@@ -25,22 +25,11 @@ export default function Footer() {
     setTimeout(() => setClickedItem(null), 1000);
   };
 
-  // Debug function to check localStorage
-  const debugLocalStorage = () => {
-    const user = localStorage.getItem('user');
-    const sessionId = localStorage.getItem('sessionId');
-    console.log('🔍 LocalStorage Debug:', {
-      user: user ? JSON.parse(user) : null,
-      sessionId: sessionId,
-      hasUser: !!user
-    });
-  };
-
   // Social media links with their actual URLs
   const socialLinks = [
     {
       platform: 'instagram',
-      url: 'https://www.instagram.com/saimrgroups/',
+      url: 'https://www.instagram.com/cleartitle1/',
       label: 'Instagram',
       icon: (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -50,7 +39,7 @@ export default function Footer() {
     },
     {
       platform: 'facebook',
-      url: 'https://www.facebook.com/profile.php?id=61583033670537',
+      url: 'https://www.facebook.com/cleartitle1',
       label: 'Facebook',
       icon: (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -60,7 +49,7 @@ export default function Footer() {
     },
     {
       platform: 'linkedin',
-      url: 'https://www.linkedin.com/in/saimr-groups-098b4438b/',
+      url: 'https://www.linkedin.com/company/cleartitle1',
       label: 'LinkedIn',
       icon: (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -70,7 +59,7 @@ export default function Footer() {
     },
     {
       platform: 'twitter',
-      url: 'https://x.com/saimrgroups',
+      url: 'https://x.com/cleartitle1',
       label: 'Twitter',
       icon: (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -91,9 +80,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-black text-white">
-
-
+    <footer className="bg-gradient-to-br from-blue-900 to-black text-white">
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
@@ -101,13 +88,24 @@ export default function Footer() {
           {/* Company Info */}
           <div className="lg:col-span-2">
             <div className="mb-6">
-              <h3 className="text-2xl font-light mb-2">SAIMR GROUPS</h3>
-              <div className="w-20 h-1 bg-white mb-4"></div>
+              <h3 className="text-2xl font-light mb-2">
+                <span className="text-blue-400">CLEAR</span>
+                <span className="text-yellow-300">TITLE 1</span>
+              </h3>
+              <div className="w-20 h-1 bg-gradient-to-r from-blue-400 to-yellow-300 mb-4"></div>
               <p className="text-gray-300 leading-relaxed max-w-md">
-                Shaping the future of India's industrial and logistics real estate. 
-                We connect investors and developers with strategic land opportunities 
-                across Bengaluru, Karnataka with clear title properties only.
+                Your trusted partner for 100% legally verified properties. We specialize in comprehensive 
+                legal due diligence for all property types including flats, plots, farmlands, commercial 
+                spaces, and joint developments across Karnataka.
               </p>
+            </div>
+            
+            {/* Legal Assurance Badge */}
+            <div className="inline-flex items-center bg-blue-800/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-blue-600 mb-6">
+              <svg className="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-semibold text-white">100% Legal Verification Guarantee</span>
             </div>
             
             {/* Social Links */}
@@ -116,8 +114,8 @@ export default function Footer() {
                 <button
                   key={social.platform}
                   onClick={() => handleClick(social.platform, social.url, `${social.label} social link`, social.url)}
-                  className={`w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    clickedItem === `${social.platform}-${social.url}` ? 'scale-110 bg-white' : ''
+                  className={`w-10 h-10 bg-blue-800/50 hover:bg-blue-700 rounded-full flex items-center justify-center transition-all duration-300 border border-blue-600/50 ${
+                    clickedItem === `${social.platform}-${social.url}` ? 'scale-110 bg-yellow-300 text-black' : ''
                   }`}
                   aria-label={social.label}
                   title={social.label}
@@ -128,86 +126,95 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links
+          {/* Property Types */}
           <div>
             <h4 className="text-lg font-semibold mb-6 relative">
-              Quick Links
-              <div className="absolute -bottom-2 left-0 w-12 h-0.5 bg-white"></div>
+              Property Types
+              <div className="absolute -bottom-2 left-0 w-12 h-0.5 bg-yellow-300"></div>
             </h4>
-            <ul className="space-y-3">
-              {['Home', 'About Us', 'Services', 'Projects', 'Contact'].map((link) => (
-                <li key={link}>
-                  <button
-                    onClick={() => handleClick('navigation', link.toLowerCase().replace(' ', '_'), `Navigation: ${link}`)}
-                    className={`text-gray-300 hover:text-white transition-all duration-300 hover:pl-2 block w-full text-left ${
-                      clickedItem === `navigation-${link.toLowerCase().replace(' ', '_')}` ? 'pl-4 font-semibold' : ''
-                    }`}
-                  >
-                    {link}
-                  </button>
-                </li>
+            <div className="space-y-3">
+              {[
+                'Flats & Apartments',
+                'Single Site Plots', 
+                'Farm Lands',
+                'Commercial Spaces',
+                'Joint Developments',
+                'Joint Ventures'
+              ].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => handleClick('property_type', type.toLowerCase().replace(/ /g, '_'), `Property Type: ${type}`)}
+                  className={`flex items-center text-gray-300 hover:text-white transition-all duration-300 hover:pl-2 block w-full text-left group ${
+                    clickedItem === `property_type-${type.toLowerCase().replace(/ /g, '_')}` ? 'pl-4 font-semibold text-yellow-300' : ''
+                  }`}
+                >
+                  <svg className="w-3 h-3 text-blue-400 mr-2 opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {type}
+                </button>
               ))}
-            </ul>
-          </div> */}
+            </div>
+          </div>
 
           {/* Contact Info */}
           <div>
             <h4 className="text-lg font-semibold mb-6 relative">
               Contact Us
-              <div className="absolute -bottom-2 left-0 w-12 h-0.5 bg-white"></div>
+              <div className="absolute -bottom-2 left-0 w-12 h-0.5 bg-yellow-300"></div>
             </h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <svg className="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-yellow-300 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
                 <button
-                  onClick={() => handleClick('location', 'bengaluru_karnataka', 'Google Maps Location', 'https://www.google.com/maps/place//@13.029303,77.7108679,15z/data=!3m1!4b1!17m2!4m1!1e3!18m1!1e1?entry=ttu&g_ep=EgoyMDI1MTAyOS4yIKXMDSoASAFQAw%3D%3D')}
+                  onClick={() => handleClick('location', 'bengaluru_karnataka', 'Google Maps Location', 'https://www.google.com/maps/place/Bengaluru,+Karnataka')}
                   className={`text-gray-300 hover:text-white transition-all duration-300 text-left ${
-                    clickedItem === 'location-bengaluru_karnataka' ? 'font-semibold scale-105' : ''
+                    clickedItem === 'location-bengaluru_karnataka' ? 'font-semibold scale-105 text-yellow-300' : ''
                   }`}
                 >
                   Bengaluru, Karnataka, India
                 </button>
               </div>
               <div className="flex items-center space-x-3">
-                <svg className="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-yellow-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                 </svg>
                 <button
                   onClick={() => handleClick('phone', '+917788999022', 'Primary Phone', 'tel:+917788999022')}
                   className={`text-gray-300 hover:text-white transition-all duration-300 ${
-                    clickedItem === 'phone-+917788999022' ? 'font-semibold scale-105' : ''
+                    clickedItem === 'phone-+917788999022' ? 'font-semibold scale-105 text-yellow-300' : ''
                   }`}
                 >
                   +91 77889 99022
                 </button>
               </div>
               <div className="flex items-center space-x-3">
-                <svg className="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-yellow-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
                 <button
-                  onClick={() => handleClick('email', 'saimrgroups@gmail.com', 'Email Address', 'mailto:saimrgroups@gmail.com')}
+                  onClick={() => handleClick('email', 'info@cleartitle1.com', 'Email Address', 'mailto:info@cleartitle1.com')}
                   className={`text-gray-300 hover:text-white transition-all duration-300 ${
-                    clickedItem === 'email-saimrgroups@gmail.com' ? 'font-semibold scale-105' : ''
+                    clickedItem === 'email-info@cleartitle1.com' ? 'font-semibold scale-105 text-yellow-300' : ''
                   }`}
                 >
-                  saimrgroups@gmail.com
+                  info@cleartitle1.com
                 </button>
               </div>
               <div className="flex items-center space-x-3">
-                <svg className="w-5 h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-yellow-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"/>
                 </svg>
                 <button
-                  onClick={() => handleClick('website', 'saimrgroups.com', 'Website', 'https://saimrgroups.com')}
+                  onClick={() => handleClick('website', 'cleartitle1.com', 'Website', 'https://cleartitle1.com')}
                   className={`text-gray-300 hover:text-white transition-all duration-300 ${
-                    clickedItem === 'website-saimrgroups.com' ? 'font-semibold scale-105' : ''
+                    clickedItem === 'website-cleartitle1.com' ? 'font-semibold scale-105 text-yellow-300' : ''
                   }`}
                 >
-                  www.saimrgroups.com
+                  www.cleartitle1.com
                 </button>
               </div>
             </div>
@@ -216,22 +223,35 @@ export default function Footer() {
       </div>
 
       {/* Services Section */}
-      <div className="border-t border-gray-800">
+      <div className="border-t border-blue-700">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h4 className="text-lg font-semibold mb-6 text-center">Our Services</h4>
+          <h4 className="text-lg font-semibold mb-6 text-center text-yellow-300">Our Legal Assurance Services</h4>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {[
-              { name: 'Joint Development', desc: 'Strategic land partnerships' },
-              { name: 'Joint Ventures', desc: 'Collaborative projects' },
-              { name: 'Outright Sales', desc: 'Clear title properties' }
+              { 
+                name: 'Title Verification', 
+                desc: 'Comprehensive legal document checks',
+                icon: '📋'
+              },
+              { 
+                name: 'Encumbrance Check', 
+                desc: 'No loans or legal disputes',
+                icon: '🔍'
+              },
+              { 
+                name: 'Regulatory Compliance', 
+                desc: 'All government approvals verified',
+                icon: '⚖️'
+              }
             ].map((service) => (
               <button
                 key={service.name}
-                onClick={() => handleClick('service', service.name.toLowerCase().replace(' ', '_'), `Service: ${service.name}`)}
-                className={`text-center p-4 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all duration-300 ${
-                  clickedItem === `service-${service.name.toLowerCase().replace(' ', '_')}` ? 'bg-white text-black' : ''
+                onClick={() => handleClick('legal_service', service.name.toLowerCase().replace(' ', '_'), `Legal Service: ${service.name}`)}
+                className={`text-center p-4 bg-blue-800/30 hover:bg-blue-700/50 rounded-lg transition-all duration-300 border border-blue-600/30 backdrop-blur-sm ${
+                  clickedItem === `legal_service-${service.name.toLowerCase().replace(' ', '_')}` ? 'bg-yellow-300 text-black scale-105' : ''
                 }`}
               >
+                <div className="text-2xl mb-2">{service.icon}</div>
                 <h5 className="font-semibold mb-2">{service.name}</h5>
                 <p className="text-sm text-gray-300">{service.desc}</p>
               </button>
@@ -241,19 +261,20 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-gray-800">
+      <div className="border-t border-blue-700">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} SAIMR Groups. All rights reserved.
+              © {new Date().getFullYear()} <span className="text-blue-400">CLEAR</span>
+              <span className="text-yellow-300">TITLE 1</span>. All rights reserved.
             </div>
             <div className="flex space-x-6 text-sm">
-              {['Privacy Policy', 'Terms of Service', 'Disclaimer'].map((link) => (
+              {['Privacy Policy', 'Terms of Service', 'Legal Disclaimer'].map((link) => (
                 <button
                   key={link}
                   onClick={() => handleClick('legal', link.toLowerCase().replace(' ', '_'), `Legal: ${link}`)}
-                  className={`text-gray-400 hover:text-white transition-all duration-300 ${
-                    clickedItem === `legal-${link.toLowerCase().replace(' ', '_')}` ? 'font-semibold' : ''
+                  className={`text-gray-400 hover:text-yellow-300 transition-all duration-300 ${
+                    clickedItem === `legal-${link.toLowerCase().replace(' ', '_')}` ? 'font-semibold text-yellow-300' : ''
                   }`}
                 >
                   {link}

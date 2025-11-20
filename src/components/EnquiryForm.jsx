@@ -67,9 +67,9 @@ const EnquiryForm = () => {
     },
     {
       type: 'email',
-      value: 'saimrgroups@gmail.com',
+      value: 'info@cleartitle1.com',
       displayName: 'Email',
-      url: 'mailto:saimrgroups@gmail.com',
+      url: 'mailto:info@cleartitle1.com',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -110,7 +110,7 @@ const EnquiryForm = () => {
       const response = await createEnquiry(enquiryData);
       
       if (response.data.success) {
-        setSubmitMessage('Thank you! Your enquiry has been submitted successfully.');
+        setSubmitMessage('Thank you! Your enquiry has been submitted successfully. Our legal team will contact you shortly.');
         // Reset form
         setFormData({
           name: '',
@@ -151,23 +151,29 @@ const EnquiryForm = () => {
       {!isOpen && (
         <button
           onClick={toggleForm}
-          className="bg-black text-white px-4 py-3 md:px-6 md:py-3 rounded-lg shadow-2xl border border-gray-800 hover:bg-gray-900 transition duration-200 font-medium flex items-center space-x-2"
+          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 md:px-6 md:py-3 rounded-lg shadow-2xl border border-blue-800 hover:from-blue-700 hover:to-blue-800 transition duration-200 font-medium flex items-center space-x-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
           {/* Hide text on mobile, show on medium screens and up */}
-          <span className="hidden md:inline">Get In Touch</span>
+          <span className="hidden md:inline">Legal Consultation</span>
         </button>
       )}
 
       {/* Enquiry Form */}
       {isOpen && (
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-300 p-4 md:p-6 w-80 max-w-[90vw]">
+        <div className="bg-white rounded-xl shadow-2xl border border-blue-200 p-4 md:p-6 w-80 max-w-[90vw]">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg md:text-xl font-semibold text-gray-900">
-              Get In Touch
-            </h3>
+            <div>
+              <h3 className="text-lg md:text-xl font-semibold text-gray-900">
+                Legal Consultation
+              </h3>
+              <div className="flex items-center gap-1 mt-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-green-600 font-medium">Legal Team Online</span>
+              </div>
+            </div>
             <button
               onClick={toggleForm}
               className="text-gray-500 hover:text-gray-700 transition duration-200"
@@ -179,7 +185,7 @@ const EnquiryForm = () => {
           </div>
           
           <p className="text-gray-600 text-xs md:text-sm mb-4 md:mb-6">
-            Have questions? We'd love to hear from you.
+            Get expert legal advice on property verification and clear title assurance.
           </p>
           
           {/* Quick Contact Buttons */}
@@ -188,8 +194,8 @@ const EnquiryForm = () => {
               <button
                 key={contact.type}
                 onClick={() => handleClick(contact.type, contact.value, contact.displayName, contact.url)}
-                className={`flex-1 flex items-center justify-center space-x-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-3 rounded-lg transition-all duration-300 text-xs font-medium ${
-                  clickedItem === `${contact.type}-${contact.value}` ? 'bg-gray-300 scale-95' : ''
+                className={`flex-1 flex items-center justify-center space-x-1 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 px-3 rounded-lg transition-all duration-300 text-xs font-medium border border-blue-200 ${
+                  clickedItem === `${contact.type}-${contact.value}` ? 'bg-blue-200 scale-95' : ''
                 }`}
               >
                 {contact.icon}
@@ -201,9 +207,9 @@ const EnquiryForm = () => {
           </div>
 
           {isAuthenticated && (
-            <div className="bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 mb-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mb-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-800 text-xs md:text-sm flex items-center">
+                <span className="text-blue-800 text-xs md:text-sm flex items-center">
                   <svg className="w-3 h-3 md:w-4 md:h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
@@ -211,7 +217,7 @@ const EnquiryForm = () => {
                 </span>
                 <button
                   onClick={handleAutoFill}
-                  className="text-gray-700 hover:text-gray-900 text-xs font-medium underline"
+                  className="text-blue-700 hover:text-blue-900 text-xs font-medium underline"
                 >
                   Auto-fill
                 </button>
@@ -231,7 +237,7 @@ const EnquiryForm = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white text-gray-900"
+                className="w-full px-3 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 placeholder="Enter your full name"
               />
             </div>
@@ -247,14 +253,14 @@ const EnquiryForm = () => {
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white text-gray-900"
+                className="w-full px-3 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 placeholder="Enter your phone number"
               />
             </div>
 
             <div>
               <label htmlFor="message" className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
-                Message *
+                Property Enquiry *
               </label>
               <textarea
                 id="message"
@@ -262,16 +268,16 @@ const EnquiryForm = () => {
                 value={formData.message}
                 onChange={handleChange}
                 rows="3"
-                placeholder="Please describe your enquiry in detail..."
+                placeholder="Tell us about the property you're interested in and any legal concerns..."
                 required
-                className="w-full px-3 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white text-gray-900 resize-none"
+                className="w-full px-3 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 resize-none"
               />
             </div>
 
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition duration-200 disabled:cursor-not-allowed text-sm md:text-base"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-medium py-2 px-4 rounded-lg transition duration-200 disabled:cursor-not-allowed text-sm md:text-base shadow-md"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center">
@@ -282,7 +288,7 @@ const EnquiryForm = () => {
                   Submitting...
                 </span>
               ) : (
-                'Submit Enquiry'
+                'Get Legal Consultation'
               )}
             </button>
 
@@ -297,47 +303,34 @@ const EnquiryForm = () => {
             )}
           </form>
 
-          {/* Alternative Contact Methods */}
-          {/* <div className="mt-4 pt-4 border-t border-gray-300">
-            <p className="text-gray-600 text-xs text-center mb-2">
-              Prefer to contact directly?
-            </p>
-            <div className="flex justify-center space-x-4">
-              {contactMethods.map((contact) => (
-                <button
-                  key={contact.type}
-                  onClick={() => handleClick(contact.type, contact.value, contact.displayName, contact.url)}
-                  className={`flex items-center space-x-1 text-gray-700 hover:text-gray-900 transition-all duration-300 text-xs ${
-                    clickedItem === `${contact.type}-${contact.value}` ? 'text-black font-semibold scale-105' : ''
-                  }`}
-                >
-                  {contact.icon}
-                  <span>
-                    {contact.type === 'phone' ? 'Call' : contact.type === 'whatsapp' ? 'WhatsApp' : 'Email'}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div> */}
-
           {!isAuthenticated && (
             <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-300">
               <p className="text-gray-600 text-xs md:text-sm text-center">
                 <a 
                   href="/login" 
-                  className="text-gray-700 hover:text-gray-900 font-medium transition duration-200 inline-flex items-center"
+                  className="text-blue-600 hover:text-blue-800 font-medium transition duration-200 inline-flex items-center"
                 >
                   <svg className="w-3 h-3 md:w-4 md:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  Log in for faster enquiry
+                  Log in for faster consultation
                 </a>
               </p>
               <p className="text-gray-500 text-xs text-center mt-1">
-                Auto-fill your details for future enquiries
+                Auto-fill your details and track your legal enquiries
               </p>
             </div>
           )}
+
+          {/* Legal Assurance Badge */}
+          <div className="mt-4 pt-4 border-t border-gray-300">
+            <div className="flex items-center justify-center gap-2 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="text-xs text-blue-800 font-medium">100% Legal Verification Guarantee</span>
+            </div>
+          </div>
         </div>
       )}
     </div>

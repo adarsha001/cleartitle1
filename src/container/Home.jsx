@@ -2,7 +2,7 @@ import React from 'react'
 // import Searchfilter from '../pages/Searchfilter'
 import FeaturedProperties from '../pages/FeaturedProperties'
 import PropertyList from '../pages/PropertyList'
-import VerifiedProperties from '../pages/VerifiedProperties'
+// import VerifiedProperties from '../pages/VerifiedProperties'
 import QualityAssurance from '../pages/QualityAsurence'
 import Footer from '../pages/Footer'
 const Home = () => {
@@ -11,7 +11,7 @@ const Home = () => {
       {/* <Searchfilter/> */}
       <PropertyList/>
       <FeaturedProperties/>
-      <VerifiedProperties/>
+      {/* <VerifiedProperties/> */}
       <QualityAssurance/>
       <Footer/>
     </div>
