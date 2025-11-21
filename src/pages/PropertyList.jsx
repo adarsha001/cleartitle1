@@ -384,7 +384,7 @@ export default function PropertyList() {
                 
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/30">
                   <CheckCircle className="w-10 h-10 text-blue-300 mx-auto mb-3" />
-                  <h3 className="text-white font-bold text-lg mb-2">Complete Transparency</h3>
+                  <h3 className="text-white font-bold text-lg mb-2">Completely Transparency</h3>
                   <p className="text-blue-100 text-sm">No hidden clauses, full disclosure on every property</p>
                 </div>
               </div>
