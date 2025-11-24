@@ -335,7 +335,7 @@ export default function PropertyList() {
   </div>
 
 </div>
-
+</div>
 
             {/* Search Bar */}
             <div className="max-w-4xl mx-auto px-4">
