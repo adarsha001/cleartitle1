@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Search, SlidersHorizontal, Grid3x3, List, MapPin, Home, DollarSign, Maximize, Building, Sprout, Handshake, LandPlot, ChevronDown, X, Shield, CheckCircle, FileCheck, Award, Menu } from "lucide-react";
+import { Search, SlidersHorizontal, Grid3x3, List, MapPin, Home, DollarSign, Maximize, Building, Sprout, Handshake, LandPlot, ChevronDown, X, Shield, CheckCircle, FileCheck, Award, Menu, FileText } from "lucide-react";
 import { getProperties } from "../api/axios";
 import PropertyCard from "../components/PropertyCard";
 
@@ -314,6 +314,14 @@ export default function PropertyList() {
                   <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Complete Transparency</h3>
                   <p className="text-blue-100 text-xs sm:text-sm">No hidden clauses, full disclosure on every property</p>
                 </div>
+                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
+  <FileText className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-purple-300 mx-auto mb-2 sm:mb-3" />
+  <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Paperwork & Documentation</h3>
+  <p className="text-blue-100 text-xs sm:text-sm">
+    Khata conversion, registration, legal paperwork, and complete documentation support.
+  </p>
+</div>
+
               </div>
             </div>
 
