@@ -295,35 +295,47 @@ export default function PropertyList() {
                 </div>
               </div>
 
-              {/* ClearTitle1 Features - Responsive Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto mb-8 sm:mb-12 px-4">
-                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-                  <FileCheck className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-yellow-300 mx-auto mb-2 sm:mb-3" />
-                  <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Clear Title Guarantee</h3>
-                  <p className="text-blue-100 text-xs sm:text-sm">Every property comes with verified clear title documentation</p>
-                </div>
-                
-                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-                  <Shield className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-green-300 mx-auto mb-2 sm:mb-3" />
-                  <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Legal Verification</h3>
-                  <p className="text-blue-100 text-xs sm:text-sm">Thorough legal checks and complete compliance assurance</p>
-                </div>
-                
-                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-                  <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-blue-300 mx-auto mb-2 sm:mb-3" />
-                  <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Complete Transparency</h3>
-                  <p className="text-blue-100 text-xs sm:text-sm">No hidden clauses, full disclosure on every property</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-  <FileText className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-purple-300 mx-auto mb-2 sm:mb-3" />
-  <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Paperwork & Documentation</h3>
-  <p className="text-blue-100 text-xs sm:text-sm">
-    Khata conversion, registration, legal paperwork, and complete documentation support.
-  </p>
+         {/* ClearTitle1 Features - Responsive Grid */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto mb-8 sm:mb-12 px-4">
+
+  {/* Clear Title Guarantee */}
+  <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
+    <FileCheck className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-yellow-300 mx-auto mb-2 sm:mb-3" />
+    <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Clear Title Guarantee</h3>
+    <p className="text-blue-100 text-xs sm:text-sm">
+      Every property comes with verified clear title documentation
+    </p>
+  </div>
+
+  {/* Legal Verification */}
+  <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
+    <Shield className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-green-300 mx-auto mb-2 sm:mb-3" />
+    <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Legal Verification</h3>
+    <p className="text-blue-100 text-xs sm:text-sm">
+      Thorough legal checks and complete compliance assurance
+    </p>
+  </div>
+
+  {/* Complete Transparency */}
+  <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
+    <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 lg:h-10 lg:w-10 text-blue-300 mx-auto mb-2 sm:mb-3" />
+    <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Complete Transparency</h3>
+    <p className="text-blue-100 text-xs sm:text-sm">
+      No hidden clauses, full disclosure on every property
+    </p>
+  </div>
+
+  {/* Paperwork & Documentation Services */}
+  <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30 lg:col-span-3">
+    <FileText className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-purple-300 mx-auto mb-2 sm:mb-3" />
+    <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Paperwork & Documentation</h3>
+    <p className="text-blue-100 text-xs sm:text-sm text-center max-w-md mx-auto">
+      Khata conversion, registration, legal paperwork, and complete documentation support.
+    </p>
+  </div>
+
 </div>
 
-              </div>
-            </div>
 
             {/* Search Bar */}
             <div className="max-w-4xl mx-auto px-4">
