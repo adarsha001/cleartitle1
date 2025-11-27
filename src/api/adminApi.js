@@ -343,6 +343,27 @@ export const fetchHourlyDistribution = async (timeframe = '7d', groupBy = 'hour'
 export const fetchPropertyById = (id) => 
   fetchWithRetry(() => API.get(`/properties/${id}`));
 
+
+// Admin creates property with agent details
+export const createPropertyByAdmin = (propertyData) => 
+  API.post("/admin/properties", propertyData);
+
+// Admin updates property with all fields
+export const updatePropertyByAdmin = (id, propertyData) => 
+  API.put(`/admin/properties/${id}`, propertyData);
+
+// Get properties with agent details and filters
+export const getPropertiesWithAgents = (params = {}) => 
+  fetchWithRetry(() => API.get("/admin/properties/with-agents", { params }));
+
+// Get single property by ID for admin
+export const getPropertyById = (id) => 
+  fetchWithRetry(() => API.get(`/admin/properties/${id}`));
+
+// Delete property by admin
+export const deletePropertyByAdmin = (id) => 
+  API.delete(`/admin/properties/${id}`);
+
 // // ✅ FIXED: Update property
 // export const updateProperty = (id, data) => 
 //   API.put(`/properties/${id}`, data);
