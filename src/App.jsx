@@ -28,6 +28,7 @@ import AdminEnquiries from "./components/AdminEnquiries";
 import NotFound from "./components/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 import TermsAndConditionsSaimr from "./components/TermsAndConditions_SAIMR_Groups";
+import Adminpropertyagent from "./components/Adminpropertyagent";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -134,7 +135,7 @@ export default function App() {
                   </AdminRoute>
                 }
               />
-
+<Route path="/admin/property-agent" element={<Adminpropertyagent />} />
               <Route path="/terms" element={<TermsAndConditionsSaimr />} />
 
               {/* 404 Not Found Route - Catch all undefined routes */}

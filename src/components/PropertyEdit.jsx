@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchPropertyById, updateProperty } from './../api/adminApi';
+import { getsPropertyById, updateProperty } from './../api/adminApi';
 
 const PropertyEdit = ({ propertyId, onClose, onUpdate }) => {
   const [property, setProperty] = useState(null);
@@ -58,7 +58,7 @@ const PropertyEdit = ({ propertyId, onClose, onUpdate }) => {
     try {
       console.log('📥 Loading property with ID:', propertyId);
       
-      const response = await fetchPropertyById(propertyId);
+      const response = await getsPropertyById(propertyId);
       
       if (response.data.success) {
         const foundProperty = response.data.property;
@@ -173,85 +173,86 @@ const PropertyEdit = ({ propertyId, onClose, onUpdate }) => {
         : [...prev.features, feature]
     }));
   };
-const cleanFormData = (data) => {
-  // Create a deep copy
-  const cleanedData = JSON.parse(JSON.stringify(data));
-  
-  // Keep price exactly as entered - no conversion
-  // Only ensure it's a string
-  if (typeof cleanedData.price !== 'string') {
-    cleanedData.price = String(cleanedData.price || '');
-  }
-  
-  // Basic field cleaning
-  cleanedData.displayOrder = data.displayOrder === '' ? 0 : Number(data.displayOrder);
-  
-  // Ensure attributes object exists
-  cleanedData.attributes = cleanedData.attributes || {};
-  
-  // Clean individual attributes - convert empty strings to undefined
-  const attributeFields = [
-    'square', 'propertyLabel', 'leaseDuration', 'typeOfJV', 
-    'facing', 'roadWidth', 'waterSource', 'soilType'
-  ];
-  
-  attributeFields.forEach(field => {
-    if (cleanedData.attributes[field] === '') {
-      cleanedData.attributes[field] = undefined;
+
+  const cleanFormData = (data) => {
+    // Create a deep copy
+    const cleanedData = JSON.parse(JSON.stringify(data));
+    
+    // Keep price exactly as entered - no conversion
+    // Only ensure it's a string
+    if (typeof cleanedData.price !== 'string') {
+      cleanedData.price = String(cleanedData.price || '');
     }
-  });
-  
-  // Handle numeric fields for expectedROI - keep as string if it contains text
-  if (cleanedData.attributes.expectedROI === '') {
-    cleanedData.attributes.expectedROI = undefined;
-  }
-  
-  // Handle acre field conversion - keep as string if it contains text
-  if (cleanedData.attributes.square) {
-    // Only convert to number if it's purely numeric
-    if (!isNaN(cleanedData.attributes.square) && cleanedData.attributes.square !== '') {
-      cleanedData.attributes.square = Number(cleanedData.attributes.square);
+    
+    // Basic field cleaning
+    cleanedData.displayOrder = data.displayOrder === '' ? 0 : Number(data.displayOrder);
+    
+    // Ensure attributes object exists
+    cleanedData.attributes = cleanedData.attributes || {};
+    
+    // Clean individual attributes - convert empty strings to undefined
+    const attributeFields = [
+      'square', 'propertyLabel', 'leaseDuration', 'typeOfJV', 
+      'facing', 'roadWidth', 'waterSource', 'soilType'
+    ];
+    
+    attributeFields.forEach(field => {
+      if (cleanedData.attributes[field] === '') {
+        cleanedData.attributes[field] = undefined;
+      }
+    });
+    
+    // Handle numeric fields for expectedROI - keep as string if it contains text
+    if (cleanedData.attributes.expectedROI === '') {
+      cleanedData.attributes.expectedROI = undefined;
     }
-    // Otherwise keep as string (e.g., "5 acres", "10 hectares")
-  }
-  
-  // Handle boolean fields
-  cleanedData.attributes.irrigationAvailable = Boolean(cleanedData.attributes.irrigationAvailable);
-  cleanedData.attributes.legalClearance = Boolean(cleanedData.attributes.legalClearance);
-
-  // CRITICAL: Ensure typeOfJV for JD/JV properties
-  if (cleanedData.category === 'JD/JV') {
-    cleanedData.attributes.typeOfJV = cleanedData.attributes.typeOfJV || 'General Partnership';
-  }
-
-  // Clean nearby distances - convert to numbers if they are numeric
-  cleanedData.nearby = {};
-  Object.entries(data.nearby).forEach(([key, value]) => {
-    if (value === '' || value === undefined) {
-      cleanedData.nearby[key] = undefined;
-    } else if (!isNaN(value) && value !== '') {
-      cleanedData.nearby[key] = Number(value);
-    } else {
-      cleanedData.nearby[key] = value; // Keep as string if not numeric
+    
+    // Handle acre field conversion - keep as string if it contains text
+    if (cleanedData.attributes.square) {
+      // Only convert to number if it's purely numeric
+      if (!isNaN(cleanedData.attributes.square) && cleanedData.attributes.square !== '') {
+        cleanedData.attributes.square = Number(cleanedData.attributes.square);
+      }
+      // Otherwise keep as string (e.g., "5 acres", "10 hectares")
     }
-  });
+    
+    // Handle boolean fields
+    cleanedData.attributes.irrigationAvailable = Boolean(cleanedData.attributes.irrigationAvailable);
+    cleanedData.attributes.legalClearance = Boolean(cleanedData.attributes.legalClearance);
 
-  // Clean features array
-  if (!Array.isArray(cleanedData.features)) {
-    cleanedData.features = [];
-  }
+    // CRITICAL: Ensure typeOfJV for JD/JV properties
+    if (cleanedData.category === 'JD/JV') {
+      cleanedData.attributes.typeOfJV = cleanedData.attributes.typeOfJV || 'General Partnership';
+    }
 
-  console.log('🧹 Final cleaned data:', {
-    category: cleanedData.category,
-    price: cleanedData.price,
-    priceType: typeof cleanedData.price,
-    attributes: cleanedData.attributes,
-    nearby: cleanedData.nearby,
-    features: cleanedData.features
-  });
+    // Clean nearby distances - convert to numbers if they are numeric
+    cleanedData.nearby = {};
+    Object.entries(data.nearby).forEach(([key, value]) => {
+      if (value === '' || value === undefined) {
+        cleanedData.nearby[key] = undefined;
+      } else if (!isNaN(value) && value !== '') {
+        cleanedData.nearby[key] = Number(value);
+      } else {
+        cleanedData.nearby[key] = value; // Keep as string if not numeric
+      }
+    });
 
-  return cleanedData;
-};
+    // Clean features array
+    if (!Array.isArray(cleanedData.features)) {
+      cleanedData.features = [];
+    }
+
+    console.log('🧹 Final cleaned data:', {
+      category: cleanedData.category,
+      price: cleanedData.price,
+      priceType: typeof cleanedData.price,
+      attributes: cleanedData.attributes,
+      nearby: cleanedData.nearby,
+      features: cleanedData.features
+    });
+
+    return cleanedData;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -330,7 +331,7 @@ const cleanFormData = (data) => {
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Edit Property</h2>
             <p className="text-sm text-gray-600 mt-1">
-              {property?.title} - {property?.city}
+              {property ? `${property.title} - ${property.city}` : 'Loading property...'}
             </p>
             <p className="text-xs text-gray-500">ID: {propertyId}</p>
           </div>
