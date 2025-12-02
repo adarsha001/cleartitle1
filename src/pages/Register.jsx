@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Building2, User, Mail, Lock, Phone, UserCircle, ChevronRight, Briefcase, Shield, CheckCircle, FileCheck } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaError, setCaptchaError] = useState("");
+  const recaptchaRef = useRef();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -18,17 +21,38 @@ export default function Register() {
     password: "",
   });
 
-  const handleChange = (e) =>
+  const [captchaToken, setCaptchaToken] = useState("");
+
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (captchaError) setCaptchaError("");
+  };
+
+  const onCaptchaChange = (token) => {
+    setCaptchaToken(token);
+    if (captchaError) setCaptchaError("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate captcha
+    if (!captchaToken) {
+      setCaptchaError("Please complete the 'I'm not a robot' verification");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await register(formData);
+      await register({ ...formData, captchaToken });
       navigate("/profile");
     } catch (error) {
-      alert("Registration failed");
+      // Reset captcha on error
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+        setCaptchaToken("");
+      }
+      alert(error.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -274,7 +298,7 @@ export default function Register() {
             <label className="flex items-start gap-3 cursor-pointer group">
               <input 
                 type="checkbox" 
-                className="w-4 h-4 mt-1 bg-white/5 border-2 border-white/20 rounded flex-shrink-0 focus:ring-2 focus:ring-yellow-400"
+                className="w-4 h-4 mt-1 bg-white/5 border-2 border-white/20 rounded flex-shrink-0 focus:ring-2 focus:ring-yellow-400 checked:bg-yellow-400 checked:border-yellow-400"
                 required
               />
               <span className="text-sm text-white/60 group-hover:text-white/80 transition-colors">
@@ -290,6 +314,39 @@ export default function Register() {
               </span>
             </label>
 
+            {/* reCAPTCHA v2 */}
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center gap-2 text-sm text-white/70 font-medium">
+                <Shield className="w-4 h-4 text-yellow-400" />
+                <span>Security Verification *</span>
+              </div>
+              
+              <div className="bg-white/5 border-2 border-white/10 rounded-xl p-4 backdrop-blur-sm">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey="6LfNKx8sAAAAAN1BwpjlcY5iU5iS9JmNEaYHewXs"
+                  onChange={onCaptchaChange}
+                  onExpired={() => {
+                    setCaptchaToken("");
+                    setCaptchaError("Captcha expired. Please verify again.");
+                  }}
+                  theme="dark"
+                  className="[&>div>div]:mx-auto"
+                />
+              </div>
+              
+              {captchaError && (
+                <div className="flex items-center gap-2 p-3 bg-red-900/20 border border-red-700/30 rounded-lg">
+                  <Shield className="w-4 h-4 text-red-400" />
+                  <p className="text-red-400 text-sm">{captchaError}</p>
+                </div>
+              )}
+              
+              <p className="text-xs text-white/40 italic">
+                This security check helps prevent automated account creation and protects your information.
+              </p>
+            </div>
+
             {/* Legal Assurance Badge */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 border-2 border-blue-500">
               <div className="flex items-center gap-3">
@@ -304,7 +361,7 @@ export default function Register() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !captchaToken}
               className="group w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black py-4 rounded-xl hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 flex items-center justify-center gap-2 font-bold disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-lg border-2 border-yellow-400"
             >
               {isLoading ? (
