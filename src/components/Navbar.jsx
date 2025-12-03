@@ -51,7 +51,7 @@ export default function Navbar() {
             onClick={handleNavLinkClick}
           >
      
-          <img className='w-32 h-32 sm:w-32 sm:h-32 scale-200 p-4' src="/logo.png" alt="Logo" />
+          <img className='w-48 h-48 sm:w-48 sm:h-48 scale-200 pb-4' src="/logo.png" alt="Logo" />
           </Link>
 
           {/* Desktop Navigation (lg and above) */}
