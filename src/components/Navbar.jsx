@@ -41,7 +41,7 @@ export default function Navbar() {
   const isAdmin = user?.role === 'admin' || user?.isAdmin === true || user?.admin === true;
 
   return (
-    <nav className="bg-gradient-to-r from-blue-900 to-black text-white shadow-lg border-b border-blue-700 z-50 w-full">
+    <nav className="bg-gradient-to-t  from-blue-900 to-black text-white shadow-lg border-b border-blue-700 z-50 w-full">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
@@ -51,15 +51,7 @@ export default function Navbar() {
             onClick={handleNavLinkClick}
           >
      
-            <div className="sm:block">
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold leading-tight">
-                <span className="text-blue-400">CLEAR</span>
-                <span className="text-yellow-300">TITLE 1</span>
-              </div>
-              <div className="text-xs text-gray-300 font-medium mt-0.5">
-                100% Legal Verification
-              </div>
-            </div>
+          <img className='w-32 h-32 sm:w-32 sm:h-32 scale-200 p-4' src="/logo.png" alt="Logo" />
           </Link>
 
           {/* Desktop Navigation (lg and above) */}

@@ -37,18 +37,6 @@ export default function Login() {
         
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16">
           {/* Logo/Brand */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Shield className="w-12 h-12 text-yellow-300" />
-              <div>
-                <h1 className="text-4xl font-bold">
-                  <span className="text-blue-400">CLEAR</span>
-                  <span className="text-yellow-300">TITLE 1</span>
-                </h1>
-                <p className="text-sm text-white/60 tracking-widest mt-1">100% LEGAL VERIFICATION</p>
-              </div>
-            </div>
-          </div>
 
           {/* Middle Content */}
           <div className="space-y-6 max-w-lg">
