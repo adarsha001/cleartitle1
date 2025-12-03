@@ -11,7 +11,8 @@ import { useAuth } from "../context/AuthContext";
 import PropertyForm from "./PropertyForm";
 import AdminPropertyCard from "./AdminPropertyCard";
 import Adminpropertyagent from "./Adminpropertyagent";
-import AgentsPage from "./AgentsPage"; // Import the AgentsPage component
+import AgentsPage from "./AgentsPage";
+import AdminWebsiteAssignment from "./AdminWebsiteAssignment"; // New import
 
 // Inline LoadingSpinner component
 const LoadingSpinner = ({ message = "Loading..." }) => {
@@ -84,9 +85,7 @@ const AdminDashboard = () => {
 
   const handleCreateProperty = async (propertyData) => {
     try {
-      // This will be handled by the PropertyForm component
       console.log('Creating property:', propertyData);
-      // After successful creation, navigate back to properties
       setActiveSection("properties");
     } catch (err) {
       setError(err.message || 'Failed to create property');
@@ -99,17 +98,14 @@ const AdminDashboard = () => {
     }
   };
 
-  // Show loading while auth is being checked
   if (authLoading) {
     return <LoadingSpinner message="Checking admin permissions..." />;
   }
 
-  // Don't render if not authenticated or not admin
   if (!isAuthenticated || !user?.isAdmin) {
     return null;
   }
 
-  // Render error state
   const renderErrorState = () => (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
@@ -139,7 +135,32 @@ const AdminDashboard = () => {
       case "property-agent":
         return <Adminpropertyagent />;
       case "agents":
-        return <AgentsPage />; // Add Agents section
+        return <AgentsPage />;
+      case "website-assignment":
+        return (
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+              <div className="text-center sm:text-left">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  Website Assignment Management
+                </h2>
+                <p className="text-gray-600 text-sm sm:text-base">
+                  Manage which properties appear on ClearTitle (parent) and SAIMR (child) websites
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveSection("properties")}
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>Back to Properties</span>
+              </button>
+            </div>
+            <AdminWebsiteAssignment />
+          </div>
+        );
       case "users":
         return <AdminUsers />;
       case "analytics":
@@ -180,7 +201,6 @@ const AdminDashboard = () => {
                 </button>
               </div>
             </div>
-            
             {analyticsView === "overview" ? <AdminClickAnalytics /> : <ClickAnalyticsDetails />}
           </div>
         );
@@ -208,8 +228,6 @@ const AdminDashboard = () => {
                 <span>Back to Properties</span>
               </button>
             </div>
-            
-            {/* Use PropertyForm component here */}
             <PropertyForm 
               onSubmit={handleCreateProperty}
               onClose={() => setActiveSection("properties")}
@@ -255,8 +273,6 @@ const AdminDashboard = () => {
                 </p>
               )}
             </div>
-            
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="sm:hidden p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -307,7 +323,6 @@ const AdminDashboard = () => {
               <span>Property & Agent</span>
             </button>
 
-            {/* NEW AGENTS BUTTON */}
             <button
               onClick={() => {
                 setActiveSection("agents");
@@ -323,6 +338,23 @@ const AdminDashboard = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <span>Agents</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveSection("website-assignment");
+                setError(null);
+              }}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+                activeSection === "website-assignment"
+                  ? "bg-cyan-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span>Website Assignment</span>
             </button>
 
             <button
@@ -435,7 +467,6 @@ const AdminDashboard = () => {
                 <span>Property & Agent</span>
               </button>
 
-              {/* NEW AGENTS BUTTON FOR MOBILE */}
               <button
                 onClick={() => {
                   setActiveSection("agents");
@@ -452,6 +483,24 @@ const AdminDashboard = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <span>Agents</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveSection("website-assignment");
+                  setError(null);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
+                  activeSection === "website-assignment"
+                    ? "bg-cyan-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Website Assignment</span>
               </button>
 
               <button

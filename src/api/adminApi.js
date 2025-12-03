@@ -487,6 +487,14 @@ export const getPropertyStats = async () => {
     throw error;
   }
 };
+
+export const assignPropertiesToWebsites = (data) => {
+  return API.post("/properties/assign-websites", data);
+};
+
+export const getPropertiesForAdmin = (params = {}) => {
+  return API.get("/properties", { params });
+};
 // // ✅ FIXED: Update property
 // export const updateProperty = (id, data) => 
 //   API.put(`/properties/${id}`, data);
