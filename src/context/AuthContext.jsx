@@ -82,49 +82,65 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Regular login
-  const login = async (emailOrUsername, password) => {
-    try {
-      const { data } = await API.post('/auth/login', { emailOrUsername, password });
+const login = async (loginData) => {
+  try {
+    const { data } = await API.post('/auth/login', { 
+      emailOrUsername: loginData.emailOrUsername, 
+      password: loginData.password,
+      sourceWebsite:  'cleartitle1' // Add sourceWebsite
+    });
+    
+    if (data.success && data.token && data.user) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
       
-      if (data.success && data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
-        
-        setUser(data.user);
-        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
-        
-        return { success: true, user: data.user };
-      } else {
-        throw new Error(data.message || 'Invalid credentials');
-      }
-    } catch (error) {
-      console.error('❌ Login error:', error);
-      throw error;
-    }
-  };
-
-  const register = async (formData) => {
-    try {
-      const { data } = await API.post('/auth/register', formData);
+      setUser(data.user);
+      setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
       
-      if (data.success && data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
-        
-        setUser(data.user);
-        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
-        
-        return { success: true, user: data.user };
-      } else {
-        throw new Error(data.message || 'Registration failed');
-      }
-    } catch (error) {
-      console.error('❌ Registration error:', error);
-      throw error;
+      return { success: true, user: data.user };
+    } else {
+      throw new Error(data.message || 'Invalid credentials');
     }
-  };
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    throw error;
+  }
+};
+// context/AuthContext.jsx
+const register = async (registerData) => {
+  try {
+    // Ensure sourceWebsite is included (default to cleartitle1 if not provided)
+    const dataToSend = {
+      ...registerData,
+      sourceWebsite: registerData.sourceWebsite || 'cleartitle1'
+    };
+    
+    console.log('Registering user from:', dataToSend.sourceWebsite);
+    
+    const { data } = await API.post('/auth/register', dataToSend);
+    
+    if (data.success && data.token && data.user) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
+      
+      // Store website login info
+      localStorage.setItem('currentWebsite', dataToSend.sourceWebsite);
+      localStorage.setItem('websiteLogins', JSON.stringify(data.user.websiteLogins || {}));
+      
+      setUser(data.user);
+      setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
+      
+      return { success: true, user: data.user };
+    } else {
+      throw new Error(data.message || 'Registration failed');
+    }
+  } catch (error) {
+    console.error('❌ Registration error:', error);
+    throw error;
+  }
+};
 
   const updateProfile = async (profileData) => {
     try {

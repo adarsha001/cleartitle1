@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = 'https://saimr-backend-1.onrender.com/api';
+const baseURL = 'http://localhost:5000/api';
 
 // Create main API instance for JSON requests
 const API = axios.create({

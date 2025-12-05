@@ -9,7 +9,11 @@ import {
 export default function Login() {
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ emailOrUsername: "", password: "" ,sourceWebsite: 'cleartitle1'});
+  const [form, setForm] = useState({ 
+    emailOrUsername: "", 
+    password: "",
+    sourceWebsite: 'cleartitle1' // Add sourceWebsite
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -104,7 +108,12 @@ export default function Login() {
     console.log("Google Sign-In response received");
     
     try {
-      await googleLogin(response.credential);
+      // Update Google login to include sourceWebsite
+      const googleLoginData = {
+        token: response.credential,
+        sourceWebsite: 'cleartitle1' // Add sourceWebsite for Google login
+      };
+      await googleLogin(googleLoginData);
       navigate("/profile");
     } catch (error) {
       console.error("Google Sign-In error:", error);
@@ -117,23 +126,19 @@ export default function Login() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
-  try {
-    // Update the login call to include sourceWebsite
-    await login({
-      emailOrUsername: form.emailOrUsername,
-      password: form.password,
-      sourceWebsite: 'cleartitle1' // Add sourceWebsite
-    });
-    navigate("/profile");
-  } catch (error) {
-    alert(error.message || "Invalid login credentials");
-  } finally {
-    setIsLoading(false);
-  }
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      // Send all form data including sourceWebsite
+      await login(form);
+      navigate("/profile");
+    } catch (error) {
+      alert("Invalid login credentials");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Fallback Google button
   const triggerManualGoogleSignIn = () => {
@@ -179,9 +184,6 @@ const handleSubmit = async (e) => {
               Sign in to access 100% legally verified properties, complete title 
               documentation, and connect with trusted legal advisors and property experts.
             </p>
-
-            {/* Google Sign-In Benefits */}
-    
 
             {/* Trust Metrics */}
             <div className="grid grid-cols-2 gap-4 pt-6">

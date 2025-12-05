@@ -110,7 +110,12 @@ export default function Register() {
     console.log("Google Sign-In response received for registration");
     
     try {
-      await googleLogin(response.credential);
+      // Pass sourceWebsite to Google login
+      const googleLoginData = {
+        token: response.credential,
+        sourceWebsite: 'cleartitle1' // Add sourceWebsite
+      };
+      await googleLogin(googleLoginData);
       navigate("/profile");
     } catch (error) {
       console.error("Google Sign-In error:", error);
@@ -141,7 +146,12 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      await register({ ...formData, captchaToken });
+      // Ensure sourceWebsite is included in the registration data
+      await register({ 
+        ...formData, 
+        captchaToken,
+        sourceWebsite: 'cleartitle1' // Explicitly set sourceWebsite
+      });
       navigate("/profile");
     } catch (error) {
       // Reset captcha on error
