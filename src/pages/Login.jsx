@@ -176,34 +176,7 @@ export default function Login() {
             </p>
 
             {/* Google Sign-In Benefits */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-4 text-yellow-300 flex items-center gap-2">
-                <img 
-                  src="https://www.google.com/favicon.ico" 
-                  alt="Google" 
-                  className="w-6 h-6"
-                />
-                Quick & Secure Sign-In
-              </h3>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-white/80">One-click login with Google</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-white/80">Enhanced security with Google protection</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-white/80">No passwords to remember</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-white/80">Instant account creation</span>
-                </li>
-              </ul>
-            </div>
+    
 
             {/* Trust Metrics */}
             <div className="grid grid-cols-2 gap-4 pt-6">
