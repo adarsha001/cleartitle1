@@ -7,6 +7,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [requiresPhoneUpdate, setRequiresPhoneUpdate] = useState(false);
 
   // Initialize user from localStorage on mount
   useEffect(() => {
@@ -14,18 +15,23 @@ export const AuthProvider = ({ children }) => {
       try {
         const storedUser = localStorage.getItem('user');
         const token = localStorage.getItem('token');
+        const phoneUpdateFlag = localStorage.getItem('requiresPhoneUpdate');
         
         if (storedUser && token) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
+          setRequiresPhoneUpdate(phoneUpdateFlag === 'true');
         } else {
           setUser(null);
+          setRequiresPhoneUpdate(false);
         }
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
         setUser(null);
+        setRequiresPhoneUpdate(false);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
+        localStorage.removeItem('requiresPhoneUpdate');
       } finally {
         setLoading(false);
       }
@@ -34,7 +40,48 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Rest of your AuthContext code remains the same...
+  // Google Sign-In
+  const googleLogin = async (googleToken, userType = 'buyer') => {
+    try {
+      console.log('Sending Google token to backend...');
+      
+      const { data } = await API.post('/auth/google', { 
+        token: googleToken, 
+        userType 
+      });
+      
+      console.log('Google Sign-In response:', data);
+      
+      if (data.success && data.token && data.user) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
+        
+        setUser(data.user);
+        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
+        
+        return { success: true, user: data.user };
+      } else {
+        throw new Error(data.message || 'Google sign-in failed');
+      }
+    } catch (error) {
+      console.error('❌ Google login error:', error);
+      
+      // More detailed error handling
+      if (error.response) {
+        // Server responded with error
+        throw new Error(error.response.data.message || 'Google sign-in failed');
+      } else if (error.request) {
+        // No response received
+        throw new Error('No response from server. Please check your connection.');
+      } else {
+        // Request setup error
+        throw new Error(error.message || 'Google sign-in failed');
+      }
+    }
+  };
+
+  // Regular login
   const login = async (emailOrUsername, password) => {
     try {
       const { data } = await API.post('/auth/login', { emailOrUsername, password });
@@ -42,11 +89,14 @@ export const AuthProvider = ({ children }) => {
       if (data.success && data.token && data.user) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
+        
         setUser(data.user);
+        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
         
         return { success: true, user: data.user };
       } else {
-        throw new Error('Invalid response from server');
+        throw new Error(data.message || 'Invalid credentials');
       }
     } catch (error) {
       console.error('❌ Login error:', error);
@@ -61,11 +111,14 @@ export const AuthProvider = ({ children }) => {
       if (data.success && data.token && data.user) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
+        
         setUser(data.user);
+        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
         
         return { success: true, user: data.user };
       } else {
-        throw new Error('Invalid response from server');
+        throw new Error(data.message || 'Registration failed');
       }
     } catch (error) {
       console.error('❌ Registration error:', error);
@@ -73,10 +126,41 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const { data } = await API.put('/auth/profile', profileData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (data.success && data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
+        
+        setUser(data.user);
+        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
+        
+        return { success: true, user: data.user };
+      } else {
+        throw new Error(data.message || 'Update failed');
+      }
+    } catch (error) {
+      console.error('❌ Update profile error:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
+    // Clear Google session if exists
+    if (window.google && window.google.accounts) {
+      window.google.accounts.id.disableAutoSelect();
+    }
+    
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('requiresPhoneUpdate');
     setUser(null);
+    setRequiresPhoneUpdate(false);
   };
 
   const updateUser = (updatedUser) => {
@@ -84,22 +168,34 @@ export const AuthProvider = ({ children }) => {
     setUser(updatedUser);
   };
 
+  const clearPhoneUpdateFlag = () => {
+    setRequiresPhoneUpdate(false);
+    localStorage.removeItem('requiresPhoneUpdate');
+  };
+
   const value = {
     user,
     login,
+    googleLogin,
     register,
     logout,
     updateUser,
+    updateProfile,
     loading,
+    requiresPhoneUpdate,
+    clearPhoneUpdateFlag,
     isAuthenticated: !!user,
     userInfo: user ? {
-      id: user.id,
+      id: user.id || user._id,
       name: user.name,
       username: user.username,
       gmail: user.gmail,
       userType: user.userType,
       phoneNumber: user.phoneNumber,
-      isAdmin: user.isAdmin
+      isAdmin: user.isAdmin,
+      isGoogleAuth: user.isGoogleAuth,
+      avatar: user.avatar,
+      requiresPhoneUpdate: user.requiresPhoneUpdate
     } : null
   };
 

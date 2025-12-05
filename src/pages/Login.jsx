@@ -1,13 +1,118 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Shield, Lock, Mail, ChevronRight, CheckCircle, FileCheck } from "lucide-react";
+import { 
+  Shield, Lock, Mail, ChevronRight, CheckCircle, 
+  FileCheck, LogIn, AlertCircle, Eye, EyeOff 
+} from "lucide-react";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ emailOrUsername: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [googleError, setGoogleError] = useState("");
+  const googleButtonRef = useRef(null);
+
+  // Get Google Client ID from Vite environment
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  // Load Google SDK
+  useEffect(() => {
+    const initializeGoogleSignIn = () => {
+      if (window.google && GOOGLE_CLIENT_ID) {
+        console.log("Initializing Google Sign-In with Client ID:", GOOGLE_CLIENT_ID.substring(0, 20) + "...");
+        
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          context: "signin",
+          ux_mode: "popup"
+        });
+
+        // Render Google Sign-In button
+        if (googleButtonRef.current) {
+          try {
+            window.google.accounts.id.renderButton(
+              googleButtonRef.current,
+              {
+                theme: "outline",
+                size: "large",
+                width: 384, // max-w-md = 384px
+                text: "continue_with",
+                shape: "rectangular",
+                logo_alignment: "left",
+                locale: "en"
+              }
+            );
+            
+            // Show One Tap UI after a delay
+            setTimeout(() => {
+              window.google.accounts.id.prompt();
+            }, 1000);
+          } catch (error) {
+            console.error("Error rendering Google button:", error);
+            setGoogleError("Unable to load Google Sign-In button");
+          }
+        }
+      } else {
+        console.error("Google Client ID not found or Google SDK not loaded");
+        setGoogleError("Google Sign-In is not properly configured");
+      }
+    };
+
+    // Load Google SDK script
+    const loadGoogleSDK = () => {
+      if (!window.google) {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = initializeGoogleSignIn;
+        script.onerror = (error) => {
+          console.error("Failed to load Google Sign-In script:", error);
+          setGoogleError("Failed to load Google Sign-In. Please check your internet connection.");
+        };
+        document.head.appendChild(script);
+      } else {
+        initializeGoogleSignIn();
+      }
+    };
+
+    if (GOOGLE_CLIENT_ID) {
+      loadGoogleSDK();
+    } else {
+      setGoogleError("Google Client ID is missing. Please check environment configuration.");
+      console.error("Missing VITE_GOOGLE_CLIENT_ID environment variable");
+    }
+
+    return () => {
+      // Cleanup
+      if (window.google && window.google.accounts) {
+        window.google.accounts.id.cancel();
+      }
+    };
+  }, [GOOGLE_CLIENT_ID]);
+
+  const handleGoogleResponse = async (response) => {
+    setIsGoogleLoading(true);
+    setGoogleError("");
+    console.log("Google Sign-In response received");
+    
+    try {
+      await googleLogin(response.credential);
+      navigate("/profile");
+    } catch (error) {
+      console.error("Google Sign-In error:", error);
+      setGoogleError(error.response?.data?.message || error.message || "Google sign-in failed. Please try again.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,9 +124,18 @@ export default function Login() {
       await login(form.emailOrUsername, form.password);
       navigate("/profile");
     } catch (error) {
-      alert("Invalid login credentials");
+      alert(error.message || "Invalid login credentials");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fallback Google button
+  const triggerManualGoogleSignIn = () => {
+    if (window.google && window.google.accounts) {
+      window.google.accounts.id.prompt();
+    } else {
+      setGoogleError("Google Sign-In is not available. Please refresh the page.");
     }
   };
 
@@ -37,6 +151,16 @@ export default function Login() {
         
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16">
           {/* Logo/Brand */}
+          <div className="flex items-center gap-3">
+            <Shield className="w-12 h-12 text-yellow-300" />
+            <div>
+              <h1 className="text-3xl font-bold">
+                <span className="text-blue-300">CLEAR</span>
+                <span className="text-yellow-300">TITLE 1</span>
+              </h1>
+              <p className="text-white/60 text-sm">100% Legal Property Verification</p>
+            </div>
+          </div>
 
           {/* Middle Content */}
           <div className="space-y-6 max-w-lg">
@@ -51,21 +175,34 @@ export default function Login() {
               documentation, and connect with trusted legal advisors and property experts.
             </p>
 
-            {/* Legal Assurance Features */}
-            <div className="space-y-4 pt-4">
-              <p className="text-yellow-300 text-sm font-semibold tracking-wider">YOUR LEGAL ASSURANCE</p>
-              {[
-                "Access to 100% Verified Property Listings",
-                "Complete Legal Documentation",
-                "Direct Connect with Legal Advisors",
-                "Real-time Title Status Updates",
-                "Secure Investment Portfolio"
-              ].map((feature, idx) => (
-                <div key={idx} className="flex items-start gap-3">
+            {/* Google Sign-In Benefits */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h3 className="text-xl font-bold mb-4 text-yellow-300 flex items-center gap-2">
+                <img 
+                  src="https://www.google.com/favicon.ico" 
+                  alt="Google" 
+                  className="w-6 h-6"
+                />
+                Quick & Secure Sign-In
+              </h3>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-white/80 text-sm">{feature}</span>
-                </div>
-              ))}
+                  <span className="text-white/80">One-click login with Google</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-white/80">Enhanced security with Google protection</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-white/80">No passwords to remember</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-white/80">Instant account creation</span>
+                </li>
+              </ul>
             </div>
 
             {/* Trust Metrics */}
@@ -124,6 +261,68 @@ export default function Login() {
             </div>
           </div>
 
+          {/* Google Sign-In Section */}
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-white mb-2">Quick Sign-In</h3>
+              <p className="text-white/60 text-sm mb-4">Use your Google account for instant access</p>
+            </div>
+            
+            {/* Google Sign-In Button Container */}
+            <div className="w-full flex justify-center">
+              <div 
+                ref={googleButtonRef}
+                className="w-full flex justify-center [&>div]:w-full [&>div]:flex [&>div]:justify-center"
+              ></div>
+            </div>
+            
+            {/* Manual Google Sign-In Button (fallback) */}
+            {!GOOGLE_CLIENT_ID && (
+              <div className="text-center">
+                <p className="text-yellow-300 text-sm mb-2">Google Sign-In not configured</p>
+              </div>
+            )}
+            
+            {isGoogleLoading && (
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 text-sm text-white/70">
+                  <div className="w-4 h-4 border-2 border-white/70 border-t-transparent rounded-full animate-spin"></div>
+                  Signing in with Google...
+                </div>
+              </div>
+            )}
+            
+            {googleError && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-red-300 text-sm font-semibold">Google Sign-In Error</p>
+                    <p className="text-red-300/80 text-sm mt-1">{googleError}</p>
+                    <button
+                      onClick={triggerManualGoogleSignIn}
+                      className="mt-2 text-red-200 hover:text-white text-sm underline"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-gradient-to-br from-blue-900 via-blue-800 to-black px-4 text-white/50">
+                Or continue with email
+              </span>
+            </div>
+          </div>
+
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email/Username Field */}
@@ -139,28 +338,51 @@ export default function Login() {
                   placeholder="Enter your email or username"
                   onChange={handleChange}
                   value={form.emailOrUsername}
-                  className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-12 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400 transition-colors backdrop-blur-sm"
+                  className="w-full bg-white/5 border-2 border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400 transition-colors backdrop-blur-sm"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             {/* Password Field */}
             <div className="space-y-2">
-              <label className="text-sm text-white/70 tracking-wide font-medium">
-                Password
-              </label>
+              <div className="flex justify-between items-center">
+                <label className="text-sm text-white/70 tracking-wide font-medium">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-yellow-300 text-sm hover:text-yellow-400 transition-colors"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Enter your password"
                   onChange={handleChange}
                   value={form.password}
-                  className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-12 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400 transition-colors backdrop-blur-sm"
+                  className="w-full bg-white/5 border-2 border-white/10 rounded-xl pl-12 pr-12 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400 transition-colors backdrop-blur-sm"
                   required
+                  disabled={isLoading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -177,7 +399,8 @@ export default function Login() {
                 </div>
               ) : (
                 <>
-                  Access Legal Portal
+                  <LogIn className="w-5 h-5" />
+                  Sign In with Email
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -200,10 +423,31 @@ export default function Login() {
               type="button"
               onClick={() => navigate("/register")}
               className="w-full border-2 border-white/20 text-white py-4 rounded-xl hover:bg-white/5 transition-all duration-300 font-bold backdrop-blur-sm"
+              disabled={isLoading || isGoogleLoading}
             >
               Create Legal Account
             </button>
           </form>
+
+          {/* Terms and Privacy */}
+          <div className="text-center text-xs text-white/50">
+            <p>
+              By signing in, you agree to our{" "}
+              <button 
+                onClick={() => navigate("/terms")} 
+                className="text-yellow-300 hover:text-yellow-400 transition-colors"
+              >
+                Terms of Service
+              </button>{" "}
+              and{" "}
+              <button 
+                onClick={() => navigate("/privacy")} 
+                className="text-yellow-300 hover:text-yellow-400 transition-colors"
+              >
+                Privacy Policy
+              </button>
+            </p>
+          </div>
 
           {/* Security Footer */}
           <div className="text-center pt-6 border-t border-white/10">
