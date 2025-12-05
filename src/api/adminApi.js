@@ -205,11 +205,20 @@ export const fetchEnquiriesByUserId = (userId, page = 1, limit = 10) =>
 
 // ==================== USER MANAGEMENT ENDPOINTS ====================
 
-export const fetchAllUsers = (page = 1, limit = 10, search = '') => 
-  fetchWithRetry(() => API.get(`/users?page=${page}&limit=${limit}&search=${search}`));
+export const fetchAllUsers = (page = 1, limit = 10, search = '', sourceWebsite = 'all') => {
+  let url = `/users?page=${page}&limit=${limit}`;
+  if (search) url += `&search=${search}`;
+  if (sourceWebsite && sourceWebsite !== 'all') url += `&sourceWebsite=${sourceWebsite}`;
+  
+  return API.get(url);
+};
 
-export const fetchUserById = (id) => 
-  fetchWithRetry(() => API.get(`/users/${id}`));
+export const fetchUserById = (id) => API.get(`/users/${id}`);
+
+export const fetchWebsiteStats = () => API.get('/users/stats/website');
+
+export const fetchUsersByWebsite = (website, page = 1, limit = 10) => 
+  API.get(`/users/website/${website}?page=${page}&limit=${limit}`);
 
 // ==================== ANALYTICS ENDPOINTS ====================
 
