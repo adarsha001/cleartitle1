@@ -41,45 +41,41 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Google Sign-In
-  const googleLogin = async (googleToken, userType = 'buyer') => {
-    try {
-      console.log('Sending Google token to backend...');
+// In your AuthContext.jsx
+const googleLogin = async (token) => {
+  try {
+    console.log('Google login with token length:', token.length);
+    
+    // Send only the token string, not an object
+    const { data } = await API.post('/auth/google-signin', {
+      token: token // Just send the token string
+    });
+    
+    if (data.success && data.token && data.user) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
       
-      const { data } = await API.post('/auth/google', { 
-        token: googleToken, 
-        userType 
-      });
-      
-      console.log('Google Sign-In response:', data);
-      
-      if (data.success && data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
-        
-        setUser(data.user);
-        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
-        
-        return { success: true, user: data.user };
-      } else {
-        throw new Error(data.message || 'Google sign-in failed');
+      // Store website info if available from backend
+      if (data.user.sourceWebsite) {
+        localStorage.setItem('currentWebsite', data.user.sourceWebsite);
       }
-    } catch (error) {
-      console.error('❌ Google login error:', error);
-      
-      // More detailed error handling
-      if (error.response) {
-        // Server responded with error
-        throw new Error(error.response.data.message || 'Google sign-in failed');
-      } else if (error.request) {
-        // No response received
-        throw new Error('No response from server. Please check your connection.');
-      } else {
-        // Request setup error
-        throw new Error(error.message || 'Google sign-in failed');
+      if (data.user.websiteLogins) {
+        localStorage.setItem('websiteLogins', JSON.stringify(data.user.websiteLogins));
       }
+      
+      setUser(data.user);
+      setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
+      
+      return { success: true, user: data.user };
+    } else {
+      throw new Error(data.message || 'Google sign-in failed');
     }
-  };
+  } catch (error) {
+    console.error('❌ Google login error:', error);
+    throw error;
+  }
+};
 
   // Regular login
 const login = async (loginData) => {

@@ -22,7 +22,7 @@ export default function Register() {
     phoneNumber: "",
     gmail: "",
     password: "",
-    sourceWebsite: 'cleartitle1' 
+    sourceWebsite: 'cleartitle1' // Keep only for regular registration
   });
 
   const [captchaToken, setCaptchaToken] = useState("");
@@ -110,12 +110,8 @@ export default function Register() {
     console.log("Google Sign-In response received for registration");
     
     try {
-      // Pass sourceWebsite to Google login
-      const googleLoginData = {
-        token: response.credential,
-        sourceWebsite: 'cleartitle1' // Add sourceWebsite
-      };
-      await googleLogin(googleLoginData);
+      // Send only the token for Google login (remove sourceWebsite)
+      await googleLogin(response.credential);
       navigate("/profile");
     } catch (error) {
       console.error("Google Sign-In error:", error);
@@ -146,11 +142,11 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      // Ensure sourceWebsite is included in the registration data
+      // Keep sourceWebsite for regular registration
       await register({ 
         ...formData, 
         captchaToken,
-        sourceWebsite: 'cleartitle1' // Explicitly set sourceWebsite
+        sourceWebsite: 'cleartitle1'
       });
       navigate("/profile");
     } catch (error) {
