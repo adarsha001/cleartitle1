@@ -117,18 +117,23 @@ export default function Login() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await login(form.emailOrUsername, form.password);
-      navigate("/profile");
-    } catch (error) {
-      alert(error.message || "Invalid login credentials");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+  try {
+    // Update the login call to include sourceWebsite
+    await login({
+      emailOrUsername: form.emailOrUsername,
+      password: form.password,
+      sourceWebsite: 'cleartitle1' // Add sourceWebsite
+    });
+    navigate("/profile");
+  } catch (error) {
+    alert(error.message || "Invalid login credentials");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Fallback Google button
   const triggerManualGoogleSignIn = () => {
