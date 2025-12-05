@@ -519,7 +519,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={isLoading || !captchaToken}
-              className="group w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black py-4 rounded-xl hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 flex items-center justify-center gap-2 font-bold disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-lg border-2 border-yellow-400"
+              className="group w-full bg-gradient-to-t from-yellow-400 to-yellow-500 text-black py-4 rounded-xl hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 flex items-center justify-center gap-2 font-bold disabled:opacity-50 disabled:cursor-not-allowed mt-2 shadow-lg border-2 border-yellow-400"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">

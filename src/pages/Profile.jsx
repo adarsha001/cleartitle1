@@ -30,7 +30,7 @@ import {
   Twitter,
   Linkedin,
   Instagram,
-  BirthdayCake,
+  Cake,
   Map,
   Bell,
   Info,
@@ -1194,7 +1194,7 @@ export default function Profile() {
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700">Date of Birth</label>
                       <div className="relative">
-                        <BirthdayCake className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           name="dateOfBirth"
                           type="date"
