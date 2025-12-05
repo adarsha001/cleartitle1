@@ -37,14 +37,36 @@ import {
   Target,
   Award,
   FileText,
-  Lock
+  Lock,
+  Filter,
+  SortAsc,
+  SortDesc,
+  RefreshCw,
+  Download,
+  Share2,
+  ExternalLink,
+  MoreVertical
 } from 'lucide-react';
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
   const [userEnquiries, setUserEnquiries] = useState([]);
+  const [likedProperties, setLikedProperties] = useState([]);
+  const [postedProperties, setPostedProperties] = useState([]);
+  const [postedStats, setPostedStats] = useState({
+    total: 0,
+    approved: 0,
+    pending: 0,
+    rejected: 0,
+    active: 0,
+    sold: 0,
+    rented: 0,
+    expired: 0,
+    draft: 0
+  });
   const [loading, setLoading] = useState(true);
   const [enquiriesLoading, setEnquiriesLoading] = useState(false);
+  const [postedLoading, setPostedLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('favorites');
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
@@ -94,77 +116,152 @@ export default function Profile() {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('');
   const [avatarLoading, setAvatarLoading] = useState(false);
+  const [postedFilters, setPostedFilters] = useState({
+    status: 'all',
+    sortBy: 'createdAt',
+    sortOrder: 'desc'
+  });
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
 
+  // Single useEffect to fetch initial data
   useEffect(() => {
-    fetchUserProfile();
+    const fetchData = async () => {
+      try {
+        // Fetch user profile
+        const profileResponse = await API.get('/users/profile');
+        console.log("Full user profile response:", profileResponse.data);
+        setUserData(profileResponse.data.user);
+        
+        // Initialize edit form data
+        if (profileResponse.data.user) {
+          setEditFormData({
+            name: profileResponse.data.user.name || '',
+            lastName: profileResponse.data.user.lastName || '',
+            phoneNumber: profileResponse.data.user.phoneNumber || '',
+            alternativePhoneNumber: profileResponse.data.user.alternativePhoneNumber || '',
+            gmail: profileResponse.data.user.gmail || '',
+            userType: profileResponse.data.user.userType || 'buyer',
+            company: profileResponse.data.user.company || '',
+            languages: profileResponse.data.user.languages?.join(', ') || '',
+            dateOfBirth: profileResponse.data.user.dateOfBirth ? new Date(profileResponse.data.user.dateOfBirth).toISOString().split('T')[0] : '',
+            gender: profileResponse.data.user.gender || '',
+            occupation: profileResponse.data.user.occupation || '',
+            preferredLocation: profileResponse.data.user.preferredLocation || '',
+            about: profileResponse.data.user.about || '',
+            interests: profileResponse.data.user.interests?.join(', ') || '',
+            website: profileResponse.data.user.website || '',
+            specialization: profileResponse.data.user.specialization?.join(', ') || '',
+            contactPreferences: profileResponse.data.user.contactPreferences || {
+              phone: true,
+              email: true,
+              whatsapp: true,
+              sms: false
+            },
+            socialMedia: profileResponse.data.user.socialMedia || {
+              facebook: '',
+              twitter: '',
+              linkedin: '',
+              instagram: ''
+            },
+            officeAddress: profileResponse.data.user.officeAddress || {
+              street: '',
+              city: '',
+              state: '',
+              pincode: ''
+            },
+            notifications: profileResponse.data.user.notifications || {
+              emailNotifications: true,
+              propertyAlerts: true,
+              priceDropAlerts: true,
+              newPropertyAlerts: true
+            }
+          });
+          setAvatarPreview(profileResponse.data.user.avatar);
+        }
+        
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
   }, []);
 
+  // Separate useEffect for tab-specific data
   useEffect(() => {
-    if (activeTab === 'enquiries') {
-      fetchUserEnquiries();
-    }
-  }, [activeTab]);
+    const fetchTabData = async () => {
+      if (activeTab === 'enquiries') {
+        await fetchUserEnquiries();
+      } else if (activeTab === 'favorites') {
+        await fetchLikedProperties();
+      } else if (activeTab === 'posted') {
+        await fetchPostedProperties();
+      }
+    };
+    
+    fetchTabData();
+  }, [activeTab, postedFilters]);
 
-  const fetchUserProfile = async () => {
+  // Fetch posted properties
+  const fetchPostedProperties = async () => {
+    setPostedLoading(true);
     try {
-      const response = await API.get('/users/profile');
-      console.log("Full user profile response:", response.data);
-      setUserData(response.data.user);
+      console.log("Fetching posted properties with filters:", postedFilters);
+      const response = await API.get('/users/posted-properties', {
+        params: postedFilters
+      });
       
-      if (response.data.user) {
-        setEditFormData({
-          name: response.data.user.name || '',
-          lastName: response.data.user.lastName || '',
-          phoneNumber: response.data.user.phoneNumber || '',
-          alternativePhoneNumber: response.data.user.alternativePhoneNumber || '',
-          gmail: response.data.user.gmail || '',
-          userType: response.data.user.userType || 'buyer',
-          company: response.data.user.company || '',
-          languages: response.data.user.languages?.join(', ') || '',
-          dateOfBirth: response.data.user.dateOfBirth ? new Date(response.data.user.dateOfBirth).toISOString().split('T')[0] : '',
-          gender: response.data.user.gender || '',
-          occupation: response.data.user.occupation || '',
-          preferredLocation: response.data.user.preferredLocation || '',
-          about: response.data.user.about || '',
-          interests: response.data.user.interests?.join(', ') || '',
-          website: response.data.user.website || '',
-          specialization: response.data.user.specialization?.join(', ') || '',
-          contactPreferences: response.data.user.contactPreferences || {
-            phone: true,
-            email: true,
-            whatsapp: true,
-            sms: false
-          },
-          socialMedia: response.data.user.socialMedia || {
-            facebook: '',
-            twitter: '',
-            linkedin: '',
-            instagram: ''
-          },
-          officeAddress: response.data.user.officeAddress || {
-            street: '',
-            city: '',
-            state: '',
-            pincode: ''
-          },
-          notifications: response.data.user.notifications || {
-            emailNotifications: true,
-            propertyAlerts: true,
-            priceDropAlerts: true,
-            newPropertyAlerts: true
-          }
+      console.log("Posted properties response:", response.data);
+      
+      if (response.data.success) {
+        setPostedProperties(response.data.postedProperties || []);
+        setPostedStats(response.data.stats || {
+          total: 0,
+          approved: 0,
+          pending: 0,
+          rejected: 0,
+          active: 0,
+          sold: 0,
+          rented: 0,
+          expired: 0,
+          draft: 0
         });
-        setAvatarPreview(response.data.user.avatar);
+      } else {
+        console.error("Failed to fetch posted properties:", response.data.message);
+        setPostedProperties([]);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error fetching posted properties:', error);
+      console.error('Error details:', error.response?.data);
+      setPostedProperties([]);
     } finally {
-      setLoading(false);
+      setPostedLoading(false);
     }
   };
 
+  // Fetch liked properties
+  const fetchLikedProperties = async () => {
+    try {
+      console.log("Fetching liked properties...");
+      const response = await API.get('/users/liked-properties');
+      console.log("Liked properties response:", response.data);
+      
+      if (response.data.success) {
+        setLikedProperties(response.data.likedProperties || []);
+      } else {
+        console.error("Failed to fetch liked properties:", response.data.message);
+        setLikedProperties([]);
+      }
+    } catch (error) {
+      console.error('Error fetching liked properties:', error);
+      setLikedProperties([]);
+    }
+  };
+
+  // Fetch user enquiries
   const fetchUserEnquiries = async () => {
     setEnquiriesLoading(true);
     try {
@@ -178,6 +275,430 @@ export default function Profile() {
     }
   };
 
+  // Handle filter changes for posted properties
+  const handleFilterChange = (filterType, value) => {
+    setPostedFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  // Handle sort changes
+  const handleSortChange = (sortBy) => {
+    setPostedFilters(prev => ({
+      ...prev,
+      sortBy,
+      sortOrder: prev.sortBy === sortBy && prev.sortOrder === 'desc' ? 'asc' : 'desc'
+    }));
+  };
+
+  // Handle delete property
+  const handleDeleteProperty = async (propertyId, e) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await API.delete(`/properties/${propertyId}`);
+      // Update the posted properties list immediately
+      setPostedProperties(prev => prev.filter(property => property._id !== propertyId));
+      // Update stats
+      setPostedStats(prev => ({
+        ...prev,
+        total: prev.total - 1
+      }));
+      alert('Property deleted successfully');
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      alert('Error deleting property');
+    }
+  };
+
+  // Handle edit property
+  const handleEditProperty = (propertyId, e) => {
+    e.stopPropagation();
+    navigate(`/edit-property/${propertyId}`);
+  };
+
+  // Handle view property
+  const handleViewProperty = (propertyId, e) => {
+    e.stopPropagation();
+    navigate(`/property/${propertyId}`);
+  };
+
+  // Handle share property
+  const handleShareProperty = (propertyId, e) => {
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/property/${propertyId}`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'Check out this property',
+        url: shareUrl
+      });
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      alert('Link copied to clipboard!');
+    }
+  };
+
+  // Handle download property details
+  const handleDownloadProperty = (property, e) => {
+    e.stopPropagation();
+    const propertyDetails = `
+      Property: ${property.title}
+      Price: ₹${property.price?.toLocaleString('en-IN')}
+      Location: ${property.city}
+      Status: ${property.approvalStatus}
+      Listed: ${new Date(property.createdAt).toLocaleDateString()}
+      
+      ${property.description || ''}
+    `;
+    
+    const blob = new Blob([propertyDetails], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${property.title.replace(/\s+/g, '-')}-details.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Enhanced PropertyCard for posted properties
+  const PostedPropertyCard = ({ property }) => {
+    const [showActions, setShowActions] = useState(false);
+    console.log("properties",property)
+const getImageUrl = () => {
+  // Check if property.images exists and has at least one image
+  if (property.images && property.images.length > 0 && property.images[0]) {
+    console.log("First image object:", property.images[0]);
+    
+    // Try different possible property names
+    if (property.images[0].imageUrl) {
+      return property.images[0].imageUrl;
+    }
+    if (property.images[0].url) {
+      return property.images[0].url;
+    }
+    if (property.images[0].image) {
+      return property.images[0].image;
+    }
+    if (property.images[0].src) {
+      return property.images[0].src;
+    }
+  }
+  
+  // Fallback to property.imageUrls if exists
+  if (property.imageUrls && property.imageUrls.length > 0) {
+    return property.imageUrls[0];
+  }
+
+  return null;
+};
+    const imageUrl = getImageUrl();
+
+    return (
+      <div 
+        className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer hover:border-blue-900/20 group"
+        onClick={() => navigate(`/property/${property._id}`)}
+      >
+        <div className="relative">
+          <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+            <img 
+              src={imageUrl}
+              alt={property.title || 'Property'}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          
+            />
+            <div 
+              className="w-full h-full hidden items-center justify-center bg-gray-200"
+              style={{ display: 'none' }}
+            >
+              <Home className="w-12 h-12 text-gray-400" />
+              <span className="ml-2 text-gray-500">No Image Available</span>
+            </div>
+          </div>
+          
+          {/* Status badges */}
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
+            {property.isVerified && (
+              <div className="bg-blue-900 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Verified
+              </div>
+            )}
+            {property.isFeatured && (
+              <div className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                Featured
+              </div>
+            )}
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(property.approvalStatus)}`}>
+              {property.approvalStatus}
+            </div>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="absolute top-3 right-3 flex gap-2">
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowActions(!showActions);
+                }}
+                className="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors shadow-sm"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+              
+              {/* Dropdown actions */}
+              {showActions && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewProperty(property._id, e);
+                      setShowActions(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View Property
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditProperty(property._id, e);
+                      setShowActions(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit Property
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShareProperty(property._id, e);
+                      setShowActions(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share Property
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadProperty(property, e);
+                      setShowActions(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Details
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteProperty(property._id, e);
+                      setShowActions(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Property
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Overlay on hover */}
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+        </div>
+        
+        <div className="p-4">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-gray-900 line-clamp-1">{property.title || 'Untitled Property'}</h3>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">
+                {new Date(property.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+          
+          <p className="text-2xl font-bold text-blue-900 mb-2">
+            {property.price ? `₹${property.price.toLocaleString('en-IN')}` : 'Price not set'}
+          </p>
+          
+          <div className="flex items-center text-gray-600 mb-3">
+            <MapPin className="w-4 h-4 mr-1" />
+            <span className="text-sm">
+              {property.city || property.propertyLocation?.city || property.location?.city || 'Location not specified'}
+            </span>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 mb-3">
+            {property.attributes?.bedrooms && (
+              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                {property.attributes.bedrooms} Beds
+              </span>
+            )}
+            {property.attributes?.bathrooms && (
+              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                {property.attributes.bathrooms} Baths
+              </span>
+            )}
+            {property.attributes?.area && (
+              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                {property.attributes.area} sqft
+              </span>
+            )}
+          </div>
+          
+          {/* Additional info */}
+          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+              {property.category && (
+                <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">
+                  {property.category}
+                </span>
+              )}
+              {property.approvalStatus === 'rejected' && property.rejectionReason && (
+                <span className="text-xs text-red-600" title={property.rejectionReason}>
+                  Rejected
+                </span>
+              )}
+            </div>
+            <button
+              onClick={(e) => handleViewProperty(property._id, e)}
+              className="flex items-center gap-1 text-blue-900 hover:text-blue-700 text-sm font-medium"
+            >
+              <ExternalLink className="w-3 h-3" />
+              View
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Original PropertyCard for favorites and posted properties
+  const PropertyCard = ({ property, likedAt, showDelete = false, onDelete, showStatus = false, status }) => {
+    // Get the first image or use placeholder
+    const imageUrl = property.images?.[0]?.url || 
+                    property.imageUrls?.[0] || 
+                    property.images?.[0] 
+    
+    return (
+      <div 
+        className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer hover:border-blue-900/20"
+        onClick={() => handlePropertyClick(property._id)}
+      >
+        <div className="relative">
+          <img 
+            src={imageUrl}
+            alt={property.title}
+            className="w-full h-48 object-cover"
+          />
+          {property.isVerified && (
+            <div className="absolute top-3 left-3 bg-blue-900 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+              <CheckCircle className="w-3 h-3" />
+              Verified
+            </div>
+          )}
+          {property.isFeatured && (
+            <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+              Featured
+            </div>
+          )}
+          {showDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(property._id, e);
+              }}
+              className="absolute top-3 right-3 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        
+        <div className="p-4">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-bold text-gray-900 line-clamp-1">{property.title}</h3>
+            {showStatus && status && (
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(status)}`}>
+                {status}
+              </span>
+            )}
+          </div>
+          
+          <p className="text-2xl font-bold text-blue-900 mb-2">₹{property.price?.toLocaleString('en-IN') || '0'}</p>
+          
+          <div className="flex items-center text-gray-600 mb-3">
+            <MapPin className="w-4 h-4 mr-1" />
+            <span className="text-sm">{property.city || property.propertyLocation?.city || 'Location not specified'}</span>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 mb-3">
+            {property.attributes?.bedrooms && (
+              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                {property.attributes.bedrooms} Beds
+              </span>
+            )}
+            {property.attributes?.bathrooms && (
+              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                {property.attributes.bathrooms} Baths
+              </span>
+            )}
+            {property.attributes?.area && (
+              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                {property.attributes.area} sqft
+              </span>
+            )}
+          </div>
+          
+          {likedAt && (
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+              <div className="flex items-center text-gray-500 text-sm">
+                <Heart className="w-4 h-4 mr-1 fill-red-500 text-red-500" />
+                Liked {new Date(likedAt).toLocaleDateString()}
+              </div>
+              <button
+                onClick={(e) => handleUnlike(property._id, e)}
+                className="text-red-500 hover:text-red-700 text-sm font-medium"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Handle property click
+  const handlePropertyClick = (propertyId) => {
+    navigate(`/property/${propertyId}`);
+  };
+
+  // Handle unlike property
+  const handleUnlike = async (propertyId, e) => {
+    e.stopPropagation();
+    try {
+      await API.delete(`/users/like/${propertyId}`);
+      // Update the liked properties list immediately
+      setLikedProperties(prev => prev.filter(item => item.property?._id !== propertyId));
+    } catch (error) {
+      console.error('Error unliking property:', error);
+    }
+  };
+
+  // Handle edit click
   const handleEditClick = () => {
     setIsEditing(true);
     setActiveTab('edit');
@@ -185,6 +706,7 @@ export default function Profile() {
     setEditSuccess('');
   };
 
+  // Handle cancel edit
   const handleCancelEdit = () => {
     setIsEditing(false);
     setActiveTab('favorites');
@@ -236,6 +758,7 @@ export default function Profile() {
     setAvatarPreview(userData?.avatar || '');
   };
 
+  // Handle edit form change
   const handleEditChange = (e) => {
     const { name, value, type, checked } = e.target;
     
@@ -277,6 +800,7 @@ export default function Profile() {
     setEditSuccess('');
   };
 
+  // Handle avatar change
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -290,6 +814,7 @@ export default function Profile() {
     }
   };
 
+  // Handle save changes
   const handleSaveChanges = async (e) => {
     e.preventDefault();
     setEditError('');
@@ -359,6 +884,7 @@ export default function Profile() {
     }
   };
 
+  // Upload avatar
   const uploadAvatar = async () => {
     if (!avatarFile) return;
     
@@ -388,42 +914,7 @@ export default function Profile() {
     }
   };
 
-  const handlePropertyClick = (propertyId) => {
-    navigate(`/property/${propertyId}`);
-  };
-
-  const handleUnlike = async (propertyId, e) => {
-    e.stopPropagation();
-    try {
-      await API.delete(`/users/like/${propertyId}`);
-      setUserData(prev => ({
-        ...prev,
-        likedProperties: prev.likedProperties.filter(p => p.property?._id !== propertyId)
-      }));
-    } catch (error) {
-      console.error('Error unliking property:', error);
-    }
-  };
-
-  const handleDeleteProperty = async (propertyId, e) => {
-    e.stopPropagation();
-    if (!window.confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      await API.delete(`/properties/${propertyId}`);
-      setUserData(prev => ({
-        ...prev,
-        postedProperties: prev.postedProperties.filter(p => p.property?._id !== propertyId)
-      }));
-      alert('Property deleted successfully');
-    } catch (error) {
-      console.error('Error deleting property:', error);
-      alert('Error deleting property');
-    }
-  };
-
+  // Handle delete enquiry
   const handleDeleteEnquiry = async (enquiryId, e) => {
     e.stopPropagation();
     if (!window.confirm('Are you sure you want to delete this enquiry?')) {
@@ -440,99 +931,7 @@ export default function Profile() {
     }
   };
 
-  const PropertyCard = ({ property, likedAt, showDelete = false, onDelete, showStatus = false, status }) => {
-    return (
-      <div 
-        className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer hover:border-blue-900/20"
-        onClick={() => handlePropertyClick(property._id)}
-      >
-        <div className="relative">
-          <img 
-            src={property.images?.[0] || '/api/placeholder/400/300'} 
-            alt={property.title}
-            className="w-full h-48 object-cover"
-            onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/400x300?text=Property+Image';
-            }}
-          />
-          {property.isVerified && (
-            <div className="absolute top-3 left-3 bg-blue-900 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" />
-              Verified
-            </div>
-          )}
-          {property.isFeatured && (
-            <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-              Featured
-            </div>
-          )}
-          {showDelete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(property._id, e);
-              }}
-              className="absolute top-3 right-3 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-        
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-gray-900 line-clamp-1">{property.title}</h3>
-            {showStatus && status && (
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(status)}`}>
-                {status}
-              </span>
-            )}
-          </div>
-          
-          <p className="text-2xl font-bold text-blue-900 mb-2">₹{property.price?.toLocaleString('en-IN') || '0'}</p>
-          
-          <div className="flex items-center text-gray-600 mb-3">
-            <MapPin className="w-4 h-4 mr-1" />
-            <span className="text-sm">{property.city || 'Location not specified'}</span>
-          </div>
-          
-          <div className="flex flex-wrap gap-2 mb-3">
-            {property.attributes?.bedrooms && (
-              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                {property.attributes.bedrooms} Beds
-              </span>
-            )}
-            {property.attributes?.bathrooms && (
-              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                {property.attributes.bathrooms} Baths
-              </span>
-            )}
-            {property.attributes?.area && (
-              <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                {property.attributes.area} sqft
-              </span>
-            )}
-          </div>
-          
-          {likedAt && (
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-              <div className="flex items-center text-gray-500 text-sm">
-                <Heart className="w-4 h-4 mr-1 fill-red-500 text-red-500" />
-                Liked {new Date(likedAt).toLocaleDateString()}
-              </div>
-              <button
-                onClick={(e) => handleUnlike(property._id, e)}
-                className="text-red-500 hover:text-red-700 text-sm font-medium"
-              >
-                Remove
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
+  // EnquiryCard component
   const EnquiryCard = ({ enquiry }) => {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg transition-all duration-300">
@@ -571,11 +970,6 @@ export default function Profile() {
               <span className="font-medium">Phone:</span>
               <span className="ml-2">{enquiry.phone}</span>
             </div>
-            <div className="flex items-center text-gray-700">
-              <Mail className="w-4 h-4 mr-2 text-blue-900" />
-              <span className="font-medium">Email:</span>
-              <span className="ml-2">{enquiry.email}</span>
-            </div>
           </div>
           
           <div className="space-y-2">
@@ -599,6 +993,7 @@ export default function Profile() {
     );
   };
 
+  // Loading state
   if (loading) return (
     <div className="min-h-screen bg-white py-8">
       <div className="max-w-7xl mx-auto px-4">
@@ -610,6 +1005,7 @@ export default function Profile() {
     </div>
   );
 
+  // Error state
   if (!userData) return (
     <div className="min-h-screen bg-white py-8">
       <div className="max-w-7xl mx-auto px-4">
@@ -618,26 +1014,10 @@ export default function Profile() {
     </div>
   );
 
-  // Filter out any null or invalid properties
-  const validLikedProperties = (userData.likedProperties || [])
-    .filter(item => item?.property && item.property._id)
-    .map(item => ({
-      property: item.property,
-      likedAt: item.likedAt
-    }));
+  // Filter liked properties
+  const validLikedProperties = likedProperties.filter(item => item?.property && item.property._id);
 
-  const validPostedProperties = (userData.postedProperties || [])
-    .filter(item => item?.property && item.property._id)
-    .map(item => ({
-      property: item.property,
-      postedAt: item.postedAt,
-      status: item.status
-    }));
-
-  const approvedProperties = validPostedProperties.filter(item => item.property.approvalStatus === 'approved');
-  const pendingProperties = validPostedProperties.filter(item => item.property.approvalStatus === 'pending');
-  const rejectedProperties = validPostedProperties.filter(item => item.property.approvalStatus === 'rejected');
-
+  // Get status badge style
   const getStatusBadge = (status) => {
     const statusColors = {
       pending: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
@@ -656,6 +1036,7 @@ export default function Profile() {
     return statusColors[status] || 'bg-gray-100 text-gray-800 border border-gray-200';
   };
 
+  // User type options
   const userTypes = [
     { value: "buyer", label: "Property Buyer" },
     { value: "seller", label: "Property Seller" },
@@ -666,6 +1047,7 @@ export default function Profile() {
     { value: "other", label: "Other" }
   ];
 
+  // Gender options
   const genderOptions = [
     { value: "", label: "Select Gender" },
     { value: "male", label: "Male" },
@@ -675,7 +1057,7 @@ export default function Profile() {
   ];
 
   return (
-    <div className="min-h-screen bg-white py-8">
+    <div className="min-h-screen bg-white py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Header */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
@@ -754,127 +1136,428 @@ export default function Profile() {
               </div>
             </div>
             
-            <div className="flex gap-3">
-              {!isEditing && (
-                <button
-                  onClick={handleEditClick}
-                  className="flex items-center gap-2 bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors shadow-md"
-                >
-                  <Edit className="w-4 h-4" />
-                  Edit Profile
-                </button>
-              )}
-              {isEditing && activeTab === 'edit' && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCancelEdit}
-                    className="flex items-center gap-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
+            {!isEditing && activeTab !== 'edit' && (
+              <button
+                onClick={handleEditClick}
+                className="bg-blue-900 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors flex items-center gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                Edit Profile
+              </button>
+            )}
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 pt-6 border-t border-gray-200">
+          {/* Stats Grid - Expanded with All Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 pt-6 border-t border-gray-200">
+            {/* Personal Information */}
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <User className="w-5 h-5 text-blue-900" />
-                Basic Information
+                Personal Information
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center text-gray-700">
+                  <User className="w-4 h-4 mr-3 text-blue-900" />
+                  <div>
+                    <span className="font-medium">Name:</span>
+                    <span className="ml-2">{userData.name} {userData.lastName}</span>
+                  </div>
+                </div>
+                <div className="flex items-center text-gray-700">
                   <Mail className="w-4 h-4 mr-3 text-blue-900" />
-                  <span className="truncate">{userData.gmail}</span>
+                  <div>
+                    <span className="font-medium">Email:</span>
+                    <span className="ml-2 truncate">{userData.gmail}</span>
+                  </div>
                 </div>
                 <div className="flex items-center text-gray-700">
                   <Phone className="w-4 h-4 mr-3 text-blue-900" />
-                  <span>{userData.phoneNumber}</span>
-                  {userData.isGoogleAuth && userData.phoneNumber === '1234567890' && (
-                    <span className="ml-2 text-xs text-red-500 bg-red-50 px-2 py-1 rounded">
-                      Update Required
-                    </span>
-                  )}
+                  <div>
+                    <span className="font-medium">Phone:</span>
+                    <span className="ml-2">{userData.phoneNumber}</span>
+                    {userData.isGoogleAuth && userData.phoneNumber === '1234567890' && (
+                      <span className="ml-2 text-xs text-red-500 bg-red-50 px-2 py-1 rounded">
+                        Update Required
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {userData.alternativePhoneNumber && (
+                  <div className="flex items-center text-gray-700">
+                    <PhoneCall className="w-4 h-4 mr-3 text-blue-900" />
+                    <div>
+                      <span className="font-medium">Alt Phone:</span>
+                      <span className="ml-2">{userData.alternativePhoneNumber}</span>
+                    </div>
+                  </div>
+                )}
+                {userData.dateOfBirth && (
+                  <div className="flex items-center text-gray-700">
+                    <Cake className="w-4 h-4 mr-3 text-blue-900" />
+                    <div>
+                      <span className="font-medium">Date of Birth:</span>
+                      <span className="ml-2">{new Date(userData.dateOfBirth).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                )}
+                {userData.gender && (
+                  <div className="flex items-center text-gray-700">
+                    <User className="w-4 h-4 mr-3 text-blue-900" />
+                    <div>
+                      <span className="font-medium">Gender:</span>
+                      <span className="ml-2 capitalize">{userData.gender}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Professional Information */}
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-green-900" />
+                Professional Information
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center text-gray-700">
+                  <Building2 className="w-4 h-4 mr-3 text-green-900" />
+                  <div>
+                    <span className="font-medium">User Type:</span>
+                    <span className="ml-2 capitalize">{userData.userType}</span>
+                  </div>
                 </div>
                 {userData.occupation && (
                   <div className="flex items-center text-gray-700">
-                    <Briefcase className="w-4 h-4 mr-3 text-blue-900" />
-                    <span>{userData.occupation}</span>
+                    <Briefcase className="w-4 h-4 mr-3 text-green-900" />
+                    <div>
+                      <span className="font-medium">Occupation:</span>
+                      <span className="ml-2">{userData.occupation}</span>
+                    </div>
+                  </div>
+                )}
+                {userData.company && (
+                  <div className="flex items-center text-gray-700">
+                    <Building2 className="w-4 h-4 mr-3 text-green-900" />
+                    <div>
+                      <span className="font-medium">Company:</span>
+                      <span className="ml-2">{userData.company}</span>
+                    </div>
                   </div>
                 )}
                 {userData.preferredLocation && (
                   <div className="flex items-center text-gray-700">
-                    <Map className="w-4 h-4 mr-3 text-blue-900" />
-                    <span>{userData.preferredLocation}</span>
+                    <Map className="w-4 h-4 mr-3 text-green-900" />
+                    <div>
+                      <span className="font-medium">Preferred Location:</span>
+                      <span className="ml-2">{userData.preferredLocation}</span>
+                    </div>
+                  </div>
+                )}
+                {userData.languages && userData.languages.length > 0 && (
+                  <div className="flex items-center text-gray-700">
+                    <Globe className="w-4 h-4 mr-3 text-green-900" />
+                    <div>
+                      <span className="font-medium">Languages:</span>
+                      <span className="ml-2">{userData.languages.join(', ')}</span>
+                    </div>
+                  </div>
+                )}
+                {userData.website && (
+                  <div className="flex items-center text-gray-700">
+                    <GlobeIcon className="w-4 h-4 mr-3 text-green-900" />
+                    <div>
+                      <span className="font-medium">Website:</span>
+                      <a href={userData.website} target="_blank" rel="noopener noreferrer" 
+                         className="ml-2 text-blue-600 hover:underline truncate">
+                        {userData.website}
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
+            {/* Account & Stats */}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 border border-purple-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-blue-900" />
-                Statistics
+                <Shield className="w-5 h-5 text-purple-900" />
+                Account & Statistics
               </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-                  <div className="text-2xl font-bold text-blue-900">
-                    {validLikedProperties.length}
+              <div className="space-y-3">
+                <div className="flex items-center text-gray-700">
+                  <User className="w-4 h-4 mr-3 text-purple-900" />
+                  <div>
+                    <span className="font-medium">Username:</span>
+                    <span className="ml-2">@{userData.username}</span>
                   </div>
-                  <div className="text-sm text-gray-600">Favorites</div>
                 </div>
-                <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-                  <div className="text-2xl font-bold text-green-600">
-                    {validPostedProperties.length}
+                <div className="flex items-center text-gray-700">
+                  <Calendar className="w-4 h-4 mr-3 text-purple-900" />
+                  <div>
+                    <span className="font-medium">Member Since:</span>
+                    <span className="ml-2">{new Date(userData.createdAt).toLocaleDateString()}</span>
                   </div>
-                  <div className="text-sm text-gray-600">Listed</div>
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-blue-900" />
-                Property Status
-              </h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Approved:</span>
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
-                    {approvedProperties.length}
-                  </span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                    <div className="text-xl font-bold text-blue-900">
+                      {validLikedProperties.length}
+                    </div>
+                    <div className="text-xs text-gray-600">Favorites</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                    <div className="text-xl font-bold text-green-600">
+                      {postedProperties.length}
+                    </div>
+                    <div className="text-xs text-gray-600">Listed</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                    <div className="text-xl font-bold text-purple-600">
+                      {userEnquiries.length}
+                    </div>
+                    <div className="text-xs text-gray-600">Enquiries</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                    <div className="text-xl font-bold text-yellow-600">
+                      {postedStats.approved}
+                    </div>
+                    <div className="text-xs text-gray-600">Approved</div>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Pending:</span>
-                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm font-medium">
-                    {pendingProperties.length}
-                  </span>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {userData.isAdmin && (
+                    <span className="bg-green-100 text-green-900 px-2 py-1 rounded-full text-xs font-medium">
+                      <Lock className="w-3 h-3 inline mr-1" />
+                      Admin
+                    </span>
+                  )}
+                  {userData.isGoogleAuth && (
+                    <span className="bg-blue-100 text-blue-900 px-2 py-1 rounded-full text-xs font-medium">
+                      <CheckCircle className="w-3 h-3 inline mr-1" />
+                      Google Account
+                    </span>
+                  )}
+                  {userData.isVerified && (
+                    <span className="bg-green-100 text-green-900 px-2 py-1 rounded-full text-xs font-medium">
+                      <Award className="w-3 h-3 inline mr-1" />
+                      Verified
+                    </span>
+                  )}
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Rejected:</span>
-                  <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
-                    {rejectedProperties.length}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Globe className="w-5 h-5 text-blue-900" />
-                Enquiries
-              </h3>
-              <div className="bg-white rounded-lg p-4 text-center shadow-sm">
-                <div className="text-2xl font-bold text-blue-900">
-                  {userEnquiries.length}
-                </div>
-                <div className="text-sm text-gray-600">Total Enquiries</div>
               </div>
             </div>
           </div>
+
+          {/* Additional Information Section */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Office Address */}
+            {(userData.officeAddress?.street || userData.officeAddress?.city) && (
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-5 border border-orange-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-orange-900" />
+                  Office Address
+                </h3>
+                <div className="space-y-2">
+                  {userData.officeAddress.street && (
+                    <div className="flex items-start text-gray-700">
+                      <MapPin className="w-4 h-4 mr-3 text-orange-900 mt-1" />
+                      <span>{userData.officeAddress.street}</span>
+                    </div>
+                  )}
+                  {(userData.officeAddress.city || userData.officeAddress.state) && (
+                    <div className="flex items-center text-gray-700 ml-7">
+                      <span>
+                        {userData.officeAddress.city}
+                        {userData.officeAddress.city && userData.officeAddress.state && ', '}
+                        {userData.officeAddress.state}
+                      </span>
+                    </div>
+                  )}
+                  {userData.officeAddress.pincode && (
+                    <div className="flex items-center text-gray-700 ml-7">
+                      <span>Pincode: {userData.officeAddress.pincode}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Social Media Links */}
+            {(userData.socialMedia?.facebook || userData.socialMedia?.twitter || 
+              userData.socialMedia?.linkedin || userData.socialMedia?.instagram) && (
+              <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-5 border border-pink-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <GlobeIcon className="w-5 h-5 text-pink-900" />
+                  Social Media
+                </h3>
+                <div className="space-y-3">
+                  {userData.socialMedia.facebook && (
+                    <div className="flex items-center text-gray-700">
+                      <Facebook className="w-4 h-4 mr-3 text-blue-600" />
+                      <a href={userData.socialMedia.facebook} target="_blank" rel="noopener noreferrer" 
+                         className="text-blue-600 hover:underline truncate">
+                        Facebook Profile
+                      </a>
+                    </div>
+                  )}
+                  {userData.socialMedia.twitter && (
+                    <div className="flex items-center text-gray-700">
+                      <Twitter className="w-4 h-4 mr-3 text-blue-400" />
+                      <a href={userData.socialMedia.twitter} target="_blank" rel="noopener noreferrer" 
+                         className="text-blue-600 hover:underline truncate">
+                        Twitter Profile
+                      </a>
+                    </div>
+                  )}
+                  {userData.socialMedia.linkedin && (
+                    <div className="flex items-center text-gray-700">
+                      <Linkedin className="w-4 h-4 mr-3 text-blue-700" />
+                      <a href={userData.socialMedia.linkedin} target="_blank" rel="noopener noreferrer" 
+                         className="text-blue-600 hover:underline truncate">
+                        LinkedIn Profile
+                      </a>
+                    </div>
+                  )}
+                  {userData.socialMedia.instagram && (
+                    <div className="flex items-center text-gray-700">
+                      <Instagram className="w-4 h-4 mr-3 text-pink-600" />
+                      <a href={userData.socialMedia.instagram} target="_blank" rel="noopener noreferrer" 
+                         className="text-blue-600 hover:underline truncate">
+                        Instagram Profile
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* About & Specialization Section */}
+          <div className="mt-8">
+            <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-5 border border-cyan-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Info className="w-5 h-5 text-cyan-900" />
+                Additional Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* About Section */}
+                {userData.about && (
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-2">About</h4>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {userData.about}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Interests & Specialization */}
+                <div>
+                  {(userData.interests && userData.interests.length > 0) && (
+                    <div className="mb-4">
+                      <h4 className="font-medium text-gray-700 mb-2">Interests & Hobbies</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {userData.interests.map((interest, index) => (
+                          <span key={index} className="bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-xs">
+                            {interest}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {(userData.specialization && userData.specialization.length > 0) && (
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">Specialization</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {userData.specialization.map((spec, index) => (
+                          <span key={index} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs">
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact Preferences Section */}
+          {(userData.contactPreferences || userData.notifications) && (
+            <div className="mt-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Bell className="w-5 h-5 text-gray-900" />
+                Preferences
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Contact Preferences */}
+                {userData.contactPreferences && (
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-3">Contact Preferences</h4>
+                    <div className="space-y-2">
+                      {userData.contactPreferences.phone && (
+                        <div className="flex items-center text-gray-600">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                          <span className="text-sm">Phone Calls</span>
+                        </div>
+                      )}
+                      {userData.contactPreferences.email && (
+                        <div className="flex items-center text-gray-600">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                          <span className="text-sm">Email</span>
+                        </div>
+                      )}
+                      {userData.contactPreferences.whatsapp && (
+                        <div className="flex items-center text-gray-600">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                          <span className="text-sm">WhatsApp</span>
+                        </div>
+                      )}
+                      {userData.contactPreferences.sms && (
+                        <div className="flex items-center text-gray-600">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                          <span className="text-sm">SMS</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Notification Preferences */}
+                {userData.notifications && (
+                  <div>
+                    <h4 className="font-medium text-gray-700 mb-3">Notification Preferences</h4>
+                    <div className="space-y-2">
+                      {userData.notifications.emailNotifications && (
+                        <div className="flex items-center text-gray-600">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                          <span className="text-sm">Email Notifications</span>
+                        </div>
+                      )}
+                      {userData.notifications.propertyAlerts && (
+                        <div className="flex items-center text-gray-600">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                          <span className="text-sm">Property Alerts</span>
+                        </div>
+                      )}
+                      {userData.notifications.priceDropAlerts && (
+                        <div className="flex items-center text-gray-600">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                          <span className="text-sm">Price Drop Alerts</span>
+                        </div>
+                      )}
+                      {userData.notifications.newPropertyAlerts && (
+                        <div className="flex items-center text-gray-600">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                          <span className="text-sm">New Property Alerts</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Additional Info for Google Users */}
           {userData.isGoogleAuth && userData.phoneNumber === '1234567890' && (
@@ -921,7 +1604,7 @@ export default function Profile() {
               }`}
             >
               <Home className="w-4 h-4 inline mr-2" />
-              My Listed Properties ({validPostedProperties.length})
+              My Listed Properties ({postedProperties.length})
             </button>
             <button
               onClick={() => { setActiveTab('enquiries'); setIsEditing(false); }}
@@ -957,6 +1640,7 @@ export default function Profile() {
                 <Heart className="w-6 h-6 text-blue-900" />
                 Favorite Properties
               </h2>
+              
               {validLikedProperties.length === 0 ? (
                 <div className="text-center py-12">
                   <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -990,54 +1674,207 @@ export default function Profile() {
                 My Listed Properties
               </h2>
               
-              {/* Status Tabs */}
-              <div className="flex space-x-4 mb-6 overflow-x-auto pb-2">
-                <button
-                  className="px-4 py-2 bg-blue-900 text-white rounded-lg whitespace-nowrap"
-                >
-                  All ({validPostedProperties.length})
-                </button>
-                <button
-                  className="px-4 py-2 bg-green-100 text-green-800 rounded-lg whitespace-nowrap"
-                >
-                  Approved ({approvedProperties.length})
-                </button>
-                <button
-                  className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg whitespace-nowrap"
-                >
-                  Pending ({pendingProperties.length})
-                </button>
-                <button
-                  className="px-4 py-2 bg-red-100 text-red-800 rounded-lg whitespace-nowrap"
-                >
-                  Rejected ({rejectedProperties.length})
-                </button>
+              {/* Stats Overview */}
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-900">{postedStats.total}</div>
+                    <div className="text-sm text-gray-600">Total Listed</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{postedStats.approved}</div>
+                    <div className="text-sm text-gray-600">Approved</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-yellow-600">{postedStats.pending}</div>
+                    <div className="text-sm text-gray-600">Pending</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">{postedStats.rejected}</div>
+                    <div className="text-sm text-gray-600">Rejected</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Filters and Sort Bar */}
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="flex-1 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleFilterChange('status', 'all')}
+                    className={`px-4 py-2 rounded-lg whitespace-nowrap flex items-center gap-2 ${
+                      postedFilters.status === 'all'
+                        ? 'bg-blue-900 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Filter className="w-4 h-4" />
+                    All ({postedStats.total})
+                  </button>
+                  <button
+                    onClick={() => handleFilterChange('status', 'approved')}
+                    className={`px-4 py-2 rounded-lg whitespace-nowrap ${
+                      postedFilters.status === 'approved'
+                        ? 'bg-green-100 text-green-800 border border-green-200'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Approved ({postedStats.approved})
+                  </button>
+                  <button
+                    onClick={() => handleFilterChange('status', 'pending')}
+                    className={`px-4 py-2 rounded-lg whitespace-nowrap ${
+                      postedFilters.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Pending ({postedStats.pending})
+                  </button>
+                  <button
+                    onClick={() => handleFilterChange('status', 'rejected')}
+                    className={`px-4 py-2 rounded-lg whitespace-nowrap ${
+                      postedFilters.status === 'rejected'
+                        ? 'bg-red-100 text-red-800 border border-red-200'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Rejected ({postedStats.rejected})
+                  </button>
+                </div>
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleSortChange('price')}
+                    className={`px-4 py-2 rounded-lg whitespace-nowrap flex items-center gap-2 ${
+                      postedFilters.sortBy === 'price'
+                        ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {postedFilters.sortBy === 'price' && postedFilters.sortOrder === 'desc' ? (
+                      <SortDesc className="w-4 h-4" />
+                    ) : (
+                      <SortAsc className="w-4 h-4" />
+                    )}
+                    Price
+                  </button>
+                  <button
+                    onClick={() => handleSortChange('createdAt')}
+                    className={`px-4 py-2 rounded-lg whitespace-nowrap flex items-center gap-2 ${
+                      postedFilters.sortBy === 'createdAt'
+                        ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {postedFilters.sortBy === 'createdAt' && postedFilters.sortOrder === 'desc' ? (
+                      <SortDesc className="w-4 h-4" />
+                    ) : (
+                      <SortAsc className="w-4 h-4" />
+                    )}
+                    Date
+                  </button>
+                  <button
+                    onClick={fetchPostedProperties}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"
+                    title="Refresh"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              {validPostedProperties.length === 0 ? (
+              {postedLoading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900"></div>
+                  <p className="mt-4 text-gray-600">Loading your properties...</p>
+                </div>
+              ) : postedProperties.length === 0 ? (
                 <div className="text-center py-12">
                   <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No properties listed yet</p>
+                  <p className="text-gray-500">
+                    {postedFilters.status === 'all' 
+                      ? 'No properties listed yet' 
+                      : `No ${postedFilters.status} properties found`}
+                  </p>
                   <button 
                     onClick={() => navigate('/add-property')}
                     className="mt-4 bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors"
                   >
-                    List a Property
+                    List Your First Property
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {validPostedProperties.map((item) => (
-                    <PropertyCard
-                      key={item.property._id}
-                      property={item.property}
-                      showDelete={true}
-                      onDelete={handleDeleteProperty}
-                      showStatus={true}
-                      status={item.property.approvalStatus}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="mb-4 flex justify-between items-center">
+                    <p className="text-sm text-gray-600">
+                      Showing {postedProperties.length} propert{postedProperties.length === 1 ? 'y' : 'ies'}
+                      {postedFilters.status !== 'all' && ` (${postedFilters.status})`}
+                    </p>
+                    <button
+                      onClick={() => navigate('/add-property')}
+                      className="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors flex items-center gap-2"
+                    >
+                      <Home className="w-4 h-4" />
+                      List New Property
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {postedProperties.map((property) => (
+                      <PostedPropertyCard
+                        key={property._id}
+                        property={property}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Export/Download Section */}
+                  {postedProperties.length > 0 && (
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Export Your Properties</h3>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={() => {
+                            const csvContent = "data:text/csv;charset=utf-8," 
+                              + "Title,Price,Location,Status,Date\n" 
+                              + postedProperties.map(p => 
+                                  `"${p.title}",${p.price},"${p.city}",${p.approvalStatus},"${new Date(p.createdAt).toLocaleDateString()}"`
+                                ).join("\n");
+                            const encodedUri = encodeURI(csvContent);
+                            const link = document.createElement("a");
+                            link.setAttribute("href", encodedUri);
+                            link.setAttribute("download", "my-properties.csv");
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                          className="px-4 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 flex items-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Export as CSV
+                        </button>
+                        <button
+                          onClick={() => {
+                            const propertiesData = JSON.stringify(postedProperties, null, 2);
+                            const blob = new Blob([propertiesData], { type: 'application/json' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'my-properties.json';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                          }}
+                          className="px-4 py-2 bg-purple-100 text-purple-800 rounded-lg hover:bg-purple-200 flex items-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Export as JSON
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1093,12 +1930,11 @@ export default function Profile() {
               {editSuccess && (
                 <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
                   <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-green-500 mt=0.5 flex-shrink-0" />
                     <p className="text-green-700 text-sm">{editSuccess}</p>
                   </div>
                 </div>
               )}
-
               <form onSubmit={handleSaveChanges} className="space-y-8">
                 {/* Section 1: Basic Information */}
                 <div className="bg-gray-50 rounded-xl p-6">
