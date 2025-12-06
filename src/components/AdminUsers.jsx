@@ -29,26 +29,38 @@ const AdminUsers = () => {
         return;
       }
 
+      // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10'
       });
 
       if (search) params.append('search', search);
-      if (website !== 'all') params.append('sourceWebsite', website);
-
-      const { data } = await API.get(`/admin/users?${params.toString()}`);
-
-      if (data.success) {
-        setUsers(data.users || []);
-        setTotalPages(data.totalPages || 1);
-        setCurrentPage(data.currentPage || page);
-        setTotalUsers(data.total || 0);
-        if (data.websiteStats) {
-          setWebsiteStats(data.websiteStats);
+      
+      // If website is not 'all', use the specific website endpoint
+      if (website !== 'all') {
+        const { data } = await API.get(`/admin/website/${website}?${params.toString()}`);
+        
+        if (data.success) {
+          setUsers(data.users || []);
+          setTotalPages(data.totalPages || 1);
+          setCurrentPage(data.currentPage || page);
+          setTotalUsers(data.total || 0);
+        } else {
+          throw new Error(data.message || 'Failed to fetch users');
         }
       } else {
-        throw new Error(data.message || 'Failed to fetch users');
+        // Use the general users endpoint for all users
+        const { data } = await API.get(`/admin/users?${params.toString()}`);
+
+        if (data.success) {
+          setUsers(data.users || []);
+          setTotalPages(data.totalPages || 1);
+          setCurrentPage(data.currentPage || page);
+          setTotalUsers(data.total || 0);
+        } else {
+          throw new Error(data.message || 'Failed to fetch users');
+        }
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -62,6 +74,18 @@ const AdminUsers = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Get website statistics
+  const getWebsiteStats = async () => {
+    try {
+      const { data } = await API.get('/admin/stats/website');
+      if (data.success) {
+        setWebsiteStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error fetching website stats:', error);
     }
   };
 
@@ -86,6 +110,7 @@ const AdminUsers = () => {
 
   useEffect(() => {
     getUsers();
+    getWebsiteStats();
   }, []);
 
   const handleSearch = (e) => {
@@ -133,43 +158,38 @@ const AdminUsers = () => {
     });
   };
 
-  // Enhanced website badge color function
   const getWebsiteBadgeColor = (website) => {
-    if (!website || website === 'none' || website === 'common') {
+    if (!website) {
       return 'bg-gray-200 text-gray-800 border-gray-300';
     }
-    if (website === 'multiple' || website === 'multi') {
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    }
-    switch (website) {
+    switch (website.toLowerCase()) {
       case 'saimgroups':
         return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'cleartitle1':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'direct':
         return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'multiple':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  // Function to get website display text
   const getWebsiteDisplayText = (website) => {
-    if (!website || website === 'none') return 'No Website';
-    if (website === 'multiple' || website === 'multi') return 'Multiple';
-    if (website === 'common') return 'Common';
+    if (!website) return 'No Website';
+    if (website === 'multiple') return 'Multiple';
     return website;
   };
 
   // Check if user has multiple website logins
   const hasMultipleWebsiteLogins = (user) => {
-    return (user.saimgroupsLoginCount > 0 && user.cleartitle1LoginCount > 0) ||
-           user.sourceWebsite === 'multiple' ||
-           user.isMultiWebsiteUser;
+    return (user.websiteLogins?.saimgroups?.hasLoggedIn && user.websiteLogins?.cleartitle1?.hasLoggedIn) ||
+           user.sourceWebsite === 'multiple';
   };
 
   // Render loading state
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -196,7 +216,10 @@ const AdminUsers = () => {
             </div>
             <p className="mt-2 text-red-700">{error}</p>
             <button
-              onClick={() => getUsers()}
+              onClick={() => {
+                getUsers();
+                getWebsiteStats();
+              }}
               className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
             >
               Try Again
@@ -217,15 +240,16 @@ const AdminUsers = () => {
               <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
               <p className="text-gray-600 mt-2">
                 Manage users and view their liked properties
-                {websiteStats && (
-                  <span className="ml-2 text-sm text-gray-500">
-                    • Total: {totalUsers} users
-                  </span>
-                )}
+                <span className="ml-2 text-sm text-gray-500">
+                  • Total: {websiteStats?.totalUsers || totalUsers} users
+                </span>
               </p>
             </div>
             <button
-              onClick={() => getUsers()}
+              onClick={() => {
+                getUsers();
+                getWebsiteStats();
+              }}
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,15 +262,15 @@ const AdminUsers = () => {
 
         {/* Website Stats */}
         {websiteStats && (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center">
                 <div className="bg-purple-100 p-3 rounded-lg mr-3">
                   <span className="text-purple-600 font-bold">S</span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">SaimGroups</p>
-                  <p className="text-xl font-bold">{websiteStats.saimgroups || 0}</p>
+                  <p className="text-sm text-gray-500">SaimGroups Users</p>
+                  <p className="text-xl font-bold">{websiteStats.sourceWebsite?.saimgroups || 0}</p>
                 </div>
               </div>
             </div>
@@ -256,19 +280,8 @@ const AdminUsers = () => {
                   <span className="text-blue-600 font-bold">C</span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">ClearTitle1</p>
-                  <p className="text-xl font-bold">{websiteStats.cleartitle1 || 0}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center">
-                <div className="bg-gray-100 p-3 rounded-lg mr-3">
-                  <span className="text-gray-600 font-bold">D</span>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Direct</p>
-                  <p className="text-xl font-bold">{websiteStats.direct || 0}</p>
+                  <p className="text-sm text-gray-500">ClearTitle1 Users</p>
+                  <p className="text-xl font-bold">{websiteStats.sourceWebsite?.cleartitle1 || 0}</p>
                 </div>
               </div>
             </div>
@@ -278,19 +291,19 @@ const AdminUsers = () => {
                   <span className="text-yellow-600 font-bold">M</span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Multiple</p>
-                  <p className="text-xl font-bold">{websiteStats.multiWebsite || 0}</p>
+                  <p className="text-sm text-gray-500">Multi-Website Users</p>
+                  <p className="text-xl font-bold">{websiteStats.multiWebsiteUsers || 0}</p>
                 </div>
               </div>
             </div>
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center">
-                <div className="bg-gray-300 p-3 rounded-lg mr-3">
-                  <span className="text-gray-700 font-bold">C</span>
+                <div className="bg-gray-100 p-3 rounded-lg mr-3">
+                  <span className="text-gray-600 font-bold">T</span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Common</p>
-                  <p className="text-xl font-bold">{websiteStats.common || websiteStats.noWebsite || 0}</p>
+                  <p className="text-sm text-gray-500">Total Users</p>
+                  <p className="text-xl font-bold">{websiteStats.totalUsers || 0}</p>
                 </div>
               </div>
             </div>
@@ -317,7 +330,7 @@ const AdminUsers = () => {
                 </button>
               </form>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               <button
                 onClick={() => handleWebsiteFilter('all')}
                 className={`px-4 py-2 rounded-lg ${selectedWebsite === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
@@ -335,18 +348,6 @@ const AdminUsers = () => {
                 className={`px-4 py-2 rounded-lg ${selectedWebsite === 'cleartitle1' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
               >
                 ClearTitle1
-              </button>
-              <button
-                onClick={() => handleWebsiteFilter('multiple')}
-                className={`px-4 py-2 rounded-lg ${selectedWebsite === 'multiple' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                Multiple
-              </button>
-              <button
-                onClick={() => handleWebsiteFilter('common')}
-                className={`px-4 py-2 rounded-lg ${selectedWebsite === 'common' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                Common
               </button>
             </div>
             <button
@@ -402,7 +403,7 @@ const AdminUsers = () => {
                         <div className="flex items-center gap-1">
                           {hasMultipleWebsiteLogins(user) ? (
                             <span className={`text-xs px-2 py-1 rounded-full border ${getWebsiteBadgeColor('multiple')}`}>
-                              Multiple Websites
+                              Multiple
                             </span>
                           ) : (
                             <span className={`text-xs px-2 py-1 rounded-full border ${getWebsiteBadgeColor(user.sourceWebsite)}`}>
@@ -468,24 +469,24 @@ const AdminUsers = () => {
 
                   {/* Login Stats */}
                   <div className="grid grid-cols-2 gap-2 mb-4">
-                    {user.saimgroupsLoginCount > 0 && (
+                    {user.websiteLogins?.saimgroups?.hasLoggedIn && (
                       <div className="bg-purple-50 rounded-lg p-2">
                         <div className="text-sm font-medium text-purple-700">SaimGroups</div>
-                        <div className="text-xs text-purple-600">{user.saimgroupsLoginCount} logins</div>
-                        {user.saimgroupsLastLogin && (
+                        <div className="text-xs text-purple-600">{user.websiteLogins.saimgroups.loginCount} logins</div>
+                        {user.websiteLogins.saimgroups.lastLogin && (
                           <div className="text-xs text-purple-500 mt-1">
-                            Last: {formatDate(user.saimgroupsLastLogin)}
+                            Last: {formatDate(user.websiteLogins.saimgroups.lastLogin)}
                           </div>
                         )}
                       </div>
                     )}
-                    {user.cleartitle1LoginCount > 0 && (
+                    {user.websiteLogins?.cleartitle1?.hasLoggedIn && (
                       <div className="bg-blue-50 rounded-lg p-2">
                         <div className="text-sm font-medium text-blue-700">ClearTitle1</div>
-                        <div className="text-xs text-blue-600">{user.cleartitle1LoginCount} logins</div>
-                        {user.cleartitle1LastLogin && (
+                        <div className="text-xs text-blue-600">{user.websiteLogins.cleartitle1.loginCount} logins</div>
+                        {user.websiteLogins.cleartitle1.lastLogin && (
                           <div className="text-xs text-blue-500 mt-1">
-                            Last: {formatDate(user.cleartitle1LastLogin)}
+                            Last: {formatDate(user.websiteLogins.cleartitle1.lastLogin)}
                           </div>
                         )}
                       </div>
@@ -629,7 +630,7 @@ const AdminUsers = () => {
                               <span className={`px-3 py-1 rounded-full text-sm ${getWebsiteBadgeColor(userDetails.sourceWebsite)}`}>
                                 {getWebsiteDisplayText(userDetails.sourceWebsite)}
                               </span>
-                              {userDetails.isMultiWebsiteUser && (
+                              {hasMultipleWebsiteLogins(userDetails) && (
                                 <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
                                   Multi-Website User
                                 </span>
@@ -728,97 +729,6 @@ const AdminUsers = () => {
                               </div>
                             )}
                           </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Business & Personal Info */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                      {/* Business Information */}
-                      <div className="bg-white rounded-lg border p-4">
-                        <h3 className="text-lg font-semibold mb-4">Business Information</h3>
-                        <div className="space-y-3">
-                          {userDetails.company && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Company</label>
-                              <p className="text-gray-900">{userDetails.company}</p>
-                            </div>
-                          )}
-                          {userDetails.occupation && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Occupation</label>
-                              <p className="text-gray-900">{userDetails.occupation}</p>
-                            </div>
-                          )}
-                          {userDetails.specialization && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Specialization</label>
-                              <p className="text-gray-900">{userDetails.specialization}</p>
-                            </div>
-                          )}
-                          {userDetails.officeAddress && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Office Address</label>
-                              <p className="text-gray-900">{userDetails.officeAddress}</p>
-                            </div>
-                          )}
-                          {userDetails.website && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Website</label>
-                              <a href={userDetails.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                {userDetails.website}
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Personal Information */}
-                      <div className="bg-white rounded-lg border p-4">
-                        <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-                        <div className="space-y-3">
-                          {userDetails.dateOfBirth && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Date of Birth</label>
-                              <p className="text-gray-900">{formatDate(userDetails.dateOfBirth)}</p>
-                            </div>
-                          )}
-                          {userDetails.preferredLocation && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Preferred Location</label>
-                              <p className="text-gray-900">{userDetails.preferredLocation}</p>
-                            </div>
-                          )}
-                          {userDetails.languages && userDetails.languages.length > 0 && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Languages</label>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                {userDetails.languages.map((lang, index) => (
-                                  <span key={index} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">
-                                    {lang}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {userDetails.interests && userDetails.interests.length > 0 && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">Interests</label>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                {userDetails.interests.map((interest, index) => (
-                                  <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                                    {interest}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {userDetails.about && (
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">About</label>
-                              <p className="text-gray-900 mt-1">{userDetails.about}</p>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
