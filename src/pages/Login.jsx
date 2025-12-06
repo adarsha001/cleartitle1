@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { 
-  Shield, Lock, Mail, ChevronRight, CheckCircle, 
+  Shield, Lock, Mail, ChevronRight, 
   FileCheck, LogIn, AlertCircle, Eye, EyeOff 
 } from "lucide-react";
 
@@ -145,7 +145,7 @@ export default function Login() {
     setIsGoogleLoading(true);
     setGoogleError("");
     
-    console.log("🔍 Google Sign-In response received in Login:", {
+    console.log("🔍 Google Sign-In response received:", {
       hasCredential: !!response.credential,
       credentialType: typeof response.credential,
       credentialLength: response.credential?.length,
@@ -153,8 +153,7 @@ export default function Login() {
     });
     
     try {
-      // ✅ FIX: Send ONLY the token string (NOT an object)
-      // This matches what Register component does and what AuthContext expects
+      // Send ONLY the token string (NOT an object)
       await googleLogin(response.credential);
       
       if (isMounted.current) {
