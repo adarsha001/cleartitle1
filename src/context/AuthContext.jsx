@@ -41,29 +41,34 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Google Sign-In
-// In your AuthContext.jsx
-// In your AuthContext.js - Fix the googleLogin function
-const googleLogin = async (googleData) => {
+// In AuthContext.js - FIXED version
+const googleLogin = async (token) => { // Expect just a string token
   try {
-    console.log('🔍 Google login data:', googleData);
+    console.log('🔍 Google login attempt started');
+    console.log('✅ Token received:', {
+      type: typeof token,
+      isString: typeof token === 'string',
+      length: token?.length,
+      first50: token?.substring(0, 50),
+      isValidJWT: token?.split('.').length === 3
+    });
     
-    // Extract token - handle both string and object inputs
-    let token;
-    if (typeof googleData === 'string') {
-      token = googleData;
-    } else if (googleData && googleData.token) {
-      token = googleData.token;
-    } else {
-      throw new Error('Invalid Google login data');
+    if (!token || typeof token !== 'string') {
+      console.error('❌ Invalid token format:', token);
+      throw new Error('Invalid Google token received');
     }
     
-    console.log('✅ Extracted token length:', token?.length);
-    console.log('✅ Token first 50 chars:', token?.substring(0, 50));
-    
     // Send only the token string to backend
+    console.log('📤 Sending to backend:', {
+      endpoint: '/auth/google-signin',
+      payload: { token: token }
+    });
+    
     const { data } = await API.post('/auth/google-signin', {
       token: token
     });
+    
+    console.log('✅ Backend response:', data);
     
     if (data.success && data.token && data.user) {
       localStorage.setItem('token', data.token);
@@ -86,11 +91,25 @@ const googleLogin = async (googleData) => {
       throw new Error(data.message || 'Google sign-in failed');
     }
   } catch (error) {
-    console.error('❌ Google login error:', error);
+    console.error('❌ Google login error details:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.config?.data
+      }
+    });
+    
+    // Check if it's a specific error from backend
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    
     throw error;
   }
 };
-
   // Regular login
 const login = async (loginData) => {
   try {
