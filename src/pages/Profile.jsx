@@ -1069,26 +1069,7 @@ export default function Profile() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                    <div className="text-xl font-bold text-blue-900">
-                      {validLikedProperties.length}
-                    </div>
-                    <div className="text-xs text-gray-600">Favorites</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                    <div className="text-xl font-bold text-green-600">
-                      {postedProperties.length}
-                    </div>
-                    <div className="text-xs text-gray-600">Listed</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                  
-                    <div className="text-xs text-gray-600">Enquiries</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                 
-                    <div className="text-xs text-gray-600">Approved</div>
-                  </div>
+            
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {userData.isAdmin && (
