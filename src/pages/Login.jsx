@@ -12,41 +12,54 @@ export default function Login() {
   const [form, setForm] = useState({ 
     emailOrUsername: "", 
     password: "",
-    sourceWebsite: 'cleartitle1' // Add sourceWebsite
+    sourceWebsite: 'cleartitle1'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [googleError, setGoogleError] = useState("");
   const googleButtonRef = useRef(null);
+  
+  // Add cleanup ref
+  const isMounted = useRef(true);
 
   // Get Google Client ID from Vite environment
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+  useEffect(() => {
+    return () => {
+      isMounted.current = false; // Cleanup on unmount
+    };
+  }, []);
+
   // Load Google SDK
   useEffect(() => {
-    const initializeGoogleSignIn = () => {
-      if (window.google && GOOGLE_CLIENT_ID) {
-        console.log("Initializing Google Sign-In with Client ID:", GOOGLE_CLIENT_ID.substring(0, 20) + "...");
-        
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: handleGoogleResponse,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          context: "signin",
-          ux_mode: "popup"
-        });
+    let googleScript = null;
+    let isInitialized = false;
 
-        // Render Google Sign-In button
-        if (googleButtonRef.current) {
-          try {
+    const initializeGoogleSignIn = () => {
+      if (window.google && GOOGLE_CLIENT_ID && !isInitialized) {
+        console.log("Initializing Google Sign-In for Login page");
+        isInitialized = true;
+        
+        try {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            context: "signin",
+            ux_mode: "popup"
+          });
+
+          // Render Google Sign-In button
+          if (googleButtonRef.current && !googleButtonRef.current.hasChildNodes()) {
             window.google.accounts.id.renderButton(
               googleButtonRef.current,
               {
                 theme: "outline",
                 size: "large",
-                width: 384, // max-w-md = 384px
+                width: 384,
                 text: "continue_with",
                 shape: "rectangular",
                 logo_alignment: "left",
@@ -56,32 +69,39 @@ export default function Login() {
             
             // Show One Tap UI after a delay
             setTimeout(() => {
-              window.google.accounts.id.prompt();
+              if (window.google && window.google.accounts) {
+                try {
+                  window.google.accounts.id.prompt((notification) => {
+                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                      console.log("One Tap not shown:", notification.getNotDisplayedReason());
+                    }
+                  });
+                } catch (error) {
+                  console.warn("One Tap prompt error:", error);
+                }
+              }
             }, 1000);
-          } catch (error) {
-            console.error("Error rendering Google button:", error);
-            setGoogleError("Unable to load Google Sign-In button");
           }
+        } catch (error) {
+          console.error("Error rendering Google button:", error);
+          setGoogleError("Unable to load Google Sign-In button");
         }
-      } else {
-        console.error("Google Client ID not found or Google SDK not loaded");
-        setGoogleError("Google Sign-In is not properly configured");
       }
     };
 
     // Load Google SDK script
     const loadGoogleSDK = () => {
       if (!window.google) {
-        const script = document.createElement("script");
-        script.src = "https://accounts.google.com/gsi/client";
-        script.async = true;
-        script.defer = true;
-        script.onload = initializeGoogleSignIn;
-        script.onerror = (error) => {
+        googleScript = document.createElement("script");
+        googleScript.src = "https://accounts.google.com/gsi/client";
+        googleScript.async = true;
+        googleScript.defer = true;
+        googleScript.onload = initializeGoogleSignIn;
+        googleScript.onerror = (error) => {
           console.error("Failed to load Google Sign-In script:", error);
           setGoogleError("Failed to load Google Sign-In. Please check your internet connection.");
         };
-        document.head.appendChild(script);
+        document.head.appendChild(googleScript);
       } else {
         initializeGoogleSignIn();
       }
@@ -94,32 +114,68 @@ export default function Login() {
       console.error("Missing VITE_GOOGLE_CLIENT_ID environment variable");
     }
 
+    // Cleanup function
     return () => {
-      // Cleanup
+      isInitialized = false;
+      
+      // Remove Google button if it exists
+      if (googleButtonRef.current) {
+        googleButtonRef.current.innerHTML = '';
+      }
+      
+      // Cancel any pending Google authentication
       if (window.google && window.google.accounts) {
-        window.google.accounts.id.cancel();
+        try {
+          window.google.accounts.id.cancel();
+        } catch (error) {
+          console.log("Google cleanup error:", error);
+        }
+      }
+      
+      // Remove script if component unmounts quickly
+      if (googleScript && document.head.contains(googleScript)) {
+        document.head.removeChild(googleScript);
       }
     };
   }, [GOOGLE_CLIENT_ID]);
 
   const handleGoogleResponse = async (response) => {
+    if (!isMounted.current) return;
+    
     setIsGoogleLoading(true);
     setGoogleError("");
-    console.log("Google Sign-In response received");
+    
+    console.log("🔍 Google Sign-In response received in Login:", {
+      hasCredential: !!response.credential,
+      credentialType: typeof response.credential,
+      credentialLength: response.credential?.length,
+      first50: response.credential?.substring(0, 50)
+    });
     
     try {
-      // Update Google login to include sourceWebsite
-      const googleLoginData = {
-        token: response.credential,
-        sourceWebsite: 'cleartitle1' // Add sourceWebsite for Google login
-      };
-      await googleLogin(googleLoginData);
-      navigate("/profile");
+      // ✅ FIX: Send ONLY the token string (NOT an object)
+      // This matches what Register component does and what AuthContext expects
+      await googleLogin(response.credential);
+      
+      if (isMounted.current) {
+        navigate("/profile");
+      }
     } catch (error) {
-      console.error("Google Sign-In error:", error);
+      if (!isMounted.current) return;
+      
+      console.error("❌ Google Sign-In error:", error);
+      
+      // Don't show alert for aborted requests
+      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+        console.log("Request was cancelled");
+        return;
+      }
+      
       setGoogleError(error.response?.data?.message || error.message || "Google sign-in failed. Please try again.");
     } finally {
-      setIsGoogleLoading(false);
+      if (isMounted.current) {
+        setIsGoogleLoading(false);
+      }
     }
   };
 
@@ -128,15 +184,29 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isMounted.current) return;
+    
     setIsLoading(true);
     try {
-      // Send all form data including sourceWebsite
       await login(form);
-      navigate("/profile");
+      
+      if (isMounted.current) {
+        navigate("/profile");
+      }
     } catch (error) {
+      if (!isMounted.current) return;
+      
+      // Don't show alert for aborted requests
+      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+        console.log("Request was cancelled");
+        return;
+      }
+      
       alert("Invalid login credentials");
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 
