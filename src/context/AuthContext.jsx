@@ -42,13 +42,27 @@ export const AuthProvider = ({ children }) => {
 
   // Google Sign-In
 // In your AuthContext.jsx
-const googleLogin = async (token) => {
+// In your AuthContext.js - Fix the googleLogin function
+const googleLogin = async (googleData) => {
   try {
-    console.log('Google login with token length:', token.length);
+    console.log('🔍 Google login data:', googleData);
     
-    // Send only the token string, not an object
+    // Extract token - handle both string and object inputs
+    let token;
+    if (typeof googleData === 'string') {
+      token = googleData;
+    } else if (googleData && googleData.token) {
+      token = googleData.token;
+    } else {
+      throw new Error('Invalid Google login data');
+    }
+    
+    console.log('✅ Extracted token length:', token?.length);
+    console.log('✅ Token first 50 chars:', token?.substring(0, 50));
+    
+    // Send only the token string to backend
     const { data } = await API.post('/auth/google-signin', {
-      token: token // Just send the token string
+      token: token
     });
     
     if (data.success && data.token && data.user) {

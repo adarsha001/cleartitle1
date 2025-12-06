@@ -267,6 +267,7 @@ export default function Profile() {
     try {
       const response = await API.get('/users/my-enquiries');
       setUserEnquiries(response.data.enquiries || []);
+  
     } catch (error) {
       console.error('Error fetching user enquiries:', error);
       setUserEnquiries([]);
@@ -724,22 +725,7 @@ export default function Profile() {
             <h3 className="font-bold text-gray-900 text-lg">{enquiry.property?.title || 'Property'}</h3>
             <p className="text-gray-600 text-sm">Enquiry ID: {enquiry._id?.slice(-8)}</p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handlePropertyClick(enquiry.property?._id)}
-              className="bg-blue-900 text-white p-2 rounded-lg hover:bg-blue-800 transition-colors"
-              title="View Property"
-            >
-              <Eye className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => handleDeleteEnquiry(enquiry._id, e)}
-              className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors"
-              title="Delete Enquiry"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+       
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -752,7 +738,7 @@ export default function Profile() {
             <div className="flex items-center text-gray-700">
               <Phone className="w-4 h-4 mr-2 text-blue-900" />
               <span className="font-medium">Phone:</span>
-              <span className="ml-2">{enquiry.phone}</span>
+              <span className="ml-2">{enquiry.phoneNumber}</span>
             </div>
           </div>
           
@@ -1096,15 +1082,11 @@ export default function Profile() {
                     <div className="text-xs text-gray-600">Listed</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                    <div className="text-xl font-bold text-purple-600">
-                      {userEnquiries.length}
-                    </div>
+                  
                     <div className="text-xs text-gray-600">Enquiries</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                    <div className="text-xl font-bold text-yellow-600">
-                      {postedStats.approved}
-                    </div>
+                 
                     <div className="text-xs text-gray-600">Approved</div>
                   </div>
                 </div>
