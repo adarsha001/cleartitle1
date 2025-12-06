@@ -23,14 +23,12 @@ const AdminUsers = () => {
     setLoading(true);
     setError(null);
     try {
-      // Check if user is admin (optional)
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/login');
         return;
       }
 
-      // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10'
@@ -39,7 +37,6 @@ const AdminUsers = () => {
       if (search) params.append('search', search);
       if (website !== 'all') params.append('sourceWebsite', website);
 
-      // Make API call - Use /users endpoint (not /admin/users unless you have that route)
       const { data } = await API.get(`/admin/users?${params.toString()}`);
 
       if (data.success) {
@@ -47,7 +44,6 @@ const AdminUsers = () => {
         setTotalPages(data.totalPages || 1);
         setCurrentPage(data.currentPage || page);
         setTotalUsers(data.total || 0);
-        console.log(data)
         if (data.websiteStats) {
           setWebsiteStats(data.websiteStats);
         }
@@ -58,7 +54,6 @@ const AdminUsers = () => {
       console.error('Error fetching users:', error);
       setError(error.response?.data?.message || error.message || 'Failed to load users');
       
-      // Handle specific errors
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         navigate('/login');
@@ -74,7 +69,6 @@ const AdminUsers = () => {
   const getUserDetails = async (userId) => {
     setLoadingUserDetails(true);
     try {
-      // Use /users/:id endpoint
       const { data } = await API.get(`/admin/users/${userId}`);
       
       if (data.success) {
@@ -139,7 +133,14 @@ const AdminUsers = () => {
     });
   };
 
+  // Enhanced website badge color function
   const getWebsiteBadgeColor = (website) => {
+    if (!website || website === 'none' || website === 'common') {
+      return 'bg-gray-200 text-gray-800 border-gray-300';
+    }
+    if (website === 'multiple' || website === 'multi') {
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    }
     switch (website) {
       case 'saimgroups':
         return 'bg-purple-100 text-purple-800 border-purple-200';
@@ -150,6 +151,21 @@ const AdminUsers = () => {
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  // Function to get website display text
+  const getWebsiteDisplayText = (website) => {
+    if (!website || website === 'none') return 'No Website';
+    if (website === 'multiple' || website === 'multi') return 'Multiple';
+    if (website === 'common') return 'Common';
+    return website;
+  };
+
+  // Check if user has multiple website logins
+  const hasMultipleWebsiteLogins = (user) => {
+    return (user.saimgroupsLoginCount > 0 && user.cleartitle1LoginCount > 0) ||
+           user.sourceWebsite === 'multiple' ||
+           user.isMultiWebsiteUser;
   };
 
   // Render loading state
@@ -222,15 +238,15 @@ const AdminUsers = () => {
 
         {/* Website Stats */}
         {websiteStats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center">
                 <div className="bg-purple-100 p-3 rounded-lg mr-3">
                   <span className="text-purple-600 font-bold">S</span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">SaimGroups Users</p>
-                  <p className="text-xl font-bold">{websiteStats.saimgroups}</p>
+                  <p className="text-sm text-gray-500">SaimGroups</p>
+                  <p className="text-xl font-bold">{websiteStats.saimgroups || 0}</p>
                 </div>
               </div>
             </div>
@@ -240,8 +256,8 @@ const AdminUsers = () => {
                   <span className="text-blue-600 font-bold">C</span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">ClearTitle1 Users</p>
-                  <p className="text-xl font-bold">{websiteStats.cleartitle1}</p>
+                  <p className="text-sm text-gray-500">ClearTitle1</p>
+                  <p className="text-xl font-bold">{websiteStats.cleartitle1 || 0}</p>
                 </div>
               </div>
             </div>
@@ -251,19 +267,30 @@ const AdminUsers = () => {
                   <span className="text-gray-600 font-bold">D</span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Direct Users</p>
-                  <p className="text-xl font-bold">{websiteStats.direct}</p>
+                  <p className="text-sm text-gray-500">Direct</p>
+                  <p className="text-xl font-bold">{websiteStats.direct || 0}</p>
                 </div>
               </div>
             </div>
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center">
-                <div className="bg-green-100 p-3 rounded-lg mr-3">
-                  <span className="text-green-600 font-bold">M</span>
+                <div className="bg-yellow-100 p-3 rounded-lg mr-3">
+                  <span className="text-yellow-600 font-bold">M</span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Multi-Website Users</p>
-                  <p className="text-xl font-bold">{websiteStats.multiWebsite}</p>
+                  <p className="text-sm text-gray-500">Multiple</p>
+                  <p className="text-xl font-bold">{websiteStats.multiWebsite || 0}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center">
+                <div className="bg-gray-300 p-3 rounded-lg mr-3">
+                  <span className="text-gray-700 font-bold">C</span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Common</p>
+                  <p className="text-xl font-bold">{websiteStats.common || websiteStats.noWebsite || 0}</p>
                 </div>
               </div>
             </div>
@@ -290,12 +317,12 @@ const AdminUsers = () => {
                 </button>
               </form>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleWebsiteFilter('all')}
                 className={`px-4 py-2 rounded-lg ${selectedWebsite === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
               >
-                All Websites
+                All Users
               </button>
               <button
                 onClick={() => handleWebsiteFilter('saimgroups')}
@@ -308,6 +335,18 @@ const AdminUsers = () => {
                 className={`px-4 py-2 rounded-lg ${selectedWebsite === 'cleartitle1' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
               >
                 ClearTitle1
+              </button>
+              <button
+                onClick={() => handleWebsiteFilter('multiple')}
+                className={`px-4 py-2 rounded-lg ${selectedWebsite === 'multiple' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Multiple
+              </button>
+              <button
+                onClick={() => handleWebsiteFilter('common')}
+                className={`px-4 py-2 rounded-lg ${selectedWebsite === 'common' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Common
               </button>
             </div>
             <button
@@ -360,9 +399,17 @@ const AdminUsers = () => {
                         <h3 className="text-lg font-semibold text-gray-900 truncate">
                           {user.name} {user.lastName}
                         </h3>
-                        <span className={`text-xs px-2 py-1 rounded-full border ${getWebsiteBadgeColor(user.sourceWebsite)}`}>
-                          {user.sourceWebsite}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          {hasMultipleWebsiteLogins(user) ? (
+                            <span className={`text-xs px-2 py-1 rounded-full border ${getWebsiteBadgeColor('multiple')}`}>
+                              Multiple Websites
+                            </span>
+                          ) : (
+                            <span className={`text-xs px-2 py-1 rounded-full border ${getWebsiteBadgeColor(user.sourceWebsite)}`}>
+                              {getWebsiteDisplayText(user.sourceWebsite)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <p className="text-gray-600 text-sm truncate">@{user.username}</p>
                       {user.userType && (
@@ -580,7 +627,7 @@ const AdminUsers = () => {
                             <label className="text-sm font-medium text-gray-600">Source Website</label>
                             <div className="flex items-center gap-2 mt-1">
                               <span className={`px-3 py-1 rounded-full text-sm ${getWebsiteBadgeColor(userDetails.sourceWebsite)}`}>
-                                {userDetails.sourceWebsite}
+                                {getWebsiteDisplayText(userDetails.sourceWebsite)}
                               </span>
                               {userDetails.isMultiWebsiteUser && (
                                 <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
@@ -606,7 +653,6 @@ const AdminUsers = () => {
                               <div className="font-medium">{formatDate(userDetails.updatedAt)}</div>
                             </div>
                           </div>
-                     
 
                           <div className="grid grid-cols-2 gap-4">
                             <div className={`rounded-lg p-3 ${userDetails.isVerified ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
@@ -659,6 +705,13 @@ const AdminUsers = () => {
                               <div className="text-xs text-blue-600 space-y-1">
                                 <div>First: {formatDate(userDetails.websiteLogins.cleartitle1.firstLogin)}</div>
                                 <div>Last: {formatDate(userDetails.websiteLogins.cleartitle1.lastLogin)}</div>
+                              </div>
+                            </div>
+                          )}
+                          {(!userDetails.websiteLogins?.saimgroups?.hasLoggedIn && !userDetails.websiteLogins?.cleartitle1?.hasLoggedIn) && (
+                            <div className="bg-gray-100 p-3 rounded-lg border border-gray-200">
+                              <div className="text-center text-gray-600">
+                                No website login activity recorded
                               </div>
                             </div>
                           )}
