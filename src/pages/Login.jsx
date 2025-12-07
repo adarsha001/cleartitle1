@@ -231,13 +231,14 @@ export default function Login() {
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16">
           {/* Logo/Brand */}
           <div className="flex items-center gap-3">
-            <Shield className="w-12 h-12 text-yellow-300" />
+         
             <div>
-              <h1 className="text-3xl font-bold">
-                <span className="text-blue-300">CLEAR</span>
-                <span className="text-yellow-300">TITLE 1</span>
-              </h1>
-              <p className="text-white/60 text-sm">100% Legal Property Verification</p>
+              <img
+              src="/logo.png"
+              alt="Logo"
+              className="w-24 h-12 sm:w-40 sm:h-40 drop-shadow-lg"
+            />
+
             </div>
           </div>
 

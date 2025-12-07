@@ -862,17 +862,7 @@ export default function Profile() {
                     </div>
                   )}
                 </div>
-                {isEditing && activeTab === 'edit' && (
-                  <label className="absolute bottom-0 right-0 bg-blue-900 text-white p-2 rounded-full cursor-pointer hover:bg-blue-800 transition-colors shadow-lg">
-                    <Camera className="w-4 h-4" />
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                    />
-                  </label>
-                )}
+       
               </div>
               
               <div>

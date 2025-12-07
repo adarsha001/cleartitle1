@@ -41,11 +41,9 @@ export default function Navbar() {
             <img
               src="/logo.png"
               alt="Logo"
-              className="w-12 h-12 sm:w-14 sm:h-14 drop-shadow-lg"
+              className="w-24 h-12 sm:w-18 sm:h-18 drop-shadow-lg"
             />
-            <span className={`hidden sm:block font-bold text-lg text-gray-900`}>
-              Clear<span className="text-white bg-[#5b7adb] px-1 rounded">Title</span>
-            </span>
+      
           </Link>
 
           {/* -------- DESKTOP MENU -------- */}

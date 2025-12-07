@@ -190,17 +190,14 @@ export default function Register() {
         <div className="absolute top-20 left-20 w-64 h-64 bg-yellow-300/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         
-        <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16">
+        <div className="relative z-10 flex flex-col justify-between  xl:p-16">
           {/* Logo/Brand */}
-          <div className="flex items-center gap-3">
-            <Shield className="w-12 h-12 text-yellow-300" />
-            <div>
-              <h1 className="text-3xl font-bold">
-                <span className="text-blue-300">CLEAR</span>
-                <span className="text-yellow-300">TITLE 1</span>
-              </h1>
-              <p className="text-white/60 text-sm">100% Legal Property Verification</p>
-            </div>
+          <div className="flex items-center ">
+               <img
+              src="/logo.png"
+              alt="Logo"
+              className="w-24 h-12 sm:w-40 sm:h-40 drop-shadow-lg"
+            />
           </div>
 
           {/* Middle Content */}
