@@ -230,9 +230,7 @@ export default function Login() {
             <div>
               <div className="flex justify-between mb-1">
                 <label className="text-sm text-white/70">Password</label>
-                <button onClick={() => navigate("/forgot-password")} type="button" className="text-yellow-300 text-sm">
-                  Forgot password?
-                </button>
+              
               </div>
 
               <div className="relative">
