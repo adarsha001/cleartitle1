@@ -5,11 +5,13 @@ import PropertyList from '../pages/PropertyList'
 // import VerifiedProperties from '../pages/VerifiedProperties'
 import QualityAssurance from '../pages/QualityAsurence'
 import Footer from '../pages/Footer'
+import PropertyUnitList from '../components/PropertyUnitList'
 const Home = () => {
   return (
     <div>
       {/* <Searchfilter/> */}
       <PropertyList/>
+      {/* <PropertyUnitList/> */}
       <FeaturedProperties/>
       {/* <VerifiedProperties/> */}
       <QualityAssurance/>

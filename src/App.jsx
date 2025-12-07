@@ -29,7 +29,10 @@ import NotFound from "./components/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 import TermsAndConditionsSaimr from "./components/TermsAndConditions_SAIMR_Groups";
 import Adminpropertyagent from "./components/Adminpropertyagent";
-
+import PropertyUnitForm from "./components/PropertyUnitForm";
+import PropertySelectionPage from "./pages/PropertySelectionPage";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
@@ -44,7 +47,18 @@ export default function App() {
           <ViewModeProvider>
             <ScrollToTop />
             <Navbar />
-            
+                  <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
             {/* Global Enquiry Form - Shows on all pages except admin */}
             <Routes>
               <Route path="/admin/*" element={null} />
@@ -93,7 +107,15 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-
+     <Route
+                path="/add-property-unit"
+                element={
+                  <ProtectedRoute>
+                    <PropertyUnitForm />
+                  </ProtectedRoute>
+                }
+              />
+               <Route path="/add-listing" element={<PropertySelectionPage />} />
               {/* Admin Routes */}
               <Route
                 path="/admin"

@@ -63,7 +63,7 @@ export default function Navbar() {
             )}
 
             <Link
-              to={user ? "/add-property" : "#"}
+              to={user ? "/add-listing" : "#"}
               onClick={handleAddPropertyClick}
               className={`px-4 py-2 rounded-lg transition font-medium ${
                 user
