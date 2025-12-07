@@ -193,39 +193,101 @@ export default function Register() {
         <div className="relative z-10 flex flex-col justify-between  xl:p-16">
           {/* Logo/Brand */}
           <div className="flex items-center ">
-               <img
-              src="/logo.png"
-              alt="Logo"
-              className="w-24 h-12 sm:w-40 sm:h-40 drop-shadow-lg"
-            />
+              <img src="/logo.png" className="w-96 h-auto drop-shadow-xl" />
           </div>
 
           {/* Middle Content */}
-          <div className=" max-w-lg">
-            <div className="space-y-2">
-              <div className="w-16 h-1 bg-gradient-to-r from-yellow-300 to-yellow-400" />
-              <h2 className="text-4xl xl:text-5xl font-bold leading-tight">
-                Join India's Most<br />Trusted Legal<br />Property Platform
-              </h2>
-            </div>
-            <p className="text-white/70 text-lg leading-relaxed">
-              Create your account to access 100% legally verified properties, complete title 
-              verification, and connect with trusted buyers, sellers, and legal experts.
-            </p>
+       <div className="space-y-4 xl:space-y-6 max-w-md xl:max-w-lg">
+  <div className="space-y-2">
+    <div className="w-12 xl:w-16 h-1 bg-gradient-to-r from-yellow-300 to-yellow-400" />
+    <h2 className="text-2xl xl:text-3xl 2xl:text-4xl font-bold leading-tight">
+      Your Gateway to<br />Legally Secure Properties
+    </h2>
+  </div>
+  
+  <div className="text-white/80 text-sm xl:text-base 2xl:text-lg leading-relaxed space-y-4">
+    <p>
+      Welcome to <strong className="text-yellow-300">Clear Title 1</strong> - India's premier platform for 
+      <strong> 100% legally verified properties</strong>. We eliminate the uncertainty from property 
+      transactions through comprehensive legal due diligence.
+    </p>
+    
+    <div className="bg-gradient-to-r from-blue-600/20 to-blue-700/20 rounded-xl p-4 border border-blue-500/30">
+      <h4 className="font-bold text-white mb-2 text-sm">Why Choose Clear Title 1?</h4>
+      <ul className="space-y-2 text-sm">
+        <li className="flex items-start gap-2">
+          <span className="text-green-400 mt-1">•</span>
+          <span><strong>Zero Legal Disputes</strong> - Every property is cleared of all legal encumbrances</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="text-green-400 mt-1">•</span>
+          <span><strong>Bank Loan Ready</strong> - All properties pre-approved by leading financial institutions</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="text-green-400 mt-1">•</span>
+          <span><strong>Expert Network</strong> - Direct access to certified legal advisors and property experts</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="text-green-400 mt-1">•</span>
+          <span><strong>Complete Transparency</strong> - Full disclosure of all property documents and history</span>
+        </li>
+      </ul>
+    </div>
+    
+    <p className="text-white/60 italic text-sm">
+      "Property transactions should be exciting, not stressful. We make sure every property 
+      you see is legally sound and financially viable."
+    </p>
+  </div>
 
-          
-            {/* Trust Badges */}
-            <div className="grid grid-cols-2 gap-4 pt-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <div className="text-2xl font-bold text-yellow-300">100%</div>
-                <div className="text-xs text-white/70">Legal Verification</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <div className="text-2xl font-bold text-green-400">500+</div>
-                <div className="text-xs text-white/70">Verified Properties</div>
-              </div>
-            </div>
-          </div>
+  {/* Success Metrics */}
+  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+    <h4 className="font-bold text-white text-sm mb-3">Our Track Record</h4>
+    <div className="grid grid-cols-2 gap-3">
+      <div className="text-center">
+        <div className="text-xl font-bold text-yellow-300">1,000+</div>
+        <div className="text-xs text-white/70">Happy Clients</div>
+      </div>
+      <div className="text-center">
+        <div className="text-xl font-bold text-green-400">₹750Cr+</div>
+        <div className="text-xs text-white/70">Property Value</div>
+      </div>
+      <div className="text-center">
+        <div className="text-xl font-bold text-blue-400">99.7%</div>
+        <div className="text-xs text-white/70">Satisfaction Rate</div>
+      </div>
+      <div className="text-center">
+        <div className="text-xl font-bold text-purple-400">24/7</div>
+        <div className="text-xs text-white/70">Legal Support</div>
+      </div>
+    </div>
+  </div>
+
+  {/* Security Features */}
+  <div className="space-y-2">
+    <h4 className="font-bold text-white text-sm">Bank-Grade Security Features</h4>
+    <div className="flex flex-wrap gap-2">
+      <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-xs">256-bit SSL Encryption</span>
+      <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Two-Factor Authentication</span>
+      <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">Document Watermarking</span>
+      <span className="px-3 py-1 bg-yellow-500/20 text-yellow-300 rounded-full text-xs">Secure Digital Signatures</span>
+    </div>
+  </div>
+
+  {/* Call to Action */}
+  <div className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl p-4 border border-yellow-500/30">
+    <div className="flex items-center gap-3">
+      <Shield className="w-8 h-8 text-yellow-300 flex-shrink-0" />
+      <div>
+        <h4 className="font-bold text-white text-sm">Start Your Secure Journey</h4>
+        <p className="text-white/70 text-xs mt-1">
+          Join thousands of satisfied customers who have found their dream properties 
+          with complete peace of mind.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
           {/* Bottom */}
           <div className="text-white/50 text-sm">
@@ -240,14 +302,7 @@ export default function Register() {
         <div className="w-full max-w-xl space-y-8 py-8">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 justify-center mb-8">
-            <Shield className="w-10 h-10 text-yellow-300" />
-            <div>
-              <h1 className="text-2xl font-bold">
-                <span className="text-blue-400">CLEAR</span>
-                <span className="text-yellow-300">TITLE 1</span>
-              </h1>
-              <p className="text-xs text-white/60 text-center">100% Legal Verification</p>
-            </div>
+         <img src="/logo.png" className="w-56 h-auto drop-shadow-xl" />
           </div>
 
           {/* Form Header */}

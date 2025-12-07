@@ -38,11 +38,7 @@ export default function Navbar() {
             className="flex items-center space-x-2"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <img
-              src="/logo.png"
-              alt="Logo"
-              className="w-24 h-12 sm:w-18 sm:h-18 drop-shadow-lg"
-            />
+              <img src="/logo.png" className="w-16 h-auto drop-shadow-xl" />
       
           </Link>
 
