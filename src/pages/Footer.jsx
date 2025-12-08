@@ -127,35 +127,7 @@ export default function Footer() {
           </div>
 
           {/* Property Types */}
-          <div>
-            <h4 className="text-lg font-semibold mb-6 relative">
-              Property Types
-              <div className="absolute -bottom-2 left-0 w-12 h-0.5 bg-yellow-300"></div>
-            </h4>
-            <div className="space-y-3">
-              {[
-                'Flats & Apartments',
-                'Single Site Plots', 
-                'Farm Lands',
-                'Commercial Spaces',
-                'Joint Developments',
-                'Joint Ventures'
-              ].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => handleClick('property_type', type.toLowerCase().replace(/ /g, '_'), `Property Type: ${type}`)}
-                  className={`flex items-center text-gray-300 hover:text-white transition-all duration-300 hover:pl-2 block w-full text-left group ${
-                    clickedItem === `property_type-${type.toLowerCase().replace(/ /g, '_')}` ? 'pl-4 font-semibold text-yellow-300' : ''
-                  }`}
-                >
-                  <svg className="w-3 h-3 text-blue-400 mr-2 opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
+
 
           {/* Contact Info */}
           <div>
