@@ -35,6 +35,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import PropertyUnitsPage from "./components/PropertyUnitsPage";
 import PropertyUnitDetail from "./components/PropertyUnitDetail";
+import TermsAndConditionsClearTitle1 from "./components/TermsAndConditions_SAIMR_Groups";
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
@@ -119,7 +120,7 @@ export default function App() {
                 }
               />
 
-
+<Route path="/terms-and-conditions" element={<TermsAndConditionsClearTitle1 />} />
               <Route path="/property-units/:id" element={<PropertyUnitDetail />} /> 
               <Route path="/property-units" element={<PropertyUnitsPage />} /> 
                <Route path="/add-listing" element={<PropertySelectionPage />} />
@@ -132,6 +133,7 @@ export default function App() {
                   </AdminRoute>
                 }
               />
+              
               <Route
                 path="/admin/properties"
                 element={
@@ -165,7 +167,7 @@ export default function App() {
                 }
               />
 <Route path="/admin/property-agent" element={<Adminpropertyagent />} />
-              <Route path="/terms" element={<TermsAndConditionsSaimr />} />
+              {/* <Route path="/terms" element={<TermsAndConditionsSaimr />} /> */}
 
               {/* 404 Not Found Route - Catch all undefined routes */}
               <Route path="*" element={<NotFound />} />

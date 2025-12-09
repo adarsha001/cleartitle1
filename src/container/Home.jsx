@@ -88,11 +88,11 @@ const Home = () => {
       </div>
 
       {/* Progress Display */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow z-50">
+      {/* <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow z-50">
         <span className="text-sm font-medium">
           {sections[currentSection].name} ({currentSection + 1}/{sections.length})
         </span>
-      </div>
+      </div> */}
 
       {/* Sections */}
       {sections.map((sec, index) => {
