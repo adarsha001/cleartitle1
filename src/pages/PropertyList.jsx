@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Search, SlidersHorizontal, Grid3x3, List, MapPin, Home, DollarSign, Maximize, Building, Sprout, Handshake, LandPlot, ChevronDown, X, Shield, CheckCircle, FileCheck, Award, Menu, FileText } from "lucide-react";
+import { Search, SlidersHorizontal, Grid3x3, List, MapPin, Home, DollarSign, Maximize, Building, Sprout, Handshake, LandPlot, ChevronDown, X, Shield, CheckCircle, FileCheck, Award, Menu, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { getProperties } from "../api/axios";
 import PropertyCard from "../components/PropertyCard";
 
@@ -19,6 +19,12 @@ export default function PropertyList() {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [limit] = useState(12); // Items per page
+  
   const propertyListRef = useRef(null);
 
   // Check mobile screen size
@@ -32,115 +38,133 @@ export default function PropertyList() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        setLoading(true);
-        const response = await getProperties();
-        setProperties(response.data.properties || []);
-      } catch (err) {
-        setError("Failed to fetch properties");
-        console.error("Error fetching properties:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch properties with pagination
+  const fetchProperties = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: limit,
+        category: categoryFilter || undefined,
+        city: cityFilter || undefined,
+        search: search || undefined,
+        sortBy: getSortField(sort),
+        sortOrder: getSortOrder(sort),
+        minPrice: getMinPrice(priceRange),
+        maxPrice: getMaxPrice(priceRange)
+      };
+      
+      const response = await getProperties(params);
+      setProperties(response.data.properties || []);
+      setTotalPages(response.data.totalPages || 1);
+      setTotalCount(response.data.total || 0);
+      setError("");
+    } catch (err) {
+      setError("Failed to fetch properties");
+      console.error("Error fetching properties:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Fetch properties when filters change
+  useEffect(() => {
+    setCurrentPage(1); // Reset to first page when filters change
+    fetchProperties();
+  }, [categoryFilter, cityFilter, priceRange, areaRange, search, sort]);
+
+  // Fetch properties when page changes
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchProperties();
+    }
+  }, [currentPage]);
+
+  // Initial fetch
+  useEffect(() => {
     fetchProperties();
   }, []);
 
-  useEffect(() => {
-    if (search && propertyListRef.current) {
-      setTimeout(() => {
-        const element = propertyListRef.current;
-        if (element) {
-          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-          const offsetPosition = elementPosition - (window.innerHeight * 0.4);
-          
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: 'smooth'
-          });
-        }
-      }, 100);
+  // Helper functions for sorting
+  const getSortField = (sortValue) => {
+    switch(sortValue) {
+      case "displayOrder": return "displayOrder";
+      case "newest": return "createdAt";
+      case "oldest": return "createdAt";
+      case "name": return "title";
+      case "price-low": return "price";
+      case "price-high": return "price";
+      case "area-low": return "attributes.square";
+      case "area-high": return "attributes.square";
+      default: return "displayOrder";
     }
-  }, [search]);
+  };
 
-  useEffect(() => {
-    if (categoryFilter && propertyListRef.current) {
-      setTimeout(() => {
-        propertyListRef.current?.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }, 100);
+  const getSortOrder = (sortValue) => {
+    switch(sortValue) {
+      case "newest":
+      case "price-high":
+      case "area-high":
+        return "desc";
+      case "oldest":
+      case "price-low":
+      case "area-low":
+      case "name":
+      case "displayOrder":
+      default:
+        return "asc";
     }
-  }, [categoryFilter]);
+  };
 
-  const cities = [...new Set(properties.map((p) => p.city).filter(Boolean))];
+  // Price range helpers
+  const getMinPrice = (range) => {
+    switch(range) {
+      case "0-50": return 0;
+      case "50-100": return 5000000;
+      case "100-200": return 10000000;
+      case "200+": return 20000000;
+      default: return undefined;
+    }
+  };
 
-  const filtered = properties
-    .filter((p) => {
-      const matchesSearch =
-        p.title?.toLowerCase().includes(search.toLowerCase()) ||
-        p.city?.toLowerCase().includes(search.toLowerCase()) ||
-        p.category?.toLowerCase().includes(search.toLowerCase()) ||
-        p.propertyLocation?.toLowerCase().includes(search.toLowerCase());
+  const getMaxPrice = (range) => {
+    switch(range) {
+      case "0-50": return 5000000;
+      case "50-100": return 10000000;
+      case "100-200": return 20000000;
+      case "200+": return 1000000000; // Large number for 200+
+      default: return undefined;
+    }
+  };
 
-      const matchesCategory = categoryFilter ? p.category === categoryFilter : true;
-      const matchesCity = cityFilter ? p.city === cityFilter : true;
+  // Pagination handlers
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      scrollToTop();
+    }
+  };
 
-      const matchesPriceRange = priceRange
-        ? (() => {
-            const price = p.price;
-            if (price === "Price on Request") return priceRange === "on-request";
-            const priceNum = typeof price === 'number' ? price : parseFloat(price) || 0;
-            if (priceRange === "0-50") return priceNum <= 5000000;
-            if (priceRange === "50-100") return priceNum > 5000000 && priceNum <= 10000000;
-            if (priceRange === "100-200") return priceNum > 10000000 && priceNum <= 20000000;
-            if (priceRange === "200+") return priceNum > 20000000;
-            if (priceRange === "on-request") return price === "Price on Request";
-            return true;
-          })()
-        : true;
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      scrollToTop();
+    }
+  };
 
-      const matchesArea = areaRange
-        ? (() => {
-            const area = p.attributes?.square || 0;
-            if (areaRange === "0-10") return area <= 10;
-            if (areaRange === "10-50") return area > 10 && area <= 50;
-            if (areaRange === "50-100") return area > 50 && area <= 100;
-            if (areaRange === "100+") return area > 1000;
-            return true;
-          })()
-        : true;
+  const goToPage = (page) => {
+    setCurrentPage(page);
+    scrollToTop();
+  };
 
-      return matchesSearch && matchesCategory && matchesCity && matchesPriceRange && matchesArea;
-    })
-    .sort((a, b) => {
-      if (sort === "displayOrder") {
-        const orderDiff = (a.displayOrder || 0) - (b.displayOrder || 0);
-        if (orderDiff !== 0) return orderDiff;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      }
-      if (sort === "price-low") {
-        const priceA = a.price === "Price on Request" ? Infinity : (typeof a.price === 'number' ? a.price : parseFloat(a.price) || 0);
-        const priceB = b.price === "Price on Request" ? Infinity : (typeof b.price === 'number' ? b.price : parseFloat(b.price) || 0);
-        return priceA - priceB;
-      }
-      if (sort === "price-high") {
-        const priceA = a.price === "Price on Request" ? -1 : (typeof a.price === 'number' ? a.price : parseFloat(a.price) || 0);
-        const priceB = b.price === "Price on Request" ? -1 : (typeof b.price === 'number' ? b.price : parseFloat(b.price) || 0);
-        return priceB - priceA;
-      }
-      if (sort === "name") return a.title?.localeCompare(b.title) || 0;
-      if (sort === "area-low") return (a.attributes?.square || 0) - (b.attributes?.square || 0);
-      if (sort === "area-high") return (b.attributes?.square || 0) - (a.attributes?.square || 0);
-      if (sort === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
-      if (sort === "oldest") return new Date(a.createdAt) - new Date(b.createdAt);
-      return 0;
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: propertyListRef.current?.offsetTop - 100 || 0,
+      behavior: 'smooth'
     });
+  };
 
+  // Filter handlers
   const clearFilters = () => {
     setSearch("");
     setSort("displayOrder");
@@ -148,11 +172,14 @@ export default function PropertyList() {
     setCityFilter("");
     setPriceRange("");
     setAreaRange("");
+    setCurrentPage(1);
     setShowMobileFilters(false);
+    setShowFilters(false);
   };
 
   const clearCategoryFilter = () => {
     setCategoryFilter("");
+    setCurrentPage(1);
   };
 
   const handleSearchChange = (e) => {
@@ -161,15 +188,19 @@ export default function PropertyList() {
 
   const handleCategorySelect = (category) => {
     setCategoryFilter(categoryFilter === category ? "" : category);
+    setCurrentPage(1);
   };
 
   const handleSearchSubmit = (e) => {
-    if (e.key === 'Enter' && propertyListRef.current) {
-      propertyListRef.current.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
+    if (e.key === 'Enter') {
+      setCurrentPage(1);
+      scrollToTop();
     }
+  };
+
+  const getCities = () => {
+    const cities = properties.map(p => p.city).filter(Boolean);
+    return [...new Set(cities)];
   };
 
   const activeFiltersCount = [categoryFilter, cityFilter, priceRange, areaRange].filter(Boolean).length;
@@ -184,7 +215,7 @@ export default function PropertyList() {
     }
   };
 
-  if (loading) {
+  if (loading && currentPage === 1) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
         <div className="text-center">
@@ -195,7 +226,7 @@ export default function PropertyList() {
     );
   }
 
-  if (error) {
+  if (error && properties.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
@@ -205,7 +236,7 @@ export default function PropertyList() {
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Error Loading Properties</h2>
           <p className="text-gray-600 mb-6 text-sm sm:text-base">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={fetchProperties}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md text-sm sm:text-base"
           >
             Try Again
@@ -219,7 +250,7 @@ export default function PropertyList() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Modern Hero Section */}
       <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800">
-        {/* Animated Background - Simplified for Mobile */}
+        {/* Animated Background */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0" style={{
             backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
@@ -227,17 +258,9 @@ export default function PropertyList() {
           }}></div>
         </div>
 
-        {/* Glowing Orbs - Smaller on Mobile */}
+        {/* Glowing Orbs */}
         <div className="absolute top-10 left-4 w-48 h-48 sm:w-96 sm:h-96 bg-blue-400 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
         <div className="absolute bottom-10 right-4 w-48 h-48 sm:w-96 sm:h-96 bg-purple-400 rounded-full filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
-
-        {/* Industrial SVG Illustration - Hidden on Mobile */}
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-5xl opacity-30 hidden lg:block">
-          <svg viewBox="0 0 1000 500" className="w-full h-auto">
-            {/* Factory illustrations remain the same */}
-            {/* ... (keep the existing SVG code) ... */}
-          </svg>
-        </div>
 
         {/* Content Container */}
         <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
@@ -249,23 +272,23 @@ export default function PropertyList() {
                 <span className="text-white font-semibold text-xs sm:text-sm tracking-wider">100% VERIFIED PROPERTIES</span>
               </div>
               
-              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-4 sm:mb-6 text-white leading-tight tracking-tight">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 text-white leading-tight tracking-tight">
                 Clear Title,
                 <span className="block bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-400 bg-clip-text text-transparent mt-2">
                   Clear Future
                 </span>
               </h1>
               
-              <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-blue-100 font-light mb-6 sm:mb-8 max-w-3xl mx-auto px-4">
+              <p className="text-lg sm:text-xl md:text-2xl text-blue-100 font-light mb-6 sm:mb-8 max-w-3xl mx-auto px-4">
                 Invest with Confidence in Completely Verified Properties
               </p>
 
-              {/* Trust Badges - Responsive Grid */}
+              {/* Trust Badges */}
               <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-3 sm:gap-6 mb-8 sm:mb-12 px-4">
                 <div className="px-3 py-2 sm:px-6 sm:py-4 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30">
                   <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                     <Shield className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-300" />
-                    <div className="text-xl sm:text-3xl font-bold text-white">{properties.length}+</div>
+                    <div className="text-xl sm:text-3xl font-bold text-white">{totalCount}+</div>
                   </div>
                   <div className="text-xs sm:text-sm text-blue-100">Clear Title Properties</div>
                 </div>
@@ -281,7 +304,7 @@ export default function PropertyList() {
                 <div className="px-3 py-2 sm:px-6 sm:py-4 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30">
                   <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                     <MapPin className="w-4 h-4 sm:w-6 sm:h-6 text-red-300" />
-                    <div className="text-xl sm:text-3xl font-bold text-white">{cities.length}+</div>
+                    <div className="text-xl sm:text-3xl font-bold text-white">{getCities().length}+</div>
                   </div>
                   <div className="text-xs sm:text-sm text-blue-100">Prime Locations</div>
                 </div>
@@ -295,64 +318,58 @@ export default function PropertyList() {
                 </div>
               </div>
 
-         {/* ClearTitle1 Features - Responsive Grid */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto mb-8 sm:mb-12 px-4">
+              {/* ClearTitle1 Features */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto mb-8 sm:mb-12 px-4">
+                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
+                  <FileCheck className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300 mx-auto mb-2 sm:mb-3" />
+                  <h3 className="text-white font-bold text-sm sm:text-base mb-1 sm:mb-2">Clear Title Guarantee</h3>
+                  <p className="text-blue-100 text-xs sm:text-sm">
+                    Every property comes with verified clear title documentation
+                  </p>
+                </div>
 
-  {/* Clear Title Guarantee */}
-  <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-    <FileCheck className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-yellow-300 mx-auto mb-2 sm:mb-3" />
-    <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Clear Title Guarantee</h3>
-    <p className="text-blue-100 text-xs sm:text-sm">
-      Every property comes with verified clear title documentation
-    </p>
-  </div>
+                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
+                  <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-green-300 mx-auto mb-2 sm:mb-3" />
+                  <h3 className="text-white font-bold text-sm sm:text-base mb-1 sm:mb-2">Legal Verification</h3>
+                  <p className="text-blue-100 text-xs sm:text-sm">
+                    Thorough legal checks and complete compliance assurance
+                  </p>
+                </div>
 
-  {/* Legal Verification */}
-  <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-    <Shield className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-green-300 mx-auto mb-2 sm:mb-3" />
-    <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Legal Verification</h3>
-    <p className="text-blue-100 text-xs sm:text-sm">
-      Thorough legal checks and complete compliance assurance
-    </p>
-  </div>
+                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
+                  <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-300 mx-auto mb-2 sm:mb-3" />
+                  <h3 className="text-white font-bold text-sm sm:text-base mb-1 sm:mb-2">Complete Transparency</h3>
+                  <p className="text-blue-100 text-xs sm:text-sm">
+                    No hidden clauses, full disclosure on every property
+                  </p>
+                </div>
 
-  {/* Complete Transparency */}
-  <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-    <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 lg:h-10 lg:w-10 text-blue-300 mx-auto mb-2 sm:mb-3" />
-    <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Complete Transparency</h3>
-    <p className="text-blue-100 text-xs sm:text-sm">
-      No hidden clauses, full disclosure on every property
-    </p>
-  </div>
-
-  {/* Paperwork & Documentation Services */}
-  <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30 lg:col-span-3">
-    <FileText className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-purple-300 mx-auto mb-2 sm:mb-3" />
-    <h3 className="text-white font-bold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">Paperwork & Documentation</h3>
-    <p className="text-blue-100 text-xs sm:text-sm text-center max-w-md mx-auto">
-      Khata conversion, registration, legal paperwork, and complete documentation support.
-    </p>
-  </div>
-
-</div>
-</div>
+                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30 lg:col-span-3">
+                  <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-purple-300 mx-auto mb-2 sm:mb-3" />
+                  <h3 className="text-white font-bold text-sm sm:text-base mb-1 sm:mb-2">Paperwork & Documentation</h3>
+                  <p className="text-blue-100 text-xs sm:text-sm text-center max-w-md mx-auto">
+                    Khata conversion, registration, legal paperwork, and complete documentation support.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             {/* Search Bar */}
             <div className="max-w-4xl mx-auto px-4">
-              <div className="bg-white/95 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 lg:p-8 border border-white/50">
+              <div className="bg-white/95 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 border border-white/50">
                 <div className="relative mb-4 sm:mb-6">
                   <Search className="absolute left-3 sm:left-6 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-6 sm:h-6" />
                   <input
                     type="text"
                     placeholder="Search by location, property type, or keyword..."
-                    className="w-full pl-10 sm:pl-16 pr-4 sm:pr-6 py-3 sm:py-4 lg:py-5 text-sm sm:text-base lg:text-lg border-2 border-gray-300 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white"
+                    className="w-full pl-10 sm:pl-16 pr-4 sm:pr-6 py-3 sm:py-4 text-sm sm:text-base border-2 border-gray-300 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white"
                     value={search}
                     onChange={handleSearchChange}
                     onKeyPress={handleSearchSubmit}
                   />
                 </div>
                 
-                {/* Category Buttons - Responsive Grid */}
+                {/* Category Buttons */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                   <button 
                     onClick={() => handleCategorySelect("Commercial")}
@@ -483,6 +500,8 @@ export default function PropertyList() {
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
               <option value="name">Name (A-Z)</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
             </select>
 
             <div className="flex gap-1 sm:gap-2 bg-white rounded-lg sm:rounded-xl p-1 shadow-md border-2 border-blue-300">
@@ -543,9 +562,24 @@ export default function PropertyList() {
                     onChange={(e) => setCityFilter(e.target.value)}
                   >
                     <option value="">All Cities</option>
-                    {cities.map((city) => (
+                    {getCities().map((city) => (
                       <option key={city} value={city}>{city}</option>
                     ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">Price Range (₹)</label>
+                  <select
+                    className="w-full border-2 border-blue-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    value={priceRange}
+                    onChange={(e) => setPriceRange(e.target.value)}
+                  >
+                    <option value="">All Prices</option>
+                    <option value="0-50">0 - 50 Lakhs</option>
+                    <option value="50-100">50 Lakhs - 1 Crore</option>
+                    <option value="100-200">1 - 2 Crores</option>
+                    <option value="200+">2+ Crores</option>
                   </select>
                 </div>
 
@@ -573,7 +607,7 @@ export default function PropertyList() {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-3">Property Type</label>
                 <select
@@ -596,9 +630,39 @@ export default function PropertyList() {
                   onChange={(e) => setCityFilter(e.target.value)}
                 >
                   <option value="">All Cities</option>
-                  {cities.map((city) => (
+                  {getCities().map((city) => (
                     <option key={city} value={city}>{city}</option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">Price Range (₹)</label>
+                <select
+                  className="w-full border-2 border-blue-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  value={priceRange}
+                  onChange={(e) => setPriceRange(e.target.value)}
+                >
+                  <option value="">All Prices</option>
+                  <option value="0-50">0 - 50 Lakhs</option>
+                  <option value="50-100">50 Lakhs - 1 Crore</option>
+                  <option value="100-200">1 - 2 Crores</option>
+                  <option value="200+">2+ Crores</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">Area (Acres)</label>
+                <select
+                  className="w-full border-2 border-blue-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  value={areaRange}
+                  onChange={(e) => setAreaRange(e.target.value)}
+                >
+                  <option value="">All Areas</option>
+                  <option value="0-10">0 - 10 Acres</option>
+                  <option value="10-50">10 - 50 Acres</option>
+                  <option value="50-100">50 - 100 Acres</option>
+                  <option value="100+">100+ Acres</option>
                 </select>
               </div>
             </div>
@@ -615,8 +679,9 @@ export default function PropertyList() {
               </h2>
               <p className="text-gray-700 font-medium flex items-center gap-2 text-sm sm:text-base">
                 <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-                Showing {filtered.length} {filtered.length === 1 ? "property" : "properties"}
+                Showing {properties.length} of {totalCount} properties
                 {activeFiltersCount > 0 && " (filtered)"} with clear titles
+                <span className="text-blue-600 font-bold ml-2">Page {currentPage} of {totalPages}</span>
               </p>
             </div>
             <div className="flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-2 bg-white rounded-lg sm:rounded-xl border-2 border-green-300 shadow-md">
@@ -626,24 +691,35 @@ export default function PropertyList() {
           </div>
         </div>
 
-        {/* Property Cards */}
-        <div
-          className={`grid gap-4 sm:gap-6 lg:gap-8 ${
-            viewMode === "grid" 
-              ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" 
-              : "grid-cols-1"
-          }`}
-        >
-          {filtered.filter(property => property && property._id).map((property) => (
-            <PropertyCard
-              key={property._id || property.id} 
-              property={property} 
-              viewMode={viewMode}
-            />
-          ))}
-        </div>
+        {/* Loading Spinner for Page Changes */}
+        {loading && currentPage > 1 && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-2 text-gray-600">Loading properties...</p>
+          </div>
+        )}
 
-        {filtered.length === 0 && !loading && (
+        {/* Property Cards */}
+        {!loading || currentPage === 1 ? (
+          <div
+            className={`grid gap-4 sm:gap-6 lg:gap-8 ${
+              viewMode === "grid" 
+                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" 
+                : "grid-cols-1"
+            }`}
+          >
+            {properties.filter(property => property && property._id).map((property) => (
+              <PropertyCard
+                key={property._id || property.id} 
+                property={property} 
+                viewMode={viewMode}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        {/* No results message */}
+        {properties.length === 0 && !loading && (
           <div className="text-center py-12 sm:py-16 bg-white rounded-xl sm:rounded-2xl shadow-lg border-2 border-gray-200 px-4">
             <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <Home className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-blue-600" />
@@ -656,6 +732,135 @@ export default function PropertyList() {
             >
               Clear All Filters
             </button>
+          </div>
+        )}
+
+        {/* Pagination Component */}
+        {totalPages > 1 && !loading && properties.length > 0 && (
+          <div className="mt-8 sm:mt-12">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-gray-600">
+                Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalCount)} of {totalCount} properties
+              </div>
+              
+              <nav className="flex items-center space-x-2">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className={`p-2 sm:p-3 rounded-lg transition-all ${
+                    currentPage === 1
+                      ? "text-gray-400 cursor-not-allowed bg-gray-100"
+                      : "text-gray-700 hover:bg-blue-50 hover:text-blue-600 bg-white border border-gray-300 hover:border-blue-300"
+                  }`}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                {/* Page Numbers */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => goToPage(pageNum)}
+                      className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all ${
+                        currentPage === pageNum
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                          : "text-gray-700 hover:bg-blue-50 bg-white border border-gray-300 hover:border-blue-300"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <>
+                    <span className="px-2 text-gray-500">...</span>
+                    <button
+                      onClick={() => goToPage(totalPages)}
+                      className={`px-3 sm:px-4 py-2 rounded-lg font-medium transition-all ${
+                        currentPage === totalPages
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                          : "text-gray-700 hover:bg-blue-50 bg-white border border-gray-300 hover:border-blue-300"
+                      }`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className={`p-2 sm:p-3 rounded-lg transition-all ${
+                    currentPage === totalPages
+                      ? "text-gray-400 cursor-not-allowed bg-gray-100"
+                      : "text-gray-700 hover:bg-blue-50 hover:text-blue-600 bg-white border border-gray-300 hover:border-blue-300"
+                  }`}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </nav>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Go to:</span>
+                <select
+                  value={currentPage}
+                  onChange={(e) => goToPage(parseInt(e.target.value))}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      Page {i + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            {/* Mobile-friendly pagination */}
+            <div className="mt-6 sm:hidden">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg font-medium ${
+                    currentPage === 1
+                      ? "text-gray-400 cursor-not-allowed bg-gray-100"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                  }`}
+                >
+                  Previous
+                </button>
+                
+                <span className="text-sm text-gray-600">
+                  {currentPage} of {totalPages}
+                </span>
+                
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-lg font-medium ${
+                    currentPage === totalPages
+                      ? "text-gray-400 cursor-not-allowed bg-gray-100"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

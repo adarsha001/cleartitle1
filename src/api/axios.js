@@ -110,10 +110,14 @@ APII.interceptors.response.use(
 
 // API functions
 
-// JSON APIs
-export const getProperties= (params = {}) => {
+export const getProperties = (params = {}) => {
   return API.get("/properties", { 
-    params: { ...params, website: "cleartitle" } 
+    params: { 
+      ...params, 
+      website: "cleartitle",
+      page: params.page || 1,
+      limit: params.limit || 12 // Add limit parameter
+    } 
   });
 };
 export const getPropertyById = (id) => API.get(`/properties/${id}`);

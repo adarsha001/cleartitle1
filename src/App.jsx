@@ -120,7 +120,8 @@ export default function App() {
               />
 
 
-              <Route path="/property-units/:id" element={<PropertyUnitDetail />} />
+              <Route path="/property-units/:id" element={<PropertyUnitDetail />} /> 
+              <Route path="/property-units" element={<PropertyUnitsPage />} /> 
                <Route path="/add-listing" element={<PropertySelectionPage />} />
               {/* Admin Routes */}
               <Route

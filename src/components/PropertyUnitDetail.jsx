@@ -201,31 +201,7 @@ export default function PropertyUnitDetail() {
   };
 
   // Calculate price per sqft with null checks
-  const calculatePricePerSqft = () => {
-    if (!propertyUnit) return null;
-    
-    try {
-      const { price, specifications } = propertyUnit;
-      if (!price || !specifications || !specifications.carpetArea) return null;
-      
-      let priceAmount = 0;
-      
-      if (typeof price === 'object' && price !== null) {
-        priceAmount = price.amount || price.value || 0;
-      } else if (typeof price === 'number') {
-        priceAmount = price;
-      }
-      
-      if (priceAmount > 0 && specifications.carpetArea > 0) {
-        const pricePerSqft = Math.round(priceAmount / specifications.carpetArea);
-        return pricePerSqft;
-      }
-    } catch (err) {
-      console.error("Error calculating price per sqft:", err);
-    }
-    
-    return null;
-  };
+
 
   // Get property type icon
   const getPropertyTypeIcon = (type) => {
@@ -350,39 +326,170 @@ export default function PropertyUnitDetail() {
   };
 
   // Feature icons mapping
-  const featureIcons = {
-    // Basic Amenities
-    "24/7 Water Supply": <Droplets className="w-5 h-5" />,
-    "Power Backup": <Watch className="w-5 h-5" />,
-    "Lift": <Layers className="w-5 h-5" />,
-    "Parking": <Car className="w-5 h-5" />,
-    "Security": <Shield className="w-5 h-5" />,
-    "CCTV": <Camera className="w-5 h-5" />,
-    "WiFi": <Wifi className="w-5 h-5" />,
-    
-    // Unit Features
-    "Modular Kitchen": <Utensils className="w-5 h-5" />,
-    "Wardrobes": <Home className="w-5 h-5" />,
-    "Air Conditioning": <Wind className="w-5 h-5" />,
-    "TV": <Tv className="w-5 h-5" />,
-    "Geyser": <Droplets className="w-5 h-5" />,
-    
-    // Building Amenities
-    "Swimming Pool": <Droplets className="w-5 h-5" />,
-    "Gym": <Dumbbell className="w-5 h-5" />,
-    "Club House": <Users className="w-5 h-5" />,
-    "Play Area": <Home className="w-5 h-5" />,
-    "Garden": <TreePine className="w-5 h-5" />,
-    "Jogging Track": <Dumbbell className="w-5 h-5" />,
-    
-    // Legal & Safety
-    "Fire Safety": <Shield className="w-5 h-5" />,
-    "RERA Registered": <Award className="w-5 h-5" />,
-    "Clear Title": <FileCheck className="w-5 h-5" />,
-    "Legal Documentation": <FileText className="w-5 h-5" />
-  };
+// Feature icons mapping - UPDATED with unique icons
+const featureIcons = {
+  // Basic Amenities
+  "24/7 Water Supply": <Droplets className="w-5 h-5" />,
+  "Power Backup": <Watch className="w-5 h-5" />,
+  "Lift/Elevator": <Layers className="w-5 h-5" />,
+  "Parking": <Car className="w-5 h-5" />,
+  "Security": <Shield className="w-5 h-5" />,
+  "CCTV Surveillance": <Camera className="w-5 h-5" />,
+  "WiFi/Internet": <Wifi className="w-5 h-5" />,
+  
+  // Unit Features
+  "Modular Kitchen": <Utensils className="w-5 h-5" />,
+  "Built-in Wardrobes": <Building className="w-5 h-5" />,
+  "Air Conditioning": <Wind className="w-5 h-5" />,
+  "TV": <Tv className="w-5 h-5" />,
+  "Geyser": <Droplets className="w-5 h-5" />,
+  "False Ceiling": <Layers className="w-5 h-5" />,
+  "Wooden Flooring": <Home className="w-5 h-5" />,
+  "Marble Flooring": <Award className="w-5 h-5" />,
+  "Vitrified Tiles": <Home className="w-5 h-5" />,
+  "Piped Gas": <Wind className="w-5 h-5" />,
+  "Intercom": <Phone className="w-5 h-5" />,
+  
+  // Building Amenities
+  "Swimming Pool": <Droplets className="w-5 h-5" />,
+  "Gym/Fitness Center": <Dumbbell className="w-5 h-5" />,
+  "Club House": <Users className="w-5 h-5" />,
+  "Children's Play Area": <Home className="w-5 h-5" />,
+  "Garden/Lawn": <TreePine className="w-5 h-5" />,
+  "Jogging Track": <Navigation className="w-5 h-5" />,
+  "Tennis Court": <Award className="w-5 h-5" />,
+  "Basketball Court": <Award className="w-5 h-5" />,
+  "Badminton Court": <Award className="w-5 h-5" />,
+  "Squash Court": <Award className="w-5 h-5" />,
+  "Yoga/Meditation Area": <Users className="w-5 h-5" />,
+  "Party Hall": <Users className="w-5 h-5" />,
+  "Guest Rooms": <Building2 className="w-5 h-5" />,
+  "Library": <FileText className="w-5 h-5" />,
+  "Indoor Games": <Home className="w-5 h-5" />,
+  
+  // Kitchen & Bathroom
+  "Chimney": <Wind className="w-5 h-5" />,
+  "Water Purifier": <Droplets className="w-5 h-5" />,
+  "Microwave": <Utensils className="w-5 h-5" />,
+  "Refrigerator": <Home className="w-5 h-5" />,
+  "Dishwasher": <Utensils className="w-5 h-5" />,
+  "Washing Machine": <Home className="w-5 h-5" />,
+  "Jacuzzi": <Droplets className="w-5 h-5" />,
+  "Shower Cubicle": <Droplets className="w-5 h-5" />,
+  
+  // Safety & Security
+  "Fire Safety": <Shield className="w-5 h-5" />,
+  "RERA Registered": <Award className="w-5 h-5" />,
+  "Clear Title": <FileCheck className="w-5 h-5" />,
+  "Legal Documentation": <FileText className="w-5 h-5" />,
+  "Security Guard": <Shield className="w-5 h-5" />,
+  "Video Door Phone": <Camera className="w-5 h-5" />,
+  "Burglar Alarm": <Shield className="w-5 h-5" />,
+  "Fire Extinguisher": <Shield className="w-5 h-5" />,
+  "Earthquake Resistant": <Shield className="w-5 h-5" />,
+  
+  // Additional Features
+  "Main Road Facing": <Navigation className="w-5 h-5" />,
+  "Corner Location": <MapPin className="w-5 h-5" />,
+  "Natural Light/Ventilation": <Wind className="w-5 h-5" />,
+  "Park Facing": <TreePine className="w-5 h-5" />,
+  "Lake/River View": <Droplets className="w-5 h-5" />,
+  "Mountain View": <TreePine className="w-5 h-5" />,
+  "Sea View": <Droplets className="w-5 h-5" />,
+  "Pet Friendly": <Home className="w-5 h-5" />,
+  "Wheelchair Access": <Home className="w-5 h-5" />,
+  "Servant Room": <Building2 className="w-5 h-5" />,
+  "Pooja Room": <Home className="w-5 h-5" />,
+  "Study Room": <FileText className="w-5 h-5" />,
+  "Store Room": <Building2 className="w-5 h-5" />,
+  
+  // Utilities
+  "Solar Water Heating": <Wind className="w-5 h-5" />,
+  "Rain Water Harvesting": <Droplets className="w-5 h-5" />,
+  "Sewage Treatment Plant": <Droplets className="w-5 h-5" />,
+  "Water Storage": <Droplets className="w-5 h-5" />,
+  
+  // Infrastructure
+  "Wide Roads": <Navigation className="w-5 h-5" />,
+  "Street Lights": <Watch className="w-5 h-5" />,
+  "Drainage System": <Droplets className="w-5 h-5" />,
+  "Waste Management": <Home className="w-5 h-5" />,
+  
+  // Commercial Features
+  "Basement Parking": <Car className="w-5 h-5" />,
+  "Conference Room": <Users className="w-5 h-5" />,
+  "Pantry": <Utensils className="w-5 h-5" />,
+  "Reception Area": <Building2 className="w-5 h-5" />,
+  "Modular Office": <Building className="w-5 h-5" />,
+  "Cafeteria": <Utensils className="w-5 h-5" />,
+};
 
-  const pricePerSqft = calculatePricePerSqft();
+// Fallback icon mapping for unknown features
+const getFeatureIcon = (feature) => {
+  const featureLower = feature.toLowerCase();
+  
+  if (featureLower.includes('water') || featureLower.includes('pool') || featureLower.includes('rain')) {
+    return <Droplets className="w-5 h-5" />;
+  }
+  if (featureLower.includes('security') || featureLower.includes('safety') || featureLower.includes('guard')) {
+    return <Shield className="w-5 h-5" />;
+  }
+  if (featureLower.includes('gym') || featureLower.includes('fitness') || featureLower.includes('sports')) {
+    return <Dumbbell className="w-5 h-5" />;
+  }
+  if (featureLower.includes('park') || featureLower.includes('garden') || featureLower.includes('tree')) {
+    return <TreePine className="w-5 h-5" />;
+  }
+  if (featureLower.includes('kitchen') || featureLower.includes('food') || featureLower.includes('cooking')) {
+    return <Utensils className="w-5 h-5" />;
+  }
+  if (featureLower.includes('document') || featureLower.includes('legal') || featureLower.includes('paper')) {
+    return <FileText className="w-5 h-5" />;
+  }
+  if (featureLower.includes('certificate') || featureLower.includes('award') || featureLower.includes('registered')) {
+    return <Award className="w-5 h-5" />;
+  }
+  if (featureLower.includes('camera') || featureLower.includes('cctv') || featureLower.includes('surveillance')) {
+    return <Camera className="w-5 h-5" />;
+  }
+  if (featureLower.includes('wifi') || featureLower.includes('internet') || featureLower.includes('network')) {
+    return <Wifi className="w-5 h-5" />;
+  }
+  if (featureLower.includes('phone') || featureLower.includes('call') || featureLower.includes('communication')) {
+    return <Phone className="w-5 h-5" />;
+  }
+  if (featureLower.includes('navigation') || featureLower.includes('direction') || featureLower.includes('road')) {
+    return <Navigation className="w-5 h-5" />;
+  }
+  if (featureLower.includes('building') || featureLower.includes('structure') || featureLower.includes('construction')) {
+    return <Building className="w-5 h-5" />;
+  }
+  if (featureLower.includes('people') || featureLower.includes('users') || featureLower.includes('community')) {
+    return <Users className="w-5 h-5" />;
+  }
+  if (featureLower.includes('clock') || featureLower.includes('time') || featureLower.includes('schedule')) {
+    return <Watch className="w-5 h-5" />;
+  }
+  if (featureLower.includes('air') || featureLower.includes('wind') || featureLower.includes('ventilation')) {
+    return <Wind className="w-5 h-5" />;
+  }
+  if (featureLower.includes('layer') || featureLower.includes('floor') || featureLower.includes('level')) {
+    return <Layers className="w-5 h-5" />;
+  }
+  if (featureLower.includes('tv') || featureLower.includes('television') || featureLower.includes('entertainment')) {
+    return <Tv className="w-5 h-5" />;
+  }
+  if (featureLower.includes('car') || featureLower.includes('vehicle') || featureLower.includes('transport')) {
+    return <Car className="w-5 h-5" />;
+  }
+  if (featureLower.includes('map') || featureLower.includes('location') || featureLower.includes('address')) {
+    return <MapPin className="w-5 h-5" />;
+  }
+  
+  // Default icon
+  return <Home className="w-5 h-5" />;
+};
+
   const embedUrl = getGoogleMapsEmbedUrl();
   const viewUrl = getGoogleMapsViewUrl();
 
@@ -542,158 +649,139 @@ export default function PropertyUnitDetail() {
             )}
           </div>
 
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
-            <div className="flex-1">
-              <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
-                {isFeatured && (
-                  <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
-                    <Star className="w-3 h-3 sm:w-4 sm:h-4" />
-                    Featured
-                  </span>
-                )}
-                
-                {isVerified && (
-                  <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
-                    <Verified className="w-3 h-3 sm:w-4 sm:h-4" />
-                    Verified
-                  </span>
-                )}
-                
-                <span className={`${getListingTypeColor(listingType)} text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2`}>
-                  {listingType === 'Sale' ? '💰' : '📅'}
-                  {listingType}
-                </span>
-                
-                <span className={`${getAvailabilityColor(availability)} text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg`}>
-                  {availability === 'available' ? '✅ Available' : 
-                   availability === 'sold' ? '❌ Sold' : 
-                   availability === 'rented' ? '🏠 Rented' : 
-                   '🤝 Under Negotiation'}
-                </span>
-                
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
-                  {getPropertyTypeIcon(propertyType)}
-                  {propertyType}
-                </span>
-              </div>
-              
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight leading-tight">
-                {title || "Untitled Property"}
-                {unitNumber && (
-                  <span className="text-blue-600 ml-2 text-lg sm:text-xl">#{unitNumber}</span>
-                )}
-              </h1>
-              
-              <div className="flex items-center gap-2 sm:gap-3 text-blue-600 mb-4 sm:mb-6">
-                <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="text-base sm:text-lg font-bold tracking-wide">
-                  {fullAddress || `${address || ''}${address && city ? ', ' : ''}${city || ''}` || "Location not specified"}
-                </span>
-              </div>
+     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+<div className="flex-1">
+  <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
+    {isFeatured && (
+      <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
+        <Star className="w-3 h-3 sm:w-4 sm:h-4" />
+        Featured
+      </span>
+    )}
+    
+    {isVerified && (
+      <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
+        <Verified className="w-3 h-3 sm:w-4 sm:h-4" />
+        Verified
+      </span>
+    )}
+    
+<span className="bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
+  {listingType === 'Sale' ? '🏷️' : '📋'}
+  {listingType}
+</span>
 
-              <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6">
-                {/* Unit Specifications */}
-                {safeSpecifications.bedrooms > 0 && (
-                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-blue-200 shadow-sm">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                        {safeSpecifications.bedrooms}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                        Bedrooms
-                      </p>
-                    </div>
-                  </div>
-                )}
+<span className={`bg-gradient-to-r from-amber-700 to-yellow-100 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg`}>
+  {availability === 'available' ? '🌟 Available' : 
+   availability === 'sold' ? '🏆 Sold' : 
+   availability === 'rented' ? '🔑 Rented' : 
+   '🤝 Under Negotiation'}
+</span>
+    <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
+      {getPropertyTypeIcon(propertyType)}
+      {propertyType}
+    </span>
+  </div>
+  
+  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight leading-tight">
+    {title || "Untitled Property"}
+    {unitNumber && (
+      <span className="text-indigo-600 ml-2 text-lg sm:text-xl">#{unitNumber}</span>
+    )}
+  </h1>
+  
+  <div className="flex items-center gap-2 sm:gap-3 text-indigo-600 mb-4 sm:mb-6">
+    <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
+    <span className="text-base sm:text-lg font-bold tracking-wide">
+      {fullAddress || `${address || ''}${address && city ? ', ' : ''}${city || ''}` || "Location not specified"}
+    </span>
+  </div>
 
-                {safeSpecifications.bathrooms > 0 && (
-                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-blue-200 shadow-sm">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Bath className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                        {safeSpecifications.bathrooms}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                        Bathrooms
-                      </p>
-                    </div>
-                  </div>
-                )}
+  <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6">
+    {/* Unit Specifications */}
+    {safeSpecifications.bedrooms > 0 && (
+      <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg sm:rounded-xl border border-indigo-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        </div>
+        <div>
+          <p className="text-xl sm:text-2xl font-bold text-indigo-900">
+            {safeSpecifications.bedrooms}
+          </p>
+          <p className="text-xs sm:text-sm text-indigo-700 font-medium">
+            Bedrooms
+          </p>
+        </div>
+      </div>
+    )}
 
-                {safeSpecifications.carpetArea > 0 && (
-                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-blue-200 shadow-sm">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Maximize className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                        {safeSpecifications.carpetArea.toLocaleString()} sq.ft.
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                        Carpet Area
-                      </p>
-                    </div>
-                  </div>
-                )}
+    {safeSpecifications.bathrooms > 0 && (
+      <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg sm:rounded-xl border border-teal-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Bath className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        </div>
+        <div>
+          <p className="text-xl sm:text-2xl font-bold text-teal-900">
+            {safeSpecifications.bathrooms}
+          </p>
+          <p className="text-xs sm:text-sm text-teal-700 font-medium">
+            Bathrooms
+          </p>
+        </div>
+      </div>
+    )}
 
-                {safeSpecifications.floorNumber > 0 && (
-                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-blue-200 shadow-sm">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                        {safeSpecifications.floorNumber}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                        Floor
-                      </p>
-                    </div>
-                  </div>
-                )}
+    {safeSpecifications.carpetArea > 0 && (
+      <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg sm:rounded-xl border border-amber-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Maximize className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        </div>
+        <div>
+          <p className="text-xl sm:text-2xl font-bold text-amber-900">
+            {safeSpecifications.carpetArea.toLocaleString()} sq.ft.
+          </p>
+          <p className="text-xs sm:text-sm text-amber-700 font-medium">
+            Carpet Area
+          </p>
+        </div>
+      </div>
+    )}
 
-                {/* Price Per Sqft */}
-                {pricePerSqft && (
-                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg sm:rounded-xl border-2 border-green-300 shadow-sm">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-600 to-green-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                        ₹{pricePerSqft}/sq.ft.
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                        Price per sq.ft.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4 sm:mt-0 lg:text-right">
-              <div className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mb-1 sm:mb-2">
-                {formatPrice(price)}
-              </div>
-              
-              {maintenanceCharges > 0 && (
-                <p className="text-sm text-gray-600 mb-1">
-                  Maintenance: ₹{maintenanceCharges.toLocaleString()}/month
-                </p>
-              )}
-              
-              {securityDeposit > 0 && (
-                <p className="text-sm text-gray-600">
-                  Security Deposit: ₹{securityDeposit.toLocaleString()}
-                </p>
-              )}
-            </div>
-          </div>
+    {safeSpecifications.floorNumber > 0 && (
+      <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg sm:rounded-xl border border-emerald-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+          <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        </div>
+        <div>
+          <p className="text-xl sm:text-2xl font-bold text-emerald-900">
+            {safeSpecifications.floorNumber}
+          </p>
+          <p className="text-xs sm:text-sm text-emerald-700 font-medium">
+            Floor
+          </p>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+  <div className="mt-4 sm:mt-0 lg:text-right">
+    <div className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-1 sm:mb-2">
+      {formatPrice(price)}
+    </div>
+    
+    {maintenanceCharges > 0 && (
+      <p className="text-sm text-gray-600 mb-1">
+        Maintenance: ₹{maintenanceCharges.toLocaleString()}/month
+      </p>
+    )}
+    
+    {securityDeposit > 0 && (
+      <p className="text-sm text-gray-600">
+        Security Deposit: ₹{securityDeposit.toLocaleString()}
+      </p>
+    )}
+  </div>
+</div>
         </div>
       </div>
 
@@ -935,29 +1023,29 @@ export default function PropertyUnitDetail() {
               </div>
             )}
 
-            {/* Unit Features */}
-            {safeUnitFeatures.length > 0 && (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 md:p-8 border border-blue-200">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
-                  Unit Features
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                  {safeUnitFeatures.map((feature, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200 hover:border-blue-300 transition-all"
-                    >
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                        {featureIcons[feature] || <Home className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
-                      </div>
-                      <span className="font-bold text-gray-800 tracking-wide text-sm sm:text-base">
-                        {feature}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          {/* Unit Features */}
+{safeUnitFeatures.length > 0 && (
+  <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 md:p-8 border border-blue-200">
+    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
+      Unit Features
+    </h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+      {safeUnitFeatures.map((feature, index) => (
+        <div
+          key={index}
+          className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg sm:rounded-xl border border-indigo-200 hover:border-indigo-300 transition-all hover:shadow-md"
+        >
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            {featureIcons[feature] || getFeatureIcon(feature)}
+          </div>
+          <span className="font-bold text-gray-800 tracking-wide text-sm sm:text-base">
+            {feature}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
             {/* Building Details */}
             {safeBuildingDetails.name && (
@@ -1075,7 +1163,7 @@ export default function PropertyUnitDetail() {
             )}
 
             {/* Virtual Tour */}
-            {virtualTour && (
+            {/* {virtualTour && (
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 md:p-8 border border-blue-200">
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
                   Virtual Tour
@@ -1092,7 +1180,7 @@ export default function PropertyUnitDetail() {
                   ></iframe>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Right Column - Contact & Info */}
