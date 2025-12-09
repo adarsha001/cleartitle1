@@ -33,6 +33,8 @@ import PropertyUnitForm from "./components/PropertyUnitForm";
 import PropertySelectionPage from "./pages/PropertySelectionPage";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import PropertyUnitsPage from "./components/PropertyUnitsPage";
+import PropertyUnitDetail from "./components/PropertyUnitDetail";
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
@@ -69,6 +71,7 @@ export default function App() {
               {/* Public Routes */}
               <Route path="/" element={<Home/>} />
               <Route path="/properties" element={<PropertyList />} />
+              <Route path="/properties-unit" element={<PropertyUnitsPage />} />
               <Route path="/featured" element={<FeaturedProperties />} />
               <Route path="/property/:id" element={<PropertyDetail />} />
               
@@ -115,6 +118,9 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+
+
+              <Route path="/property-units/:id" element={<PropertyUnitDetail />} />
                <Route path="/add-listing" element={<PropertySelectionPage />} />
               {/* Admin Routes */}
               <Route

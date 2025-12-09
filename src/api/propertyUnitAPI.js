@@ -1,15 +1,40 @@
-// In your api/axios.js or similar file
+// api/propertyUnitAPI.js
 import axios from 'axios';
 
-const baseURL = 'https://saimr-backend-1.onrender.com/api';
-
+// Create axios instance
 const API = axios.create({
-  baseURL,
+  baseURL: 'https://saimr-backend-1.onrender.com/api',
   timeout: 15000,
-  withCredentials: true,
 });
 
-// Add the property unit API endpoints
+// Add request interceptor to include token
+API.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle errors
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized - clear token and redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Property Unit API methods
 export const propertyUnitAPI = {
   // Get all property units with filters
   getPropertyUnits: (params = {}) => {
@@ -23,34 +48,20 @@ export const propertyUnitAPI = {
 
   // Create property unit (FormData for images)
   createPropertyUnit: (formData) => {
-    const APII = axios.create({
-      baseURL,
-      timeout: 30000,
-      withCredentials: true,
+    return API.post('/property-units', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
-    
-    const token = localStorage.getItem('token');
-    if (token) {
-      APII.defaults.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    return APII.post('/property-units', formData);
   },
 
   // Update property unit
   updatePropertyUnit: (id, formData) => {
-    const APII = axios.create({
-      baseURL,
-      timeout: 30000,
-      withCredentials: true,
+    return API.put(`/property-units/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
-    
-    const token = localStorage.getItem('token');
-    if (token) {
-      APII.defaults.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    return APII.put(`/property-units/${id}`, formData);
   },
 
   // Delete property unit
@@ -69,5 +80,10 @@ export const propertyUnitAPI = {
       approvalStatus: status,
       rejectionReason: reason
     });
+  },
+
+  // Get my properties
+  getMyProperties: () => {
+    return API.get('/property-units/my-properties');
   }
 };
