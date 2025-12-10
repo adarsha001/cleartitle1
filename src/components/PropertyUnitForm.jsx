@@ -10,7 +10,7 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const [images, setImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   
-  // Individual state for all fields
+  // All individual state fields (same as before)
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [unitNumber, setUnitNumber] = useState('');
@@ -19,19 +19,14 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const [coordinatesLat, setCoordinatesLat] = useState('');
   const [coordinatesLng, setCoordinatesLng] = useState('');
   const [mapUrl, setMapUrl] = useState('');
-  // Price fields
   const [priceAmount, setPriceAmount] = useState('');
   const [priceCurrency, setPriceCurrency] = useState('INR');
   const [pricePerUnit, setPricePerUnit] = useState('total');
   const [maintenanceCharges, setMaintenanceCharges] = useState(0);
   const [securityDeposit, setSecurityDeposit] = useState(0);
-  
-  // Property type and status
   const [propertyType, setPropertyType] = useState('Apartment');
   const [availability, setAvailability] = useState('available');
   const [listingType, setListingType] = useState('sale');
-  
-  // Specifications (all individual fields)
   const [specBedrooms, setSpecBedrooms] = useState('');
   const [specBathrooms, setSpecBathrooms] = useState('');
   const [specBalconies, setSpecBalconies] = useState(0);
@@ -47,62 +42,40 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const [specParkingCovered, setSpecParkingCovered] = useState(0);
   const [specParkingOpen, setSpecParkingOpen] = useState(0);
   const [specKitchenType, setSpecKitchenType] = useState('regular');
-  
-  // Building details
   const [buildingName, setBuildingName] = useState('');
   const [buildingTotalFloors, setBuildingTotalFloors] = useState('');
   const [buildingTotalUnits, setBuildingTotalUnits] = useState('');
   const [buildingYearBuilt, setBuildingYearBuilt] = useState('');
   const [buildingAmenities, setBuildingAmenities] = useState([]);
-  
-  // Unit features
   const [unitFeatures, setUnitFeatures] = useState([]);
-  
-  // Rental details
   const [rentalAvailable, setRentalAvailable] = useState(false);
   const [rentalLeaseDurationValue, setRentalLeaseDurationValue] = useState(11);
   const [rentalLeaseDurationUnit, setRentalLeaseDurationUnit] = useState('months');
   const [rentalNegotiable, setRentalNegotiable] = useState(true);
   const [rentalPreferredTenants, setRentalPreferredTenants] = useState(['any']);
   const [rentalIncludedInRent, setRentalIncludedInRent] = useState([]);
-  
-  // Website assignment
   const [websiteAssignment, setWebsiteAssignment] = useState(['cleartitle']);
-  
-  // Additional info
   const [virtualTour, setVirtualTour] = useState('');
   const [floorPlanImage, setFloorPlanImage] = useState('');
   const [floorPlanPublicId, setFloorPlanPublicId] = useState('');
   const [floorPlanDescription, setFloorPlanDescription] = useState('');
-  
-  // Owner details
   const [ownerName, setOwnerName] = useState('');
   const [ownerPhone, setOwnerPhone] = useState('');
   const [ownerEmail, setOwnerEmail] = useState('');
   const [ownerReason, setOwnerReason] = useState('');
-  
-  // Legal details
   const [legalOwnershipType, setLegalOwnershipType] = useState('');
   const [legalReraRegistered, setLegalReraRegistered] = useState(false);
   const [legalReraNumber, setLegalReraNumber] = useState('');
   const [legalKhataCertificate, setLegalKhataCertificate] = useState(false);
   const [legalEncumbranceCertificate, setLegalEncumbranceCertificate] = useState(false);
   const [legalOccupancyCertificate, setLegalOccupancyCertificate] = useState(false);
-  
-  // Viewing schedule
   const [viewingSchedule, setViewingSchedule] = useState([]);
-  
-  // Contact preference
   const [contactPreference, setContactPreference] = useState(['call', 'whatsapp']);
-  
-  // SEO and display
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
-  // REMOVED: displayOrder, isFeatured, isVerified, approvalStatus - will be handled by backend
-
-  // Parent property
   const [parentProperty, setParentProperty] = useState('');
 
+  // Options arrays (same as before)
   const propertyTypes = [
     "Apartment", "Villa", "Independent House", "Studio", 
     "Penthouse", "Duplex", "Row House", "Plot", "Commercial Space"
@@ -119,60 +92,24 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const contactPreferenceOptions = ["call", "whatsapp", "email", "message"];
   const ownershipTypeOptions = ["freehold", "leasehold", "cooperative", "power-of-attorney"];
   
-  // Website options
-  const websiteOptions = [
-    "cleartitle", 
-    "saimr",
-    "magicbricks", 
-    "99acres", 
-    "housing", 
-    "commonfloor", 
-    "makaan"
-  ];
+  const websiteOptions = ["cleartitle", "saimr", "magicbricks", "99acres", "housing", "commonfloor", "makaan"];
   
-  // Unit features options
   const unitFeaturesOptions = [
-    "Air Conditioning", 
-    "Modular Kitchen", 
-    "Wardrobes", 
-    "Geyser", 
-    "Exhaust Fan", 
-    "Chimney",
-    "Lighting", 
-    "Ceiling Fans", 
-    "Smart Home Automation", 
-    "Central AC", 
-    "Jacuzzi",
-    "Walk-in Closet",
-    "Study Room", 
-    "Pooja Room", 
-    "Utility Area", 
-    "Servant Room", 
-    "Private Garden", 
-    "Terrace",
-    "Balcony", 
-    "Swimming Pool", 
-    "Video Door Phone", 
-    "Security Alarm", 
-    "Fire Safety",
-    "CCTV", 
-    "Pet Friendly", 
-    "Wheelchair Access", 
-    "Natural Light", 
-    "View"
+    "Air Conditioning", "Modular Kitchen", "Wardrobes", "Geyser", "Exhaust Fan", "Chimney",
+    "Lighting", "Ceiling Fans", "Smart Home Automation", "Central AC", "Jacuzzi", "Walk-in Closet",
+    "Study Room", "Pooja Room", "Utility Area", "Servant Room", "Private Garden", "Terrace",
+    "Balcony", "Swimming Pool", "Video Door Phone", "Security Alarm", "Fire Safety", "CCTV",
+    "Pet Friendly", "Wheelchair Access", "Natural Light", "View"
   ];
 
-  // Building amenities options
   const amenitiesOptions = [
     "Swimming Pool", "Gym", "Club House", "Children Play Area", "Park", "Garden",
     "Power Backup", "Lift", "Security", "CCTV", "Fire Safety", "Intercom",
     "Visitor Parking", "Reserved Parking"
   ];
 
-  // Included in rent options
   const includedInRentOptions = ["maintenance", "electricity", "water", "gas", "internet", "parking"];
 
-  // Year options for building year built (1950 to current year)
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from(
     { length: currentYear - 1949 },
@@ -192,12 +129,10 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       const response = await propertyUnitAPI.getPropertyUnit(propertyUnitId);
       const data = response.data.data;
       
-      // Set images preview
       if (data.images && data.images.length > 0) {
         setPreviewImages(data.images.map(img => img.url));
       }
       
-      // Set all fields from backend data
       setTitle(data.title || '');
       setDescription(data.description || '');
       setUnitNumber(data.unitNumber || '');
@@ -206,19 +141,14 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       setCoordinatesLat(data.coordinates?.latitude || '');
       setCoordinatesLng(data.coordinates?.longitude || '');
       setMapUrl(data.mapUrl || '');
-      // Price
       setPriceAmount(data.price?.amount?.toString() || '');
       setPriceCurrency(data.price?.currency || 'INR');
       setPricePerUnit(data.price?.perUnit || 'total');
       setMaintenanceCharges(data.maintenanceCharges || 0);
       setSecurityDeposit(data.securityDeposit || 0);
-      
-      // Property type and status
       setPropertyType(data.propertyType || 'Apartment');
       setAvailability(data.availability || 'available');
       setListingType(data.listingType || 'sale');
-      
-      // Specifications
       setSpecBedrooms(data.specifications?.bedrooms?.toString() || '');
       setSpecBathrooms(data.specifications?.bathrooms?.toString() || '');
       setSpecBalconies(data.specifications?.balconies || 0);
@@ -234,59 +164,37 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       setSpecParkingCovered(data.specifications?.parking?.covered || 0);
       setSpecParkingOpen(data.specifications?.parking?.open || 0);
       setSpecKitchenType(data.specifications?.kitchenType || 'regular');
-      
-      // Building details
       setBuildingName(data.buildingDetails?.name || '');
       setBuildingTotalFloors(data.buildingDetails?.totalFloors?.toString() || '');
       setBuildingTotalUnits(data.buildingDetails?.totalUnits?.toString() || '');
       setBuildingYearBuilt(data.buildingDetails?.yearBuilt?.toString() || '');
       setBuildingAmenities(data.buildingDetails?.amenities || []);
-      
-      // Unit features
       setUnitFeatures(data.unitFeatures || []);
-      
-      // Rental details
       setRentalAvailable(data.rentalDetails?.availableForRent || false);
       setRentalLeaseDurationValue(data.rentalDetails?.leaseDuration?.value || 11);
       setRentalLeaseDurationUnit(data.rentalDetails?.leaseDuration?.unit || 'months');
       setRentalNegotiable(data.rentalDetails?.rentNegotiable || true);
       setRentalPreferredTenants(data.rentalDetails?.preferredTenants || ['any']);
       setRentalIncludedInRent(data.rentalDetails?.includedInRent || []);
-      
-      // Website assignment
       setWebsiteAssignment(data.websiteAssignment || ['cleartitle']);
-      
-      // Additional info
       setVirtualTour(data.virtualTour || '');
       setFloorPlanImage(data.floorPlan?.image || '');
       setFloorPlanPublicId(data.floorPlan?.public_id || '');
       setFloorPlanDescription(data.floorPlan?.description || '');
-      
-      // Owner details
       setOwnerName(data.ownerDetails?.name || '');
       setOwnerPhone(data.ownerDetails?.phoneNumber || '');
       setOwnerEmail(data.ownerDetails?.email || '');
       setOwnerReason(data.ownerDetails?.reasonForSelling || '');
-      
-      // Legal details
       setLegalOwnershipType(data.legalDetails?.ownershipType || '');
       setLegalReraRegistered(data.legalDetails?.reraRegistered || false);
       setLegalReraNumber(data.legalDetails?.reraNumber || '');
       setLegalKhataCertificate(data.legalDetails?.khataCertificate || false);
       setLegalEncumbranceCertificate(data.legalDetails?.encumbranceCertificate || false);
       setLegalOccupancyCertificate(data.legalDetails?.occupancyCertificate || false);
-      
-      // Viewing schedule
       setViewingSchedule(data.viewingSchedule || []);
-      
-      // Contact preference
       setContactPreference(data.contactPreference || ['call', 'whatsapp']);
-      
-      // SEO and display
       setMetaTitle(data.metaTitle || '');
       setMetaDescription(data.metaDescription || '');
-      
-      // Parent property
       setParentProperty(data.parentProperty || '');
       
     } catch (error) {
@@ -307,7 +215,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     
     setImages(files);
     
-    // Create preview URLs
     const previews = files.map(file => URL.createObjectURL(file));
     setPreviewImages(previews);
   };
@@ -323,7 +230,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     setPreviewImages(newPreviews);
   };
 
-  // Handle checkbox arrays
   const handleCheckboxArray = (array, value, setArray) => {
     if (array.includes(value)) {
       setArray(array.filter(item => item !== value));
@@ -332,17 +238,14 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     }
   };
 
-  // Validate form before submission
   const validateForm = () => {
     const errors = [];
     
-    // Basic required fields
     if (!title.trim()) errors.push('Title is required');
     if (!city.trim()) errors.push('City is required');
     if (!address.trim()) errors.push('Address is required');
     if (!priceAmount || priceAmount.trim() === '') errors.push('Price amount is required');
     
-    // Validate price amount is a valid positive number
     if (priceAmount) {
       const priceNum = parseFloat(priceAmount.replace(/,/g, ''));
       if (isNaN(priceNum)) {
@@ -352,13 +255,11 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       }
     }
     
-    // Property type specific validations
     if (propertyType === 'Plot') {
       if (!specPlotArea || specPlotArea.trim() === '' || parseFloat(specPlotArea) <= 0) {
         errors.push('Plot Area is required for Plot property type and must be greater than 0');
       }
     } else if (propertyType === 'Villa') {
-      // For Villa properties - require bedrooms, bathrooms, carpetArea, and plotArea
       const bedroomsNum = parseFloat(specBedrooms);
       if (isNaN(bedroomsNum) || bedroomsNum < 0) {
         errors.push('Bedrooms must be 0 or a positive number');
@@ -374,12 +275,10 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         errors.push('Carpet Area is required and must be greater than 0');
       }
       
-      // Plot Area is REQUIRED for Villa
       if (!specPlotArea || specPlotArea.trim() === '' || parseFloat(specPlotArea) <= 0) {
         errors.push('Plot Area is required for Villa property type and must be greater than 0');
       }
       
-      // Built-up Area is optional for Villa but validate if provided
       if (specBuiltUpArea && specBuiltUpArea.trim() !== '') {
         const builtUpAreaNum = parseFloat(specBuiltUpArea);
         if (isNaN(builtUpAreaNum) || builtUpAreaNum <= 0) {
@@ -387,7 +286,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         }
       }
     } else if (propertyType === 'Commercial Space') {
-      // For Commercial Space - require carpetArea and builtUpArea
       const carpetAreaNum = parseFloat(specCarpetArea);
       if (isNaN(carpetAreaNum) || carpetAreaNum <= 0) {
         errors.push('Carpet Area is required and must be greater than 0');
@@ -398,7 +296,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         errors.push('Built-up Area is required and must be greater than 0');
       }
       
-      // Bedrooms and bathrooms are optional for Commercial Space
       if (specBedrooms && specBedrooms.trim() !== '') {
         const bedroomsNum = parseFloat(specBedrooms);
         if (isNaN(bedroomsNum) || bedroomsNum < 0) {
@@ -413,7 +310,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         }
       }
     } else {
-      // For other non-Plot properties (Apartment, Independent House, etc.)
       const bedroomsNum = parseFloat(specBedrooms);
       if (isNaN(bedroomsNum) || bedroomsNum < 0) {
         errors.push('Bedrooms must be 0 or a positive number');
@@ -434,7 +330,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         errors.push('Built-up Area is required and must be greater than 0');
       }
       
-      // Plot Area is optional for other properties but validate if provided
       if (specPlotArea && specPlotArea.trim() !== '') {
         const plotAreaNum = parseFloat(specPlotArea);
         if (isNaN(plotAreaNum) || plotAreaNum <= 0) {
@@ -443,7 +338,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       }
     }
     
-    // Validate other numeric fields
     const numericValidations = [
       { name: 'Maintenance Charges', value: maintenanceCharges, min: 0 },
       { name: 'Security Deposit', value: securityDeposit, min: 0 },
@@ -465,7 +359,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       }
     });
     
-    // Validate building year
     if (buildingYearBuilt && buildingYearBuilt !== '') {
       const yearNum = parseInt(buildingYearBuilt);
       if (isNaN(yearNum) || yearNum < 1950 || yearNum > currentYear) {
@@ -473,7 +366,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       }
     }
     
-    // Validate images
     if (!images.length && mode === 'create') {
       errors.push('At least one image is required');
     }
@@ -489,7 +381,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate form
     if (!validateForm()) {
       return;
     }
@@ -497,7 +388,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     try {
       setLoading(true);
       
-      // Prepare data exactly as backend expects
       const dataToSend = {
         title: title.trim(),
         description: description.trim(),
@@ -510,7 +400,7 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         },
         mapUrl: mapUrl.trim(),
         price: {
-          amount: priceAmount.trim(), // Backend expects string for amount
+          amount: priceAmount.trim(),
           currency: priceCurrency,
           perUnit: pricePerUnit
         },
@@ -581,22 +471,17 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         metaTitle: metaTitle.trim(),
         metaDescription: metaDescription.trim(),
         parentProperty: parentProperty.trim() || undefined,
-        // REMOVED: displayOrder, isFeatured, isVerified, approvalStatus - backend will set defaults
       };
       
-      // Clean up empty strings and undefined values
       const cleanData = {};
       Object.keys(dataToSend).forEach(key => {
         const value = dataToSend[key];
         
-        // Skip completely undefined/null values
         if (value === null || value === undefined) {
           return;
         }
         
-        // Handle objects
         if (typeof value === 'object' && !Array.isArray(value)) {
-          // Clean nested objects
           const cleanNested = {};
           let hasNestedValues = false;
           
@@ -612,37 +497,29 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
             cleanData[key] = cleanNested;
           }
         } 
-        // Handle arrays
         else if (Array.isArray(value)) {
-          // Only include non-empty arrays
           if (value.length > 0) {
             cleanData[key] = value;
           }
         }
-        // Handle strings
         else if (typeof value === 'string') {
-          // Only include non-empty strings
           if (value.trim() !== '') {
             cleanData[key] = value.trim();
           }
         }
-        // Handle other types (numbers, booleans)
         else {
           cleanData[key] = value;
         }
       });
       
-      // Special handling for legalDetails.ownershipType
       if (cleanData.legalDetails && cleanData.legalDetails.ownershipType === '') {
         delete cleanData.legalDetails.ownershipType;
       }
       
-      // If legalDetails ends up empty, remove it completely
       if (cleanData.legalDetails && Object.keys(cleanData.legalDetails).length === 0) {
         delete cleanData.legalDetails;
       }
       
-      // Special handling for ownerDetails
       if (cleanData.ownerDetails) {
         const cleanOwner = {};
         Object.keys(cleanData.ownerDetails).forEach(key => {
@@ -658,17 +535,13 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         }
       }
       
-      // Create FormData
       const formDataToSend = new FormData();
       
-      // Append all data as JSON strings (backend expects JSON strings for nested objects)
       Object.keys(cleanData).forEach(key => {
         if (cleanData[key] !== null && cleanData[key] !== undefined) {
           if (typeof cleanData[key] === 'object' && !Array.isArray(cleanData[key])) {
-            // Stringify nested objects for backend to parse
             formDataToSend.append(key, JSON.stringify(cleanData[key]));
           } else if (Array.isArray(cleanData[key])) {
-            // Stringify arrays for backend to parse
             formDataToSend.append(key, JSON.stringify(cleanData[key]));
           } else {
             formDataToSend.append(key, cleanData[key]);
@@ -676,13 +549,11 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         }
       });
       
-      // Append images
       if (images.length > 0) {
-        images.forEach((image, index) => {
+        images.forEach((image) => {
           formDataToSend.append('images', image);
         });
       } else if (mode === 'edit') {
-        // For edit mode, if no new images, send empty array
         formDataToSend.append('images', JSON.stringify([]));
       }
       
@@ -691,7 +562,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
         response = await propertyUnitAPI.createPropertyUnit(formDataToSend);
         toast.success('Property unit created successfully! It will be visible after admin approval.');
         
-        // Navigate to profile page after successful creation
         setTimeout(() => {
           navigate('/profile');
         }, 1500);
@@ -709,7 +579,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       console.error('Submission error details:', error);
       console.error('Error response:', error.response?.data);
       
-      // More detailed error messages
       if (error.response?.data?.errors) {
         error.response.data.errors.forEach(err => toast.error(err));
       } else if (error.response?.data?.message) {
@@ -723,17 +592,17 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     }
   };
 
-  // Helper function to render input
-  const renderInput = (label, value, onChange, type = 'text', placeholder = '', required = false, min = null, max = null) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+  // Helper Components
+  const ResponsiveInput = ({ label, value, onChange, type = 'text', placeholder = '', required = false, min = null, max = null }) => (
+    <div className="mb-3 sm:mb-4">
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         placeholder={placeholder}
         required={required}
         min={min}
@@ -742,16 +611,15 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     </div>
   );
 
-  // Helper function to render textarea
-  const renderTextarea = (label, value, onChange, placeholder = '', required = false, rows = 3) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+  const ResponsiveTextarea = ({ label, value, onChange, placeholder = '', required = false, rows = 3 }) => (
+    <div className="mb-3 sm:mb-4">
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         placeholder={placeholder}
         required={required}
         rows={rows}
@@ -759,16 +627,15 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     </div>
   );
 
-  // Helper function to render select
-  const renderSelect = (label, value, onChange, options, required = false) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+  const ResponsiveSelect = ({ label, value, onChange, options, required = false }) => (
+    <div className="mb-3 sm:mb-4">
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         required={required}
       >
         {options.map(option => (
@@ -780,50 +647,45 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     </div>
   );
 
-  // Helper function to render year select
-  const renderYearSelect = (label, value, onChange, required = false) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+  const ResponsiveYearSelect = ({ label, value, onChange, required = false }) => (
+    <div className="mb-3 sm:mb-4">
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         required={required}
       >
         <option value="">Select Year</option>
         {yearOptions.map(year => (
-          <option key={year} value={year}>
-            {year}
-          </option>
+          <option key={year} value={year}>{year}</option>
         ))}
       </select>
     </div>
   );
 
-  // Helper function to render checkbox
-  const renderCheckbox = (label, checked, onChange) => (
-    <div className="flex items-center mb-3">
+  const ResponsiveCheckbox = ({ label, checked, onChange }) => (
+    <div className="flex items-center mb-2 sm:mb-3">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
       />
-      <label className="ml-2 block text-sm text-gray-700">
+      <label className="ml-2 block text-xs sm:text-sm text-gray-700">
         {label}
       </label>
     </div>
   );
 
-  // Helper function to render checkbox group
-  const renderCheckboxGroup = (label, options, selectedValues, onChange) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+  const ResponsiveCheckboxGroup = ({ label, options, selectedValues, onChange, columns = 1 }) => (
+    <div className="mb-3 sm:mb-4">
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
         {label}
       </label>
-      <div className="space-y-2">
+      <div className={`grid grid-cols-${columns} sm:grid-cols-${columns} gap-1 sm:gap-2`}>
         {options.map(option => (
           <div key={option} className="flex items-center">
             <input
@@ -832,7 +694,7 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
               onChange={() => onChange(option)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label className="ml-2 text-sm text-gray-700">
+            <label className="ml-2 text-xs sm:text-sm text-gray-700 truncate">
               {option}
             </label>
           </div>
@@ -842,78 +704,176 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          {mode === 'create' ? 'Add New Property Unit' : 'Edit Property Unit'}
-        </h1>
-        <p className="text-gray-600 mb-8">
-          Fill in the details below to {mode === 'create' ? 'list a new' : 'update'} property unit
-        </p>
+    <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 py-4 sm:py-6 lg:py-8">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-sm sm:shadow-lg overflow-hidden p-3 sm:p-4 md:p-6 lg:p-8">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
+            {mode === 'create' ? 'Add New Property Unit' : 'Edit Property Unit'}
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600">
+            Fill in the details below to {mode === 'create' ? 'list a new' : 'update'} property unit
+          </p>
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information Section */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Basic Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderInput('Title *', title, setTitle, 'text', 'e.g., Luxury 3BHK Apartment', true)}
-              {renderInput('Unit Number', unitNumber, setUnitNumber, 'text', 'e.g., Unit 101, Villa A1')}
-              <div className="md:col-span-2">
-                {renderTextarea('Description', description, setDescription, 'Detailed description of the property')}
+        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+          {/* Basic Information */}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Basic Information</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+              <ResponsiveInput 
+                label="Title *" 
+                value={title} 
+                onChange={setTitle} 
+                placeholder="e.g., Luxury 3BHK Apartment" 
+                required 
+              />
+              <ResponsiveInput 
+                label="Unit Number" 
+                value={unitNumber} 
+                onChange={setUnitNumber} 
+                placeholder="e.g., Unit 101, Villa A1" 
+              />
+              <div className="sm:col-span-2">
+                <ResponsiveTextarea 
+                  label="Description" 
+                  value={description} 
+                  onChange={setDescription} 
+                  placeholder="Detailed description of the property" 
+                  rows={3}
+                />
               </div>
-              {renderInput('Parent Property ID', parentProperty, setParentProperty, 'text', 'Property ID for grouping (optional)')}
+              <div className="sm:col-span-2">
+                <ResponsiveInput 
+                  label="Parent Property ID" 
+                  value={parentProperty} 
+                  onChange={setParentProperty} 
+                  placeholder="Property ID for grouping (optional)" 
+                />
+              </div>
             </div>
           </div>
-          
+
           {/* Location Section */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Location Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderInput('City *', city, setCity, 'text', 'e.g., Mumbai', true)}
-              {renderInput('Address *', address, setAddress, 'text', 'Full address', true)}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Location Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+              <ResponsiveInput 
+                label="City *" 
+                value={city} 
+                onChange={setCity} 
+                placeholder="e.g., Mumbai" 
+                required 
+              />
+              <ResponsiveInput 
+                label="Address *" 
+                value={address} 
+                onChange={setAddress} 
+                placeholder="Full address" 
+                required 
+              />
             </div>
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderInput('Latitude', coordinatesLat, setCoordinatesLat, 'text', 'e.g., 19.0760')}
-              {renderInput('Longitude', coordinatesLng, setCoordinatesLng, 'text', 'e.g., 72.8777')}
+            <div className="mt-3 sm:mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+              <ResponsiveInput 
+                label="Latitude" 
+                value={coordinatesLat} 
+                onChange={setCoordinatesLat} 
+                placeholder="e.g., 19.0760" 
+              />
+              <ResponsiveInput 
+                label="Longitude" 
+                value={coordinatesLng} 
+                onChange={setCoordinatesLng} 
+                placeholder="e.g., 72.8777" 
+              />
             </div>
-            {/* Add Map URL field */}
-            <div className="mt-4">
-              {renderInput('Map URL (Optional)', mapUrl, setMapUrl, 'text', 'Google Maps embed URL or map image URL')}
-              <p className="text-sm text-gray-500 mt-1">
+            <div className="mt-3 sm:mt-4">
+              <ResponsiveInput 
+                label="Map URL (Optional)" 
+                value={mapUrl} 
+                onChange={setMapUrl} 
+                placeholder="Google Maps embed URL or map image URL" 
+              />
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
                 Paste Google Maps embed URL or any map service link. Example: https://maps.google.com/...
               </p>
             </div>
           </div>
-          
+
           {/* Price Section */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Pricing Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {renderInput('Price Amount *', priceAmount, setPriceAmount, 'text', 'e.g., 10000000', true, 1)}
-              {renderSelect('Currency', priceCurrency, setPriceCurrency, currencies)}
-              {renderSelect('Per Unit', pricePerUnit, setPricePerUnit, perUnitOptions)}
-              {renderInput('Maintenance Charges', maintenanceCharges, setMaintenanceCharges, 'number', 'Monthly charges', false, 0)}
-              {renderInput('Security Deposit', securityDeposit, setSecurityDeposit, 'number', 'Refundable deposit', false, 0)}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Pricing Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+              <ResponsiveInput 
+                label="Price Amount *" 
+                value={priceAmount} 
+                onChange={setPriceAmount} 
+                placeholder="e.g., 10000000" 
+                required 
+                min="1"
+              />
+              <ResponsiveSelect 
+                label="Currency" 
+                value={priceCurrency} 
+                onChange={setPriceCurrency} 
+                options={currencies} 
+              />
+              <ResponsiveSelect 
+                label="Per Unit" 
+                value={pricePerUnit} 
+                onChange={setPricePerUnit} 
+                options={perUnitOptions} 
+              />
+              <ResponsiveInput 
+                label="Maintenance Charges" 
+                value={maintenanceCharges} 
+                onChange={setMaintenanceCharges} 
+                type="number" 
+                placeholder="Monthly charges" 
+                min="0"
+              />
+              <ResponsiveInput 
+                label="Security Deposit" 
+                value={securityDeposit} 
+                onChange={setSecurityDeposit} 
+                type="number" 
+                placeholder="Refundable deposit" 
+                min="0"
+              />
             </div>
           </div>
-          
+
           {/* Property Type & Status */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Property Type & Status</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {renderSelect('Property Type *', propertyType, setPropertyType, propertyTypes, true)}
-              {renderSelect('Listing Type', listingType, setListingType, listingTypes)}
-              {renderSelect('Availability', availability, setAvailability, availabilityOptions)}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Property Type & Status</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+              <ResponsiveSelect 
+                label="Property Type *" 
+                value={propertyType} 
+                onChange={setPropertyType} 
+                options={propertyTypes} 
+                required 
+              />
+              <ResponsiveSelect 
+                label="Listing Type" 
+                value={listingType} 
+                onChange={setListingType} 
+                options={listingTypes} 
+              />
+              <ResponsiveSelect 
+                label="Availability" 
+                value={availability} 
+                onChange={setAvailability} 
+                options={availabilityOptions} 
+              />
             </div>
           </div>
-          
+
           {/* Specifications Section */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Property Specifications</h2>
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Property Specifications</h2>
             
-            {/* Helper text based on property type */}
-            <div className="mb-6 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
+            <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-blue-50 rounded-lg">
+              <p className="text-xs sm:text-sm text-blue-700">
                 <span className="font-medium">Requirements based on property type:</span>
                 {propertyType === 'Plot' && ' Plot Area is required.'}
                 {propertyType === 'Villa' && ' Bedrooms, Bathrooms, Carpet Area, and Plot Area are required.'}
@@ -923,177 +883,273 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Bedrooms - required for most properties except Plot and optional for Commercial Space */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {propertyType !== 'Plot' && (
-                renderInput(
-                  'Bedrooms' + (propertyType !== 'Commercial Space' ? ' *' : ''), 
-                  specBedrooms, 
-                  setSpecBedrooms, 
-                  'number', 
-                  'e.g., 2', 
-                  propertyType !== 'Commercial Space',
-                  0
-                )
+                <ResponsiveInput
+                  label={'Bedrooms' + (propertyType !== 'Commercial Space' ? ' *' : '')}
+                  value={specBedrooms}
+                  onChange={setSpecBedrooms}
+                  type="number"
+                  placeholder="e.g., 2"
+                  required={propertyType !== 'Commercial Space'}
+                  min="0"
+                />
               )}
               
-              {/* Bathrooms - required for most properties except Plot and optional for Commercial Space */}
               {propertyType !== 'Plot' && (
-                renderInput(
-                  'Bathrooms' + (propertyType !== 'Commercial Space' ? ' *' : ''), 
-                  specBathrooms, 
-                  setSpecBathrooms, 
-                  'number', 
-                  'e.g., 2', 
-                  propertyType !== 'Commercial Space',
-                  0
-                )
+                <ResponsiveInput
+                  label={'Bathrooms' + (propertyType !== 'Commercial Space' ? ' *' : '')}
+                  value={specBathrooms}
+                  onChange={setSpecBathrooms}
+                  type="number"
+                  placeholder="e.g., 2"
+                  required={propertyType !== 'Commercial Space'}
+                  min="0"
+                />
               )}
               
-              {/* Carpet Area - required for all properties except Plot */}
-              {propertyType !== 'Plot' && renderInput(
-                'Carpet Area (sq.ft.) *', 
-                specCarpetArea, 
-                setSpecCarpetArea, 
-                'number', 
-                'e.g., 1200', 
-                true,
-                1
+              {propertyType !== 'Plot' && (
+                <ResponsiveInput
+                  label="Carpet Area (sq.ft.) *"
+                  value={specCarpetArea}
+                  onChange={setSpecCarpetArea}
+                  type="number"
+                  placeholder="e.g., 1200"
+                  required
+                  min="1"
+                />
               )}
               
-              {/* Built-up Area - required for non-Plot and non-Villa properties */}
-              {propertyType !== 'Plot' && propertyType !== 'Villa' && renderInput(
-                'Built-up Area (sq.ft.) *', 
-                specBuiltUpArea, 
-                setSpecBuiltUpArea, 
-                'number', 
-                'e.g., 1400', 
-                true,
-                1
+              {propertyType !== 'Plot' && propertyType !== 'Villa' && (
+                <ResponsiveInput
+                  label="Built-up Area (sq.ft.) *"
+                  value={specBuiltUpArea}
+                  onChange={setSpecBuiltUpArea}
+                  type="number"
+                  placeholder="e.g., 1400"
+                  required
+                  min="1"
+                />
               )}
               
-              {/* Built-up Area - optional for Villa */}
-              {propertyType === 'Villa' && renderInput(
-                'Built-up Area (sq.ft.)', 
-                specBuiltUpArea, 
-                setSpecBuiltUpArea, 
-                'number', 
-                'e.g., 1400'
+              {propertyType === 'Villa' && (
+                <ResponsiveInput
+                  label="Built-up Area (sq.ft.)"
+                  value={specBuiltUpArea}
+                  onChange={setSpecBuiltUpArea}
+                  type="number"
+                  placeholder="e.g., 1400"
+                />
               )}
               
-              {/* Plot Area - required for Plot and Villa properties */}
-              {(propertyType === 'Plot' || propertyType === 'Villa') && renderInput(
-                'Plot Area (sq.ft.) *', 
-                specPlotArea, 
-                setSpecPlotArea, 
-                'number', 
-                'e.g., 500', 
-                true,
-                1
+              {(propertyType === 'Plot' || propertyType === 'Villa') && (
+                <ResponsiveInput
+                  label="Plot Area (sq.ft.) *"
+                  value={specPlotArea}
+                  onChange={setSpecPlotArea}
+                  type="number"
+                  placeholder="e.g., 500"
+                  required
+                  min="1"
+                />
               )}
               
-              {/* Plot Area - optional for other property types */}
-              {propertyType !== 'Plot' && propertyType !== 'Villa' && renderInput(
-                'Plot Area (sq.ft.)', 
-                specPlotArea, 
-                setSpecPlotArea, 
-                'number', 
-                'e.g., 500'
+              {propertyType !== 'Plot' && propertyType !== 'Villa' && (
+                <ResponsiveInput
+                  label="Plot Area (sq.ft.)"
+                  value={specPlotArea}
+                  onChange={setSpecPlotArea}
+                  type="number"
+                  placeholder="e.g., 500"
+                />
               )}
               
-              {/* Super Built-up Area - optional for all except Plot */}
-              {propertyType !== 'Plot' && renderInput(
-                'Super Built-up Area (sq.ft.)', 
-                specSuperBuiltUpArea, 
-                setSpecSuperBuiltUpArea, 
-                'number', 
-                'e.g., 1500'
+              {propertyType !== 'Plot' && (
+                <ResponsiveInput
+                  label="Super Built-up Area (sq.ft.)"
+                  value={specSuperBuiltUpArea}
+                  onChange={setSpecSuperBuiltUpArea}
+                  type="number"
+                  placeholder="e.g., 1500"
+                />
               )}
               
-              {renderInput('Balconies', specBalconies, setSpecBalconies, 'number', 'e.g., 2', false, 0)}
-              {renderInput('Floors in Unit', specFloors, setSpecFloors, 'number', 'e.g., 1', false, 1)}
-              {renderInput('Floor Number', specFloorNumber, setSpecFloorNumber, 'number', 'e.g., 3')}
-              {renderSelect('Furnishing', specFurnishing, setSpecFurnishing, furnishingOptions)}
-              {renderSelect('Possession Status', specPossessionStatus, setSpecPossessionStatus, possessionOptions)}
-              {renderInput('Age of Property (years)', specAgeOfProperty, setSpecAgeOfProperty, 'number', 'e.g., 5', false, 0)}
-              {renderSelect('Kitchen Type', specKitchenType, setSpecKitchenType, kitchenTypes)}
-              {renderInput('Covered Parking', specParkingCovered, setSpecParkingCovered, 'number', 'e.g., 1', false, 0)}
-              {renderInput('Open Parking', specParkingOpen, setSpecParkingOpen, 'number', 'e.g., 1', false, 0)}
+              <ResponsiveInput
+                label="Balconies"
+                value={specBalconies}
+                onChange={setSpecBalconies}
+                type="number"
+                placeholder="e.g., 2"
+                min="0"
+              />
+              
+              <ResponsiveInput
+                label="Floors in Unit"
+                value={specFloors}
+                onChange={setSpecFloors}
+                type="number"
+                placeholder="e.g., 1"
+                min="1"
+              />
+              
+              <ResponsiveInput
+                label="Floor Number"
+                value={specFloorNumber}
+                onChange={setSpecFloorNumber}
+                type="number"
+                placeholder="e.g., 3"
+              />
+              
+              <ResponsiveSelect
+                label="Furnishing"
+                value={specFurnishing}
+                onChange={setSpecFurnishing}
+                options={furnishingOptions}
+              />
+              
+              <ResponsiveSelect
+                label="Possession Status"
+                value={specPossessionStatus}
+                onChange={setSpecPossessionStatus}
+                options={possessionOptions}
+              />
+              
+              <ResponsiveInput
+                label="Age of Property (years)"
+                value={specAgeOfProperty}
+                onChange={setSpecAgeOfProperty}
+                type="number"
+                placeholder="e.g., 5"
+                min="0"
+              />
+              
+              <ResponsiveSelect
+                label="Kitchen Type"
+                value={specKitchenType}
+                onChange={setSpecKitchenType}
+                options={kitchenTypes}
+              />
+              
+              <ResponsiveInput
+                label="Covered Parking"
+                value={specParkingCovered}
+                onChange={setSpecParkingCovered}
+                type="number"
+                placeholder="e.g., 1"
+                min="0"
+              />
+              
+              <ResponsiveInput
+                label="Open Parking"
+                value={specParkingOpen}
+                onChange={setSpecParkingOpen}
+                type="number"
+                placeholder="e.g., 1"
+                min="0"
+              />
             </div>
           </div>
-          
+
           {/* Building Details */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Building Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {renderInput('Building Name', buildingName, setBuildingName, 'text', 'e.g., Skyline Towers')}
-              {renderInput('Total Floors', buildingTotalFloors, setBuildingTotalFloors, 'number', 'e.g., 20')}
-              {renderInput('Total Units', buildingTotalUnits, setBuildingTotalUnits, 'number', 'e.g., 80')}
-              {renderYearSelect('Year Built', buildingYearBuilt, setBuildingYearBuilt)}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Building Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <ResponsiveInput
+                label="Building Name"
+                value={buildingName}
+                onChange={setBuildingName}
+                placeholder="e.g., Skyline Towers"
+              />
+              
+              <ResponsiveInput
+                label="Total Floors"
+                value={buildingTotalFloors}
+                onChange={setBuildingTotalFloors}
+                type="number"
+                placeholder="e.g., 20"
+              />
+              
+              <ResponsiveInput
+                label="Total Units"
+                value={buildingTotalUnits}
+                onChange={setBuildingTotalUnits}
+                type="number"
+                placeholder="e.g., 80"
+              />
+              
+              <ResponsiveYearSelect
+                label="Year Built"
+                value={buildingYearBuilt}
+                onChange={setBuildingYearBuilt}
+              />
             </div>
             
             {/* Building Amenities */}
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+            <div className="mt-4 sm:mt-6">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                 Building Amenities
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                 {amenitiesOptions.map(amenity => (
                   <div key={amenity} className="flex items-center">
                     <input
                       type="checkbox"
                       checked={buildingAmenities.includes(amenity)}
                       onChange={() => handleCheckboxArray(buildingAmenities, amenity, setBuildingAmenities)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <label className="ml-2 text-sm text-gray-700">{amenity}</label>
+                    <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700 truncate">{amenity}</label>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-          
+
           {/* Unit Features */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Unit Features</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Unit Features</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
               {unitFeaturesOptions.map(feature => (
                 <div key={feature} className="flex items-center">
                   <input
                     type="checkbox"
                     checked={unitFeatures.includes(feature)}
                     onChange={() => handleCheckboxArray(unitFeatures, feature, setUnitFeatures)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <label className="ml-2 text-sm text-gray-700">{feature}</label>
+                  <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700 truncate">{feature}</label>
                 </div>
               ))}
             </div>
           </div>
-          
+
           {/* Rental Details */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Rental Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                {renderCheckbox('Available for Rent', rentalAvailable, setRentalAvailable)}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Rental Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+              <div className="space-y-3 sm:space-y-4">
+                <ResponsiveCheckbox 
+                  label="Available for Rent" 
+                  checked={rentalAvailable} 
+                  onChange={setRentalAvailable} 
+                />
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Lease Duration
                   </label>
-                  <div className="flex gap-4">
+                  <div className="flex gap-2 sm:gap-4">
                     <input
                       type="number"
                       value={rentalLeaseDurationValue}
                       onChange={(e) => setRentalLeaseDurationValue(e.target.value)}
-                      className="w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-20 sm:w-24 px-2 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       min="1"
                     />
                     <select
                       value={rentalLeaseDurationUnit}
                       onChange={(e) => setRentalLeaseDurationUnit(e.target.value)}
-                      className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-24 sm:w-32 px-2 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="months">Months</option>
                       <option value="years">Years</option>
@@ -1101,29 +1157,67 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
                   </div>
                 </div>
                 
-                {renderCheckbox('Rent Negotiable', rentalNegotiable, setRentalNegotiable)}
+                <ResponsiveCheckbox 
+                  label="Rent Negotiable" 
+                  checked={rentalNegotiable} 
+                  onChange={setRentalNegotiable} 
+                />
               </div>
               
-              <div className="space-y-4">
-                {renderCheckboxGroup('Preferred Tenants', preferredTenantsOptions, rentalPreferredTenants, 
-                  (tenant) => handleCheckboxArray(rentalPreferredTenants, tenant, setRentalPreferredTenants)
-                )}
+              <div className="space-y-3 sm:space-y-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    Preferred Tenants
+                  </label>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    {preferredTenantsOptions.map(tenant => (
+                      <div key={tenant} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={rentalPreferredTenants.includes(tenant)}
+                          onChange={() => handleCheckboxArray(rentalPreferredTenants, tenant, setRentalPreferredTenants)}
+                          className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700">
+                          {tenant.charAt(0).toUpperCase() + tenant.slice(1)}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 
-                {renderCheckboxGroup('Included in Rent', includedInRentOptions, rentalIncludedInRent,
-                  (item) => handleCheckboxArray(rentalIncludedInRent, item, setRentalIncludedInRent)
-                )}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    Included in Rent
+                  </label>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    {includedInRentOptions.map(item => (
+                      <div key={item} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={rentalIncludedInRent.includes(item)}
+                          onChange={() => handleCheckboxArray(rentalIncludedInRent, item, setRentalIncludedInRent)}
+                          className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700">
+                          {item.charAt(0).toUpperCase() + item.slice(1)}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          
+
           {/* Website Assignment */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Website Assignment</h2>
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600 mb-4">
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Website Assignment</h2>
+            <div className="space-y-3 sm:space-y-4">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Select websites where this property should be listed. Default is ClearTitle.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
                 {websiteOptions.map(website => {
                   const displayName = website.charAt(0).toUpperCase() + website.slice(1);
                   
@@ -1133,9 +1227,9 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
                         type="checkbox"
                         checked={websiteAssignment.includes(website)}
                         onChange={() => handleCheckboxArray(websiteAssignment, website, setWebsiteAssignment)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
-                      <label className="ml-2 text-sm font-medium text-gray-700">
+                      <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm font-medium text-gray-700">
                         {displayName}
                       </label>
                     </div>
@@ -1144,22 +1238,22 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
               </div>
             </div>
           </div>
-          
+
           {/* Image Upload Section */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Property Images</h2>
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Property Images</h2>
             
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="mb-4 sm:mb-6">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Upload Images <span className="text-red-500">*</span>
-                <span className="text-gray-500 text-sm ml-2">(Max 10 images, at least 1 required)</span>
+                <span className="text-gray-500 text-xs sm:text-sm ml-1 sm:ml-2">(Max 10 images, at least 1 required)</span>
               </label>
-              <div className="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-                <div className="space-y-2 text-center">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <div className="mt-1 sm:mt-2 px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                <div className="space-y-1 sm:space-y-2 text-center">
+                  <svg className="mx-auto h-8 sm:h-12 w-8 sm:w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <div className="flex text-sm text-gray-600">
+                  <div className="flex flex-col sm:flex-row justify-center text-xs sm:text-sm text-gray-600 gap-1 sm:gap-0">
                     <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
                       <span>Upload files</span>
                       <input
@@ -1171,7 +1265,7 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
                         required={mode === 'create'}
                       />
                     </label>
-                    <p className="pl-1">or drag and drop</p>
+                    <span className="sm:ml-1">or drag and drop</span>
                   </div>
                   <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
                 </div>
@@ -1180,99 +1274,136 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
             
             {/* Image Previews */}
             {previewImages.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-medium text-gray-700 mb-4">Image Previews</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div className="mt-4 sm:mt-6">
+                <h3 className="text-sm sm:text-lg font-medium text-gray-700 mb-2 sm:mb-4">Image Previews</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
                   {previewImages.map((preview, index) => (
                     <div key={index} className="relative group">
                       <img
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        className="w-full h-20 sm:h-24 md:h-32 object-cover rounded-lg"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-red-500 text-white rounded-full p-0.5 sm:p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     </div>
                   ))}
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">
                   {images.length} image(s) selected
                 </p>
               </div>
             )}
           </div>
-          
+
           {/* Additional Information */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Additional Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderInput('Virtual Tour URL', virtualTour, setVirtualTour, 'text', 'https://matterport.com/...')}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Additional Information</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+              <ResponsiveInput 
+                label="Virtual Tour URL" 
+                value={virtualTour} 
+                onChange={setVirtualTour} 
+                placeholder="https://matterport.com/..." 
+              />
               
-              {/* Floor Plan */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   Floor Plan Image URL
                 </label>
                 <input
                   type="text"
                   value={floorPlanImage}
                   onChange={(e) => setFloorPlanImage(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Floor plan image URL"
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Floor Plan Description
-                </label>
-                <textarea
-                  value={floorPlanDescription}
-                  onChange={(e) => setFloorPlanDescription(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Description of floor plan"
+              <div className="sm:col-span-2">
+                <ResponsiveTextarea 
+                  label="Floor Plan Description" 
+                  value={floorPlanDescription} 
+                  onChange={setFloorPlanDescription} 
+                  placeholder="Description of floor plan" 
                   rows={2}
                 />
               </div>
               
-              {renderInput('Meta Title', metaTitle, setMetaTitle, 'text', 'SEO title (optional)')}
-              {renderTextarea('Meta Description', metaDescription, setMetaDescription, 'SEO description (optional)')}
-            </div>
-          </div>
-          
-          {/* Owner Details */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Owner Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {renderInput('Owner Name', ownerName, setOwnerName, 'text', 'e.g., Ramesh Kumar')}
-              {renderInput('Phone Number', ownerPhone, setOwnerPhone, 'tel', 'e.g., +91 9876543210')}
-              {renderInput('Email', ownerEmail, setOwnerEmail, 'email', 'e.g., owner@example.com')}
-              <div className="md:col-span-2">
-                {renderTextarea('Reason for Selling', ownerReason, setOwnerReason, 'e.g., Moving abroad, upgrading, etc.')}
+              <ResponsiveInput 
+                label="Meta Title" 
+                value={metaTitle} 
+                onChange={setMetaTitle} 
+                placeholder="SEO title (optional)" 
+              />
+              
+              <div className="sm:col-span-2">
+                <ResponsiveTextarea 
+                  label="Meta Description" 
+                  value={metaDescription} 
+                  onChange={setMetaDescription} 
+                  placeholder="SEO description (optional)" 
+                  rows={2}
+                />
               </div>
             </div>
           </div>
-          
+
+          {/* Owner Details */}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Owner Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+              <ResponsiveInput 
+                label="Owner Name" 
+                value={ownerName} 
+                onChange={setOwnerName} 
+                placeholder="e.g., Ramesh Kumar" 
+              />
+              <ResponsiveInput 
+                label="Phone Number" 
+                value={ownerPhone} 
+                onChange={setOwnerPhone} 
+                type="tel" 
+                placeholder="e.g., +91 9876543210" 
+              />
+              <ResponsiveInput 
+                label="Email" 
+                value={ownerEmail} 
+                onChange={setOwnerEmail} 
+                type="email" 
+                placeholder="e.g., owner@example.com" 
+              />
+              <div className="sm:col-span-2">
+                <ResponsiveTextarea 
+                  label="Reason for Selling" 
+                  value={ownerReason} 
+                  onChange={setOwnerReason} 
+                  placeholder="e.g., Moving abroad, upgrading, etc." 
+                  rows={2}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Legal Details */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Legal Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Ownership Type */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Legal Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="mb-2 sm:mb-3">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   Ownership Type
                 </label>
                 <select
                   value={legalOwnershipType}
                   onChange={(e) => setLegalOwnershipType(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select Ownership Type</option>
                   {ownershipTypeOptions.map(option => (
@@ -1283,40 +1414,67 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
                 </select>
               </div>
               
-              {renderInput('RERA Number', legalReraNumber, setLegalReraNumber, 'text', 'e.g., PRM/KA/RERA/1251/...')}
-              {renderCheckbox('RERA Registered', legalReraRegistered, setLegalReraRegistered)}
-              {renderCheckbox('Khata Certificate', legalKhataCertificate, setLegalKhataCertificate)}
-              {renderCheckbox('Encumbrance Certificate', legalEncumbranceCertificate, setLegalEncumbranceCertificate)}
-              {renderCheckbox('Occupancy Certificate', legalOccupancyCertificate, setLegalOccupancyCertificate)}
+              <ResponsiveInput 
+                label="RERA Number" 
+                value={legalReraNumber} 
+                onChange={setLegalReraNumber} 
+                placeholder="e.g., PRM/KA/RERA/1251/..." 
+              />
+              
+              <div className="col-span-1 sm:col-span-2 lg:col-span-1">
+                <ResponsiveCheckbox 
+                  label="RERA Registered" 
+                  checked={legalReraRegistered} 
+                  onChange={setLegalReraRegistered} 
+                />
+              </div>
+              
+              <ResponsiveCheckbox 
+                label="Khata Certificate" 
+                checked={legalKhataCertificate} 
+                onChange={setLegalKhataCertificate} 
+              />
+              
+              <ResponsiveCheckbox 
+                label="Encumbrance Certificate" 
+                checked={legalEncumbranceCertificate} 
+                onChange={setLegalEncumbranceCertificate} 
+              />
+              
+              <ResponsiveCheckbox 
+                label="Occupancy Certificate" 
+                checked={legalOccupancyCertificate} 
+                onChange={setLegalOccupancyCertificate} 
+              />
             </div>
           </div>
-          
+
           {/* Contact Preference */}
-          <div className="border-b pb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Contact Preference</h2>
-            <div className="flex flex-wrap gap-4">
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Contact Preference</h2>
+            <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
               {contactPreferenceOptions.map(pref => (
                 <div key={pref} className="flex items-center">
                   <input
                     type="checkbox"
                     checked={contactPreference.includes(pref)}
                     onChange={() => handleCheckboxArray(contactPreference, pref, setContactPreference)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700">
                     {pref.charAt(0).toUpperCase() + pref.slice(1)}
                   </label>
                 </div>
               ))}
             </div>
           </div>
-          
-          {/* Submit Button */}
-          <div className="flex justify-end space-x-4 pt-8">
+
+          {/* Submit Buttons */}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 md:gap-4 pt-4 sm:pt-6 md:pt-8">
             <button
               type="button"
               onClick={() => window.history.back()}
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-lg text-xs sm:text-sm md:text-base text-gray-700 hover:bg-gray-50 transition-colors"
               disabled={loading}
             >
               Cancel
@@ -1324,11 +1482,11 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-xs sm:text-sm md:text-base"
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>

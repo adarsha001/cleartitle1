@@ -147,7 +147,7 @@ export default function Navbar() {
           )}
 
           <Link
-            to={user ? "/add-property" : "#"}
+            to={user ? "/add-listing" : "#"}
             onClick={handleAddPropertyClick}
             className={`block p-2 rounded-lg mt-1 font-medium ${
               user
