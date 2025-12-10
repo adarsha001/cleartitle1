@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createPropertyByAdmin } from '../api/adminApi';
+import { createPropertyByAdmin, updatePropertyByAdmin } from '../api/adminApi';
 
 const PropertyForm = ({ property, onSubmit, onClose }) => {
   const [formData, setFormData] = useState({
@@ -344,20 +344,49 @@ const handleSubmit = async (e) => {
   setSuccess(false);
   
   try {
+    console.log('🧪 [DEBUG] Starting form submission...');
+    console.log('🧪 [DEBUG] Is editing?', !!property);
+    console.log('🧪 [DEBUG] Total imagePreviews:', imagePreviews.length);
+    
+    // Debug each image preview
+    imagePreviews.forEach((preview, index) => {
+      console.log(`  Image ${index}:`, {
+        isExisting: preview.isExisting,
+        hasFile: !!preview.file,
+        fileInstance: preview.file instanceof File,
+        name: preview.name || preview.file?.name,
+        preview: preview.preview?.substring(0, 50) + '...'
+      });
+    });
+
     // Validate required fields
     if (!formData.title || !formData.city || !formData.propertyLocation || !formData.price || !formData.category) {
       throw new Error('Please fill in all required fields');
     }
 
-    // Validate images
+    // SIMPLIFIED IMAGE VALIDATION - FIXED
     if (imagePreviews.length === 0) {
       throw new Error('Please upload at least one image');
     }
 
-    // ✅ FIX: Create FormData object for file upload
+    // Check if we have any valid images (either new or existing)
+    const hasValidImages = imagePreviews.some(preview => {
+      // For existing images (when editing), just check if preview exists
+      if (preview.isExisting) {
+        return true;
+      }
+      // For new images, check if it's a valid File
+      return preview.file && preview.file instanceof File;
+    });
+
+    if (!hasValidImages) {
+      throw new Error('Please upload at least one valid image');
+    }
+
+    // ✅ Create FormData
     const submitFormData = new FormData();
 
-    // ✅ Add all basic fields as strings
+    // ✅ Add all basic fields
     submitFormData.append('title', formData.title.trim());
     submitFormData.append('description', formData.description.trim() || '');
     submitFormData.append('content', formData.content.trim() || '');
@@ -373,7 +402,7 @@ const handleSubmit = async (e) => {
     submitFormData.append('isVerified', formData.isVerified.toString());
     submitFormData.append('rejectionReason', '');
 
-    // ✅ Add nested objects as JSON strings (your server expects this)
+    // ✅ Add nested objects as JSON strings
     submitFormData.append('coordinates', JSON.stringify({
       latitude: formData.coordinates.latitude ? parseFloat(formData.coordinates.latitude) : null,
       longitude: formData.coordinates.longitude ? parseFloat(formData.coordinates.longitude) : null
@@ -421,60 +450,103 @@ const handleSubmit = async (e) => {
       IndustrialArea: formData.nearby.IndustrialArea ? parseFloat(formData.nearby.IndustrialArea) : null
     }));
 
-    // ✅ CRITICAL: Add image files to FormData
-    const newImageFiles = imagePreviews
-      .filter(preview => !preview.isExisting && preview.file)
-      .map(preview => preview.file);
-
-    console.log(`📸 Adding ${newImageFiles.length} images to FormData`);
+    // ✅ FIXED: Get new image files correctly
+    const newImageFiles = [];
     
-    if (newImageFiles.length === 0) {
-      throw new Error('No valid image files found. Please upload at least one image.');
+    for (const preview of imagePreviews) {
+      if (!preview.isExisting && preview.file && preview.file instanceof File) {
+        newImageFiles.push(preview.file);
+      }
     }
 
-    // Append each image file with field name 'images'
-    newImageFiles.forEach((file, index) => {
-      console.log(`  Image ${index + 1}:`, file.name, `(${file.size} bytes, ${file.type})`);
-      submitFormData.append('images', file); // Field name must be 'images'
-    });
+    console.log('🧪 [DEBUG] New image files found:', newImageFiles.length);
+    
+    // Append new images to FormData
+    if (newImageFiles.length > 0) {
+      console.log('📤 Appending images to FormData:');
+      newImageFiles.forEach((file, index) => {
+        console.log(`  Image ${index + 1}: ${file.name} (${file.size} bytes, ${file.type})`);
+        submitFormData.append('images', file);
+      });
+    } else if (!property) {
+      // If creating new property and no new images
+      console.warn('⚠️ Creating new property but no new images found');
+      throw new Error('Please upload at least one image for the new property');
+    }
 
-    // ✅ DEBUG: Verify FormData before sending
-    console.log('🔍 Final FormData verification:');
+    // For editing existing properties without new images, we need to send existing image URLs
+    if (property && newImageFiles.length === 0) {
+      console.log('ℹ️ Editing property with no new images - preserving existing images');
+      const existingImageUrls = imagePreviews
+        .filter(preview => preview.isExisting)
+        .map(preview => preview.preview);
+      
+      console.log(`🖼️ Found ${existingImageUrls.length} existing images`);
+      
+      if (existingImageUrls.length > 0) {
+        // Send existing image URLs so backend knows to preserve them
+        submitFormData.append('existingImages', JSON.stringify(existingImageUrls));
+      }
+    }
+
+    // ✅ Debug FormData contents
+    console.log('🔍 FormData contents before sending:');
     let imageCount = 0;
     for (let [key, value] of submitFormData.entries()) {
       if (key === 'images') {
         imageCount++;
-        console.log(`  ${key}[${imageCount}]:`, value.name, `(${value.size} bytes)`);
+        if (value instanceof File) {
+          console.log(`  ${key}[${imageCount}]: ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`  ${key}[${imageCount}]: Not a File - ${typeof value}`);
+        }
+      } else if (key === 'existingImages') {
+        console.log(`  ${key}: ${value}`);
       } else {
-        console.log(`  ${key}:`, typeof value === 'string' ? value.substring(0, 100) + '...' : value);
+        console.log(`  ${key}: ${typeof value === 'string' ? value.substring(0, 50) + '...' : 'Object'}`);
       }
     }
     
     console.log(`📊 Total images in FormData: ${imageCount}`);
+    console.log(`📊 Total image previews: ${imagePreviews.length}`);
 
-    if (imageCount === 0) {
-      throw new Error('No images were added to FormData. Please check image upload.');
+    // Final validation - different for new vs edit
+    if (!property && imageCount === 0) {
+      throw new Error('Please upload at least one image for the new property.');
     }
 
-    console.log('🚀 Sending property creation request with FormData...');
-    const response = await createPropertyByAdmin(submitFormData);
+    if (property && imageCount === 0 && imagePreviews.length === 0) {
+      throw new Error('No images found. Please add at least one image.');
+    }
+
+    console.log('🚀 Calling API...');
     
-    console.log('✅ Property created successfully:', response);
+    // ✅ FIX: Call the correct API based on whether we're creating or editing
+    let response;
+    if (property) {
+      // Editing existing property - use updatePropertyByAdmin
+      console.log(`🔄 Updating property with ID: ${property._id}`);
+      response = await updatePropertyByAdmin(property._id, submitFormData);
+    } else {
+      // Creating new property - use createPropertyByAdmin
+      console.log('🆕 Creating new property');
+      response = await createPropertyByAdmin(submitFormData);
+    }
     
+    console.log('✅ Success:', response);
     setSuccess(true);
     
-    // Call the onSubmit callback if provided
     if (onSubmit) {
-      await onSubmit(response.data || response);
+      // Pass a flag to indicate whether this was an edit or create
+      await onSubmit(response.data || response, !!property);
     }
     
-    // Close the form after a short delay to show success message
     setTimeout(() => {
       if (onClose) onClose();
     }, 2000);
     
   } catch (error) {
-    console.error('❌ Property creation error:', error);
+    console.error('❌ Error:', error);
     setError(error.message || 'Failed to create property. Please try again.');
   } finally {
     setLoading(false);

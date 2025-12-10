@@ -2,29 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { toast } from 'react-toastify';
-// Assume this API file is correctly implemented
-import { propertyUnitAPI } from '../api/adminpropertyUnitAPI'; 
-// Assume these components are correctly implemented
-import PropertyUnitEdit from './PropertyUnitEdit'; 
-import PropertyUnitView from './PropertyUnitView'; 
+import { propertyUnitAPI } from '../api/adminpropertyUnitAPI';
+import PropertyUnitEdit from './PropertyUnitEdit';
+import PropertyUnitView from './PropertyUnitView';
 
 // Drag and Drop Types
 const ItemTypes = {
   PROPERTY: 'property',
 };
-
-// Utility function (from the main component logic)
-const getStatusBadge = (status) => {
-    const statusColors = {
-      approved: 'bg-green-100 text-green-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      rejected: 'bg-red-100 text-red-800',
-      available: 'bg-blue-100 text-blue-800',
-      sold: 'bg-red-100 text-red-800',
-      rented: 'bg-purple-100 text-purple-800'
-    };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
-  };
 
 // Draggable Property Row Component
 const DraggablePropertyRow = ({ 
@@ -46,7 +31,6 @@ const DraggablePropertyRow = ({
   const [{ isDragging }, drag] = useDrag({
     type: ItemTypes.PROPERTY,
     item: { index, id: property._id },
-    canDrag: isReordering, // Only allow dragging when reordering is active
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -55,7 +39,6 @@ const DraggablePropertyRow = ({
   const [, drop] = useDrop({
     accept: ItemTypes.PROPERTY,
     hover: (draggedItem) => {
-      // Only proceed with hover logic if reordering is enabled
       if (!ref.current || !isReordering) return;
       
       const dragIndex = draggedItem.index;
@@ -68,22 +51,31 @@ const DraggablePropertyRow = ({
     },
   });
 
-  // Attach both drag and drop functionality to the ref
   drag(drop(ref));
 
   const opacity = isDragging ? 0.4 : 1;
 
-  // Render the row
+  const getStatusBadge = (status) => {
+    const statusColors = {
+      approved: 'bg-green-100 text-green-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+      rejected: 'bg-red-100 text-red-800',
+      available: 'bg-blue-100 text-blue-800',
+      sold: 'bg-red-100 text-red-800',
+      rented: 'bg-purple-100 text-purple-800'
+    };
+    return statusColors[status] || 'bg-gray-100 text-gray-800';
+  };
+
   return (
     <tr 
       ref={ref}
-      style={{ opacity, cursor: isReordering ? 'grab' : 'default' }}
-      className={`hover:bg-gray-50 transition-all duration-200 ${isDragging ? 'z-10 relative shadow-xl' : ''}`}
+      style={{ opacity, cursor: isReordering ? 'move' : 'default' }}
+      className="hover:bg-gray-50 transition-all duration-200"
     >
       <td className="px-6 py-4 whitespace-nowrap">
         {isReordering ? (
-          <div className="text-gray-400 hover:text-gray-600 transition-colors">
-            {/* Drag Handle Icon */}
+          <div className="text-gray-400">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
             </svg>
@@ -278,57 +270,29 @@ const AdminPropertyUnits = () => {
   const [isReordering, setIsReordering] = useState(false);
   const [isSavingOrder, setIsSavingOrder] = useState(false);
 
-  // Utility functions
-  const formatPrice = (price) => {
-    if (!price || !price.amount) return 'N/A';
-    const amount = typeof price.amount === 'string' 
-      ? parseFloat(price.amount) || 0 
-      : price.amount;
-    const formattedAmount = amount.toLocaleString('en-IN');
-    const currencySymbols = {
-      'INR': '₹',
-      'USD': '$',
-      'EUR': '€'
-    };
-    const symbol = currencySymbols[price.currency] || price.currency || '₹';
-    return `${symbol} ${formattedAmount}`;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  // Helper function to normalize price data
-  const normalizePrice = (property) => ({
-    ...property,
-    price: property.price ? {
-      ...property.price,
-      amount: property.price.amount ? property.price.amount.toString() : '0'
-    } : { amount: '0', currency: 'INR', perUnit: 'total' }
-  });
-
   // Fetch ALL property units (no pagination)
   const fetchPropertyUnits = async () => {
     try {
       setLoading(true);
       
-      // Set limit to a high number to get all properties for DND sorting
+      // Set limit to a high number to get all properties
       const response = await propertyUnitAPI.getAllPropertyUnits({
         ...filters,
         page: 1,
-        limit: 1000 
+        limit: 1000 // High limit to get all properties
       });
       
-      const processedData = (response.data || []).map(normalizePrice);
+      const processedData = (response.data || []).map(property => ({
+        ...property,
+        price: property.price ? {
+          ...property.price,
+          amount: property.price.amount ? property.price.amount.toString() : '0'
+        } : { amount: '0', currency: 'INR', perUnit: 'total' }
+      }));
       
-      // Sort by displayOrder (ascending) to maintain order from server/DND
+      // Sort by displayOrder (ascending)
       processedData.sort((a, b) => {
-        const orderA = a.displayOrder || 9999; 
+        const orderA = a.displayOrder || 9999; // Default high number for items without displayOrder
         const orderB = b.displayOrder || 9999;
         return orderA - orderB;
       });
@@ -470,7 +434,14 @@ const AdminPropertyUnits = () => {
   const handleViewProperty = async (id) => {
     try {
       const response = await propertyUnitAPI.getPropertyUnitByIdAdmin(id);
-      setViewingProperty(normalizePrice(response.data));
+      const propertyWithStringPrice = {
+        ...response.data,
+        price: response.data.price ? {
+          ...response.data.price,
+          amount: response.data.price.amount ? response.data.price.amount.toString() : '0'
+        } : { amount: '0', currency: 'INR', perUnit: 'total' }
+      };
+      setViewingProperty(propertyWithStringPrice);
     } catch (error) {
       toast.error('Failed to load property details');
     }
@@ -479,7 +450,14 @@ const AdminPropertyUnits = () => {
   const handleEditProperty = async (id) => {
     try {
       const response = await propertyUnitAPI.getPropertyUnitByIdAdmin(id);
-      setEditingProperty(normalizePrice(response.data));
+      const propertyWithStringPrice = {
+        ...response.data,
+        price: response.data.price ? {
+          ...response.data.price,
+          amount: response.data.price.amount ? response.data.price.amount.toString() : '0'
+        } : { amount: '0', currency: 'INR', perUnit: 'total' }
+      };
+      setEditingProperty(propertyWithStringPrice);
     } catch (error) {
       toast.error('Failed to load property for editing');
     }
@@ -507,6 +485,31 @@ const AdminPropertyUnits = () => {
       console.error('Save property error:', error);
       toast.error(error.response?.data?.message || 'Failed to save property');
     }
+  };
+
+  // Utility functions
+  const formatPrice = (price) => {
+    if (!price || !price.amount) return 'N/A';
+    const amount = typeof price.amount === 'string' 
+      ? parseFloat(price.amount) || 0 
+      : price.amount;
+    const formattedAmount = amount.toLocaleString('en-IN');
+    const currencySymbols = {
+      'INR': '₹',
+      'USD': '$',
+      'EUR': '€'
+    };
+    const symbol = currencySymbols[price.currency] || price.currency || '₹';
+    return `${symbol} ${formattedAmount}`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   const clearFilters = () => {
@@ -799,7 +802,7 @@ const AdminPropertyUnits = () => {
         </div>
       </div>
 
-      {/* Modals - Property Unit View */}
+      {/* Modals */}
       {viewingProperty && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white">
@@ -834,19 +837,13 @@ const AdminPropertyUnits = () => {
         </div>
       )}
 
-      {/* Modals - Property Unit Edit */}
-      {(editingProperty || creatingProperty) && (
+      {editingProperty && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
-                {editingProperty ? 'Edit Property' : 'Create New Property'}
-              </h3>
+              <h3 className="text-lg font-medium text-gray-900">Edit Property</h3>
               <button
-                onClick={() => {
-                  setEditingProperty(null);
-                  setCreatingProperty(false);
-                }}
+                onClick={() => setEditingProperty(null)}
                 className="text-gray-400 hover:text-gray-500"
               >
                 <span className="text-2xl">&times;</span>
@@ -855,10 +852,27 @@ const AdminPropertyUnits = () => {
             <PropertyUnitEdit 
               property={editingProperty} 
               onSubmit={handlePropertyUpdate}
-              onCancel={() => {
-                setEditingProperty(null);
-                setCreatingProperty(false);
-              }}
+              onCancel={() => setEditingProperty(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {creatingProperty && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-4/5 lg:w-3/4 shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Create New Property</h3>
+              <button
+                onClick={() => setCreatingProperty(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <span className="text-2xl">&times;</span>
+              </button>
+            </div>
+            <PropertyUnitEdit 
+              onSubmit={handlePropertyUpdate}
+              onCancel={() => setCreatingProperty(false)}
             />
           </div>
         </div>

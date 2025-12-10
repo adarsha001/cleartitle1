@@ -360,52 +360,77 @@ export const createPropertyByAdmin = async (formData) => {
   try {
     const token = localStorage.getItem('token');
     
-    console.log('📤 Sending FormData to server...');
+    console.log('📤 [API] Sending FormData to server...');
     
-    // Debug FormData contents
+    // Debug FormData contents BEFORE sending
     if (formData instanceof FormData) {
-      console.log('📋 FormData contents:');
+      console.log('📋 [API] FormData contents before sending:');
       let imageCount = 0;
       for (let [key, value] of formData.entries()) {
         if (key === 'images') {
           imageCount++;
-          console.log(`  ${key}[${imageCount}]:`, value.name || 'File', `(${value.size} bytes, ${value.type})`);
+          if (value instanceof File) {
+            console.log(`  ${key}[${imageCount}]:`, value.name, `(${value.size} bytes, ${value.type})`);
+          } else {
+            console.log(`  ${key}[${imageCount}]:`, 'Not a File object:', typeof value, value);
+          }
+        } else if (key === 'preserveExistingImages') {
+          console.log(`  ${key}:`, value);
         } else {
-          console.log(`  ${key}:`, typeof value === 'string' ? value.substring(0, 100) + '...' : value);
+          const valStr = typeof value === 'string' ? value : JSON.stringify(value);
+          console.log(`  ${key}:`, valStr.length > 50 ? valStr.substring(0, 50) + '...' : valStr);
         }
       }
-      console.log(`📊 Total images: ${imageCount}`);
+      console.log(`📊 [API] Total image files in FormData: ${imageCount}`);
+      
+      // If no images found, throw error immediately
+      if (imageCount === 0) {
+        console.warn('⚠️ [API] No image files found in FormData');
+      }
+    } else {
+      console.error('❌ [API] formData is not FormData instance:', typeof formData);
     }
 
     const response = await fetch(`${baseURL}/agent/properties`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
-        // No Content-Type header for FormData
+        // No Content-Type header for FormData - browser sets it automatically
       },
       body: formData,
     });
 
+    // Check response status
+    console.log(`📥 [API] Server response status: ${response.status} ${response.statusText}`);
+    
     const responseData = await response.json();
+    console.log('📥 [API] Server response data:', responseData);
     
     if (!response.ok) {
-      console.error('❌ Server error response:', responseData);
+      console.error('❌ [API] Server error response:', responseData);
       
-      // Provide more specific error messages
-      if (response.status === 500) {
-        throw new Error(responseData.message || 'Server error occurred while creating property');
-      } else if (response.status === 400) {
-        throw new Error(responseData.message || 'Invalid data provided');
+      // More specific error handling
+      if (response.status === 400) {
+        if (responseData.message && responseData.message.includes('image')) {
+          throw new Error('At least one image is required');
+        }
+        throw new Error(responseData.message || 'Invalid data provided. Please check all fields.');
+      } else if (response.status === 401) {
+        throw new Error('Authentication failed. Please login again.');
+      } else if (response.status === 403) {
+        throw new Error('You do not have permission to perform this action.');
+      } else if (response.status === 500) {
+        throw new Error('Server error occurred while creating property. Please try again later.');
       } else {
         throw new Error(responseData.message || `Failed to create property (Status: ${response.status})`);
       }
     }
 
-    console.log('✅ Property created successfully:', responseData);
+    console.log('✅ [API] Property created successfully:', responseData);
     return responseData;
     
   } catch (error) {
-    console.error('❌ API Error:', error);
+    console.error('❌ [API] Request failed:', error);
     
     // Enhanced error handling
     if (error.message.includes('Failed to fetch')) {

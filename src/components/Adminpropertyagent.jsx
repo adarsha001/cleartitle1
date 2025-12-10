@@ -314,25 +314,30 @@ const Adminpropertyagent = () => {
     }
   };
 
-  const handlePropertyFormSubmit = async (formData, isEdit = false) => {
-    try {
-      if (isEdit && editingProperty) {
-        await updatePropertyByAdmin(editingProperty._id, formData);
-      } else {
-        await createPropertyByAdmin(formData);
-      }
-      
-      setShowPropertyForm(false);
-      setEditingProperty(null);
-      // Refresh properties after creating/updating
-      fetchAllProperties();
-      fetchStats();
-      setError(null);
-    } catch (err) {
-      setError(err.message || `Failed to ${isEdit ? 'update' : 'create'} property`);
+ // In Adminpropertyagent.jsx, update the handlePropertyFormSubmit function:
+const handlePropertyFormSubmit = async (formData, isEdit = false) => {
+  try {
+    console.log('🔄 Processing property form submission, isEdit:', isEdit);
+    
+    if (isEdit && editingProperty) {
+      console.log(`📝 Updating property: ${editingProperty._id}`);
+      await updatePropertyByAdmin(editingProperty._id, formData);
+    } else {
+      console.log('🆕 Creating new property');
+      await createPropertyByAdmin(formData);
     }
-  };
-
+    
+    setShowPropertyForm(false);
+    setEditingProperty(null);
+    // Refresh properties after creating/updating
+    fetchAllProperties();
+    fetchStats();
+    setError(null);
+  } catch (err) {
+    console.error('❌ Error in handlePropertyFormSubmit:', err);
+    setError(err.message || `Failed to ${isEdit ? 'update' : 'create'} property`);
+  }
+};
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setPagination(prev => ({ ...prev, page: 1 })); // Reset to page 1 when filter changes

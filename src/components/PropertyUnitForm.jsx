@@ -66,7 +66,7 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const [rentalPreferredTenants, setRentalPreferredTenants] = useState(['any']);
   const [rentalIncludedInRent, setRentalIncludedInRent] = useState([]);
   
-  // Website assignment - SIMPLIFIED: Now just an array of strings
+  // Website assignment
   const [websiteAssignment, setWebsiteAssignment] = useState(['cleartitle']);
   
   // Additional info
@@ -357,8 +357,63 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       if (!specPlotArea || specPlotArea.trim() === '' || parseFloat(specPlotArea) <= 0) {
         errors.push('Plot Area is required for Plot property type and must be greater than 0');
       }
+    } else if (propertyType === 'Villa') {
+      // For Villa properties - require bedrooms, bathrooms, carpetArea, and plotArea
+      const bedroomsNum = parseFloat(specBedrooms);
+      if (isNaN(bedroomsNum) || bedroomsNum < 0) {
+        errors.push('Bedrooms must be 0 or a positive number');
+      }
+      
+      const bathroomsNum = parseFloat(specBathrooms);
+      if (isNaN(bathroomsNum) || bathroomsNum < 0) {
+        errors.push('Bathrooms must be 0 or a positive number');
+      }
+      
+      const carpetAreaNum = parseFloat(specCarpetArea);
+      if (isNaN(carpetAreaNum) || carpetAreaNum <= 0) {
+        errors.push('Carpet Area is required and must be greater than 0');
+      }
+      
+      // Plot Area is REQUIRED for Villa
+      if (!specPlotArea || specPlotArea.trim() === '' || parseFloat(specPlotArea) <= 0) {
+        errors.push('Plot Area is required for Villa property type and must be greater than 0');
+      }
+      
+      // Built-up Area is optional for Villa but validate if provided
+      if (specBuiltUpArea && specBuiltUpArea.trim() !== '') {
+        const builtUpAreaNum = parseFloat(specBuiltUpArea);
+        if (isNaN(builtUpAreaNum) || builtUpAreaNum <= 0) {
+          errors.push('Built-up Area must be greater than 0 if provided');
+        }
+      }
+    } else if (propertyType === 'Commercial Space') {
+      // For Commercial Space - require carpetArea and builtUpArea
+      const carpetAreaNum = parseFloat(specCarpetArea);
+      if (isNaN(carpetAreaNum) || carpetAreaNum <= 0) {
+        errors.push('Carpet Area is required and must be greater than 0');
+      }
+      
+      const builtUpAreaNum = parseFloat(specBuiltUpArea);
+      if (isNaN(builtUpAreaNum) || builtUpAreaNum <= 0) {
+        errors.push('Built-up Area is required and must be greater than 0');
+      }
+      
+      // Bedrooms and bathrooms are optional for Commercial Space
+      if (specBedrooms && specBedrooms.trim() !== '') {
+        const bedroomsNum = parseFloat(specBedrooms);
+        if (isNaN(bedroomsNum) || bedroomsNum < 0) {
+          errors.push('Bedrooms must be 0 or a positive number if provided');
+        }
+      }
+      
+      if (specBathrooms && specBathrooms.trim() !== '') {
+        const bathroomsNum = parseFloat(specBathrooms);
+        if (isNaN(bathroomsNum) || bathroomsNum < 0) {
+          errors.push('Bathrooms must be 0 or a positive number if provided');
+        }
+      }
     } else {
-      // For non-Plot properties
+      // For other non-Plot properties (Apartment, Independent House, etc.)
       const bedroomsNum = parseFloat(specBedrooms);
       if (isNaN(bedroomsNum) || bedroomsNum < 0) {
         errors.push('Bedrooms must be 0 or a positive number');
@@ -377,6 +432,14 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       const builtUpAreaNum = parseFloat(specBuiltUpArea);
       if (isNaN(builtUpAreaNum) || builtUpAreaNum <= 0) {
         errors.push('Built-up Area is required and must be greater than 0');
+      }
+      
+      // Plot Area is optional for other properties but validate if provided
+      if (specPlotArea && specPlotArea.trim() !== '') {
+        const plotAreaNum = parseFloat(specPlotArea);
+        if (isNaN(plotAreaNum) || plotAreaNum <= 0) {
+          errors.push('Plot Area must be greater than 0 if provided');
+        }
       }
     }
     
@@ -445,7 +508,7 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
           latitude: coordinatesLat ? parseFloat(coordinatesLat) : undefined,
           longitude: coordinatesLng ? parseFloat(coordinatesLng) : undefined
         },
-          mapUrl: mapUrl.trim(),
+        mapUrl: mapUrl.trim(),
         price: {
           amount: priceAmount.trim(), // Backend expects string for amount
           currency: priceCurrency,
@@ -594,8 +657,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
           delete cleanData.ownerDetails;
         }
       }
-      
-  
       
       // Create FormData
       const formDataToSend = new FormData();
@@ -804,25 +865,25 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
             </div>
           </div>
           
- {/* Location Section */}
-<div className="border-b pb-8">
-  <h2 className="text-xl font-semibold text-gray-800 mb-6">Location Details</h2>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {renderInput('City *', city, setCity, 'text', 'e.g., Mumbai', true)}
-    {renderInput('Address *', address, setAddress, 'text', 'Full address', true)}
-  </div>
-  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-    {renderInput('Latitude', coordinatesLat, setCoordinatesLat, 'text', 'e.g., 19.0760')}
-    {renderInput('Longitude', coordinatesLng, setCoordinatesLng, 'text', 'e.g., 72.8777')}
-  </div>
-  {/* Add Map URL field */}
-  <div className="mt-4">
-    {renderInput('Map URL (Optional)', mapUrl, setMapUrl, 'text', 'Google Maps embed URL or map image URL')}
-    <p className="text-sm text-gray-500 mt-1">
-      Paste Google Maps embed URL or any map service link. Example: https://maps.google.com/...
-    </p>
-  </div>
-</div>
+          {/* Location Section */}
+          <div className="border-b pb-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Location Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {renderInput('City *', city, setCity, 'text', 'e.g., Mumbai', true)}
+              {renderInput('Address *', address, setAddress, 'text', 'Full address', true)}
+            </div>
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {renderInput('Latitude', coordinatesLat, setCoordinatesLat, 'text', 'e.g., 19.0760')}
+              {renderInput('Longitude', coordinatesLng, setCoordinatesLng, 'text', 'e.g., 72.8777')}
+            </div>
+            {/* Add Map URL field */}
+            <div className="mt-4">
+              {renderInput('Map URL (Optional)', mapUrl, setMapUrl, 'text', 'Google Maps embed URL or map image URL')}
+              <p className="text-sm text-gray-500 mt-1">
+                Paste Google Maps embed URL or any map service link. Example: https://maps.google.com/...
+              </p>
+            </div>
+          </div>
           
           {/* Price Section */}
           <div className="border-b pb-8">
@@ -849,30 +910,47 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
           {/* Specifications Section */}
           <div className="border-b pb-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-6">Property Specifications</h2>
+            
+            {/* Helper text based on property type */}
+            <div className="mb-6 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <span className="font-medium">Requirements based on property type:</span>
+                {propertyType === 'Plot' && ' Plot Area is required.'}
+                {propertyType === 'Villa' && ' Bedrooms, Bathrooms, Carpet Area, and Plot Area are required.'}
+                {propertyType === 'Commercial Space' && ' Carpet Area and Built-up Area are required.'}
+                {propertyType !== 'Plot' && propertyType !== 'Villa' && propertyType !== 'Commercial Space' && 
+                  ' Bedrooms, Bathrooms, Carpet Area, and Built-up Area are required.'}
+              </p>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Bedrooms - only show for non-Plot properties */}
-              {propertyType !== 'Plot' && renderInput(
-                'Bedrooms *', 
-                specBedrooms, 
-                setSpecBedrooms, 
-                'number', 
-                'e.g., 2', 
-                true,
-                0
+              {/* Bedrooms - required for most properties except Plot and optional for Commercial Space */}
+              {propertyType !== 'Plot' && (
+                renderInput(
+                  'Bedrooms' + (propertyType !== 'Commercial Space' ? ' *' : ''), 
+                  specBedrooms, 
+                  setSpecBedrooms, 
+                  'number', 
+                  'e.g., 2', 
+                  propertyType !== 'Commercial Space',
+                  0
+                )
               )}
               
-              {/* Bathrooms - only show for non-Plot properties */}
-              {propertyType !== 'Plot' && renderInput(
-                'Bathrooms *', 
-                specBathrooms, 
-                setSpecBathrooms, 
-                'number', 
-                'e.g., 2', 
-                true,
-                0
+              {/* Bathrooms - required for most properties except Plot and optional for Commercial Space */}
+              {propertyType !== 'Plot' && (
+                renderInput(
+                  'Bathrooms' + (propertyType !== 'Commercial Space' ? ' *' : ''), 
+                  specBathrooms, 
+                  setSpecBathrooms, 
+                  'number', 
+                  'e.g., 2', 
+                  propertyType !== 'Commercial Space',
+                  0
+                )
               )}
               
-              {/* Carpet Area - required for non-Plot properties */}
+              {/* Carpet Area - required for all properties except Plot */}
               {propertyType !== 'Plot' && renderInput(
                 'Carpet Area (sq.ft.) *', 
                 specCarpetArea, 
@@ -883,8 +961,8 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
                 1
               )}
               
-              {/* Built-up Area - required for non-Plot properties */}
-              {propertyType !== 'Plot' && renderInput(
+              {/* Built-up Area - required for non-Plot and non-Villa properties */}
+              {propertyType !== 'Plot' && propertyType !== 'Villa' && renderInput(
                 'Built-up Area (sq.ft.) *', 
                 specBuiltUpArea, 
                 setSpecBuiltUpArea, 
@@ -894,8 +972,17 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
                 1
               )}
               
-              {/* Plot Area - required for Plot properties */}
-              {propertyType === 'Plot' && renderInput(
+              {/* Built-up Area - optional for Villa */}
+              {propertyType === 'Villa' && renderInput(
+                'Built-up Area (sq.ft.)', 
+                specBuiltUpArea, 
+                setSpecBuiltUpArea, 
+                'number', 
+                'e.g., 1400'
+              )}
+              
+              {/* Plot Area - required for Plot and Villa properties */}
+              {(propertyType === 'Plot' || propertyType === 'Villa') && renderInput(
                 'Plot Area (sq.ft.) *', 
                 specPlotArea, 
                 setSpecPlotArea, 
@@ -905,10 +992,27 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
                 1
               )}
               
+              {/* Plot Area - optional for other property types */}
+              {propertyType !== 'Plot' && propertyType !== 'Villa' && renderInput(
+                'Plot Area (sq.ft.)', 
+                specPlotArea, 
+                setSpecPlotArea, 
+                'number', 
+                'e.g., 500'
+              )}
+              
+              {/* Super Built-up Area - optional for all except Plot */}
+              {propertyType !== 'Plot' && renderInput(
+                'Super Built-up Area (sq.ft.)', 
+                specSuperBuiltUpArea, 
+                setSpecSuperBuiltUpArea, 
+                'number', 
+                'e.g., 1500'
+              )}
+              
               {renderInput('Balconies', specBalconies, setSpecBalconies, 'number', 'e.g., 2', false, 0)}
               {renderInput('Floors in Unit', specFloors, setSpecFloors, 'number', 'e.g., 1', false, 1)}
               {renderInput('Floor Number', specFloorNumber, setSpecFloorNumber, 'number', 'e.g., 3')}
-              {renderInput('Super Built-up Area (sq.ft.)', specSuperBuiltUpArea, setSpecSuperBuiltUpArea, 'number', 'e.g., 1500')}
               {renderSelect('Furnishing', specFurnishing, setSpecFurnishing, furnishingOptions)}
               {renderSelect('Possession Status', specPossessionStatus, setSpecPossessionStatus, possessionOptions)}
               {renderInput('Age of Property (years)', specAgeOfProperty, setSpecAgeOfProperty, 'number', 'e.g., 5', false, 0)}
