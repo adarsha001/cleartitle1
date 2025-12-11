@@ -9,7 +9,8 @@ export default function PropertyList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [viewMode, setViewMode] = useState("grid");
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // Input value
+  const [searchQuery, setSearchQuery] = useState(""); // Actual search term for API
 
   const [categoryFilter, setCategoryFilter] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -19,7 +20,8 @@ export default function PropertyList() {
   const [sort, setSort] = useState("displayOrder");
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-    const location = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,7 +30,7 @@ export default function PropertyList() {
   const [limit] = useState(12); // Items per page
   
   const propertyListRef = useRef(null);
-const navigate=useNavigate()
+
   // Check mobile screen size
   useEffect(() => {
     const checkMobile = () => {
@@ -39,12 +41,24 @@ const navigate=useNavigate()
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
- useEffect(() => {
+
+  // Clear URL query parameters
+  useEffect(() => {
     if (location.search) {
-      // Clear the query parameters from URL
       navigate('/', { replace: true });
     }
   }, [location.search, navigate]);
+
+  // Scroll to properties when filters change or new data loads
+  useEffect(() => {
+    if (properties.length > 0) {
+      // Use setTimeout to ensure DOM is updated
+      setTimeout(() => {
+        scrollToProperties();
+      }, 100);
+    }
+  }, [properties]);
+
   // Fetch properties with pagination
   const fetchProperties = async () => {
     try {
@@ -54,7 +68,7 @@ const navigate=useNavigate()
         limit: limit,
         category: categoryFilter || undefined,
         city: cityFilter || undefined,
-        search: search || undefined,
+        search: searchQuery || undefined,
         sortBy: getSortField(sort),
         sortOrder: getSortOrder(sort),
         minPrice: getMinPrice(priceRange),
@@ -74,11 +88,11 @@ const navigate=useNavigate()
     }
   };
 
-  // Fetch properties when filters change
+  // Fetch properties when filters change (except search)
   useEffect(() => {
     setCurrentPage(1); // Reset to first page when filters change
     fetchProperties();
-  }, [categoryFilter, cityFilter, priceRange, areaRange, search, sort]);
+  }, [categoryFilter, cityFilter, priceRange, areaRange, searchQuery, sort]);
 
   // Fetch properties when page changes
   useEffect(() => {
@@ -144,36 +158,74 @@ const navigate=useNavigate()
     }
   };
 
+  // Scroll to properties function - FIXED
+  const scrollToProperties = () => {
+    const headerOffset = 100; // Adjust for fixed header
+    
+    if (propertyListRef.current) {
+      const elementPosition = propertyListRef.current.getBoundingClientRect().top;
+      const offsetPosition = window.pageYOffset + elementPosition - headerOffset;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    } else {
+      // Fallback if ref is not available yet
+      const propertySection = document.querySelector('.property-list-section');
+      if (propertySection) {
+        const sectionPosition = propertySection.getBoundingClientRect().top;
+        const offsetPosition = window.pageYOffset + sectionPosition - headerOffset;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
+  // Search handler
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setCurrentPage(1);
+  };
+
+  // Handle Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearchQuery("");
+    setCurrentPage(1);
+  };
+
   // Pagination handlers
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
-      scrollToTop();
     }
   };
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
-      scrollToTop();
     }
   };
 
   const goToPage = (page) => {
     setCurrentPage(page);
-    scrollToTop();
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: propertyListRef.current?.offsetTop - 100 || 0,
-      behavior: 'smooth'
-    });
   };
 
   // Filter handlers
   const clearFilters = () => {
-    setSearch("");
+    setSearchInput("");
+    setSearchQuery("");
     setSort("displayOrder");
     setCategoryFilter("");
     setCityFilter("");
@@ -189,20 +241,9 @@ const navigate=useNavigate()
     setCurrentPage(1);
   };
 
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-  };
-
   const handleCategorySelect = (category) => {
     setCategoryFilter(categoryFilter === category ? "" : category);
     setCurrentPage(1);
-  };
-
-  const handleSearchSubmit = (e) => {
-    if (e.key === 'Enter') {
-      setCurrentPage(1);
-      scrollToTop();
-    }
   };
 
   const getCities = () => {
@@ -210,7 +251,7 @@ const navigate=useNavigate()
     return [...new Set(cities)];
   };
 
-  const activeFiltersCount = [categoryFilter, cityFilter, priceRange, areaRange].filter(Boolean).length;
+  const activeFiltersCount = [categoryFilter, cityFilter, priceRange, areaRange, searchQuery].filter(Boolean).length;
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -361,7 +402,7 @@ const navigate=useNavigate()
               </div>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Bar with Button */}
             <div className="max-w-4xl mx-auto px-4">
               <div className="bg-white/95 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 border border-white/50">
                 <div className="relative mb-4 sm:mb-6">
@@ -369,71 +410,88 @@ const navigate=useNavigate()
                   <input
                     type="text"
                     placeholder="Search by location, property type, or keyword..."
-                    className="w-full pl-10 sm:pl-16 pr-4 sm:pr-6 py-3 sm:py-4 text-sm sm:text-base border-2 border-gray-300 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white"
-                    value={search}
-                    onChange={handleSearchChange}
-                    onKeyPress={handleSearchSubmit}
+                    className="w-full pl-10 sm:pl-16 pr-12 sm:pr-24 py-3 sm:py-4 text-sm sm:text-base border-2 border-gray-300 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all bg-white"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
                   />
+                  <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1 sm:gap-2">
+                    {searchInput && (
+                      <button
+                        onClick={clearSearch}
+                        className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={handleSearch}
+                      className="px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold shadow-md flex items-center gap-2 text-sm sm:text-base"
+                    >
+                      <Search className="w-3 h-3 sm:w-4 sm:h-4" />
+                      Search
+                    </button>
+                  </div>
                 </div>
                 
                 {/* Category Buttons */}
-           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
-  <button 
-    onClick={() => handleCategorySelect("Commercial")}
-    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
-      categoryFilter === "Commercial" 
-        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
-        : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-900 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-200"
-    }`}
-  >
-    <Building className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
-    Commercial
-  </button>
-  
-  <button 
-    onClick={() => handleCategorySelect("Outright")}
-    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
-      categoryFilter === "Outright" 
-        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
-        : "bg-gradient-to-r from-green-50 to-emerald-50 text-green-900 hover:from-green-100 hover:to-emerald-100 border-2 border-green-200"
-    }`}
-  >
-    <LandPlot className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
-    Outright
-  </button>
-  
-  <button 
-    onClick={() => handleCategorySelect("Farmland")}
-    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
-      categoryFilter === "Farmland" 
-        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
-        : "bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-900 hover:from-amber-100 hover:to-yellow-100 border-2 border-amber-200"
-    }`}
-  >
-    <Sprout className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
-    Farmland
-  </button>
-  
-  <button 
-    onClick={() => handleCategorySelect("JD/JV")}
-    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
-      categoryFilter === "JD/JV" 
-        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
-        : "bg-gradient-to-r from-purple-50 to-pink-50 text-purple-900 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
-    }`}
-  >
-    <Handshake className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
-    JD/JV
-  </button>
-  
-  <button 
-    onClick={() => navigate('/property-units')}
-    className="col-span-2 sm:col-span-1 px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm bg-gradient-to-r from-pink-50 to-rose-50 text-rose-900 hover:from-pink-100 hover:to-rose-100 border-2 border-rose-200"
-  >
-    <Home className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
-    Property Units
-  </button>
-</div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
+                  <button 
+                    onClick={() => handleCategorySelect("Commercial")}
+                    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
+                      categoryFilter === "Commercial" 
+                        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
+                        : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-900 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-200"
+                    }`}
+                  >
+                    <Building className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+                    Commercial
+                  </button>
+                  
+                  <button 
+                    onClick={() => handleCategorySelect("Outright")}
+                    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
+                      categoryFilter === "Outright" 
+                        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
+                        : "bg-gradient-to-r from-green-50 to-emerald-50 text-green-900 hover:from-green-100 hover:to-emerald-100 border-2 border-green-200"
+                    }`}
+                  >
+                    <LandPlot className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+                    Outright
+                  </button>
+                  
+                  <button 
+                    onClick={() => handleCategorySelect("Farmland")}
+                    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
+                      categoryFilter === "Farmland" 
+                        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
+                        : "bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-900 hover:from-amber-100 hover:to-yellow-100 border-2 border-amber-200"
+                    }`}
+                  >
+                    <Sprout className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+                    Farmland
+                  </button>
+                  
+                  <button 
+                    onClick={() => handleCategorySelect("JD/JV")}
+                    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
+                      categoryFilter === "JD/JV" 
+                        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
+                        : "bg-gradient-to-r from-purple-50 to-pink-50 text-purple-900 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
+                    }`}
+                  >
+                    <Handshake className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+                    JD/JV
+                  </button>
+                  
+                  <button 
+                    onClick={() => navigate('/property-units')}
+                    className="col-span-2 sm:col-span-1 px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm bg-gradient-to-r from-pink-50 to-rose-50 text-rose-900 hover:from-pink-100 hover:to-rose-100 border-2 border-rose-200"
+                  >
+                    <Home className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+                    Property Units
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -446,7 +504,7 @@ const navigate=useNavigate()
       </div>
 
       {/* Property Listings Section */}
-      <div ref={propertyListRef} className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
+      <div ref={propertyListRef} className="property-list-section max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
         {/* Active Filters and Controls */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center mb-6 sm:mb-8">
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
@@ -480,6 +538,20 @@ const navigate=useNavigate()
                   </span>
                 )}
               </button>
+            )}
+
+            {/* Active Search Filter */}
+            {searchQuery && (
+              <div className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg sm:rounded-xl shadow-lg border-2 border-purple-400">
+                <Search className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="font-semibold text-sm sm:text-base">"{searchQuery}"</span>
+                <button
+                  onClick={clearSearch}
+                  className="ml-1 sm:ml-2 p-1 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                </button>
+              </div>
             )}
 
             {categoryFilter && (
