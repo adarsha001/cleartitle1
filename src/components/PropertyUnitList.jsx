@@ -4,11 +4,13 @@ import {
   MapPin, Home, DollarSign, Maximize, Building, 
   Bed, Bath, Car, Layers, ChevronDown, X, 
   Shield, CheckCircle, FileCheck, Award, Menu, 
-  FileText, Filter, Building2, Store, Factory, Hotel, Trees
+  FileText, Filter, Building2, Store, Factory, Hotel, Trees,
+  ChevronLeft
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function PropertyUnitList() {
   const { user } = useAuth();
@@ -17,7 +19,7 @@ export default function PropertyUnitList() {
   const [error, setError] = useState("");
   const [viewMode, setViewMode] = useState("grid");
   const [search, setSearch] = useState("");
-
+const navigate=useNavigate()
   // Filters state
   const [filters, setFilters] = useState({
     city: "",
@@ -229,6 +231,7 @@ export default function PropertyUnitList() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+ 
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800">
         <div className="absolute inset-0 opacity-20">
@@ -236,6 +239,7 @@ export default function PropertyUnitList() {
             backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
             backgroundSize: '30px 30px'
           }}></div>
+          
         </div>
 
         <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
@@ -260,6 +264,7 @@ export default function PropertyUnitList() {
                 Browse through our verified residential and commercial properties
               </p>
             </div>
+            
 
             {/* Search Bar */}
             <div className="max-w-4xl mx-auto">
@@ -282,7 +287,16 @@ export default function PropertyUnitList() {
       </div>
 
       {/* Property Listings Section */}
-      <div ref={propertyListRef} className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
+<div ref={propertyListRef} id="property-unit-list" className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
+          <div className="mb-6 sm:mb-8">
+      <button
+        onClick={() => navigate('/')} // Or your home/properties route
+        className="inline-flex items-center gap-2 text-blue-400 hover:text-yellow-300 transition-colors group"
+      >
+        <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        <span className="font-semibold">Back to Properties</span>
+      </button>
+    </div>
         {/* Active Filters and Controls */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center mb-6 sm:mb-8">
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Search, SlidersHorizontal, Grid3x3, List, MapPin, Home, DollarSign, Maximize, Building, Sprout, Handshake, LandPlot, ChevronDown, X, Shield, CheckCircle, FileCheck, Award, Menu, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { getProperties } from "../api/axios";
 import PropertyCard from "../components/PropertyCard";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function PropertyList() {
   const [properties, setProperties] = useState([]);  
@@ -18,7 +19,8 @@ export default function PropertyList() {
   const [sort, setSort] = useState("displayOrder");
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  
+    const location = useLocation();
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,7 +28,7 @@ export default function PropertyList() {
   const [limit] = useState(12); // Items per page
   
   const propertyListRef = useRef(null);
-
+const navigate=useNavigate()
   // Check mobile screen size
   useEffect(() => {
     const checkMobile = () => {
@@ -37,7 +39,12 @@ export default function PropertyList() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
+ useEffect(() => {
+    if (location.search) {
+      // Clear the query parameters from URL
+      navigate('/', { replace: true });
+    }
+  }, [location.search, navigate]);
   // Fetch properties with pagination
   const fetchProperties = async () => {
     try {
@@ -370,55 +377,63 @@ export default function PropertyList() {
                 </div>
                 
                 {/* Category Buttons */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-                  <button 
-                    onClick={() => handleCategorySelect("Commercial")}
-                    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
-                      categoryFilter === "Commercial" 
-                        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
-                        : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-900 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-200"
-                    }`}
-                  >
-                    <Building className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
-                    Commercial
-                  </button>
-                  
-                  <button 
-                    onClick={() => handleCategorySelect("Outright")}
-                    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
-                      categoryFilter === "Outright" 
-                        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
-                        : "bg-gradient-to-r from-green-50 to-emerald-50 text-green-900 hover:from-green-100 hover:to-emerald-100 border-2 border-green-200"
-                    }`}
-                  >
-                    <LandPlot className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
-                    Outright
-                  </button>
-                  
-                  <button 
-                    onClick={() => handleCategorySelect("Farmland")}
-                    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
-                      categoryFilter === "Farmland" 
-                        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
-                        : "bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-900 hover:from-amber-100 hover:to-yellow-100 border-2 border-amber-200"
-                    }`}
-                  >
-                    <Sprout className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
-                    Farmland
-                  </button>
-                  
-                  <button 
-                    onClick={() => handleCategorySelect("JD/JV")}
-                    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
-                      categoryFilter === "JD/JV" 
-                        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
-                        : "bg-gradient-to-r from-purple-50 to-pink-50 text-purple-900 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
-                    }`}
-                  >
-                    <Handshake className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
-                    JD/JV
-                  </button>
-                </div>
+           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
+  <button 
+    onClick={() => handleCategorySelect("Commercial")}
+    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
+      categoryFilter === "Commercial" 
+        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
+        : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-900 hover:from-blue-100 hover:to-indigo-100 border-2 border-blue-200"
+    }`}
+  >
+    <Building className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+    Commercial
+  </button>
+  
+  <button 
+    onClick={() => handleCategorySelect("Outright")}
+    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
+      categoryFilter === "Outright" 
+        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
+        : "bg-gradient-to-r from-green-50 to-emerald-50 text-green-900 hover:from-green-100 hover:to-emerald-100 border-2 border-green-200"
+    }`}
+  >
+    <LandPlot className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+    Outright
+  </button>
+  
+  <button 
+    onClick={() => handleCategorySelect("Farmland")}
+    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
+      categoryFilter === "Farmland" 
+        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
+        : "bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-900 hover:from-amber-100 hover:to-yellow-100 border-2 border-amber-200"
+    }`}
+  >
+    <Sprout className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+    Farmland
+  </button>
+  
+  <button 
+    onClick={() => handleCategorySelect("JD/JV")}
+    className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm ${
+      categoryFilter === "JD/JV" 
+        ? "bg-blue-600 text-white hover:bg-blue-700 scale-105" 
+        : "bg-gradient-to-r from-purple-50 to-pink-50 text-purple-900 hover:from-purple-100 hover:to-pink-100 border-2 border-purple-200"
+    }`}
+  >
+    <Handshake className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+    JD/JV
+  </button>
+  
+  <button 
+    onClick={() => navigate('/property-units')}
+    className="col-span-2 sm:col-span-1 px-2 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all font-semibold shadow-md text-xs sm:text-sm bg-gradient-to-r from-pink-50 to-rose-50 text-rose-900 hover:from-pink-100 hover:to-rose-100 border-2 border-rose-200"
+  >
+    <Home className="w-3 h-3 sm:w-4 sm:h-5 inline mr-1 sm:mr-2" />
+    Property Units
+  </button>
+</div>
               </div>
             </div>
           </div>

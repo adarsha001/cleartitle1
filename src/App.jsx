@@ -36,6 +36,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import PropertyUnitsPage from "./components/PropertyUnitsPage";
 import PropertyUnitDetail from "./components/PropertyUnitDetail";
 import TermsAndConditionsClearTitle1 from "./components/TermsAndConditions_SAIMR_Groups";
+import PropertyUnitList from "./components/PropertyUnitList";
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
@@ -119,6 +120,7 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+                 <Route path="/property-units" element={<PropertyUnitList />} />
 
 <Route path="/terms-and-conditions" element={<TermsAndConditionsClearTitle1 />} />
               <Route path="/property-units/:id" element={<PropertyUnitDetail />} /> 
