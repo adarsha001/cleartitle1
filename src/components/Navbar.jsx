@@ -45,7 +45,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Enhanced cookie management functions
+  // Enhanced cookie management functions - Fixed "this" issue
   const cookieManager = {
     // Clear all Google Translate related cookies
     clearGoogleTranslateCookies: () => {
@@ -87,7 +87,7 @@ export default function Navbar() {
       const domain = window.location.hostname;
       
       // First, clear old cookies
-      this.clearGoogleTranslateCookies();
+      cookieManager.clearGoogleTranslateCookies(); // Fixed: Direct call instead of this.
       
       // Set new cookie with proper format
       const cookieValue = `/en/${langCode}`;
