@@ -11,84 +11,58 @@ import './index.css'
 window.googleTranslateReady = false;
 window.googleTranslateLoading = false;
 
-// Clear ALL Google Translate cookies and localStorage on page unload
-const clearLanguageData = () => {
+// Clear Google Translate cookies on page load
+const clearGoogleTranslateCookies = () => {
   const domain = window.location.hostname;
+  const path = '/';
   
-  // Clear cookies
-  document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=${domain}`;
-  document.cookie = `googtrans=; path=/; max-age=0; domain=${domain}`;
+  // Clear all possible Google Translate cookies
+  const cookieNames = [
+    'googtrans',
+    'googtrans_prev',
+    'googtrans_debug'
+  ];
   
-  // Clear localStorage language data
-  localStorage.removeItem('preferredLanguage');
-  localStorage.removeItem('languageLocked');
-  localStorage.removeItem('languageChangedOnce');
-  localStorage.removeItem('languageSource');
-  localStorage.removeItem('languageTimestamp');
-  
-  console.log('Language data cleared (session ended)');
-};
-
-// Clear language data when tab is closing
-window.addEventListener('beforeunload', (event) => {
-  // Don't clear if it's a page refresh (F5, Ctrl+R)
-  const isRefresh = performance.navigation.type === 1 || 
-                   performance.getEntriesByType("navigation")[0]?.type === "reload";
-  
-  if (!isRefresh) {
-    // Use sessionStorage to mark that we're actually closing the tab
-    sessionStorage.setItem('closingTab', 'true');
-    clearLanguageData();
-  }
-});
-
-// Clear language data on page load if it was a fresh tab
-window.addEventListener('load', () => {
-  const wasClosing = sessionStorage.getItem('closingTab') === 'true';
-  
-  if (wasClosing) {
-    // Tab was previously closed, clear everything
-    clearLanguageData();
-    sessionStorage.removeItem('closingTab');
-    sessionStorage.removeItem('preferredLanguage');
-    sessionStorage.removeItem('languageTimestamp');
-    sessionStorage.removeItem('sessionInitialized');
+  cookieNames.forEach(cookieName => {
+    document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=${path}; domain=${domain}`;
+    document.cookie = `${cookieName}=; path=${path}; max-age=0; domain=${domain}`;
     
-    // Also clear URL parameters
-    if (window.location.search.includes('hl=')) {
-      const url = new URL(window.location);
-      url.searchParams.delete('hl');
-      url.searchParams.delete('t');
-      window.history.replaceState({}, '', url);
+    // Also clear for subdomains
+    if (domain.includes('.')) {
+      const domainParts = domain.split('.');
+      if (domainParts.length > 1) {
+        const baseDomain = domainParts.slice(-2).join('.');
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=${path}; domain=${baseDomain}`;
+        document.cookie = `${cookieName}=; path=${path}; max-age=0; domain=${baseDomain}`;
+      }
     }
-  } else {
-    // This is likely a refresh or navigation within the same tab
-    // Keep sessionStorage data but clear localStorage language locks
-    localStorage.removeItem('languageLocked');
-    localStorage.removeItem('languageChangedOnce');
-    localStorage.setItem('languageSource', 'session'); // Mark as session-based
-  }
-});
+  });
+  
+  console.log('Cleared Google Translate cookies');
+};
 
 // Global function to change language
 window.changeLanguage = (langCode) => {
   console.log('Changing language to:', langCode);
   
-  // Save to sessionStorage (tab-specific)
-  sessionStorage.setItem('preferredLanguage', langCode);
-  sessionStorage.setItem('languageTimestamp', Date.now().toString());
-  
-  // Also save to localStorage but mark as session-based
+  // Save preference to localStorage
   localStorage.setItem('preferredLanguage', langCode);
-  localStorage.setItem('languageSource', 'session');
   
-  // Clear any existing Google Translate cookies
+  // Clear cookies first
+  clearGoogleTranslateCookies();
+  
+  // Set session-only cookie (no expiry, will clear when tab closes)
   const domain = window.location.hostname;
-  document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=${domain}`;
+  const path = '/';
   
-  // Set new cookie with shorter expiration (session cookie)
-  // Setting without max-age makes it a session cookie
-  document.cookie = `googtrans=/en/${langCode}; path=/; domain=${domain}`;
+  // Set cookie without expiry (session cookie)
+  document.cookie = `googtrans=/en/${langCode}; path=${path}; domain=${domain}`;
+  
+  // Store language selection in sessionStorage
+  if (langCode !== 'en') {
+    sessionStorage.setItem('languageLocked', 'true');
+    sessionStorage.setItem('selectedLanguage', langCode);
+  }
   
   // Update URL
   const url = new URL(window.location);
@@ -97,9 +71,11 @@ window.changeLanguage = (langCode) => {
   window.history.replaceState({}, '', url);
   
   // Dispatch event for other components
-  window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: langCode } }));
+  window.dispatchEvent(new CustomEvent('languageChanged', { 
+    detail: { language: langCode } 
+  }));
   
-  // Reload page after short delay
+  // Reload page
   setTimeout(() => {
     window.location.reload();
   }, 300);
@@ -116,7 +92,7 @@ const initializeGoogleTranslate = () => {
 
   const script = document.createElement('script');
   script.type = 'text/javascript';
-  script.src = `//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit`;
+  script.src = `//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit&${Date.now()}`;
   
   script.onload = () => {
     console.log('Google Translate script loaded');
@@ -147,16 +123,17 @@ window.googleTranslateElementInit = () => {
     window.googleTranslateReady = true;
     console.log('Google Translate widget initialized');
     
-    // Apply saved language from sessionStorage
-    const sessionLang = sessionStorage.getItem('preferredLanguage');
-    const urlLang = new URLSearchParams(window.location.search).get('hl');
-    const langCode = urlLang || sessionLang || 'en';
-    
-    if (langCode && langCode !== 'en') {
-      console.log('Applying session language:', langCode);
-      
-      setTimeout(() => {
-        try {
+    // Apply saved language if any
+    setTimeout(() => {
+      try {
+        // Check sessionStorage for language selection
+        const sessionLanguage = sessionStorage.getItem('selectedLanguage');
+        const urlLang = new URLSearchParams(window.location.search).get('hl');
+        const langCode = sessionLanguage || urlLang || 'en';
+        
+        if (langCode && langCode !== 'en') {
+          console.log('Applying session language:', langCode);
+          
           const iframe = document.querySelector('.goog-te-menu-frame');
           if (iframe && iframe.contentWindow) {
             const select = iframe.contentWindow.document.querySelector('.goog-te-combo');
@@ -165,11 +142,11 @@ window.googleTranslateElementInit = () => {
               select.dispatchEvent(new Event('change'));
             }
           }
-        } catch (error) {
-          console.warn('Could not apply session language:', error);
         }
-      }, 1000);
-    }
+      } catch (error) {
+        console.warn('Could not apply saved language:', error);
+      }
+    }, 1500);
     
   } catch (error) {
     console.error('Error initializing Google Translate:', error);
@@ -217,7 +194,10 @@ if (!document.querySelector('#google_translate_element')) {
   document.body.appendChild(translateDiv);
 }
 
-// Initialize Google Translate after a delay
+// Clear cookies on page load
+clearGoogleTranslateCookies();
+
+// Initialize Google Translate
 setTimeout(() => {
   initializeGoogleTranslate();
 }, 1000);

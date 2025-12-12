@@ -11,6 +11,7 @@ export default function Navbar() {
   const [currentLanguage, setCurrentLanguage] = useState({ code: 'en', name: 'English', flag: '🇺🇸' });
   const [isScrolled, setIsScrolled] = useState(false);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
+  const [isLanguageLocked, setIsLanguageLocked] = useState(false);
 
   const languageDropdownRef = useRef(null);
 
@@ -43,20 +44,62 @@ export default function Navbar() {
 
   // Check language state on component mount
   useEffect(() => {
-    // Priority: URL param > sessionStorage > localStorage > default 'en'
+    // Clear old cookies on page load (to prevent persistence after tab close)
+    const domain = window.location.hostname;
+    const path = '/';
+    
+    // Clear any existing Google Translate cookies
+    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=${path}; domain=${domain}`;
+    document.cookie = `googtrans=; path=${path}; max-age=0; domain=${domain}`;
+    
+    // Also clear from localStorage to prevent any persistence
+    localStorage.removeItem('languageLocked');
+    localStorage.removeItem('languageChangedOnce');
+    
+    // Check if we have a saved preference
+    const savedLang = localStorage.getItem('preferredLanguage');
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('hl');
-    const sessionLang = sessionStorage.getItem('preferredLanguage');
-    const savedLang = localStorage.getItem('preferredLanguage');
-    const langCode = urlLang || sessionLang || savedLang || 'en';
+    const langCode = urlLang || savedLang || 'en';
     
     // Find and set current language
     const foundLang = languages.find(lang => lang.code === langCode) || languages[0];
     setCurrentLanguage(foundLang);
     
-    console.log('Language loaded:', {
+    // Check sessionStorage for language lock state
+    const sessionLanguageLocked = sessionStorage.getItem('languageLocked');
+    const sessionLanguageCode = sessionStorage.getItem('selectedLanguage');
+    
+    // If we have a session language and it's locked, set the state
+    if (sessionLanguageLocked === 'true' && sessionLanguageCode && sessionLanguageCode !== 'en') {
+      setIsLanguageLocked(true);
+      
+      // Set cookie for this session only (no expiry, will clear on tab close)
+      const domain = window.location.hostname;
+      document.cookie = `googtrans=/en/${sessionLanguageCode}; path=/; domain=${domain}`;
+      
+      // Update URL if needed
+      if (!urlParams.get('hl')) {
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('hl', sessionLanguageCode);
+        window.history.replaceState({}, '', newUrl);
+      }
+    } else {
+      // No session lock, so start fresh
+      setIsLanguageLocked(false);
+      
+      // If language is not English, lock it for this session
+      if (langCode !== 'en') {
+        setIsLanguageLocked(true);
+        sessionStorage.setItem('languageLocked', 'true');
+        sessionStorage.setItem('selectedLanguage', langCode);
+      }
+    }
+    
+    console.log('Language state on mount:', {
       langCode,
-      source: urlLang ? 'url' : sessionLang ? 'session' : savedLang ? 'localStorage' : 'default'
+      locked: sessionLanguageLocked,
+      sessionCode: sessionLanguageCode
     });
     
     // Listen for language change events
@@ -71,16 +114,6 @@ export default function Navbar() {
     };
     
     window.addEventListener('languageChanged', handleLanguageChanged);
-    
-    // Clean up old localStorage data on fresh load
-    const hasJustOpened = !sessionStorage.getItem('sessionInitialized');
-    if (hasJustOpened) {
-      // This is a fresh tab/session
-      sessionStorage.setItem('sessionInitialized', 'true');
-      localStorage.removeItem('languageLocked');
-      localStorage.removeItem('languageChangedOnce');
-      console.log('Fresh session started - cleared language locks');
-    }
     
     return () => {
       window.removeEventListener('languageChanged', handleLanguageChanged);
@@ -98,29 +131,34 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle language change - Tab session only
+  // Handle language change - ONE TIME ONLY PER TAB
   const handleLanguageChange = (language) => {
-    console.log('Changing language to:', language.code);
+    console.log('Attempting language change to:', language.code);
+    
+    // Check if already locked (non-English already selected in this tab)
+    if (isLanguageLocked && language.code !== 'en') {
+      console.log('Language selection is locked for this tab. Close tab and reopen.');
+      setShowLanguageDropdown(false);
+      return;
+    }
     
     // Start language change
     setIsChangingLanguage(true);
+    
+    // If changing to non-English, lock future changes for this session
+    if (language.code !== 'en') {
+      setIsLanguageLocked(true);
+      sessionStorage.setItem('languageLocked', 'true');
+      sessionStorage.setItem('selectedLanguage', language.code);
+    }
     
     // Update UI
     setCurrentLanguage(language);
     setShowLanguageDropdown(false);
     setIsMobileMenuOpen(false);
     
-    // Clear any previous language locks
-    localStorage.removeItem('languageLocked');
-    localStorage.removeItem('languageChangedOnce');
-    
-    // Save preference ONLY for current session (tab)
-    sessionStorage.setItem('preferredLanguage', language.code);
-    sessionStorage.setItem('languageTimestamp', Date.now().toString());
-    
-    // Also save to localStorage for fallback, but mark it as session-based
+    // Save preference (but not lock state)
     localStorage.setItem('preferredLanguage', language.code);
-    localStorage.setItem('languageSource', 'session'); // Mark as session-based
     
     // Show loading state
     const body = document.querySelector('body');
@@ -129,21 +167,32 @@ export default function Navbar() {
       body.style.transition = 'opacity 0.3s';
     }
     
-    // Use global function to change language
-    if (typeof window.changeLanguage === 'function') {
-      window.changeLanguage(language.code);
-    } else {
-      // Fallback
-      const domain = window.location.hostname;
-      // Clear any existing cookies first
-      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=${domain}`;
-      // Set new cookie
-      document.cookie = `googtrans=/en/${language.code}; path=/; domain=${domain}`;
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 300);
-    }
+    // Set session-only cookie (no expiry, will clear when tab closes)
+    const domain = window.location.hostname;
+    const path = '/';
+    
+    // Clear any existing cookies first
+    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=${path}; domain=${domain}`;
+    document.cookie = `googtrans=; path=${path}; max-age=0; domain=${domain}`;
+    
+    // Set new session cookie
+    document.cookie = `googtrans=/en/${language.code}; path=${path}; domain=${domain}`;
+    
+    // Update URL
+    const url = new URL(window.location);
+    url.searchParams.set('hl', language.code);
+    url.searchParams.set('t', Date.now());
+    window.history.replaceState({}, '', url);
+    
+    // Dispatch event for other components
+    window.dispatchEvent(new CustomEvent('languageChanged', { 
+      detail: { language: language.code } 
+    }));
+    
+    // Reload page after a short delay
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
   };
 
   const handleAddPropertyClick = (e) => {
@@ -190,13 +239,17 @@ export default function Navbar() {
                 <button
                   onClick={() => {
                     if (!isChangingLanguage) {
+                      if (isLanguageLocked && currentLanguage.code !== 'en') {
+                        // Just show message on hover, don't open dropdown
+                        return;
+                      }
                       setShowLanguageDropdown(!showLanguageDropdown);
                     }
                   }}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 border transition-all duration-200 shadow-sm font-medium min-w-[180px] relative group ${
-                    isChangingLanguage
-                      ? 'opacity-70 cursor-not-allowed'
-                      : 'border-white/30 hover:bg-white/30'
+                    isLanguageLocked && currentLanguage.code !== 'en'
+                      ? 'border-yellow-400 cursor-not-allowed'
+                      : 'border-white/30 hover:bg-white/30 cursor-pointer'
                   }`}
                   disabled={isChangingLanguage}
                 >
@@ -204,7 +257,12 @@ export default function Navbar() {
                     {isChangingLanguage ? (
                       <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
                     ) : (
-                      <Globe className="w-4 h-4" />
+                      <>
+                        <Globe className="w-4 h-4" />
+                        {isLanguageLocked && currentLanguage.code !== 'en' && (
+                          <Lock className="w-3 h-3 text-yellow-600" />
+                        )}
+                      </>
                     )}
                     <span className="truncate">
                       {currentLanguage.flag} {isChangingLanguage ? 'Changing...' : currentLanguage.name}
@@ -212,7 +270,20 @@ export default function Navbar() {
                   </div>
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
                     showLanguageDropdown ? 'rotate-180' : ''
-                  } ${isChangingLanguage ? 'opacity-50' : ''}`} />
+                  } ${isChangingLanguage ? 'opacity-50' : ''} ${
+                    isLanguageLocked && currentLanguage.code !== 'en' ? 'text-yellow-600' : ''
+                  }`} />
+                  
+                  {/* Locked language tooltip */}
+                  {isLanguageLocked && currentLanguage.code !== 'en' && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      <div className="flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>Close tab & reopen to change language</span>
+                      </div>
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                    </div>
+                  )}
                 </button>
 
                 {showLanguageDropdown && !isChangingLanguage && (
@@ -220,37 +291,57 @@ export default function Navbar() {
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="text-sm font-semibold text-gray-700">Select Language</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Language selection is per-tab only
+                        {isLanguageLocked ? "Close tab and reopen to change again" : "Page will reload"}
                       </p>
                     </div>
                     <div className="max-h-60 overflow-y-auto">
                       {languages.map((lang) => {
                         const isCurrent = currentLanguage.code === lang.code;
+                        const isDisabled = isLanguageLocked && lang.code !== 'en';
                         
                         return (
                           <button
                             key={lang.code}
-                            onClick={() => handleLanguageChange(lang)}
-                            disabled={isChangingLanguage}
+                            onClick={() => {
+                              if (!isDisabled) {
+                                handleLanguageChange(lang);
+                              }
+                            }}
+                            disabled={isChangingLanguage || isDisabled}
                             className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
                               isCurrent ? 'bg-blue-50' : ''
-                            } hover:bg-blue-50 cursor-pointer`}
+                            } ${
+                              isDisabled 
+                                ? 'opacity-50 cursor-not-allowed bg-gray-100' 
+                                : 'hover:bg-blue-50 cursor-pointer'
+                            }`}
                           >
                             <span className="text-lg">{lang.flag}</span>
                             <span className="text-sm font-medium text-gray-800 flex-1 text-left">
                               {lang.name}
                             </span>
-                            {isCurrent && <span className="ml-auto text-blue-600 text-xs font-bold">✓</span>}
+                            {isDisabled ? (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-gray-500">Locked</span>
+                                <Lock className="w-3 h-3 text-gray-500" />
+                              </div>
+                            ) : (
+                              isCurrent && <span className="ml-auto text-blue-600 text-xs font-bold">✓</span>
+                            )}
                           </button>
                         );
                       })}
                     </div>
                     
-                    <div className="px-4 py-3 bg-blue-50 border-t border-blue-200">
-                      <p className="text-xs text-blue-800">
-                        <span className="font-bold">ℹ️ Note:</span> Language selection will reset when you close this tab.
-                      </p>
-                    </div>
+                    {isLanguageLocked && currentLanguage.code !== 'en' && (
+                      <div className="px-4 py-3 bg-yellow-50 border-t border-yellow-200">
+                        <p className="text-xs text-yellow-800">
+                          <span className="font-bold">⚠️ Language locked for this tab:</span> You can only select language once per tab session.
+                          <br />
+                          <span className="font-semibold">Close this tab and open a new one</span> to select a different language.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -343,28 +434,46 @@ export default function Navbar() {
                 {isChangingLanguage && (
                   <span className="text-xs text-blue-600">Applying...</span>
                 )}
+                {isLanguageLocked && currentLanguage.code !== 'en' && (
+                  <div className="flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-yellow-600" />
+                    <span className="text-xs text-yellow-600">Locked</span>
+                  </div>
+                )}
               </div>
+              
+              {isLanguageLocked && currentLanguage.code !== 'en' && (
+                <div className="mb-3 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-xs text-yellow-800">
+                    <span className="font-bold">Language locked for this tab.</span> Close tab & reopen to change language.
+                  </p>
+                </div>
+              )}
               
               <div className="grid grid-cols-2 gap-2">
                 {languages.slice(0, 4).map((lang) => {
                   const isCurrent = currentLanguage.code === lang.code;
+                  const isDisabled = isLanguageLocked && lang.code !== 'en';
                   
                   return (
                     <button
                       key={lang.code}
-                      onClick={() => handleLanguageChange(lang)}
-                      disabled={isChangingLanguage}
+                      onClick={() => !isDisabled && handleLanguageChange(lang)}
+                      disabled={isChangingLanguage || isDisabled}
                       className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
                         isCurrent
                           ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white/20 border-white/30 hover:bg-white/30'
+                          : isDisabled
+                          ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
+                          : 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer'
                       }`}
                     >
                       <span>{lang.flag}</span>
                       <span className="text-sm font-medium">
                         {lang.code === 'en' ? 'EN' : lang.code.toUpperCase()}
                       </span>
-                      {isCurrent && !isChangingLanguage && (
+                      {isDisabled && <Lock className="w-3 h-3 text-gray-500" />}
+                      {isCurrent && !isDisabled && !isChangingLanguage && (
                         <span className="text-blue-200">✓</span>
                       )}
                     </button>
@@ -374,11 +483,17 @@ export default function Navbar() {
 
               <button
                 onClick={() => {
+                  if (isLanguageLocked && currentLanguage.code !== 'en') {
+                    // Don't open dropdown, just show message in existing div
+                    return;
+                  }
                   setShowLanguageDropdown(!showLanguageDropdown);
                 }}
-                disabled={isChangingLanguage}
+                disabled={isChangingLanguage || (isLanguageLocked && currentLanguage.code !== 'en')}
                 className={`w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                  'bg-white/20 border-white/30 hover:bg-white/30'
+                  isLanguageLocked && currentLanguage.code !== 'en'
+                    ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
+                    : 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer'
                 }`}
               >
                 <Globe className="w-4 h-4" />
@@ -388,30 +503,36 @@ export default function Navbar() {
 
               {showLanguageDropdown && (
                 <div className="mt-2 p-2 bg-white/95 backdrop-blur-lg rounded-xl border border-white/30">
-                  <div className="mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-800">
-                      Language resets when tab is closed
-                    </p>
-                  </div>
+                  {isLanguageLocked && currentLanguage.code !== 'en' && (
+                    <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-xs text-yellow-800">
+                        Language locked for this tab. Close tab and reopen to change.
+                      </p>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {languages.slice(4).map((lang) => {
                       const isCurrent = currentLanguage.code === lang.code;
+                      const isDisabled = isLanguageLocked && lang.code !== 'en';
                       
                       return (
                         <button
                           key={lang.code}
-                          onClick={() => handleLanguageChange(lang)}
-                          disabled={isChangingLanguage}
+                          onClick={() => !isDisabled && handleLanguageChange(lang)}
+                          disabled={isChangingLanguage || isDisabled}
                           className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
                             isCurrent
                               ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-white/20 border-white/30 hover:bg-white/30'
+                              : isDisabled
+                              ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
+                              : 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer'
                           }`}
                         >
                           <span>{lang.flag}</span>
                           <span className="text-sm font-medium truncate">
                             {lang.name.split('(')[0].trim()}
                           </span>
+                          {isDisabled && <Lock className="w-3 h-3 text-gray-500" />}
                         </button>
                       );
                     })}
