@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
-import { Globe, ChevronDown, ExternalLink, Info } from 'lucide-react';
+import { Globe, ChevronDown } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -11,8 +11,6 @@ export default function Navbar() {
   const [currentLanguage, setCurrentLanguage] = useState({ code: 'en', name: 'English', flag: '🇺🇸' });
   const [isScrolled, setIsScrolled] = useState(false);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
-  const [hasChangedLanguage, setHasChangedLanguage] = useState(false);
-  const [showHoverTooltip, setShowHoverTooltip] = useState(false);
 
   const languageDropdownRef = useRef(null);
 
@@ -47,38 +45,90 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Check if language has been changed before
-  useEffect(() => {
-    const languageChangedBefore = localStorage.getItem('hasChangedLanguage');
-    const savedLang = localStorage.getItem('preferredLanguage');
+  // Enhanced cookie management functions
+  const cookieManager = {
+    // Clear all Google Translate related cookies
+    clearGoogleTranslateCookies: () => {
+      const domain = window.location.hostname;
+      const cookiesToClear = [
+        'googtrans',
+        'googtrans_prev',
+        'googtrans_debug',
+        'googtrans_/auto/',
+        'googtrans_/en/'
+      ];
+      
+      // Clear cookies for current domain and subdomains
+      const domains = [domain, '.' + domain, ''];
+      
+      cookiesToClear.forEach(cookieName => {
+        domains.forEach(dom => {
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=${dom}`;
+        });
+      });
+      
+      // Additional clearing for various cookie formats
+      const date = new Date();
+      date.setTime(date.getTime() - 1000 * 60 * 60 * 24);
+      const expires = date.toUTCString();
+      
+      // Clear all possible googtrans cookie variations
+      const cookiePrefixes = ['/auto/', '/en/'];
+      cookiePrefixes.forEach(prefix => {
+        document.cookie = `googtrans${prefix}=; expires=${expires}; path=/; domain=${domain}`;
+        document.cookie = `googtrans${prefix}=; expires=${expires}; path=/`;
+      });
+      
+      console.log('Google Translate cookies cleared');
+    },
     
-    if (languageChangedBefore === 'true' && savedLang && savedLang !== 'en') {
-      setHasChangedLanguage(true);
+    // Set new language cookie properly
+    setLanguageCookie: (langCode) => {
+      const domain = window.location.hostname;
+      
+      // First, clear old cookies
+      this.clearGoogleTranslateCookies();
+      
+      // Set new cookie with proper format
+      const cookieValue = `/en/${langCode}`;
+      const oneYear = 365 * 24 * 60 * 60; // 1 year in seconds
+      
+      // Set for root path
+      document.cookie = `googtrans=${cookieValue}; path=/; max-age=${oneYear}; domain=${domain}; SameSite=Lax`;
+      
+      // Also set alternative format for compatibility
+      document.cookie = `googtrans=/auto/${langCode}; path=/; max-age=${oneYear}; domain=${domain}; SameSite=Lax`;
+      
+      console.log('Language cookie set to:', cookieValue);
+      
+      // Set in localStorage for consistency
+      localStorage.setItem('preferredLanguage', langCode);
+      localStorage.setItem('languageTimestamp', Date.now().toString());
+    },
+    
+    // Get current language from cookie
+    getCurrentLanguage: () => {
+      // Try to get from cookie first
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'googtrans' && value) {
+          const match = value.match(/\/en\/(\w+)/) || value.match(/\/auto\/(\w+)/);
+          if (match) {
+            return match[1];
+          }
+        }
+      }
+      
+      // Fallback to localStorage or default
+      const savedLang = localStorage.getItem('preferredLanguage');
+      return savedLang || 'en';
     }
-  }, []);
-
-  // Open cleartitle.com in new tab
-  const openClearTitleWebsite = () => {
-    window.open('https://cleartitle.com', '_blank');
   };
 
-  // Open cleartitle1.com in new tab (for language change attempts)
-  const openClearTitle1Website = () => {
-    window.open('https://cleartitle1.com', '_blank');
-  };
-
-  // Handle language change - ONE TIME ONLY
-  const handleLanguageChange = (language) => {
+  // Handle language change with proper cookie management
+  const handleLanguageChange = async (language) => {
     console.log('Changing language to:', language.code);
-    
-    // Check if language has been changed before
-    if (hasChangedLanguage) {
-      console.log('Language already changed before, opening cleartitle1.com');
-      openClearTitle1Website();
-      setShowLanguageDropdown(false);
-      setIsMobileMenuOpen(false);
-      return;
-    }
     
     // Prevent multiple clicks
     if (isChangingLanguage || window.languageChangeInProgress) {
@@ -87,72 +137,70 @@ export default function Navbar() {
     }
     
     setIsChangingLanguage(true);
+    window.languageChangeInProgress = true;
     
     // Update UI state immediately
     setCurrentLanguage(language);
     setShowLanguageDropdown(false);
     setIsMobileMenuOpen(false);
     
-    // Save to localStorage with timestamp
-    const timestamp = Date.now();
-    localStorage.setItem('preferredLanguage', language.code);
-    localStorage.setItem('languageTimestamp', timestamp.toString());
-    localStorage.setItem('hasChangedLanguage', 'true'); // Mark as changed
-    
-    // Set state
-    setHasChangedLanguage(true);
+    // Clear old cookies and set new one
+    cookieManager.setLanguageCookie(language.code);
     
     // Update URL with timestamp to prevent caching
+    const timestamp = Date.now();
     const url = new URL(window.location);
     url.searchParams.set('hl', language.code);
     url.searchParams.set('t', timestamp);
     window.history.replaceState({}, '', url);
     
     // Show loading indicator
-    const originalText = document.querySelector('body');
-    if (originalText) {
-      originalText.style.opacity = '0.7';
-      originalText.style.transition = 'opacity 0.3s';
-    }
+    document.body.classList.add('language-changing');
+    document.body.style.opacity = '0.7';
+    document.body.style.transition = 'opacity 0.3s';
     
     // Use the global function to change language
     if (typeof window.changeLanguage === 'function') {
       window.changeLanguage(language.code);
     } else {
-      // Fallback: direct cookie method with reload and cache busting
+      // Fallback: direct method with reload
       console.log('window.changeLanguage not available, using fallback');
       
-      // Clear old cookies
-      document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; domain=' + window.location.hostname;
-      document.cookie = `googtrans=/en/${language.code}; path=/; domain=${window.location.hostname}; max-age=31536000`;
+      // Force Google Translate to recognize new cookie
+      const iframe = document.querySelector('.goog-te-menu-frame');
+      if (iframe && iframe.contentWindow) {
+        try {
+          const select = iframe.contentWindow.document.querySelector('.goog-te-combo');
+          if (select) {
+            select.value = language.code;
+            select.dispatchEvent(new Event('change'));
+          }
+        } catch (e) {
+          console.warn('Could not access translate iframe:', e);
+        }
+      }
       
+      // Set flag for post-reload detection
       sessionStorage.setItem('justChangedLanguage', language.code);
+      sessionStorage.setItem('languageChangeTime', Date.now().toString());
       
+      // Force reload with cache busting
       setTimeout(() => {
-        // Force reload without cache
-        window.location.href = window.location.href.split('?')[0] + '?hl=' + language.code + '&t=' + timestamp;
-      }, 300);
-    }
-  };
-
-  // Handle click on language selector button
-  const handleLanguageButtonClick = () => {
-    if (hasChangedLanguage) {
-      // If language already changed, open cleartitle1.com
-      openClearTitle1Website();
-    } else {
-      // If not changed yet, show dropdown
-      !isChangingLanguage && setShowLanguageDropdown(!showLanguageDropdown);
+        window.location.href = window.location.pathname + '?hl=' + language.code + '&t=' + timestamp + '&nocache=' + timestamp;
+      }, 500);
     }
   };
 
   // Initialize language on component mount
   useEffect(() => {
-    // Get saved language preference
+    // Get current language from cookie or localStorage
     const savedLang = localStorage.getItem('preferredLanguage');
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('hl');
-    const langCode = urlLang || savedLang || 'en';
+    const cookieLang = cookieManager.getCurrentLanguage();
+    
+    // Priority: URL param > Cookie > localStorage > default
+    const langCode = urlLang || cookieLang || savedLang || 'en';
     
     // Find matching language object
     const foundLang = languages.find(lang => lang.code === langCode) || languages[0];
@@ -174,28 +222,31 @@ export default function Navbar() {
     
     // Check if page just reloaded due to language change
     const justChanged = sessionStorage.getItem('justChangedLanguage');
-    const savedLangFromStorage = localStorage.getItem('preferredLanguage');
+    const changeTime = sessionStorage.getItem('languageChangeTime');
     
-    if (justChanged && savedLangFromStorage && justChanged === savedLangFromStorage) {
+    if (justChanged) {
       console.log('Page just reloaded for language change:', justChanged);
       
-      // Remove the flag
-      sessionStorage.removeItem('justChangedLanguage');
-      
-      // Restore opacity
+      // Clear loading state after a delay
       setTimeout(() => {
-        const body = document.querySelector('body');
-        if (body) {
-          body.style.opacity = '1';
-        }
+        document.body.classList.remove('language-changing');
+        document.body.style.opacity = '1';
         setIsChangingLanguage(false);
-      }, 500);
+        window.languageChangeInProgress = false;
+        
+        // Clear session storage flags
+        sessionStorage.removeItem('justChangedLanguage');
+        sessionStorage.removeItem('languageChangeTime');
+      }, 1000);
     }
     
-    // Reset changing language state after timeout
+    // Reset changing language state after timeout (safety)
     const resetTimeout = setTimeout(() => {
       setIsChangingLanguage(false);
-    }, 3000);
+      window.languageChangeInProgress = false;
+      document.body.classList.remove('language-changing');
+      document.body.style.opacity = '1';
+    }, 5000);
     
     return () => {
       window.removeEventListener('languageChanged', handleLanguageChanged);
@@ -254,66 +305,31 @@ export default function Navbar() {
                 Featured
               </Link>
 
-              {/* ClearTitle Website Link - ONLY ONE BUTTON */}
-              <button
-                onClick={openClearTitleWebsite}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 border border-white/30 hover:bg-white/30 transition-all duration-200 shadow-sm font-medium text-gray-900"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>cleartitle.com</span>
-              </button>
-
               {/* Language Selector - Desktop */}
               <div className="relative" ref={languageDropdownRef}>
-                <div
-                  onMouseEnter={() => hasChangedLanguage && setShowHoverTooltip(true)}
-                  onMouseLeave={() => setShowHoverTooltip(false)}
-                  className="relative"
+                <button
+                  onClick={() => !isChangingLanguage && setShowLanguageDropdown(!showLanguageDropdown)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 border border-white/30 hover:bg-white/30 transition-all duration-200 shadow-sm font-medium min-w-[180px]"
+                  disabled={isChangingLanguage}
                 >
-                  <button
-                    onClick={handleLanguageButtonClick}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 shadow-sm font-medium min-w-[180px] ${
-                      hasChangedLanguage 
-                        ? 'bg-gray-300/50 border border-gray-400/30 cursor-not-allowed text-gray-500' 
-                        : 'bg-white/20 border border-white/30 hover:bg-white/30'
-                    }`}
-                    disabled={isChangingLanguage || hasChangedLanguage}
-                  >
-                    <div className="flex items-center gap-2">
-                      {isChangingLanguage ? (
-                        <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-                      ) : hasChangedLanguage ? (
-                        <Info className="w-4 h-4" />
-                      ) : (
-                        <Globe className="w-4 h-4" />
-                      )}
-                      <span className="truncate">
-                        {currentLanguage.flag} {
-                          isChangingLanguage ? 'Changing...' : 
-                          hasChangedLanguage ? 'Language Selected' : 
-                          currentLanguage.name
-                        }
-                      </span>
-                    </div>
-                    {!hasChangedLanguage && (
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showLanguageDropdown ? 'rotate-180' : ''} ${isChangingLanguage ? 'opacity-50' : ''}`} />
+                  <div className="flex items-center gap-2">
+                    {isChangingLanguage ? (
+                      <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                    ) : (
+                      <Globe className="w-4 h-4" />
                     )}
-                  </button>
+                    <span className="truncate">
+                      {currentLanguage.flag} {isChangingLanguage ? 'Changing...' : currentLanguage.name}
+                    </span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showLanguageDropdown ? 'rotate-180' : ''} ${isChangingLanguage ? 'opacity-50' : ''}`} />
+                </button>
 
-                  {/* Hover tooltip for disabled state */}
-                  {showHoverTooltip && hasChangedLanguage && (
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap z-50">
-                      Open new tab to change language again
-                      <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
-                    </div>
-                  )}
-                </div>
-
-                {showLanguageDropdown && !isChangingLanguage && !hasChangedLanguage && (
+                {showLanguageDropdown && !isChangingLanguage && (
                   <div className="absolute top-full right-0 mt-2 w-64 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/30 py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="text-sm font-semibold text-gray-700">Select Language</p>
-                      <p className="text-xs text-gray-500 mt-1">You can only change language once</p>
+                      <p className="text-xs text-gray-500 mt-1">Page will reload to apply translation</p>
                     </div>
                     <div className="max-h-60 overflow-y-auto">
                       {languages.map((lang) => (
@@ -415,18 +431,6 @@ export default function Navbar() {
               Featured
             </Link>
 
-            {/* ClearTitle Website Link - Mobile - ONLY ONE BUTTON */}
-            <button
-              onClick={() => {
-                openClearTitleWebsite();
-                setIsMobileMenuOpen(false);
-              }}
-              className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg bg-white/20 border border-white/30 hover:bg-white/30 transition-all font-medium text-gray-900"
-            >
-              <ExternalLink className="w-4 h-4" />
-              <span>cleartitle.com</span>
-            </button>
-
             {/* Mobile Language Selector */}
             <div className="border-t border-white/20 pt-3">
               <div className="flex items-center justify-between px-2 pb-2">
@@ -434,38 +438,21 @@ export default function Navbar() {
                 {isChangingLanguage && (
                   <span className="text-xs text-blue-600">Applying...</span>
                 )}
-                {hasChangedLanguage && (
-                  <span className="text-xs text-gray-500">Click to open cleartitle1.com</span>
-                )}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {languages.slice(0, 4).map((lang) => (
                   <button
                     key={lang.code}
-                    onClick={() => {
-                      if (hasChangedLanguage) {
-                        openClearTitle1Website();
-                        setIsMobileMenuOpen(false);
-                      } else {
-                        handleLanguageChange(lang);
-                      }
-                    }}
+                    onClick={() => handleLanguageChange(lang)}
                     disabled={isChangingLanguage}
-                    className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                      currentLanguage.code === lang.code
-                        ? hasChangedLanguage 
-                          ? 'bg-gray-300 border-gray-400 text-gray-600' 
-                          : 'bg-blue-600 text-white border-blue-600'
-                        : hasChangedLanguage
-                          ? 'bg-gray-200 border-gray-300 text-gray-500'
-                          : 'bg-white/20 border-white/30 hover:bg-white/30'
-                    } ${isChangingLanguage ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${currentLanguage.code === lang.code
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white/20 border-white/30 hover:bg-white/30'
+                      } ${isChangingLanguage ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
                     <span>{lang.flag}</span>
-                    <span className="text-sm font-medium">
-                      {hasChangedLanguage ? 'Click for cleartitle1.com' : (lang.code === 'en' ? 'EN' : lang.code.toUpperCase())}
-                    </span>
-                    {currentLanguage.code === lang.code && !isChangingLanguage && !hasChangedLanguage && (
+                    <span className="text-sm font-medium">{lang.code === 'en' ? 'EN' : lang.code.toUpperCase()}</span>
+                    {currentLanguage.code === lang.code && !isChangingLanguage && (
                       <span className="text-blue-200">✓</span>
                     )}
                   </button>
@@ -473,44 +460,28 @@ export default function Navbar() {
               </div>
 
               <button
-                onClick={() => {
-                  if (hasChangedLanguage) {
-                    openClearTitle1Website();
-                    setIsMobileMenuOpen(false);
-                  } else {
-                    !isChangingLanguage && setShowLanguageDropdown(!showLanguageDropdown);
-                  }
-                }}
+                onClick={() => !isChangingLanguage && setShowLanguageDropdown(!showLanguageDropdown)}
                 disabled={isChangingLanguage}
-                className={`w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all font-medium ${
-                  hasChangedLanguage
-                    ? 'bg-gray-300 border-gray-400 text-gray-600'
-                    : 'bg-white/20 border-white/30 hover:bg-white/30 text-gray-900'
-                } ${isChangingLanguage ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/20 border border-white/30 hover:bg-white/30 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <Globe className="w-4 h-4" />
-                <span className="text-sm font-medium">
-                  {hasChangedLanguage ? 'Open cleartitle1.com' : 'More Languages'}
-                </span>
-                {!hasChangedLanguage && (
-                  <ChevronDown className={`w-4 h-4 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} />
-                )}
+                <span className="text-sm font-medium">More Languages</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} />
               </button>
 
-              {showLanguageDropdown && !isChangingLanguage && !hasChangedLanguage && (
+              {showLanguageDropdown && !isChangingLanguage && (
                 <div className="mt-2 p-2 bg-white/95 backdrop-blur-lg rounded-xl border border-white/30">
-                  <p className="text-xs text-gray-500 px-2 pb-2">You can only change language once</p>
+                  <p className="text-xs text-gray-500 px-2 pb-2">Page will reload to apply translation</p>
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {languages.slice(4).map((lang) => (
                       <button
                         key={lang.code}
                         onClick={() => handleLanguageChange(lang)}
                         disabled={isChangingLanguage}
-                        className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                          currentLanguage.code === lang.code
+                        className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${currentLanguage.code === lang.code
                             ? 'bg-blue-600 text-white border-blue-600'
                             : 'bg-white/20 border-white/30 hover:bg-white/30'
-                        } ${isChangingLanguage ? 'opacity-70 cursor-not-allowed' : ''}`}
+                          } ${isChangingLanguage ? 'opacity-70 cursor-not-allowed' : ''}`}
                       >
                         <span>{lang.flag}</span>
                         <span className="text-sm font-medium truncate">{lang.name.split('(')[0].trim()}</span>
