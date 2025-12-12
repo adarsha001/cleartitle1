@@ -11,12 +11,28 @@ import './index.css'
 window.googleTranslateReady = false;
 window.googleTranslateLoading = false;
 window.googleTranslateInitialized = false;
+window.languageChangeInProgress = false;
+
+// Clear all Google Translate cookies
+window.clearGoogleTranslateCookies = () => {
+  const domains = [
+    window.location.hostname,
+    '.' + window.location.hostname,
+    ''
+  ];
+  
+  domains.forEach(domain => {
+    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=${domain}`;
+    document.cookie = `googtrans=; path=/; max-age=0; domain=${domain}`;
+  });
+  
+  console.log('Google Translate cookies cleared');
+};
 
 // Global function to change language
 window.changeLanguage = (langCode) => {
   console.log('Changing language to:', langCode);
   
-  // Prevent multiple clicks
   if (window.languageChangeInProgress) {
     console.log('Language change already in progress');
     return false;
@@ -24,18 +40,21 @@ window.changeLanguage = (langCode) => {
   
   window.languageChangeInProgress = true;
   
-  // Clear old Google Translate cookies
-  const domain = window.location.hostname;
-  document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=' + domain;
-  document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=.' + domain;
-  document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/';
+  // Clear cookies first
+  window.clearGoogleTranslateCookies();
   
   // Set new language cookie
-  document.cookie = `googtrans=/en/${langCode}; path=/; max-age=31536000; domain=${domain}; SameSite=Lax`;
+  const domain = window.location.hostname;
+  document.cookie = `googtrans=/en/${langCode}; path=/; max-age=31536000; domain=${domain}`;
   
   // Save to localStorage
   localStorage.setItem('preferredLanguage', langCode);
   localStorage.setItem('languageTimestamp', Date.now().toString());
+  
+  // Mark that language has been changed once
+  if (langCode !== 'en') {
+    localStorage.setItem('languageChangedOnce', 'true');
+  }
   
   // Update URL
   const url = new URL(window.location);
@@ -43,15 +62,15 @@ window.changeLanguage = (langCode) => {
   url.searchParams.set('t', Date.now());
   window.history.replaceState({}, '', url);
   
-  // Dispatch event for UI updates
+  // Dispatch event
   window.dispatchEvent(new CustomEvent('languageChanged', {
     detail: { language: langCode }
   }));
   
-  // Set flag for reload detection
-  sessionStorage.setItem('justChangedLanguage', 'true');
+  // Set session flag
+  sessionStorage.setItem('justChangedLanguage', langCode);
   
-  // Try to use Google Translate API if available
+  // Try Google Translate API
   if (window.googleTranslateReady) {
     try {
       const iframe = document.querySelector('.goog-te-menu-frame');
@@ -61,21 +80,19 @@ window.changeLanguage = (langCode) => {
           select.value = langCode;
           select.dispatchEvent(new Event('change'));
           
-          // Reset progress flag
+          // Reload for consistency
           setTimeout(() => {
-            window.languageChangeInProgress = false;
-          }, 1000);
-          
+            window.location.reload();
+          }, 800);
           return true;
         }
       }
     } catch (error) {
-      console.warn('Could not access Google Translate iframe:', error);
+      console.warn('Google Translate iframe error:', error);
     }
   }
   
-  // Fallback: reload the page
-  console.log('Reloading page to apply translation...');
+  // Fallback reload
   setTimeout(() => {
     window.location.reload();
   }, 300);
@@ -112,9 +129,7 @@ const initializeGoogleTranslate = () => {
 
 // Google Translate callback
 window.googleTranslateElementInit = () => {
-  if (window.googleTranslateReady) {
-    return;
-  }
+  if (window.googleTranslateReady) return;
   
   console.log('Google Translate Element Init called');
   
@@ -130,7 +145,7 @@ window.googleTranslateElementInit = () => {
     window.googleTranslateInitialized = true;
     console.log('Google Translate widget initialized');
     
-    // Check for saved language
+    // Apply saved language
     const savedLang = localStorage.getItem('preferredLanguage');
     const urlLang = new URLSearchParams(window.location.search).get('hl');
     const langCode = urlLang || savedLang;
@@ -138,11 +153,6 @@ window.googleTranslateElementInit = () => {
     if (langCode && langCode !== 'en') {
       console.log('Applying saved language:', langCode);
       
-      // Set cookie on initial load
-      const domain = window.location.hostname;
-      document.cookie = `googtrans=/en/${langCode}; path=/; max-age=31536000; domain=${domain}; SameSite=Lax`;
-      
-      // Try to apply via iframe
       setTimeout(() => {
         try {
           const iframe = document.querySelector('.goog-te-menu-frame');
@@ -194,15 +204,11 @@ if (!document.querySelector('#google-translate-styles')) {
     body {
       top: 0 !important;
     }
-    
-    body > .skiptranslate {
-      display: none !important;
-    }
   `;
   document.head.appendChild(style);
 }
 
-// Create the translate element container
+// Create translate element container
 if (!document.querySelector('#google_translate_element')) {
   const translateDiv = document.createElement('div');
   translateDiv.id = 'google_translate_element';
@@ -210,10 +216,37 @@ if (!document.querySelector('#google_translate_element')) {
   document.body.appendChild(translateDiv);
 }
 
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM loaded, checking language state...');
+  
+  // Clear any existing translation state
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetParam = urlParams.get('reset');
+  
+  if (resetParam === 'true') {
+    window.clearGoogleTranslateCookies();
+    urlParams.delete('reset');
+    const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+    window.history.replaceState({}, '', newUrl);
+  }
+  
+  // Check for recent language change
+  const justChanged = sessionStorage.getItem('justChangedLanguage');
+  if (justChanged) {
+    console.log('Recent language change detected:', justChanged);
+    
+    setTimeout(() => {
+      const domain = window.location.hostname;
+      document.cookie = `googtrans=/en/${justChanged}; path=/; max-age=31536000; domain=${domain}`;
+    }, 500);
+  }
+});
+
 // Initialize Google Translate
 setTimeout(() => {
   initializeGoogleTranslate();
-}, 1000);
+}, 1500);
 
 // Render the app
 ReactDOM.createRoot(document.getElementById('root')).render(
