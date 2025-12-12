@@ -16,7 +16,7 @@ export default function Navbar() {
 
   const isAdmin = user?.role === "admin" || user?.isAdmin === true || user?.admin === true;
 
-  // Languages with flags
+  // Languages with flags - Fixed Pakistan flag for Urdu
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'hi', name: 'हिंदी (Hindi)', flag: '🇮🇳' },
@@ -45,89 +45,8 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Enhanced cookie management functions - Fixed "this" issue
-  const cookieManager = {
-    // Clear all Google Translate related cookies
-    clearGoogleTranslateCookies: () => {
-      const domain = window.location.hostname;
-      const cookiesToClear = [
-        'googtrans',
-        'googtrans_prev',
-        'googtrans_debug',
-        'googtrans_/auto/',
-        'googtrans_/en/'
-      ];
-      
-      // Clear cookies for current domain and subdomains
-      const domains = [domain, '.' + domain, ''];
-      
-      cookiesToClear.forEach(cookieName => {
-        domains.forEach(dom => {
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=${dom}`;
-        });
-      });
-      
-      // Additional clearing for various cookie formats
-      const date = new Date();
-      date.setTime(date.getTime() - 1000 * 60 * 60 * 24);
-      const expires = date.toUTCString();
-      
-      // Clear all possible googtrans cookie variations
-      const cookiePrefixes = ['/auto/', '/en/'];
-      cookiePrefixes.forEach(prefix => {
-        document.cookie = `googtrans${prefix}=; expires=${expires}; path=/; domain=${domain}`;
-        document.cookie = `googtrans${prefix}=; expires=${expires}; path=/`;
-      });
-      
-      console.log('Google Translate cookies cleared');
-    },
-    
-    // Set new language cookie properly
-    setLanguageCookie: (langCode) => {
-      const domain = window.location.hostname;
-      
-      // First, clear old cookies
-      cookieManager.clearGoogleTranslateCookies(); // Fixed: Direct call instead of this.
-      
-      // Set new cookie with proper format
-      const cookieValue = `/en/${langCode}`;
-      const oneYear = 365 * 24 * 60 * 60; // 1 year in seconds
-      
-      // Set for root path
-      document.cookie = `googtrans=${cookieValue}; path=/; max-age=${oneYear}; domain=${domain}; SameSite=Lax`;
-      
-      // Also set alternative format for compatibility
-      document.cookie = `googtrans=/auto/${langCode}; path=/; max-age=${oneYear}; domain=${domain}; SameSite=Lax`;
-      
-      console.log('Language cookie set to:', cookieValue);
-      
-      // Set in localStorage for consistency
-      localStorage.setItem('preferredLanguage', langCode);
-      localStorage.setItem('languageTimestamp', Date.now().toString());
-    },
-    
-    // Get current language from cookie
-    getCurrentLanguage: () => {
-      // Try to get from cookie first
-      const cookies = document.cookie.split(';');
-      for (const cookie of cookies) {
-        const [name, value] = cookie.trim().split('=');
-        if (name === 'googtrans' && value) {
-          const match = value.match(/\/en\/(\w+)/) || value.match(/\/auto\/(\w+)/);
-          if (match) {
-            return match[1];
-          }
-        }
-      }
-      
-      // Fallback to localStorage or default
-      const savedLang = localStorage.getItem('preferredLanguage');
-      return savedLang || 'en';
-    }
-  };
-
-  // Handle language change with proper cookie management
-  const handleLanguageChange = async (language) => {
+  // Handle language change - Deployment fixed version
+  const handleLanguageChange = (language) => {
     console.log('Changing language to:', language.code);
     
     // Prevent multiple clicks
@@ -137,70 +56,57 @@ export default function Navbar() {
     }
     
     setIsChangingLanguage(true);
-    window.languageChangeInProgress = true;
     
     // Update UI state immediately
     setCurrentLanguage(language);
     setShowLanguageDropdown(false);
     setIsMobileMenuOpen(false);
     
-    // Clear old cookies and set new one
-    cookieManager.setLanguageCookie(language.code);
+    // Save to localStorage with timestamp
+    const timestamp = Date.now();
+    localStorage.setItem('preferredLanguage', language.code);
+    localStorage.setItem('languageTimestamp', timestamp.toString());
     
     // Update URL with timestamp to prevent caching
-    const timestamp = Date.now();
     const url = new URL(window.location);
     url.searchParams.set('hl', language.code);
     url.searchParams.set('t', timestamp);
     window.history.replaceState({}, '', url);
     
     // Show loading indicator
-    document.body.classList.add('language-changing');
-    document.body.style.opacity = '0.7';
-    document.body.style.transition = 'opacity 0.3s';
+    const originalText = document.querySelector('body');
+    if (originalText) {
+      originalText.style.opacity = '0.7';
+      originalText.style.transition = 'opacity 0.3s';
+    }
     
     // Use the global function to change language
     if (typeof window.changeLanguage === 'function') {
       window.changeLanguage(language.code);
     } else {
-      // Fallback: direct method with reload
+      // Fallback: direct cookie method with reload and cache busting
       console.log('window.changeLanguage not available, using fallback');
       
-      // Force Google Translate to recognize new cookie
-      const iframe = document.querySelector('.goog-te-menu-frame');
-      if (iframe && iframe.contentWindow) {
-        try {
-          const select = iframe.contentWindow.document.querySelector('.goog-te-combo');
-          if (select) {
-            select.value = language.code;
-            select.dispatchEvent(new Event('change'));
-          }
-        } catch (e) {
-          console.warn('Could not access translate iframe:', e);
-        }
-      }
+      // Clear old cookies
+      document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; domain=' + window.location.hostname;
+      document.cookie = `googtrans=/en/${language.code}; path=/; domain=${window.location.hostname}; max-age=31536000`;
       
-      // Set flag for post-reload detection
       sessionStorage.setItem('justChangedLanguage', language.code);
-      sessionStorage.setItem('languageChangeTime', Date.now().toString());
       
-      // Force reload with cache busting
       setTimeout(() => {
-        window.location.href = window.location.pathname + '?hl=' + language.code + '&t=' + timestamp + '&nocache=' + timestamp;
-      }, 500);
+        // Force reload without cache
+        window.location.href = window.location.href.split('?')[0] + '?hl=' + language.code + '&t=' + timestamp;
+      }, 300);
     }
   };
 
   // Initialize language on component mount
   useEffect(() => {
-    // Get current language from cookie or localStorage
+    // Get saved language preference
     const savedLang = localStorage.getItem('preferredLanguage');
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('hl');
-    const cookieLang = cookieManager.getCurrentLanguage();
-    
-    // Priority: URL param > Cookie > localStorage > default
-    const langCode = urlLang || cookieLang || savedLang || 'en';
+    const langCode = urlLang || savedLang || 'en';
     
     // Find matching language object
     const foundLang = languages.find(lang => lang.code === langCode) || languages[0];
@@ -222,31 +128,28 @@ export default function Navbar() {
     
     // Check if page just reloaded due to language change
     const justChanged = sessionStorage.getItem('justChangedLanguage');
-    const changeTime = sessionStorage.getItem('languageChangeTime');
+    const savedLangFromStorage = localStorage.getItem('preferredLanguage');
     
-    if (justChanged) {
+    if (justChanged && savedLangFromStorage && justChanged === savedLangFromStorage) {
       console.log('Page just reloaded for language change:', justChanged);
       
-      // Clear loading state after a delay
+      // Remove the flag
+      sessionStorage.removeItem('justChangedLanguage');
+      
+      // Restore opacity
       setTimeout(() => {
-        document.body.classList.remove('language-changing');
-        document.body.style.opacity = '1';
+        const body = document.querySelector('body');
+        if (body) {
+          body.style.opacity = '1';
+        }
         setIsChangingLanguage(false);
-        window.languageChangeInProgress = false;
-        
-        // Clear session storage flags
-        sessionStorage.removeItem('justChangedLanguage');
-        sessionStorage.removeItem('languageChangeTime');
-      }, 1000);
+      }, 500);
     }
     
-    // Reset changing language state after timeout (safety)
+    // Reset changing language state after timeout
     const resetTimeout = setTimeout(() => {
       setIsChangingLanguage(false);
-      window.languageChangeInProgress = false;
-      document.body.classList.remove('language-changing');
-      document.body.style.opacity = '1';
-    }, 5000);
+    }, 3000);
     
     return () => {
       window.removeEventListener('languageChanged', handleLanguageChanged);
