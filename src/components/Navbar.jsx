@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
-import { Globe, ChevronDown, Loader2 } from 'lucide-react';
+import { Globe, ChevronDown } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -16,7 +16,7 @@ export default function Navbar() {
 
   const isAdmin = user?.role === "admin" || user?.isAdmin === true || user?.admin === true;
 
-  // Languages with flags
+  // Languages with flags - Fixed Pakistan flag for Urdu
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'hi', name: 'हिंदी (Hindi)', flag: '🇮🇳' },
@@ -45,7 +45,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Handle language change - Forced cookie approach
+  // Handle language change - Deployment fixed version
   const handleLanguageChange = (language) => {
     console.log('Changing language to:', language.code);
     
@@ -62,8 +62,16 @@ export default function Navbar() {
     setShowLanguageDropdown(false);
     setIsMobileMenuOpen(false);
     
-    // Save to localStorage immediately
+    // Save to localStorage with timestamp
+    const timestamp = Date.now();
     localStorage.setItem('preferredLanguage', language.code);
+    localStorage.setItem('languageTimestamp', timestamp.toString());
+    
+    // Update URL with timestamp to prevent caching
+    const url = new URL(window.location);
+    url.searchParams.set('hl', language.code);
+    url.searchParams.set('t', timestamp);
+    window.history.replaceState({}, '', url);
     
     // Show loading indicator
     const originalText = document.querySelector('body');
@@ -76,31 +84,18 @@ export default function Navbar() {
     if (typeof window.changeLanguage === 'function') {
       window.changeLanguage(language.code);
     } else {
-      // Fallback: direct forced approach
-      console.log('window.changeLanguage not available, using direct approach');
+      // Fallback: direct cookie method with reload and cache busting
+      console.log('window.changeLanguage not available, using fallback');
       
-      // Clear cookies and set new ones
-      const timestamp = Date.now();
-      const domain = window.location.hostname;
+      // Clear old cookies
+      document.cookie = 'googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; domain=' + window.location.hostname;
+      document.cookie = `googtrans=/en/${language.code}; path=/; domain=${window.location.hostname}; max-age=31536000`;
       
-      // Clear all cookies
-      document.cookie.split(";").forEach(cookie => {
-        const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${domain}`;
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
-      });
+      sessionStorage.setItem('justChangedLanguage', language.code);
       
-      // Set Google Translate cookie
-      document.cookie = `googtrans=/en/${language.code}; path=/; domain=${domain}; max-age=31536000`;
-      document.cookie = `googtrans=/en/${language.code}; path=/; max-age=31536000`;
-      
-      // Redirect with cache busting
       setTimeout(() => {
-        const url = new URL(window.location);
-        url.searchParams.set('hl', language.code);
-        url.searchParams.set('_t', timestamp);
-        window.location.href = url.toString();
+        // Force reload without cache
+        window.location.href = window.location.href.split('?')[0] + '?hl=' + language.code + '&t=' + timestamp;
       }, 300);
     }
   };
@@ -117,7 +112,7 @@ export default function Navbar() {
     const foundLang = languages.find(lang => lang.code === langCode) || languages[0];
     setCurrentLanguage(foundLang);
     
-    // Listen for language change events (for UI updates)
+    // Listen for language change events
     const handleLanguageChanged = (event) => {
       const newLangCode = event?.detail?.language;
       if (newLangCode) {
@@ -131,27 +126,34 @@ export default function Navbar() {
     
     window.addEventListener('languageChanged', handleLanguageChanged);
     
-    // Reset changing language state on page load
-    const checkLanguageChange = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlLang = urlParams.get('hl');
-      
-      if (urlLang) {
-        setTimeout(() => {
-          setIsChangingLanguage(false);
-          const body = document.querySelector('body');
-          if (body) {
-            body.style.opacity = '1';
-          }
-        }, 1000);
-      }
-    };
+    // Check if page just reloaded due to language change
+    const justChanged = sessionStorage.getItem('justChangedLanguage');
+    const savedLangFromStorage = localStorage.getItem('preferredLanguage');
     
-    // Check after a delay to allow page to load
-    setTimeout(checkLanguageChange, 1500);
+    if (justChanged && savedLangFromStorage && justChanged === savedLangFromStorage) {
+      console.log('Page just reloaded for language change:', justChanged);
+      
+      // Remove the flag
+      sessionStorage.removeItem('justChangedLanguage');
+      
+      // Restore opacity
+      setTimeout(() => {
+        const body = document.querySelector('body');
+        if (body) {
+          body.style.opacity = '1';
+        }
+        setIsChangingLanguage(false);
+      }, 500);
+    }
+    
+    // Reset changing language state after timeout
+    const resetTimeout = setTimeout(() => {
+      setIsChangingLanguage(false);
+    }, 3000);
     
     return () => {
       window.removeEventListener('languageChanged', handleLanguageChanged);
+      clearTimeout(resetTimeout);
     };
   }, []);
 
@@ -191,7 +193,7 @@ export default function Navbar() {
             <Link to="/" className="flex items-center space-x-2" onClick={() => setIsMobileMenuOpen(false)}>
               <img 
                 src="/logo.png" 
-                className={`drop-shadow-xl transition-all duration-300 ${isScrolled ? 'w-12 h-12' : 'w-16 h-16'}`} 
+                className={`drop-shadow-xl transition-all duration-300 ${isScrolled ? 'w-12 h-12' : 'w-18 h-18'}`} 
                 alt="Logo" 
               />
             </Link>
@@ -215,7 +217,7 @@ export default function Navbar() {
                 >
                   <div className="flex items-center gap-2">
                     {isChangingLanguage ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
                     ) : (
                       <Globe className="w-4 h-4" />
                     )}
@@ -337,7 +339,7 @@ export default function Navbar() {
               <div className="flex items-center justify-between px-2 pb-2">
                 <p className="text-sm font-semibold text-gray-700">Language</p>
                 {isChangingLanguage && (
-                  <span className="text-xs text-blue-600">Changing...</span>
+                  <span className="text-xs text-blue-600">Applying...</span>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -461,8 +463,8 @@ export default function Navbar() {
       {isChangingLanguage && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-center justify-center">
           <div className="bg-white/90 p-6 rounded-xl shadow-2xl flex flex-col items-center space-y-4">
-            <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
-            <p className="text-gray-800 font-medium">Applying language change...</p>
+            <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+            <p className="text-gray-800 font-medium">Applying translation...</p>
             <p className="text-sm text-gray-600">Page will reload in a moment</p>
           </div>
         </div>
