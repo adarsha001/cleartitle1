@@ -496,7 +496,7 @@ export default function Navbar() {
                     : 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer'
                 }`}
               >
-                <Globe className="w-4 h-4" />
+                {/* <Globe className="w-4 h-4" /> */}
                 {/* <span className="text-sm font-medium">More Languages</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} /> */}
               </button>

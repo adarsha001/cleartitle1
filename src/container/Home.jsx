@@ -56,13 +56,13 @@ const Home = () => {
       {/* Navigation Arrows & Dots */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center space-y-3">
 
-        {/* Up Arrow */}
+        {/* Up Arrow
         <button
           onClick={scrollPrev}
           className="p-2 rounded-full bg-gray-100 shadow hover:bg-gray-200"
         >
           ↑
-        </button>
+        </button> */}
 
         {/* Dots */}
         <div className="flex flex-col items-center space-y-3 py-2">
@@ -78,13 +78,13 @@ const Home = () => {
           ))}
         </div>
 
-        {/* Down Arrow */}
+        {/* Down Arrow
         <button
           onClick={scrollNext}
           className="p-2 rounded-full bg-gray-100 shadow hover:bg-gray-200"
         >
           ↓
-        </button>
+        </button> */}
       </div>
 
       {/* Progress Display */}
