@@ -174,6 +174,7 @@ export default function App() {
               {/* 404 Not Found Route - Catch all undefined routes */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            
           </ViewModeProvider>
         </LikesProvider>
       </AuthProvider>
