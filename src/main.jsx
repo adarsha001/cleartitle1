@@ -10,51 +10,85 @@ import './index.css'
 // Global state
 window.googleTranslateReady = false;
 window.googleTranslateLoading = false;
-window.googleTranslateInitialized = false;
-window.languageChangeInProgress = false;
 
-// Clear all Google Translate cookies
-window.clearGoogleTranslateCookies = () => {
-  const domains = [
-    window.location.hostname,
-    '.' + window.location.hostname,
-    ''
-  ];
+// Clear ALL Google Translate cookies and localStorage on page unload
+const clearLanguageData = () => {
+  const domain = window.location.hostname;
   
-  domains.forEach(domain => {
-    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=${domain}`;
-    document.cookie = `googtrans=; path=/; max-age=0; domain=${domain}`;
-  });
+  // Clear cookies
+  document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=${domain}`;
+  document.cookie = `googtrans=; path=/; max-age=0; domain=${domain}`;
   
-  console.log('Google Translate cookies cleared');
+  // Clear localStorage language data
+  localStorage.removeItem('preferredLanguage');
+  localStorage.removeItem('languageLocked');
+  localStorage.removeItem('languageChangedOnce');
+  localStorage.removeItem('languageSource');
+  localStorage.removeItem('languageTimestamp');
+  
+  console.log('Language data cleared (session ended)');
 };
+
+// Clear language data when tab is closing
+window.addEventListener('beforeunload', (event) => {
+  // Don't clear if it's a page refresh (F5, Ctrl+R)
+  const isRefresh = performance.navigation.type === 1 || 
+                   performance.getEntriesByType("navigation")[0]?.type === "reload";
+  
+  if (!isRefresh) {
+    // Use sessionStorage to mark that we're actually closing the tab
+    sessionStorage.setItem('closingTab', 'true');
+    clearLanguageData();
+  }
+});
+
+// Clear language data on page load if it was a fresh tab
+window.addEventListener('load', () => {
+  const wasClosing = sessionStorage.getItem('closingTab') === 'true';
+  
+  if (wasClosing) {
+    // Tab was previously closed, clear everything
+    clearLanguageData();
+    sessionStorage.removeItem('closingTab');
+    sessionStorage.removeItem('preferredLanguage');
+    sessionStorage.removeItem('languageTimestamp');
+    sessionStorage.removeItem('sessionInitialized');
+    
+    // Also clear URL parameters
+    if (window.location.search.includes('hl=')) {
+      const url = new URL(window.location);
+      url.searchParams.delete('hl');
+      url.searchParams.delete('t');
+      window.history.replaceState({}, '', url);
+    }
+  } else {
+    // This is likely a refresh or navigation within the same tab
+    // Keep sessionStorage data but clear localStorage language locks
+    localStorage.removeItem('languageLocked');
+    localStorage.removeItem('languageChangedOnce');
+    localStorage.setItem('languageSource', 'session'); // Mark as session-based
+  }
+});
 
 // Global function to change language
 window.changeLanguage = (langCode) => {
   console.log('Changing language to:', langCode);
   
-  if (window.languageChangeInProgress) {
-    console.log('Language change already in progress');
-    return false;
-  }
+  // Save to sessionStorage (tab-specific)
+  sessionStorage.setItem('preferredLanguage', langCode);
+  sessionStorage.setItem('languageTimestamp', Date.now().toString());
   
-  window.languageChangeInProgress = true;
-  
-  // Clear cookies first
-  window.clearGoogleTranslateCookies();
-  
-  // Set new language cookie
-  const domain = window.location.hostname;
-  document.cookie = `googtrans=/en/${langCode}; path=/; max-age=31536000; domain=${domain}`;
-  
-  // Save to localStorage
+  // Also save to localStorage but mark as session-based
   localStorage.setItem('preferredLanguage', langCode);
-  localStorage.setItem('languageTimestamp', Date.now().toString());
+  localStorage.setItem('languageSource', 'session');
   
-  // Mark that language has been changed once
-  if (langCode !== 'en') {
-    localStorage.setItem('languageChangedOnce', 'true');
-  }
+  // Clear any existing Google Translate cookies
+  const domain = window.location.hostname;
+  document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/; domain=${domain}`;
+  
+  // Set new cookie with shorter expiration (session cookie)
+  // Setting without max-age makes it a session cookie
+  document.cookie = `googtrans=/en/${langCode}; path=/; domain=${domain}`;
   
   // Update URL
   const url = new URL(window.location);
@@ -62,47 +96,18 @@ window.changeLanguage = (langCode) => {
   url.searchParams.set('t', Date.now());
   window.history.replaceState({}, '', url);
   
-  // Dispatch event
-  window.dispatchEvent(new CustomEvent('languageChanged', {
-    detail: { language: langCode }
-  }));
+  // Dispatch event for other components
+  window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: langCode } }));
   
-  // Set session flag
-  sessionStorage.setItem('justChangedLanguage', langCode);
-  
-  // Try Google Translate API
-  if (window.googleTranslateReady) {
-    try {
-      const iframe = document.querySelector('.goog-te-menu-frame');
-      if (iframe && iframe.contentWindow) {
-        const select = iframe.contentWindow.document.querySelector('.goog-te-combo');
-        if (select) {
-          select.value = langCode;
-          select.dispatchEvent(new Event('change'));
-          
-          // Reload for consistency
-          setTimeout(() => {
-            window.location.reload();
-          }, 800);
-          return true;
-        }
-      }
-    } catch (error) {
-      console.warn('Google Translate iframe error:', error);
-    }
-  }
-  
-  // Fallback reload
+  // Reload page after short delay
   setTimeout(() => {
     window.location.reload();
   }, 300);
-  
-  return true;
 };
 
 // Initialize Google Translate
 const initializeGoogleTranslate = () => {
-  if (window.googleTranslateLoading || window.googleTranslateInitialized) {
+  if (window.googleTranslateLoading || window.googleTranslateReady) {
     return;
   }
 
@@ -115,13 +120,11 @@ const initializeGoogleTranslate = () => {
   
   script.onload = () => {
     console.log('Google Translate script loaded');
-    window.googleTranslateLoading = false;
   };
   
   script.onerror = () => {
     console.error('Failed to load Google Translate');
     window.googleTranslateLoading = false;
-    window.googleTranslateInitialized = true;
   };
   
   document.head.appendChild(script);
@@ -142,36 +145,34 @@ window.googleTranslateElementInit = () => {
     }, 'google_translate_element');
     
     window.googleTranslateReady = true;
-    window.googleTranslateInitialized = true;
     console.log('Google Translate widget initialized');
     
-    // Apply saved language
-    const savedLang = localStorage.getItem('preferredLanguage');
+    // Apply saved language from sessionStorage
+    const sessionLang = sessionStorage.getItem('preferredLanguage');
     const urlLang = new URLSearchParams(window.location.search).get('hl');
-    const langCode = urlLang || savedLang;
+    const langCode = urlLang || sessionLang || 'en';
     
     if (langCode && langCode !== 'en') {
-      console.log('Applying saved language:', langCode);
+      console.log('Applying session language:', langCode);
       
       setTimeout(() => {
         try {
           const iframe = document.querySelector('.goog-te-menu-frame');
           if (iframe && iframe.contentWindow) {
             const select = iframe.contentWindow.document.querySelector('.goog-te-combo');
-            if (select) {
+            if (select && select.value !== langCode) {
               select.value = langCode;
               select.dispatchEvent(new Event('change'));
             }
           }
         } catch (error) {
-          console.warn('Could not apply saved language:', error);
+          console.warn('Could not apply session language:', error);
         }
       }, 1000);
     }
     
   } catch (error) {
     console.error('Error initializing Google Translate:', error);
-    window.googleTranslateInitialized = true;
   }
 };
 
@@ -216,37 +217,10 @@ if (!document.querySelector('#google_translate_element')) {
   document.body.appendChild(translateDiv);
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM loaded, checking language state...');
-  
-  // Clear any existing translation state
-  const urlParams = new URLSearchParams(window.location.search);
-  const resetParam = urlParams.get('reset');
-  
-  if (resetParam === 'true') {
-    window.clearGoogleTranslateCookies();
-    urlParams.delete('reset');
-    const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-    window.history.replaceState({}, '', newUrl);
-  }
-  
-  // Check for recent language change
-  const justChanged = sessionStorage.getItem('justChangedLanguage');
-  if (justChanged) {
-    console.log('Recent language change detected:', justChanged);
-    
-    setTimeout(() => {
-      const domain = window.location.hostname;
-      document.cookie = `googtrans=/en/${justChanged}; path=/; max-age=31536000; domain=${domain}`;
-    }, 500);
-  }
-});
-
-// Initialize Google Translate
+// Initialize Google Translate after a delay
 setTimeout(() => {
   initializeGoogleTranslate();
-}, 1500);
+}, 1000);
 
 // Render the app
 ReactDOM.createRoot(document.getElementById('root')).render(
