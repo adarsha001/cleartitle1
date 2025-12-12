@@ -497,11 +497,11 @@ export default function Navbar() {
                 }`}
               >
                 <Globe className="w-4 h-4" />
-                <span className="text-sm font-medium">More Languages</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} />
+                {/* <span className="text-sm font-medium">More Languages</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} /> */}
               </button>
 
-              {showLanguageDropdown && (
+              {/* {showLanguageDropdown && (
                 <div className="mt-2 p-2 bg-white/95 backdrop-blur-lg rounded-xl border border-white/30">
                   {isLanguageLocked && currentLanguage.code !== 'en' && (
                     <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -538,7 +538,7 @@ export default function Navbar() {
                     })}
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
 
             {isAdmin && (
