@@ -145,12 +145,20 @@ export default function Navbar() {
     <>
       {/* Main Navbar with dynamic padding */}
       <nav className={`bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'py-2' : 'py-4'}`}>
-        <div className="max-w-7xl mx-auto px-4 lg:px-8">
-          <div className="flex items-center justify-between">
-            {/* LOGO */}
-            <Link to="/" className="flex items-center space-x-2" onClick={() => setIsMobileMenuOpen(false)}>
-              <img src="/logo.png" className="w-16 h-auto drop-shadow-xl" alt="Logo" />
-            </Link>
+  <div className="max-w-7xl mx-auto px-4 lg:px-8">
+    <div className="flex items-center justify-between">
+      {/* LOGO with dynamic size based on scroll */}
+      <Link to="/" className="flex items-center space-x-2" onClick={() => setIsMobileMenuOpen(false)}>
+        <img 
+          src="/logo.png" 
+          className={`drop-shadow-xl transition-all duration-300 ${isScrolled ? 'w-12 h-12' : 'w-18 h-18'}`} 
+          alt="Logo" 
+        />
+        {/* Optional: You can also hide/show logo text based on scroll */}
+        {/* {!isScrolled && (
+          <span className="text-xl font-bold text-gray-900">Your Brand</span>
+        )} */}
+      </Link>
 
             {/* DESKTOP MENU */}
             <div className="hidden lg:flex items-center space-x-6 text-gray-900">
