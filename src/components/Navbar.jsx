@@ -7,17 +7,22 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const [showTooltip, setShowTooltip] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  /* LANGUAGE FEATURE COMMENTED OUT
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState({ code: 'en', name: 'English', flag: '🇺🇸' });
   const [isScrolled, setIsScrolled] = useState(false);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
   const [isLanguageLocked, setIsLanguageLocked] = useState(false);
-
+  */
+  const [isScrolled, setIsScrolled] = useState(false); // Keep this for scroll effect
+  
+  /* LANGUAGE FEATURE COMMENTED OUT
   const languageDropdownRef = useRef(null);
+  */
 
   const isAdmin = user?.role === "admin" || user?.isAdmin === true || user?.admin === true;
 
-  // Languages with flags
+  /* LANGUAGE FEATURE COMMENTED OUT - Languages array
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'hi', name: 'हिंदी (Hindi)', flag: '🇮🇳' },
@@ -32,6 +37,7 @@ export default function Navbar() {
     { code: 'ur', name: 'اردو (Urdu)', flag: '🇵🇰' },
     { code: 'or', name: 'ଓଡ଼ିଆ (Odia)', flag: '🇮🇳' }
   ];
+  */
 
   // Handle scroll
   useEffect(() => {
@@ -42,6 +48,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  /* LANGUAGE FEATURE COMMENTED OUT - Language state check
   // Check language state on component mount
   useEffect(() => {
     // Clear old cookies on page load (to prevent persistence after tab close)
@@ -119,7 +126,9 @@ export default function Navbar() {
       window.removeEventListener('languageChanged', handleLanguageChanged);
     };
   }, []);
+  */
 
+  /* LANGUAGE FEATURE COMMENTED OUT - Click outside handler
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -130,7 +139,9 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+  */
 
+  /* LANGUAGE FEATURE COMMENTED OUT - Language change handler
   // Handle language change - ONE TIME ONLY PER TAB
   const handleLanguageChange = (language) => {
     console.log('Attempting language change to:', language.code);
@@ -194,6 +205,7 @@ export default function Navbar() {
       window.location.reload();
     }, 300);
   };
+  */
 
   const handleAddPropertyClick = (e) => {
     if (!user) {
@@ -234,7 +246,8 @@ export default function Navbar() {
                 Featured
               </Link>
 
-              {/* Language Selector - Desktop */}
+              {/* LANGUAGE FEATURE COMMENTED OUT - Language Selector Desktop */}
+              {/* 
               <div className="relative" ref={languageDropdownRef}>
                 <button
                   onClick={() => {
@@ -274,16 +287,13 @@ export default function Navbar() {
                     isLanguageLocked && currentLanguage.code !== 'en' ? 'text-yellow-600' : ''
                   }`} />
                   
-                  {/* Locked language tooltip */}
-                  {isLanguageLocked && currentLanguage.code !== 'en' && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                      <div className="flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>Close tab & reopen to change language</span>
-                      </div>
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                    <div className="flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Close tab & reopen to change language</span>
                     </div>
-                  )}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                  </div>
                 </button>
 
                 {showLanguageDropdown && !isChangingLanguage && (
@@ -345,6 +355,7 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
+              */}
 
               {isAdmin && (
                 <Link
@@ -404,7 +415,7 @@ export default function Navbar() {
             <button
               className="text-gray-900 lg:hidden px-3 py-2 rounded focus:outline-none"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              disabled={isChangingLanguage}
+              // LANGUAGE FEATURE COMMENTED OUT: disabled={isChangingLanguage}
             >
               {isMobileMenuOpen ? "✕" : "☰"}
             </button>
@@ -427,7 +438,8 @@ export default function Navbar() {
               Featured
             </Link>
 
-            {/* Mobile Language Selector */}
+            {/* LANGUAGE FEATURE COMMENTED OUT - Mobile Language Selector */}
+            {/* 
             <div className="border-t border-white/20 pt-3">
               <div className="flex items-center justify-between px-2 pb-2">
                 <p className="text-sm font-semibold text-gray-700">Language</p>
@@ -496,12 +508,11 @@ export default function Navbar() {
                     : 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer'
                 }`}
               >
-                {/* <Globe className="w-4 h-4" /> */}
-                {/* <span className="text-sm font-medium">More Languages</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} /> */}
+                <span className="text-sm font-medium">More Languages</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* {showLanguageDropdown && (
+              {showLanguageDropdown && (
                 <div className="mt-2 p-2 bg-white/95 backdrop-blur-lg rounded-xl border border-white/30">
                   {isLanguageLocked && currentLanguage.code !== 'en' && (
                     <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -538,8 +549,9 @@ export default function Navbar() {
                     })}
                   </div>
                 </div>
-              )} */}
+              )}
             </div>
+            */}
 
             {isAdmin && (
               <Link
@@ -603,7 +615,8 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Loading overlay when changing language */}
+      {/* LANGUAGE FEATURE COMMENTED OUT - Loading overlay when changing language */}
+      {/* 
       {isChangingLanguage && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-center justify-center">
           <div className="bg-white/90 p-6 rounded-xl shadow-2xl flex flex-col items-center space-y-4">
@@ -613,6 +626,7 @@ export default function Navbar() {
           </div>
         </div>
       )}
+      */}
     </>
   );
 }
