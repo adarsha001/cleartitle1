@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
-import { Globe, ChevronDown, RefreshCw } from 'lucide-react';
+import { Globe, ChevronDown } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -11,10 +11,11 @@ export default function Navbar() {
   const [currentLanguage, setCurrentLanguage] = useState({ code: 'en', name: 'English', flag: '🇺🇸' });
   const [isScrolled, setIsScrolled] = useState(false);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
-  
+
   const languageDropdownRef = useRef(null);
   const isAdmin = user?.role === "admin" || user?.isAdmin === true || user?.admin === true;
 
+  // Languages with flags
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'hi', name: 'हिंदी (Hindi)', flag: '🇮🇳' },
@@ -39,108 +40,37 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Initialize language state
+  // Initialize language on component mount
   useEffect(() => {
-    console.log('Initializing language...');
-    
-    // First, REMOVE the skipAutoTranslate flag
-    localStorage.removeItem('skipAutoTranslate');
-    
-    // Check URL for language parameter
+    // Get language from URL or localStorage
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('hl');
-    
-    // Get from localStorage as fallback
     const savedLang = localStorage.getItem('preferredLanguage');
-    
-    // Default to English if nothing found
     const langCode = urlLang || savedLang || 'en';
     
-    // Find language in our list
+    // Find and set current language
     const foundLang = languages.find(lang => lang.code === langCode) || languages[0];
     setCurrentLanguage(foundLang);
     
-    console.log('Setting language to:', foundLang.code);
+    console.log('Language initialized:', langCode, 'source:', urlLang ? 'URL' : savedLang ? 'localStorage' : 'default');
     
-    // IMPORTANT: Set a flag that we HAVE changed language
-    localStorage.setItem('hasChangedLanguage', 'true');
-    
-    // Apply Google Translate after component mounts
-    setTimeout(() => {
-      if (langCode !== 'en') {
-        applyGoogleTranslate(langCode);
+    // Listen for language change events
+    const handleLanguageChanged = (event) => {
+      const newLangCode = event?.detail?.language;
+      if (newLangCode) {
+        const found = languages.find(l => l.code === newLangCode);
+        if (found) {
+          setCurrentLanguage(found);
+        }
       }
-    }, 1000);
+    };
     
+    window.addEventListener('languageChanged', handleLanguageChanged);
+    
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChanged);
+    };
   }, []);
-
-  // Apply Google Translate programmatically
-  const applyGoogleTranslate = (langCode) => {
-    if (langCode === 'en') {
-      // For English, remove translation
-      const iframes = document.querySelectorAll('iframe.goog-te-menu-frame, iframe.goog-te-banner-frame');
-      iframes.forEach(iframe => {
-        try {
-          const select = iframe.contentWindow?.document?.querySelector('.goog-te-combo');
-          if (select) {
-            select.value = 'en';
-            select.dispatchEvent(new Event('change'));
-          }
-        } catch (e) {
-          console.log('Could not access iframe:', e);
-        }
-      });
-      
-      // Also try direct method
-      if (window.google && window.google.translate) {
-        try {
-          window.google.translate.TranslateElement().restore();
-        } catch (e) {
-          console.log('Error restoring to English:', e);
-        }
-      }
-      return;
-    }
-    
-    // For non-English languages
-    console.log('Applying Google Translate for:', langCode);
-    
-    // Method 1: Try to find and set the Google Translate dropdown
-    const select = document.querySelector('.goog-te-combo');
-    if (select) {
-      console.log('Found Google Translate dropdown, setting to:', langCode);
-      select.value = langCode;
-      select.dispatchEvent(new Event('change'));
-    }
-    
-    // Method 2: Try through iframes
-    const iframes = document.querySelectorAll('iframe.goog-te-menu-frame, iframe.goog-te-banner-frame');
-    iframes.forEach(iframe => {
-      try {
-        const iframeSelect = iframe.contentWindow?.document?.querySelector('.goog-te-combo');
-        if (iframeSelect && iframeSelect.value !== langCode) {
-          iframeSelect.value = langCode;
-          iframeSelect.dispatchEvent(new Event('change'));
-        }
-      } catch (e) {
-        console.log('Could not access iframe:', e);
-      }
-    });
-    
-    // Method 3: Set cookie directly (most reliable)
-    const domain = window.location.hostname;
-    const path = '/';
-    
-    // Clear old cookies
-    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=${path}; domain=${domain}`;
-    
-    // Set new cookie with 1-year expiry
-    const expiryDate = new Date();
-    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-    document.cookie = `googtrans=/en/${langCode}; expires=${expiryDate.toUTCString()}; path=${path}; domain=${domain}`;
-    
-    console.log('Set cookie for language:', langCode);
-  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -154,48 +84,114 @@ export default function Navbar() {
   }, []);
 
   // Handle language change
-  const handleLanguageChange = (language) => {
+  const handleLanguageChange = async (language) => {
     console.log('Changing language to:', language.code);
     
-    // Start loading
+    // Start language change
     setIsChangingLanguage(true);
+    
+    // Update UI
+    setCurrentLanguage(language);
     setShowLanguageDropdown(false);
     setIsMobileMenuOpen(false);
     
-    // Update UI state immediately
-    setCurrentLanguage(language);
-    
-    // Save to localStorage with expiry
+    // Save to localStorage (persistent)
     localStorage.setItem('preferredLanguage', language.code);
-    localStorage.setItem('languageChangeTimestamp', Date.now().toString());
-    localStorage.setItem('hasChangedLanguage', 'true');
     
-    // REMOVE the skipAutoTranslate flag
-    localStorage.removeItem('skipAutoTranslate');
-    
-    // Update URL
+    // Update URL without reloading immediately
     const url = new URL(window.location);
-    if (language.code === 'en') {
-      url.searchParams.delete('hl');
-    } else {
-      url.searchParams.set('hl', language.code);
-    }
-    url.searchParams.set('t', Date.now()); // Cache busting
+    url.searchParams.set('hl', language.code);
     window.history.replaceState({}, '', url);
     
-    // Apply Google Translate immediately
-    applyGoogleTranslate(language.code);
+    // Dispatch event for other components
+    window.dispatchEvent(new CustomEvent('languageChanged', { 
+      detail: { 
+        language: language.code,
+        timestamp: Date.now()
+      } 
+    }));
     
-    // Force a slight delay to ensure Google Translate processes
+    // Apply translation
+    applyGoogleTranslation(language.code);
+    
+    // Reset loading state after delay
     setTimeout(() => {
-      // Reload the page
-      window.location.reload();
-    }, 800);
+      setIsChangingLanguage(false);
+    }, 1000);
   };
 
-  // Reset to English
-  const handleResetToEnglish = () => {
-    handleLanguageChange(languages[0]);
+  // Function to apply Google Translation
+  const applyGoogleTranslation = (langCode) => {
+    if (langCode === 'en') {
+      // For English, revert to original
+      if (window.google?.translate?.TranslateElement) {
+        try {
+          const iframe = document.querySelector('.goog-te-menu-frame');
+          if (iframe && iframe.contentWindow) {
+            const select = iframe.contentWindow.document.querySelector('.goog-te-combo');
+            if (select) {
+              select.value = 'en';
+              select.dispatchEvent(new Event('change'));
+            }
+          }
+        } catch (error) {
+          console.log('Error reverting to English:', error);
+        }
+      }
+      return;
+    }
+
+    // For other languages, wait for Google Translate to be ready
+    const tryApplyTranslation = (attempts = 0) => {
+      if (attempts > 10) {
+        console.log('Failed to apply translation after multiple attempts');
+        setIsChangingLanguage(false);
+        return;
+      }
+
+      if (window.google?.translate?.TranslateElement) {
+        try {
+          const iframe = document.querySelector('.goog-te-menu-frame');
+          if (iframe && iframe.contentWindow) {
+            const select = iframe.contentWindow.document.querySelector('.goog-te-combo');
+            if (select) {
+              if (select.value === langCode) {
+                console.log('Language already set to:', langCode);
+                return;
+              }
+              
+              select.value = langCode;
+              select.dispatchEvent(new Event('change'));
+              console.log('Language changed to:', langCode);
+              
+              // Check if translation was successful
+              setTimeout(() => {
+                const isTranslated = document.documentElement.lang === langCode;
+                if (isTranslated) {
+                  console.log('Translation successful');
+                } else {
+                  console.log('Translation may not have applied');
+                }
+              }, 500);
+            } else {
+              console.log('Select element not found, retrying...');
+              setTimeout(() => tryApplyTranslation(attempts + 1), 300);
+            }
+          } else {
+            console.log('Iframe not found, retrying...');
+            setTimeout(() => tryApplyTranslation(attempts + 1), 300);
+          }
+        } catch (error) {
+          console.log('Error applying translation, retrying...', error);
+          setTimeout(() => tryApplyTranslation(attempts + 1), 300);
+        }
+      } else {
+        console.log('Google Translate not ready, retrying...');
+        setTimeout(() => tryApplyTranslation(attempts + 1), 300);
+      }
+    };
+
+    tryApplyTranslation();
   };
 
   const handleAddPropertyClick = (e) => {
@@ -237,16 +233,14 @@ export default function Navbar() {
                 Featured
               </Link>
 
-              {/* Language Selector */}
+              {/* Language Selector - Desktop */}
               <div className="relative" ref={languageDropdownRef}>
                 <button
-                  onClick={() => {
-                    if (!isChangingLanguage) {
-                      setShowLanguageDropdown(!showLanguageDropdown);
-                    }
-                  }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 border border-white/30 hover:bg-white/30 transition-all duration-200 shadow-sm font-medium min-w-[180px] cursor-pointer ${
-                    isChangingLanguage ? 'opacity-70 cursor-not-allowed' : ''
+                  onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 border transition-all duration-200 shadow-sm font-medium min-w-[180px] relative ${
+                    isChangingLanguage
+                      ? 'opacity-70 cursor-not-allowed'
+                      : 'border-white/30 hover:bg-white/30'
                   }`}
                   disabled={isChangingLanguage}
                 >
@@ -270,7 +264,7 @@ export default function Navbar() {
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="text-sm font-semibold text-gray-700">Select Language</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Page will reload when changing language
+                        Powered by Google Translate
                       </p>
                     </div>
                     <div className="max-h-60 overflow-y-auto">
@@ -284,7 +278,7 @@ export default function Navbar() {
                             disabled={isChangingLanguage}
                             className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
                               isCurrent ? 'bg-blue-50' : 'hover:bg-blue-50'
-                            } ${isChangingLanguage ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                            }`}
                           >
                             <span className="text-lg">{lang.flag}</span>
                             <span className="text-sm font-medium text-gray-800 flex-1 text-left">
@@ -296,17 +290,11 @@ export default function Navbar() {
                       })}
                     </div>
                     
-                    {currentLanguage.code !== 'en' && (
-                      <div className="px-4 py-3 border-t border-gray-200">
-                        <button
-                          onClick={handleResetToEnglish}
-                          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          Reset to English
-                        </button>
-                      </div>
-                    )}
+                    <div className="px-4 py-3 bg-blue-50 border-t border-blue-200">
+                      <p className="text-xs text-blue-800">
+                        <span className="font-bold">ℹ️ Note:</span> Some elements may not translate immediately. If translation doesn't appear, try selecting again.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -397,7 +385,7 @@ export default function Navbar() {
               <div className="flex items-center justify-between px-2 pb-2">
                 <p className="text-sm font-semibold text-gray-700">Language</p>
                 {isChangingLanguage && (
-                  <span className="text-xs text-blue-600">Changing...</span>
+                  <span className="text-xs text-blue-600">Applying...</span>
                 )}
               </div>
               
@@ -414,7 +402,7 @@ export default function Navbar() {
                         isCurrent
                           ? 'bg-blue-600 text-white border-blue-600'
                           : 'bg-white/20 border-white/30 hover:bg-white/30'
-                      } ${isChangingLanguage ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                      }`}
                     >
                       <span>{lang.flag}</span>
                       <span className="text-sm font-medium">
@@ -429,22 +417,24 @@ export default function Navbar() {
               </div>
 
               <button
-                onClick={() => {
-                  setShowLanguageDropdown(!showLanguageDropdown);
-                }}
+                onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
                 disabled={isChangingLanguage}
                 className={`w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                  isChangingLanguage 
-                    ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed' 
-                    : 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer'
+                  'bg-white/20 border-white/30 hover:bg-white/30'
                 }`}
               >
+                <Globe className="w-4 h-4" />
                 <span className="text-sm font-medium">More Languages</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {showLanguageDropdown && (
                 <div className="mt-2 p-2 bg-white/95 backdrop-blur-lg rounded-xl border border-white/30">
+                  <div className="mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800">
+                      Some elements may need manual refresh
+                    </p>
+                  </div>
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {languages.slice(4).map((lang) => {
                       const isCurrent = currentLanguage.code === lang.code;
@@ -458,7 +448,7 @@ export default function Navbar() {
                             isCurrent
                               ? 'bg-blue-600 text-white border-blue-600'
                               : 'bg-white/20 border-white/30 hover:bg-white/30'
-                          } ${isChangingLanguage ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                          }`}
                         >
                           <span>{lang.flag}</span>
                           <span className="text-sm font-medium truncate">
@@ -469,16 +459,6 @@ export default function Navbar() {
                     })}
                   </div>
                 </div>
-              )}
-              
-              {currentLanguage.code !== 'en' && (
-                <button
-                  onClick={handleResetToEnglish}
-                  className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Reset to English
-                </button>
               )}
             </div>
 
@@ -544,19 +524,23 @@ export default function Navbar() {
         </div>
       )}
 
+      {/* Tooltip for unauthenticated users */}
+      {showTooltip && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          Please login to add a property
+        </div>
+      )}
+
       {/* Loading overlay when changing language */}
       {isChangingLanguage && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-center justify-center">
           <div className="bg-white/90 p-6 rounded-xl shadow-2xl flex flex-col items-center space-y-4">
             <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-            <p className="text-gray-800 font-medium">Changing language...</p>
-            <p className="text-sm text-gray-600">Page will reload in a moment</p>
+            <p className="text-gray-800 font-medium">Applying translation...</p>
+            <p className="text-sm text-gray-600">This may take a moment</p>
           </div>
         </div>
       )}
-
-      {/* Hidden Google Translate Element */}
-      <div id="google_translate_element" style={{ display: 'none' }}></div>
     </>
   );
 }
