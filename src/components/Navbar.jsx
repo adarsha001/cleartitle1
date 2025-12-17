@@ -1,28 +1,20 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
-import { Globe, ChevronDown, Lock, AlertCircle } from 'lucide-react';
+import { Globe, ChevronDown, RefreshCw } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [showTooltip, setShowTooltip] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  /* LANGUAGE FEATURE COMMENTED OUT
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState({ code: 'en', name: 'English', flag: '🇺🇸' });
   const [isScrolled, setIsScrolled] = useState(false);
   const [isChangingLanguage, setIsChangingLanguage] = useState(false);
-  const [isLanguageLocked, setIsLanguageLocked] = useState(false);
-  */
-  const [isScrolled, setIsScrolled] = useState(false); // Keep this for scroll effect
   
-  /* LANGUAGE FEATURE COMMENTED OUT
   const languageDropdownRef = useRef(null);
-  */
-
   const isAdmin = user?.role === "admin" || user?.isAdmin === true || user?.admin === true;
 
-  /* LANGUAGE FEATURE COMMENTED OUT - Languages array
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'hi', name: 'हिंदी (Hindi)', flag: '🇮🇳' },
@@ -37,7 +29,6 @@ export default function Navbar() {
     { code: 'ur', name: 'اردو (Urdu)', flag: '🇵🇰' },
     { code: 'or', name: 'ଓଡ଼ିଆ (Odia)', flag: '🇮🇳' }
   ];
-  */
 
   // Handle scroll
   useEffect(() => {
@@ -48,87 +39,109 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  /* LANGUAGE FEATURE COMMENTED OUT - Language state check
-  // Check language state on component mount
+  // Initialize language state
   useEffect(() => {
-    // Clear old cookies on page load (to prevent persistence after tab close)
-    const domain = window.location.hostname;
-    const path = '/';
+    console.log('Initializing language...');
     
-    // Clear any existing Google Translate cookies
-    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=${path}; domain=${domain}`;
-    document.cookie = `googtrans=; path=${path}; max-age=0; domain=${domain}`;
+    // First, REMOVE the skipAutoTranslate flag
+    localStorage.removeItem('skipAutoTranslate');
     
-    // Also clear from localStorage to prevent any persistence
-    localStorage.removeItem('languageLocked');
-    localStorage.removeItem('languageChangedOnce');
-    
-    // Check if we have a saved preference
-    const savedLang = localStorage.getItem('preferredLanguage');
+    // Check URL for language parameter
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('hl');
+    
+    // Get from localStorage as fallback
+    const savedLang = localStorage.getItem('preferredLanguage');
+    
+    // Default to English if nothing found
     const langCode = urlLang || savedLang || 'en';
     
-    // Find and set current language
+    // Find language in our list
     const foundLang = languages.find(lang => lang.code === langCode) || languages[0];
     setCurrentLanguage(foundLang);
     
-    // Check sessionStorage for language lock state
-    const sessionLanguageLocked = sessionStorage.getItem('languageLocked');
-    const sessionLanguageCode = sessionStorage.getItem('selectedLanguage');
+    console.log('Setting language to:', foundLang.code);
     
-    // If we have a session language and it's locked, set the state
-    if (sessionLanguageLocked === 'true' && sessionLanguageCode && sessionLanguageCode !== 'en') {
-      setIsLanguageLocked(true);
-      
-      // Set cookie for this session only (no expiry, will clear on tab close)
-      const domain = window.location.hostname;
-      document.cookie = `googtrans=/en/${sessionLanguageCode}; path=/; domain=${domain}`;
-      
-      // Update URL if needed
-      if (!urlParams.get('hl')) {
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.set('hl', sessionLanguageCode);
-        window.history.replaceState({}, '', newUrl);
-      }
-    } else {
-      // No session lock, so start fresh
-      setIsLanguageLocked(false);
-      
-      // If language is not English, lock it for this session
+    // IMPORTANT: Set a flag that we HAVE changed language
+    localStorage.setItem('hasChangedLanguage', 'true');
+    
+    // Apply Google Translate after component mounts
+    setTimeout(() => {
       if (langCode !== 'en') {
-        setIsLanguageLocked(true);
-        sessionStorage.setItem('languageLocked', 'true');
-        sessionStorage.setItem('selectedLanguage', langCode);
+        applyGoogleTranslate(langCode);
       }
-    }
+    }, 1000);
     
-    console.log('Language state on mount:', {
-      langCode,
-      locked: sessionLanguageLocked,
-      sessionCode: sessionLanguageCode
-    });
-    
-    // Listen for language change events
-    const handleLanguageChanged = (event) => {
-      const newLangCode = event?.detail?.language;
-      if (newLangCode) {
-        const found = languages.find(l => l.code === newLangCode);
-        if (found) {
-          setCurrentLanguage(found);
+  }, []);
+
+  // Apply Google Translate programmatically
+  const applyGoogleTranslate = (langCode) => {
+    if (langCode === 'en') {
+      // For English, remove translation
+      const iframes = document.querySelectorAll('iframe.goog-te-menu-frame, iframe.goog-te-banner-frame');
+      iframes.forEach(iframe => {
+        try {
+          const select = iframe.contentWindow?.document?.querySelector('.goog-te-combo');
+          if (select) {
+            select.value = 'en';
+            select.dispatchEvent(new Event('change'));
+          }
+        } catch (e) {
+          console.log('Could not access iframe:', e);
+        }
+      });
+      
+      // Also try direct method
+      if (window.google && window.google.translate) {
+        try {
+          window.google.translate.TranslateElement().restore();
+        } catch (e) {
+          console.log('Error restoring to English:', e);
         }
       }
-    };
+      return;
+    }
     
-    window.addEventListener('languageChanged', handleLanguageChanged);
+    // For non-English languages
+    console.log('Applying Google Translate for:', langCode);
     
-    return () => {
-      window.removeEventListener('languageChanged', handleLanguageChanged);
-    };
-  }, []);
-  */
+    // Method 1: Try to find and set the Google Translate dropdown
+    const select = document.querySelector('.goog-te-combo');
+    if (select) {
+      console.log('Found Google Translate dropdown, setting to:', langCode);
+      select.value = langCode;
+      select.dispatchEvent(new Event('change'));
+    }
+    
+    // Method 2: Try through iframes
+    const iframes = document.querySelectorAll('iframe.goog-te-menu-frame, iframe.goog-te-banner-frame');
+    iframes.forEach(iframe => {
+      try {
+        const iframeSelect = iframe.contentWindow?.document?.querySelector('.goog-te-combo');
+        if (iframeSelect && iframeSelect.value !== langCode) {
+          iframeSelect.value = langCode;
+          iframeSelect.dispatchEvent(new Event('change'));
+        }
+      } catch (e) {
+        console.log('Could not access iframe:', e);
+      }
+    });
+    
+    // Method 3: Set cookie directly (most reliable)
+    const domain = window.location.hostname;
+    const path = '/';
+    
+    // Clear old cookies
+    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=${path}; domain=${domain}`;
+    
+    // Set new cookie with 1-year expiry
+    const expiryDate = new Date();
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+    document.cookie = `googtrans=/en/${langCode}; expires=${expiryDate.toUTCString()}; path=${path}; domain=${domain}`;
+    
+    console.log('Set cookie for language:', langCode);
+  };
 
-  /* LANGUAGE FEATURE COMMENTED OUT - Click outside handler
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -139,73 +152,51 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  */
 
-  /* LANGUAGE FEATURE COMMENTED OUT - Language change handler
-  // Handle language change - ONE TIME ONLY PER TAB
+  // Handle language change
   const handleLanguageChange = (language) => {
-    console.log('Attempting language change to:', language.code);
+    console.log('Changing language to:', language.code);
     
-    // Check if already locked (non-English already selected in this tab)
-    if (isLanguageLocked && language.code !== 'en') {
-      console.log('Language selection is locked for this tab. Close tab and reopen.');
-      setShowLanguageDropdown(false);
-      return;
-    }
-    
-    // Start language change
+    // Start loading
     setIsChangingLanguage(true);
-    
-    // If changing to non-English, lock future changes for this session
-    if (language.code !== 'en') {
-      setIsLanguageLocked(true);
-      sessionStorage.setItem('languageLocked', 'true');
-      sessionStorage.setItem('selectedLanguage', language.code);
-    }
-    
-    // Update UI
-    setCurrentLanguage(language);
     setShowLanguageDropdown(false);
     setIsMobileMenuOpen(false);
     
-    // Save preference (but not lock state)
+    // Update UI state immediately
+    setCurrentLanguage(language);
+    
+    // Save to localStorage with expiry
     localStorage.setItem('preferredLanguage', language.code);
+    localStorage.setItem('languageChangeTimestamp', Date.now().toString());
+    localStorage.setItem('hasChangedLanguage', 'true');
     
-    // Show loading state
-    const body = document.querySelector('body');
-    if (body) {
-      body.style.opacity = '0.7';
-      body.style.transition = 'opacity 0.3s';
-    }
-    
-    // Set session-only cookie (no expiry, will clear when tab closes)
-    const domain = window.location.hostname;
-    const path = '/';
-    
-    // Clear any existing cookies first
-    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=${path}; domain=${domain}`;
-    document.cookie = `googtrans=; path=${path}; max-age=0; domain=${domain}`;
-    
-    // Set new session cookie
-    document.cookie = `googtrans=/en/${language.code}; path=${path}; domain=${domain}`;
+    // REMOVE the skipAutoTranslate flag
+    localStorage.removeItem('skipAutoTranslate');
     
     // Update URL
     const url = new URL(window.location);
-    url.searchParams.set('hl', language.code);
-    url.searchParams.set('t', Date.now());
+    if (language.code === 'en') {
+      url.searchParams.delete('hl');
+    } else {
+      url.searchParams.set('hl', language.code);
+    }
+    url.searchParams.set('t', Date.now()); // Cache busting
     window.history.replaceState({}, '', url);
     
-    // Dispatch event for other components
-    window.dispatchEvent(new CustomEvent('languageChanged', { 
-      detail: { language: language.code } 
-    }));
+    // Apply Google Translate immediately
+    applyGoogleTranslate(language.code);
     
-    // Reload page after a short delay
+    // Force a slight delay to ensure Google Translate processes
     setTimeout(() => {
+      // Reload the page
       window.location.reload();
-    }, 300);
+    }, 800);
   };
-  */
+
+  // Reset to English
+  const handleResetToEnglish = () => {
+    handleLanguageChange(languages[0]);
+  };
 
   const handleAddPropertyClick = (e) => {
     if (!user) {
@@ -246,23 +237,16 @@ export default function Navbar() {
                 Featured
               </Link>
 
-              {/* LANGUAGE FEATURE COMMENTED OUT - Language Selector Desktop */}
-              {/* 
+              {/* Language Selector */}
               <div className="relative" ref={languageDropdownRef}>
                 <button
                   onClick={() => {
                     if (!isChangingLanguage) {
-                      if (isLanguageLocked && currentLanguage.code !== 'en') {
-                        // Just show message on hover, don't open dropdown
-                        return;
-                      }
                       setShowLanguageDropdown(!showLanguageDropdown);
                     }
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 border transition-all duration-200 shadow-sm font-medium min-w-[180px] relative group ${
-                    isLanguageLocked && currentLanguage.code !== 'en'
-                      ? 'border-yellow-400 cursor-not-allowed'
-                      : 'border-white/30 hover:bg-white/30 cursor-pointer'
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-white/20 border border-white/30 hover:bg-white/30 transition-all duration-200 shadow-sm font-medium min-w-[180px] cursor-pointer ${
+                    isChangingLanguage ? 'opacity-70 cursor-not-allowed' : ''
                   }`}
                   disabled={isChangingLanguage}
                 >
@@ -270,12 +254,7 @@ export default function Navbar() {
                     {isChangingLanguage ? (
                       <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
                     ) : (
-                      <>
-                        <Globe className="w-4 h-4" />
-                        {isLanguageLocked && currentLanguage.code !== 'en' && (
-                          <Lock className="w-3 h-3 text-yellow-600" />
-                        )}
-                      </>
+                      <Globe className="w-4 h-4" />
                     )}
                     <span className="truncate">
                       {currentLanguage.flag} {isChangingLanguage ? 'Changing...' : currentLanguage.name}
@@ -283,17 +262,7 @@ export default function Navbar() {
                   </div>
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
                     showLanguageDropdown ? 'rotate-180' : ''
-                  } ${isChangingLanguage ? 'opacity-50' : ''} ${
-                    isLanguageLocked && currentLanguage.code !== 'en' ? 'text-yellow-600' : ''
-                  }`} />
-                  
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                    <div className="flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>Close tab & reopen to change language</span>
-                    </div>
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
-                  </div>
+                  } ${isChangingLanguage ? 'opacity-50' : ''}`} />
                 </button>
 
                 {showLanguageDropdown && !isChangingLanguage && (
@@ -301,61 +270,46 @@ export default function Navbar() {
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="text-sm font-semibold text-gray-700">Select Language</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {isLanguageLocked ? "Close tab and reopen to change again" : "Page will reload"}
+                        Page will reload when changing language
                       </p>
                     </div>
                     <div className="max-h-60 overflow-y-auto">
                       {languages.map((lang) => {
                         const isCurrent = currentLanguage.code === lang.code;
-                        const isDisabled = isLanguageLocked && lang.code !== 'en';
                         
                         return (
                           <button
                             key={lang.code}
-                            onClick={() => {
-                              if (!isDisabled) {
-                                handleLanguageChange(lang);
-                              }
-                            }}
-                            disabled={isChangingLanguage || isDisabled}
+                            onClick={() => handleLanguageChange(lang)}
+                            disabled={isChangingLanguage}
                             className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                              isCurrent ? 'bg-blue-50' : ''
-                            } ${
-                              isDisabled 
-                                ? 'opacity-50 cursor-not-allowed bg-gray-100' 
-                                : 'hover:bg-blue-50 cursor-pointer'
-                            }`}
+                              isCurrent ? 'bg-blue-50' : 'hover:bg-blue-50'
+                            } ${isChangingLanguage ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                           >
                             <span className="text-lg">{lang.flag}</span>
                             <span className="text-sm font-medium text-gray-800 flex-1 text-left">
                               {lang.name}
                             </span>
-                            {isDisabled ? (
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs text-gray-500">Locked</span>
-                                <Lock className="w-3 h-3 text-gray-500" />
-                              </div>
-                            ) : (
-                              isCurrent && <span className="ml-auto text-blue-600 text-xs font-bold">✓</span>
-                            )}
+                            {isCurrent && <span className="ml-auto text-blue-600 text-xs font-bold">✓</span>}
                           </button>
                         );
                       })}
                     </div>
                     
-                    {isLanguageLocked && currentLanguage.code !== 'en' && (
-                      <div className="px-4 py-3 bg-yellow-50 border-t border-yellow-200">
-                        <p className="text-xs text-yellow-800">
-                          <span className="font-bold">⚠️ Language locked for this tab:</span> You can only select language once per tab session.
-                          <br />
-                          <span className="font-semibold">Close this tab and open a new one</span> to select a different language.
-                        </p>
+                    {currentLanguage.code !== 'en' && (
+                      <div className="px-4 py-3 border-t border-gray-200">
+                        <button
+                          onClick={handleResetToEnglish}
+                          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Reset to English
+                        </button>
                       </div>
                     )}
                   </div>
                 )}
               </div>
-              */}
 
               {isAdmin && (
                 <Link
@@ -415,7 +369,7 @@ export default function Navbar() {
             <button
               className="text-gray-900 lg:hidden px-3 py-2 rounded focus:outline-none"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              // LANGUAGE FEATURE COMMENTED OUT: disabled={isChangingLanguage}
+              disabled={isChangingLanguage}
             >
               {isMobileMenuOpen ? "✕" : "☰"}
             </button>
@@ -438,54 +392,35 @@ export default function Navbar() {
               Featured
             </Link>
 
-            {/* LANGUAGE FEATURE COMMENTED OUT - Mobile Language Selector */}
-            {/* 
+            {/* Mobile Language Selector */}
             <div className="border-t border-white/20 pt-3">
               <div className="flex items-center justify-between px-2 pb-2">
                 <p className="text-sm font-semibold text-gray-700">Language</p>
                 {isChangingLanguage && (
-                  <span className="text-xs text-blue-600">Applying...</span>
-                )}
-                {isLanguageLocked && currentLanguage.code !== 'en' && (
-                  <div className="flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-yellow-600" />
-                    <span className="text-xs text-yellow-600">Locked</span>
-                  </div>
+                  <span className="text-xs text-blue-600">Changing...</span>
                 )}
               </div>
-              
-              {isLanguageLocked && currentLanguage.code !== 'en' && (
-                <div className="mb-3 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-xs text-yellow-800">
-                    <span className="font-bold">Language locked for this tab.</span> Close tab & reopen to change language.
-                  </p>
-                </div>
-              )}
               
               <div className="grid grid-cols-2 gap-2">
                 {languages.slice(0, 4).map((lang) => {
                   const isCurrent = currentLanguage.code === lang.code;
-                  const isDisabled = isLanguageLocked && lang.code !== 'en';
                   
                   return (
                     <button
                       key={lang.code}
-                      onClick={() => !isDisabled && handleLanguageChange(lang)}
-                      disabled={isChangingLanguage || isDisabled}
+                      onClick={() => handleLanguageChange(lang)}
+                      disabled={isChangingLanguage}
                       className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
                         isCurrent
                           ? 'bg-blue-600 text-white border-blue-600'
-                          : isDisabled
-                          ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
-                          : 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer'
-                      }`}
+                          : 'bg-white/20 border-white/30 hover:bg-white/30'
+                      } ${isChangingLanguage ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       <span>{lang.flag}</span>
                       <span className="text-sm font-medium">
                         {lang.code === 'en' ? 'EN' : lang.code.toUpperCase()}
                       </span>
-                      {isDisabled && <Lock className="w-3 h-3 text-gray-500" />}
-                      {isCurrent && !isDisabled && !isChangingLanguage && (
+                      {isCurrent && !isChangingLanguage && (
                         <span className="text-blue-200">✓</span>
                       )}
                     </button>
@@ -495,16 +430,12 @@ export default function Navbar() {
 
               <button
                 onClick={() => {
-                  if (isLanguageLocked && currentLanguage.code !== 'en') {
-                    // Don't open dropdown, just show message in existing div
-                    return;
-                  }
                   setShowLanguageDropdown(!showLanguageDropdown);
                 }}
-                disabled={isChangingLanguage || (isLanguageLocked && currentLanguage.code !== 'en')}
+                disabled={isChangingLanguage}
                 className={`w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                  isLanguageLocked && currentLanguage.code !== 'en'
-                    ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
+                  isChangingLanguage 
+                    ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed' 
                     : 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer'
                 }`}
               >
@@ -514,44 +445,42 @@ export default function Navbar() {
 
               {showLanguageDropdown && (
                 <div className="mt-2 p-2 bg-white/95 backdrop-blur-lg rounded-xl border border-white/30">
-                  {isLanguageLocked && currentLanguage.code !== 'en' && (
-                    <div className="mb-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-xs text-yellow-800">
-                        Language locked for this tab. Close tab and reopen to change.
-                      </p>
-                    </div>
-                  )}
                   <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {languages.slice(4).map((lang) => {
                       const isCurrent = currentLanguage.code === lang.code;
-                      const isDisabled = isLanguageLocked && lang.code !== 'en';
                       
                       return (
                         <button
                           key={lang.code}
-                          onClick={() => !isDisabled && handleLanguageChange(lang)}
-                          disabled={isChangingLanguage || isDisabled}
+                          onClick={() => handleLanguageChange(lang)}
+                          disabled={isChangingLanguage}
                           className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
                             isCurrent
                               ? 'bg-blue-600 text-white border-blue-600'
-                              : isDisabled
-                              ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
-                              : 'bg-white/20 border-white/30 hover:bg-white/30 cursor-pointer'
-                          }`}
+                              : 'bg-white/20 border-white/30 hover:bg-white/30'
+                          } ${isChangingLanguage ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                           <span>{lang.flag}</span>
                           <span className="text-sm font-medium truncate">
                             {lang.name.split('(')[0].trim()}
                           </span>
-                          {isDisabled && <Lock className="w-3 h-3 text-gray-500" />}
                         </button>
                       );
                     })}
                   </div>
                 </div>
               )}
+              
+              {currentLanguage.code !== 'en' && (
+                <button
+                  onClick={handleResetToEnglish}
+                  className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Reset to English
+                </button>
+              )}
             </div>
-            */}
 
             {isAdmin && (
               <Link
@@ -615,18 +544,19 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* LANGUAGE FEATURE COMMENTED OUT - Loading overlay when changing language */}
-      {/* 
+      {/* Loading overlay when changing language */}
       {isChangingLanguage && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-center justify-center">
           <div className="bg-white/90 p-6 rounded-xl shadow-2xl flex flex-col items-center space-y-4">
             <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-            <p className="text-gray-800 font-medium">Applying translation...</p>
+            <p className="text-gray-800 font-medium">Changing language...</p>
             <p className="text-sm text-gray-600">Page will reload in a moment</p>
           </div>
         </div>
       )}
-      */}
+
+      {/* Hidden Google Translate Element */}
+      <div id="google_translate_element" style={{ display: 'none' }}></div>
     </>
   );
 }
