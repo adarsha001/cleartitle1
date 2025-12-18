@@ -5,7 +5,7 @@ import {
   Bed, Bath, Car, Layers, ChevronDown, X, 
   Shield, CheckCircle, FileCheck, Award, Menu, 
   FileText, Filter, Building2, Store, Factory, Hotel, Trees,
-  ChevronLeft
+  ChevronLeft, ArrowUpDown, Star, TrendingUp
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
@@ -19,7 +19,8 @@ export default function PropertyUnitList() {
   const [error, setError] = useState("");
   const [viewMode, setViewMode] = useState("grid");
   const [search, setSearch] = useState("");
-const navigate=useNavigate()
+  const navigate = useNavigate();
+
   // Filters state
   const [filters, setFilters] = useState({
     city: "",
@@ -50,8 +51,8 @@ const navigate=useNavigate()
   });
 
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [sortBy, setSortBy] = useState("displayOrder"); // Changed to displayOrder
+  const [sortOrder, setSortOrder] = useState("asc"); // Changed to asc for displayOrder
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -157,6 +158,8 @@ const navigate=useNavigate()
       approvalStatus: user?.userType === 'admin' ? "" : "approved"
     });
     setSearch("");
+    setSortBy("displayOrder"); // Reset to displayOrder
+    setSortOrder("asc"); // Reset to asc
     setShowFilters(false);
     setShowMobileFilters(false);
   };
@@ -196,6 +199,16 @@ const navigate=useNavigate()
     }
   };
 
+  // Sort options with display order as default
+  const sortOptions = [
+    { value: "displayOrder", label: "Display Order", icon: <TrendingUp className="w-4 h-4" /> },
+    { value: "createdAt", label: "Newest", icon: <ArrowUpDown className="w-4 h-4" /> },
+    { value: "isFeatured", label: "Featured", icon: <Star className="w-4 h-4" /> },
+    { value: "price", label: "Price", icon: <DollarSign className="w-4 h-4" /> },
+    { value: "specifications.carpetArea", label: "Area", icon: <Maximize className="w-4 h-4" /> },
+    { value: "specifications.bedrooms", label: "Bedrooms", icon: <Bed className="w-4 h-4" /> }
+  ];
+
   // Loading state
   if (loading && propertyUnits.length === 0) {
     return (
@@ -231,7 +244,6 @@ const navigate=useNavigate()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
- 
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800">
         <div className="absolute inset-0 opacity-20">
@@ -239,7 +251,6 @@ const navigate=useNavigate()
             backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
             backgroundSize: '30px 30px'
           }}></div>
-          
         </div>
 
         <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
@@ -261,10 +272,9 @@ const navigate=useNavigate()
               </h1>
               
               <p className="text-lg sm:text-xl md:text-2xl text-blue-100 font-light mb-6 sm:mb-8 max-w-3xl mx-auto">
-                Browse through our verified residential and commercial properties
+                Browse through our curated collection of properties
               </p>
             </div>
-            
 
             {/* Search Bar */}
             <div className="max-w-4xl mx-auto">
@@ -287,16 +297,18 @@ const navigate=useNavigate()
       </div>
 
       {/* Property Listings Section */}
-<div ref={propertyListRef} id="property-unit-list" className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
-          <div className="mb-6 sm:mb-8">
-      <button
-        onClick={() => navigate('/')} // Or your home/properties route
-        className="inline-flex items-center gap-2 text-blue-400 hover:text-yellow-300 transition-colors group"
-      >
-        <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        <span className="font-semibold">Back to Properties</span>
-      </button>
-    </div>
+      <div ref={propertyListRef} id="property-unit-list" className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-16">
+        {/* Back Button */}
+        <div className="mb-6 sm:mb-8">
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-2 text-blue-400 hover:text-yellow-300 transition-colors group"
+          >
+            <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-semibold">Back to Properties</span>
+          </button>
+        </div>
+
         {/* Active Filters and Controls */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between items-stretch sm:items-center mb-6 sm:mb-8">
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
@@ -359,10 +371,11 @@ const navigate=useNavigate()
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
-                <option value="createdAt">Newest</option>
-                <option value="isFeatured">Featured</option>
-                <option value="specifications.carpetArea">Area</option>
-                <option value="price">Price</option>
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
               
               <select
@@ -370,8 +383,8 @@ const navigate=useNavigate()
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
               >
-                <option value="desc">Descending</option>
                 <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
               </select>
             </div>
 
@@ -453,6 +466,22 @@ const navigate=useNavigate()
                     <option value="">Any</option>
                     {filterOptions.bedrooms.map((beds) => (
                       <option key={beds} value={beds}>{beds} Beds</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sort Options for Mobile */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">Sort By</label>
+                  <select
+                    className="w-full border-2 border-blue-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    {sortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -593,6 +622,22 @@ const navigate=useNavigate()
                 </select>
               </div>
 
+              {/* Sort Options */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-3">Sort By</label>
+                <select
+                  className="w-full border-2 border-blue-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Admin-only filters */}
               {user?.userType === 'admin' && (
                 <>
@@ -655,9 +700,8 @@ const navigate=useNavigate()
                 {user?.userType === 'admin' ? 'All Property Units' : 'Verified Properties'}
               </h2>
               <p className="text-gray-700 font-medium flex items-center gap-2 text-sm sm:text-base">
-                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-                Showing {propertyUnits.length} of {total} properties
-                {activeFiltersCount > 0 && " (filtered)"}
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                {sortBy === 'displayOrder' ? 'Sorted by Display Order' : `Sorted by ${sortOptions.find(opt => opt.value === sortBy)?.label}`}
               </p>
             </div>
             {user?.userType !== 'admin' && (
