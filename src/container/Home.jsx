@@ -10,7 +10,7 @@ const Home = () => {
   const sectionRefs = useRef([]);
 
   const sections = [
-    { name: 'Properties', component: PropertyList },
+    // { name: 'Properties', component: PropertyList },
     { name: 'Units', component: PropertyUnitsPage },
     { name: 'Featured', component: FeaturedProperties },
     { name: 'Quality', component: QualityAssurance },
