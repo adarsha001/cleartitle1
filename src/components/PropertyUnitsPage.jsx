@@ -1071,116 +1071,17 @@ const PropertyUnitsPage = () => {
 
             {/* Building Skyline - Adjusted for bottom positioning */}
             {/* Left Building Group */}
-            <rect x="50" y="180" width="60" height="120" fill="url(#leftBuildingGrad)"/>
-            <g>
-              {[...Array(10)].map((_, i) => (
-                <g key={`bl1-${i}`}>
-                  <rect x="56" y={186 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
-                  <rect x="68" y={186 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
-                  <rect x="80" y={186 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
-                  <rect x="92" y={186 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
-                </g>
-              ))}
-            </g>
+       
 
             {/* Center Tall Building */}
-            <rect x="200" y="120" width="80" height="180" fill="url(#mainBuildingGrad)"/>
-            <g>
-              {[...Array(15)].map((_, i) => (
-                <g key={`bc1-${i}`}>
-                  <rect x="208" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                  <rect x="222" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                  <rect x="236" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                  <rect x="250" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                  <rect x="264" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                </g>
-              ))}
-            </g>
+     
 
-            {/* Medium Center-Left Building */}
-            <rect x="350" y="150" width="70" height="150" fill="rgba(255,255,255,0.35)"/>
-            <g>
-              {[...Array(12)].map((_, i) => (
-                <g key={`bm1-${i}`}>
-                  <rect x="358" y={156 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
-                  <rect x="371" y={156 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
-                  <rect x="384" y={156 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
-                  <rect x="397" y={156 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
-                </g>
-              ))}
-            </g>
+  
 
-            {/* Center Building with Antenna */}
-            <rect x="500" y="100" width="90" height="200" fill="rgba(255,255,255,0.4)"/>
-            <rect x="535" y="80" width="20" height="20" fill="rgba(255,255,255,0.4)"/>
-            <rect x="542" y="65" width="6" height="15" fill="rgba(255,255,255,0.4)"/>
-            <circle cx="545" cy="62" r="3" fill="rgba(255,255,255,0.6)"/>
-            <g>
-              {[...Array(16)].map((_, i) => (
-                <g key={`bc2-${i}`}>
-                  <rect x="508" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                  <rect x="522" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                  <rect x="536" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                  <rect x="550" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                  <rect x="564" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                  <rect x="578" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
-                </g>
-              ))}
-            </g>
 
-            {/* Medium Center-Right Building */}
-            <rect x="680" y="160" width="75" height="140" fill="rgba(255,255,255,0.38)"/>
-            <g>
-              {[...Array(11)].map((_, i) => (
-                <g key={`bm2-${i}`}>
-                  <rect x="688" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
-                  <rect x="701" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
-                  <rect x="714" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
-                  <rect x="727" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
-                  <rect x="740" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
-                </g>
-              ))}
-            </g>
 
-            {/* Tall Right Building */}
-            <rect x="850" y="130" width="85" height="170" fill="url(#rightBuildingGrad)"/>
-            <g>
-              {[...Array(14)].map((_, i) => (
-                <g key={`br1-${i}`}>
-                  <rect x="858" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
-                  <rect x="872" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
-                  <rect x="886" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
-                  <rect x="900" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
-                  <rect x="914" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
-                </g>
-              ))}
-            </g>
 
-            {/* Far Right Building */}
-            <rect x="1000" y="190" width="65" height="110" fill="rgba(255,255,255,0.32)"/>
-            <g>
-              {[...Array(9)].map((_, i) => (
-                <g key={`br2-${i}`}>
-                  <rect x="1008" y={196 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
-                  <rect x="1020" y={196 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
-                  <rect x="1032" y={196 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
-                  <rect x="1044" y={196 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
-                </g>
-              ))}
-            </g>
 
-            {/* Slanted Modern Building */}
-            <path d="M 1100 170 L 1180 150 L 1180 300 L 1100 300 Z" fill="rgba(255,255,255,0.36)"/>
-            <g>
-              {[...Array(12)].map((_, i) => (
-                <g key={`br3-${i}`}>
-                  <rect x="1110" y={176 + i * 10} width="8" height="7" fill="rgba(100,150,200,0.42)"/>
-                  <rect x="1125" y={171 + i * 10} width="8" height="7" fill="rgba(100,150,200,0.42)"/>
-                  <rect x="1140" y={166 + i * 10} width="8" height="7" fill="rgba(100,150,200,0.42)"/>
-                  <rect x="1155" y={161 + i * 10} width="8" height="7" fill="rgba(100,150,200,0.42)"/>
-                </g>
-              ))}
-            </g>
           </svg>
         </div>
 
