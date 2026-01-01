@@ -231,7 +231,7 @@ export default function Navbar() {
             <Link to="/" className="flex items-center space-x-2" onClick={() => setIsMobileMenuOpen(false)}>
               <img 
                 src="/logo.png" 
-                className={`drop-shadow-xl transition-all duration-300 ${isScrolled ? 'w-12 h-12' : 'w-18 h-18'}`} 
+                className={`drop-shadow-xl transition-all duration-300 ${isScrolled ? 'w-18 h-18' : 'w-24 h-24'}`} 
                 alt="Logo" 
               />
             </Link>

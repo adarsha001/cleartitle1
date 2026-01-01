@@ -3,15 +3,14 @@ import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import PropertyUnitCard from "../components/PropertyUnitCard";
 import { 
   Search, Filter, Grid, List, ChevronLeft, ChevronRight, 
-  Home, MapPin, Building, Ruler, Bed, Bath, Car,
-  CheckCircle, XCircle, Loader2, X, Menu, ChevronDown, ChevronUp,
-  DollarSign, Calendar, Layers, CheckSquare, Square, Star,
-  Maximize2, Minimize2, Hash, Building2, Globe, Target,
-  TrendingUp, Clock, Shield, Award, Zap, Heart, Filter as FilterIcon,
-  SlidersHorizontal, Sparkles, Crown, Trophy, TrendingDown,
-  ArrowUpDown, Eye, EyeOff, BadgeCheck, Users, Zap as Lightning,
-  Map, Navigation, Compass, Wind, Sunrise, Sunset,
-  FileCheck, FileText, ShieldCheck
+  Home, MapPin, Building, Ruler, Bed, Bath,
+  CheckCircle, XCircle, Loader2, X, ChevronDown, ChevronUp,
+  DollarSign, Calendar, Layers, Star,
+  Maximize2, Minimize2, Building2,
+  TrendingUp, Clock, Shield, Award, Zap, Filter as FilterIcon,
+  SlidersHorizontal, Crown, Trophy, TrendingDown,
+  ArrowUpDown, BadgeCheck, Zap as Lightning,
+  Map, FileCheck, FileText, ShieldCheck
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -29,7 +28,7 @@ const PropertyUnitsPage = () => {
   
   // State
   const [propertyUnits, setPropertyUnits] = useState([]);
-  const [allPropertyUnits, setAllPropertyUnits] = useState([]); // Store all units for category counts
+  const [allPropertyUnits, setAllPropertyUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,7 +40,6 @@ const PropertyUnitsPage = () => {
     basic: true,
     area: false,
     details: false,
-    location: false,
     status: false,
     admin: false
   });
@@ -54,7 +52,7 @@ const PropertyUnitsPage = () => {
     properties: 0
   });
 
-  // Filter state
+  // Filter state - UPDATED to match backend schema
   const [filters, setFilters] = useState({
     // Basic filters
     search: searchParams.get("search") || "",
@@ -64,31 +62,20 @@ const PropertyUnitsPage = () => {
     bedrooms: searchParams.get("bedrooms") || "",
     bathrooms: searchParams.get("bathrooms") || "",
     
-    // Area filters
+    // Area filters - FIXED: Using minArea and maxArea as per backend
     minArea: searchParams.get("minArea") || "",
     maxArea: searchParams.get("maxArea") || "",
-    areaType: searchParams.get("areaType") || "carpet",
     
     // Property details
     furnishing: searchParams.get("furnishing") || "",
     possessionStatus: searchParams.get("possessionStatus") || "",
-    ageOfProperty: searchParams.get("ageOfProperty") || "",
-    floor: searchParams.get("floor") || "",
-    totalFloors: searchParams.get("totalFloors") || "",
-    parking: searchParams.get("parking") || "",
-    balcony: searchParams.get("balcony") || "",
-    
-    // Location filters
-    locality: searchParams.get("locality") || "",
-    projectName: searchParams.get("projectName") || "",
-    facing: searchParams.get("facing") || "",
+    kitchenType: searchParams.get("kitchenType") || "",
     
     // Status filters
     availability: searchParams.get("availability") || "",
     approvalStatus: searchParams.get("approvalStatus") || "",
     isVerified: searchParams.get("isVerified") || "",
     isFeatured: searchParams.get("isFeatured") || "",
-    isPremium: searchParams.get("isPremium") || "",
     
     // Sort and pagination
     sortBy: searchParams.get("sortBy") || "createdAt",
@@ -101,43 +88,25 @@ const PropertyUnitsPage = () => {
   const [availableCities, setAvailableCities] = useState([]);
   const [availablePropertyTypes, setAvailablePropertyTypes] = useState([]);
   const [availableBedrooms, setAvailableBedrooms] = useState([]);
-  const [availableLocalities, setAvailableLocalities] = useState([]);
-  const [availableProjects, setAvailableProjects] = useState([]);
   
-  // Property categories for horizontal scroll - Initialize with counts
+  // Property categories for horizontal scroll - UPDATED to match backend
   const [propertyCategories, setPropertyCategories] = useState([
     { id: "all", name: "All Properties", icon: <Home className="w-5 h-5" />, count: 0 },
-    { id: "apartment", name: "Apartments", icon: <Building className="w-5 h-5" />, count: 0 },
-    { id: "villa", name: "Villas", icon: <Crown className="w-5 h-5" />, count: 0 },
-    { id: "commercial", name: "Commercial  Space", icon: <Building2 className="w-5 h-5" />, count: 0 },
-    { id: "plot", name: "Plots", icon: <Map className="w-5 h-5" />, count: 0 },
-    { id: "penthouse", name: "Penthouses", icon: <TrendingUp className="w-5 h-5" />, count: 0 },
-    { id: "farmhouse", name: "Farm Houses", icon: <Tree className="w-5 h-5" />, count: 0 },
-    { id: "studio", name: "Studio", icon: <Maximize2 className="w-5 h-5" />, count: 0 },
-    { id: "duplex", name: "Duplex", icon: <Layers className="w-5 h-5" />, count: 0 },
-    { id: "bungalow", name: "Bungalows", icon: <Home className="w-5 h-5" />, count: 0 },
+    { id: "Apartment", name: "Apartments", icon: <Building className="w-5 h-5" />, count: 0 },
+    { id: "Villa", name: "Villas", icon: <Crown className="w-5 h-5" />, count: 0 },
+    { id: "Independent House", name: "Independent Houses", icon: <Home className="w-5 h-5" />, count: 0 },
+    { id: "Studio", name: "Studio", icon: <Maximize2 className="w-5 h-5" />, count: 0 },
+    { id: "Penthouse", name: "Penthouses", icon: <TrendingUp className="w-5 h-5" />, count: 0 },
+    { id: "Duplex", name: "Duplex", icon: <Layers className="w-5 h-5" />, count: 0 },
+    { id: "Row House", name: "Row Houses", icon: <Building2 className="w-5 h-5" />, count: 0 },
+    { id: "Plot", name: "Plots", icon: <Map className="w-5 h-5" />, count: 0 },
+    { id: "Commercial Space", name: "Commercial", icon: <Building2 className="w-5 h-5" />, count: 0 },
   ]);
 
   // Format number with commas
   const formatNumber = (num) => {
     if (num === null || num === undefined) return '0';
     return num.toLocaleString('en-IN');
-  };
-
-  // Format price for display
-  const formatPrice = (price) => {
-    if (!price && price !== 0) return '₹0';
-    
-    const numPrice = parseFloat(price) || 0;
-    
-    if (numPrice >= 10000000) {
-      return `₹${(numPrice / 10000000).toFixed(2)} Cr`;
-    } else if (numPrice >= 100000) {
-      return `₹${(numPrice / 100000).toFixed(2)} L`;
-    } else if (numPrice >= 1000) {
-      return `₹${(numPrice / 1000).toFixed(2)} K`;
-    }
-    return `₹${numPrice.toLocaleString('en-IN')}`;
   };
 
   // Check if mobile on mount and resize
@@ -188,10 +157,10 @@ const PropertyUnitsPage = () => {
     try {
       const cleanFilters = {};
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== '' && value !== null && value !== undefined && !(Array.isArray(value) && value.length === 0)) {
-          if (key === 'isFeatured' || key === 'isVerified' || key === 'isPremium') {
+        if (value !== '' && value !== null && value !== undefined) {
+          if (key === 'isFeatured' || key === 'isVerified') {
             cleanFilters[key] = value === 'true';
-          } else if (['bedrooms', 'bathrooms', 'floor', 'totalFloors', 'parking', 'balcony'].includes(key)) {
+          } else if (key === 'bedrooms' || key === 'bathrooms') {
             cleanFilters[key] = parseInt(value);
           } else if (key === 'minArea' || key === 'maxArea') {
             cleanFilters[key] = parseFloat(value);
@@ -211,6 +180,8 @@ const PropertyUnitsPage = () => {
         limit: limit || 12
       };
 
+      console.log("Fetching with params:", params); // Debug log
+
       const response = await propertyUnitAPI.getPropertyUnits(params);
       
       if (response.data.success) {
@@ -225,8 +196,6 @@ const PropertyUnitsPage = () => {
         setAvailableCities(response.data.filters?.availableCities || []);
         setAvailablePropertyTypes(response.data.filters?.availablePropertyTypes || []);
         setAvailableBedrooms(response.data.filters?.availableBedrooms || []);
-        setAvailableLocalities(response.data.filters?.availableLocalities || []);
-        setAvailableProjects(response.data.filters?.availableProjects || []);
         
         // Update clear title stats
         const verifiedCount = units.filter(p => p.isVerified).length;
@@ -248,55 +217,19 @@ const PropertyUnitsPage = () => {
     }
   };
 
-  // Update category counts - FIXED VERSION using allPropertyUnits
+  // Update category counts - FIXED to match backend propertyType values
   const updateCategoryCounts = (units) => {
     const categoryCounts = {
       all: units.length,
-      apartment: units.filter(p => {
-        const type = p.propertyType?.toLowerCase() || '';
-        return type.includes('apartment') || type === 'apartment';
-      }).length,
-      villa: units.filter(p => {
-        const type = p.propertyType?.toLowerCase() || '';
-        return type.includes('villa') || type === 'villa';
-      }).length,
-      commercial: units.filter(p => {
-        const type = p.propertyType?.toLowerCase() || '';
-        return type.includes('commercial') || 
-               type.includes('office') || 
-               type.includes('shop') ||
-               type === 'commercial' ||
-               type === 'office space' ||
-               type === 'shop';
-      }).length,
-      plot: units.filter(p => {
-        const type = p.propertyType?.toLowerCase() || '';
-        return type.includes('plot') || 
-               type === 'plot' ||
-               type === 'land';
-      }).length,
-      penthouse: units.filter(p => {
-        const type = p.propertyType?.toLowerCase() || '';
-        return type.includes('penthouse') || type === 'penthouse';
-      }).length,
-      farmhouse: units.filter(p => {
-        const type = p.propertyType?.toLowerCase() || '';
-        return type.includes('farm') || 
-               type.includes('farmhouse') ||
-               type === 'farmhouse';
-      }).length,
-      studio: units.filter(p => {
-        const type = p.propertyType?.toLowerCase() || '';
-        return type.includes('studio') || type === 'studio';
-      }).length,
-      duplex: units.filter(p => {
-        const type = p.propertyType?.toLowerCase() || '';
-        return type.includes('duplex') || type === 'duplex';
-      }).length,
-      bungalow: units.filter(p => {
-        const type = p.propertyType?.toLowerCase() || '';
-        return type.includes('bungalow') || type === 'bungalow';
-      }).length,
+      "Apartment": units.filter(p => p.propertyType === "Apartment").length,
+      "Villa": units.filter(p => p.propertyType === "Villa").length,
+      "Independent House": units.filter(p => p.propertyType === "Independent House").length,
+      "Studio": units.filter(p => p.propertyType === "Studio").length,
+      "Penthouse": units.filter(p => p.propertyType === "Penthouse").length,
+      "Duplex": units.filter(p => p.propertyType === "Duplex").length,
+      "Row House": units.filter(p => p.propertyType === "Row House").length,
+      "Plot": units.filter(p => p.propertyType === "Plot").length,
+      "Commercial Space": units.filter(p => p.propertyType === "Commercial Space").length,
     };
     
     // Update categories with counts
@@ -324,7 +257,7 @@ const PropertyUnitsPage = () => {
   useEffect(() => {
     const newParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-      if (value && value !== '' && value !== '0' && !(Array.isArray(value) && value.length === 0)) {
+      if (value && value !== '' && value !== '0') {
         newParams.set(key, value.toString());
       }
     });
@@ -348,20 +281,7 @@ const PropertyUnitsPage = () => {
       // Clear propertyType filter
       handleFilterChange('propertyType', '');
     } else {
-      // Map category IDs to property types - using capitalized values
-      const typeMap = {
-        apartment: 'Apartment',
-        villa: 'Villa',
-        commercial: 'Commercial',
-        plot: 'Plot',
-        penthouse: 'Penthouse',
-        farmhouse: 'Farmhouse',
-        studio: 'Studio',
-        duplex: 'Duplex',
-        bungalow: 'Bungalow'
-      };
-      
-      handleFilterChange('propertyType', typeMap[categoryId] || '');
+      handleFilterChange('propertyType', categoryId);
     }
     
     // Scroll to property grid
@@ -381,22 +301,13 @@ const PropertyUnitsPage = () => {
       bathrooms: "",
       minArea: "",
       maxArea: "",
-      areaType: "carpet",
       furnishing: "",
       possessionStatus: "",
-      ageOfProperty: "",
-      floor: "",
-      totalFloors: "",
-      parking: "",
-      balcony: "",
-      locality: "",
-      projectName: "",
-      facing: "",
+      kitchenType: "",
       availability: "",
       approvalStatus: "",
       isVerified: "",
       isFeatured: "",
-      isPremium: "",
       sortBy: "createdAt",
       sortOrder: "desc",
       page: 1,
@@ -460,20 +371,15 @@ const PropertyUnitsPage = () => {
     }
   }, [currentPage, totalPages]);
 
-  // Options arrays
-  const listingTypes = ["Sale", "Rent", "Lease"];
-  const furnishingOptions = ["Furnished", "Semi-Furnished", "Unfurnished"];
-  const possessionOptions = ["Ready to Move", "Under Construction", "Pre Launch", "Resale"];
-  const ageOptions = ["0-1 Years", "1-5 Years", "5-10 Years", "10+ Years", "New Launch"];
-  const floorOptions = ["Ground", "1", "2", "3", "4", "5", "6-10", "11-20", "21+"];
-  const facingOptions = ["North", "South", "East", "West", "North-East", "North-West", "South-East", "South-West"];
-  const parkingOptions = ["0", "1", "2", "3", "4+"];
-  const balconyOptions = ["0", "1", "2", "3", "4+"];
-  const areaTypes = ["carpet", "builtup", "super"];
-  const availabilityOptions = ["Available", "Sold", "Rented", "Under Offer", "Hold"];
-  const approvalOptions = ["Approved", "Pending", "Rejected"];
+  // Options arrays - UPDATED to match backend schema
+  const listingTypes = ["sale", "rent", "lease", "pg"];
+  const furnishingOptions = ["unfurnished", "semi-furnished", "fully-furnished"];
+  const possessionOptions = ["ready-to-move", "under-construction", "resale"];
+  const kitchenOptions = ["modular", "regular", "open", "closed", "none"];
+  const availabilityOptions = ["available", "sold", "rented", "under-agreement", "hold"];
+  const approvalOptions = ["pending", "approved", "rejected"];
 
-  // Sort options
+  // Sort options - UPDATED to match backend allowed sort fields
   const sortOptions = [
     { value: "createdAt:desc", label: "Newest First", icon: <Calendar className="w-4 h-4" /> },
     { value: "price:asc", label: "Price: Low to High", icon: <TrendingUp className="w-4 h-4" /> },
@@ -546,15 +452,71 @@ const PropertyUnitsPage = () => {
     </div>
   );
 
-  // Quick filters
+  // Quick filters - UPDATED to match backend values
   const quickFilters = [
-    { label: "Ready to Move", value: "ready", icon: <CheckCircle className="w-4 h-4" /> },
-    { label: "Furnished", value: "furnished", icon: <Home className="w-4 h-4" /> },
-    { label: "Verified", value: "verified", icon: <BadgeCheck className="w-4 h-4" /> },
-    { label: "Featured", value: "featured", icon: <Star className="w-4 h-4" /> },
-    { label: "Premium", value: "premium", icon: <Crown className="w-4 h-4" /> },
-    { label: "New Launch", value: "new", icon: <Zap className="w-4 h-4" /> },
+    { 
+      label: "Ready to Move", 
+      value: "ready", 
+      icon: <CheckCircle className="w-4 h-4" />,
+      filterKey: "possessionStatus",
+      filterValue: "ready-to-move"
+    },
+    { 
+      label: "Furnished", 
+      value: "furnished", 
+      icon: <Home className="w-4 h-4" />,
+      filterKey: "furnishing",
+      filterValue: "fully-furnished"
+    },
+    { 
+      label: "Verified", 
+      value: "verified", 
+      icon: <BadgeCheck className="w-4 h-4" />,
+      filterKey: "isVerified",
+      filterValue: "true"
+    },
+    { 
+      label: "Featured", 
+      value: "featured", 
+      icon: <Star className="w-4 h-4" />,
+      filterKey: "isFeatured",
+      filterValue: "true"
+    },
+    { 
+      label: "For Sale", 
+      value: "sale", 
+      icon: <DollarSign className="w-4 h-4" />,
+      filterKey: "listingType",
+      filterValue: "sale"
+    },
+    { 
+      label: "For Rent", 
+      value: "rent", 
+      icon: <Calendar className="w-4 h-4" />,
+      filterKey: "listingType",
+      filterValue: "rent"
+    },
   ];
+
+  // Handle quick filter click
+  const handleQuickFilterClick = (filterKey, filterValue) => {
+    handleFilterChange(filterKey, filterValue);
+  };
+
+  // Area range presets for quick selection
+  const areaPresets = [
+    { label: "0-500 sq.ft.", min: 0, max: 500 },
+    { label: "500-1000 sq.ft.", min: 500, max: 1000 },
+    { label: "1000-1500 sq.ft.", min: 1000, max: 1500 },
+    { label: "1500-2000 sq.ft.", min: 1500, max: 2000 },
+    { label: "2000+ sq.ft.", min: 2000, max: 10000 },
+  ];
+
+  // Handle area preset click
+  const handleAreaPresetClick = (min, max) => {
+    handleFilterChange("minArea", min);
+    handleFilterChange("maxArea", max);
+  };
 
   // Render filter panel
   const renderFilterPanel = () => (
@@ -566,32 +528,23 @@ const PropertyUnitsPage = () => {
           Quick Filters
         </h4>
         <div className="flex flex-wrap gap-2">
-          {quickFilters.map((filter) => (
-            <button
-              key={filter.value}
-              onClick={() => {
-                if (filter.value === 'ready') handleFilterChange('possessionStatus', 'Ready to Move');
-                if (filter.value === 'furnished') handleFilterChange('furnishing', 'Furnished');
-                if (filter.value === 'verified') handleFilterChange('isVerified', 'true');
-                if (filter.value === 'featured') handleFilterChange('isFeatured', 'true');
-                if (filter.value === 'premium') handleFilterChange('isPremium', 'true');
-                if (filter.value === 'new') handleFilterChange('ageOfProperty', 'New Launch');
-              }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
-                (filter.value === 'ready' && filters.possessionStatus === 'Ready to Move') ||
-                (filter.value === 'furnished' && filters.furnishing === 'Furnished') ||
-                (filter.value === 'verified' && filters.isVerified === 'true') ||
-                (filter.value === 'featured' && filters.isFeatured === 'true') ||
-                (filter.value === 'premium' && filters.isPremium === 'true') ||
-                (filter.value === 'new' && filters.ageOfProperty === 'New Launch')
-                  ? 'bg-blue-100 border-blue-300 text-blue-700'
-                  : 'bg-white border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700'
-              }`}
-            >
-              {filter.icon}
-              {filter.label}
-            </button>
-          ))}
+          {quickFilters.map((filter) => {
+            const isActive = filters[filter.filterKey] === filter.filterValue;
+            return (
+              <button
+                key={filter.value}
+                onClick={() => handleQuickFilterClick(filter.filterKey, isActive ? "" : filter.filterValue)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-blue-100 border-blue-300 text-blue-700'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700'
+                }`}
+              >
+                {filter.icon}
+                {filter.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -650,7 +603,7 @@ const PropertyUnitsPage = () => {
                 <option value="">All Types</option>
                 {listingTypes.map((type) => (
                   <option key={type} value={type}>
-                    {type}
+                    {type === 'pg' ? 'PG' : type.charAt(0).toUpperCase() + type.slice(1)}
                   </option>
                 ))}
               </select>
@@ -678,53 +631,78 @@ const PropertyUnitsPage = () => {
         </div>
       )}
 
-      {/* Area Range */}
+      {/* Area Range - FIXED: Uses minArea and maxArea */}
       {renderFilterSection(
-        "Area Range",
+        "Area Range (sq.ft.)",
         <Ruler className="w-5 h-5" />,
         "area",
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Min Area (sq.ft.)</label>
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.minArea}
-                onChange={(e) => handleFilterChange("minArea", e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Max Area (sq.ft.)</label>
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.maxArea}
-                onChange={(e) => handleFilterChange("maxArea", e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Area Type</label>
-            <div className="flex gap-2">
-              {areaTypes.map((type) => (
+          {/* Area Presets */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {areaPresets.map((preset) => {
+              const isActive = filters.minArea === preset.min.toString() && filters.maxArea === preset.max.toString();
+              return (
                 <button
-                  key={type}
-                  onClick={() => handleFilterChange("areaType", type)}
-                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    filters.areaType === type
-                      ? 'bg-blue-50 border-blue-500 text-blue-700'
-                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                  key={preset.label}
+                  onClick={() => handleAreaPresetClick(preset.min, preset.max)}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                    isActive
+                      ? 'bg-blue-100 border-blue-300 text-blue-700'
+                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  {type === 'carpet' ? 'Carpet' : type === 'builtup' ? 'Built-up' : 'Super'}
+                  {preset.label}
                 </button>
-              ))}
+              );
+            })}
+          </div>
+
+          {/* Manual Input */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Min Area</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={filters.minArea}
+                  onChange={(e) => handleFilterChange("minArea", e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  min="0"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Max Area</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={filters.maxArea}
+                  onChange={(e) => handleFilterChange("maxArea", e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  min="0"
+                />
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Clear Area Filter Button */}
+          {(filters.minArea || filters.maxArea) && (
+            <button
+              onClick={() => {
+                handleFilterChange("minArea", "");
+                handleFilterChange("maxArea", "");
+              }}
+              className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium py-2 border-t border-gray-100 pt-4"
+            >
+              Clear Area Filter
+            </button>
+          )}
+        </div>,
+        (filters.minArea || filters.maxArea) 
+          ? `${filters.minArea || '0'} - ${filters.maxArea || '∞'} sq.ft.`
+          : null
       )}
 
       {/* Property Details */}
@@ -744,7 +722,7 @@ const PropertyUnitsPage = () => {
                 <option value="">Any</option>
                 {furnishingOptions.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {option.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}
                   </option>
                 ))}
               </select>
@@ -760,133 +738,27 @@ const PropertyUnitsPage = () => {
                 <option value="">Any</option>
                 {possessionOptions.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {option.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Property Age</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Kitchen Type</label>
               <select
-                value={filters.ageOfProperty}
-                onChange={(e) => handleFilterChange("ageOfProperty", e.target.value)}
+                value={filters.kitchenType}
+                onChange={(e) => handleFilterChange("kitchenType", e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Any</option>
-                {ageOptions.map((option) => (
+                {kitchenOptions.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
                   </option>
                 ))}
               </select>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Floor</label>
-              <select
-                value={filters.floor}
-                onChange={(e) => handleFilterChange("floor", e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Any Floor</option>
-                {floorOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Parking</label>
-              <select
-                value={filters.parking}
-                onChange={(e) => handleFilterChange("parking", e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Any</option>
-                {parkingOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Balcony</label>
-              <select
-                value={filters.balcony}
-                onChange={(e) => handleFilterChange("balcony", e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Any</option>
-                {balconyOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Location */}
-      {renderFilterSection(
-        "Location",
-        <MapPin className="w-5 h-5" />,
-        "location",
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Locality</label>
-            <select
-              value={filters.locality}
-              onChange={(e) => handleFilterChange("locality", e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">All Localities</option>
-              {availableLocalities.map((locality) => (
-                <option key={locality} value={locality}>
-                  {locality}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
-            <select
-              value={filters.projectName}
-              onChange={(e) => handleFilterChange("projectName", e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">All Projects</option>
-              {availableProjects.map((project) => (
-                <option key={project} value={project}>
-                  {project}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Facing</label>
-            <select
-              value={filters.facing}
-              onChange={(e) => handleFilterChange("facing", e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Any Direction</option>
-              {facingOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
       )}
@@ -908,7 +780,7 @@ const PropertyUnitsPage = () => {
                 <option value="">All Status</option>
                 {approvalOptions.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
                   </option>
                 ))}
               </select>
@@ -924,14 +796,14 @@ const PropertyUnitsPage = () => {
                 <option value="">All</option>
                 {availabilityOptions.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {option.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => handleFilterChange("isVerified", filters.isVerified === "true" ? "" : "true")}
               className={`flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${
@@ -954,18 +826,6 @@ const PropertyUnitsPage = () => {
             >
               <Star className="w-4 h-4" />
               Featured
-            </button>
-
-            <button
-              onClick={() => handleFilterChange("isPremium", filters.isPremium === "true" ? "" : "true")}
-              className={`flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                filters.isPremium === "true"
-                  ? 'bg-purple-50 border-purple-500 text-purple-700'
-                  : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <Crown className="w-4 h-4" />
-              Premium
             </button>
           </div>
         </div>
@@ -1016,7 +876,7 @@ const PropertyUnitsPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Clear Title Hero Section */}
       <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800">
-        {/* Animated Background */}
+        {/* Animated Background Grid */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0" style={{
             backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
@@ -1028,121 +888,454 @@ const PropertyUnitsPage = () => {
         <div className="absolute top-10 left-4 w-48 h-48 sm:w-96 sm:h-96 bg-blue-400 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
         <div className="absolute bottom-10 right-4 w-48 h-48 sm:w-96 sm:h-96 bg-purple-400 rounded-full filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
 
+        {/* City Skyline Silhouette Background */}
+        <div className="absolute bottom-0 left-0 right-0 w-full opacity-15">
+          <svg viewBox="0 0 600 200" className="w-full h-auto" preserveAspectRatio="xMidYMid slice">
+            {/* Trees on left */}
+            <circle cx="15" cy="180" r="12" fill="rgba(255,255,255,0.8)"/>
+            <rect x="12" y="180" width="6" height="20" fill="rgba(255,255,255,0.8)"/>
+            
+            <circle cx="35" cy="175" r="10" fill="rgba(255,255,255,0.8)"/>
+            <rect x="32" y="175" width="6" height="25" fill="rgba(255,255,255,0.8)"/>
+            
+            {/* Building 1 - Short left */}
+            <rect x="50" y="120" width="40" height="80" fill="rgba(255,255,255,0.9)"/>
+            <g>
+              {[...Array(8)].map((_, i) => (
+                <g key={`b1-${i}`}>
+                  <rect x="55" y={125 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="63" y={125 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="71" y={125 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="79" y={125 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                </g>
+              ))}
+            </g>
+            
+            {/* Building 2 - Curved top */}
+            <path d="M 95 90 Q 115 85 135 90 L 135 200 L 95 200 Z" fill="rgba(255,255,255,0.9)"/>
+            <g>
+              {[...Array(11)].map((_, i) => (
+                <g key={`b2-${i}`}>
+                  <rect x="100" y={95 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="110" y={95 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="120" y={95 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                </g>
+              ))}
+            </g>
+            
+            {/* Building 3 - Tall antenna tower */}
+            <rect x="145" y="60" width="15" height="140" fill="rgba(255,255,255,0.9)"/>
+            <rect x="150" y="40" width="5" height="25" fill="rgba(255,255,255,0.9)"/>
+            <circle cx="152.5" cy="38" r="3" fill="rgba(255,255,255,0.9)"/>
+            <g>
+              {[...Array(14)].map((_, i) => (
+                <rect key={`b3-${i}`} x="148" y={65 + i * 10} width="9" height="6" fill="rgba(100,150,200,0.6)"/>
+              ))}
+            </g>
+            
+            {/* Building 4 - Medium */}
+            <rect x="165" y="110" width="30" height="90" fill="rgba(255,255,255,0.9)"/>
+            <g>
+              {[...Array(9)].map((_, i) => (
+                <g key={`b4-${i}`}>
+                  <rect x="169" y={115 + i * 10} width="4" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="176" y={115 + i * 10} width="4" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="183" y={115 + i * 10} width="4" height="6" fill="rgba(100,150,200,0.6)"/>
+                </g>
+              ))}
+            </g>
+            
+            {/* Building 5 - Tallest center */}
+            <rect x="200" y="20" width="50" height="180" fill="rgba(255,255,255,0.95)"/>
+            <g>
+              {[...Array(18)].map((_, i) => (
+                <g key={`b5-${i}`}>
+                  <rect x="205" y={25 + i * 10} width="6" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="214" y={25 + i * 10} width="6" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="223" y={25 + i * 10} width="6" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="232" y={25 + i * 10} width="6" height="6" fill="rgba(100,150,200,0.6)"/>
+                </g>
+              ))}
+            </g>
+            
+            {/* Building 6 - Diagonal top */}
+            <path d="M 255 50 L 295 70 L 295 200 L 255 200 Z" fill="rgba(255,255,255,0.9)"/>
+            <g>
+              {[...Array(13)].map((_, i) => (
+                <g key={`b6-${i}`}>
+                  <rect x="260" y={75 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="268" y={75 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="276" y={75 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                </g>
+              ))}
+            </g>
+            
+            {/* Building 7 - Small with horizontal lines */}
+            <rect x="300" y="130" width="35" height="70" fill="rgba(255,255,255,0.9)"/>
+            <g>
+              {[...Array(14)].map((_, i) => (
+                <rect key={`b7-${i}`} x="303" y={133 + i * 5} width="29" height="2" fill="rgba(100,150,200,0.5)"/>
+              ))}
+            </g>
+            
+            {/* Building 8 - Stepped top */}
+            <rect x="340" y="80" width="40" height="120" fill="rgba(255,255,255,0.9)"/>
+            <rect x="345" y="65" width="30" height="15" fill="rgba(255,255,255,0.9)"/>
+            <rect x="350" y="55" width="20" height="10" fill="rgba(255,255,255,0.9)"/>
+            <g>
+              {[...Array(12)].map((_, i) => (
+                <g key={`b8-${i}`}>
+                  <rect x="345" y={85 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="353" y={85 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="361" y={85 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="369" y={85 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                </g>
+              ))}
+            </g>
+            
+            {/* Building 9 - Tall right */}
+            <rect x="385" y="40" width="45" height="160" fill="rgba(255,255,255,0.95)"/>
+            <g>
+              {[...Array(16)].map((_, i) => (
+                <g key={`b9-${i}`}>
+                  <rect x="390" y={45 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="398" y={45 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="406" y={45 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="414" y={45 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="422" y={45 + i * 10} width="5" height="6" fill="rgba(100,150,200,0.6)"/>
+                </g>
+              ))}
+            </g>
+            
+            {/* Building 10 - Modern slanted */}
+            <path d="M 435 90 L 470 70 L 470 200 L 435 200 Z" fill="rgba(255,255,255,0.9)"/>
+            <g>
+              {[...Array(13)].map((_, i) => (
+                <g key={`b10-${i}`}>
+                  <rect x="440" y={95 + i * 8} width="5" height="5" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="448" y={90 + i * 8} width="5" height="5" fill="rgba(100,150,200,0.6)"/>
+                  <rect x="456" y={85 + i * 8} width="5" height="5" fill="rgba(100,150,200,0.6)"/>
+                </g>
+              ))}
+            </g>
+            
+            {/* Trees on right */}
+            <circle cx="485" cy="178" r="11" fill="rgba(255,255,255,0.8)"/>
+            <rect x="482" y="178" width="6" height="22" fill="rgba(255,255,255,0.8)"/>
+            
+            <circle cx="505" cy="175" r="13" fill="rgba(255,255,255,0.8)"/>
+            <rect x="501" y="175" width="8" height="25" fill="rgba(255,255,255,0.8)"/>
+            
+            <circle cx="530" cy="180" r="12" fill="rgba(255, 255, 255, 0.8)"/>
+            <rect x="527" y="180" width="6" height="20" fill="rgba(255,255,255,0.8)"/>
+                <circle cx="560" cy="180" r="12" fill="rgba(255,255,255,0.8)"/>
+            <rect x="557" y="185" width="6" height="20" fill="rgba(255,255,255,0.8)"/>
+          </svg>
+        </div>
+
+        {/* Large Building Illustration - Fully at Bottom, Proportional & Responsive */}
+        <div className="absolute bottom-0 left-0 right-0 w-full h-32 sm:h-40 md:h-56 lg:h-72 xl:h-80">
+          <svg viewBox="0 0 1200 300" className="w-full h-full opacity-30" preserveAspectRatio="xMidYMax meet">
+            <defs>
+              <linearGradient id="mainBuildingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.5)"/>
+                <stop offset="100%" stopColor="rgba(255,255,255,0.15)"/>
+              </linearGradient>
+              <linearGradient id="leftBuildingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.45)"/>
+                <stop offset="100%" stopColor="rgba(255,255,255,0.12)"/>
+              </linearGradient>
+              <linearGradient id="rightBuildingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.48)"/>
+                <stop offset="100%" stopColor="rgba(255,255,255,0.18)"/>
+              </linearGradient>
+            </defs>
+
+            {/* Floating Property Icons */}
+            <circle cx="200" cy="30" r="4" fill="rgba(255,255,255,0.6)">
+              <animate attributeName="cy" values="30;20;30" dur="4s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="4s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="620" cy="20" r="5" fill="rgba(255,255,255,0.7)">
+              <animate attributeName="cy" values="20;10;20" dur="5s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="5s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="850" cy="40" r="4" fill="rgba(255,255,255,0.6)">
+              <animate attributeName="cy" values="40;30;40" dur="4.5s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="4.5s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="1050" cy="50" r="3" fill="rgba(255,255,255,0.5)">
+              <animate attributeName="cy" values="50;40;50" dur="4.2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.5;0.9;0.5" dur="4.2s" repeatCount="indefinite"/>
+            </circle>
+
+            {/* Building Skyline - Adjusted for bottom positioning */}
+            {/* Left Building Group */}
+            <rect x="50" y="180" width="60" height="120" fill="url(#leftBuildingGrad)"/>
+            <g>
+              {[...Array(10)].map((_, i) => (
+                <g key={`bl1-${i}`}>
+                  <rect x="56" y={186 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
+                  <rect x="68" y={186 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
+                  <rect x="80" y={186 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
+                  <rect x="92" y={186 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
+                </g>
+              ))}
+            </g>
+
+            {/* Center Tall Building */}
+            <rect x="200" y="120" width="80" height="180" fill="url(#mainBuildingGrad)"/>
+            <g>
+              {[...Array(15)].map((_, i) => (
+                <g key={`bc1-${i}`}>
+                  <rect x="208" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                  <rect x="222" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                  <rect x="236" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                  <rect x="250" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                  <rect x="264" y={126 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                </g>
+              ))}
+            </g>
+
+            {/* Medium Center-Left Building */}
+            <rect x="350" y="150" width="70" height="150" fill="rgba(255,255,255,0.35)"/>
+            <g>
+              {[...Array(12)].map((_, i) => (
+                <g key={`bm1-${i}`}>
+                  <rect x="358" y={156 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
+                  <rect x="371" y={156 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
+                  <rect x="384" y={156 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
+                  <rect x="397" y={156 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
+                </g>
+              ))}
+            </g>
+
+            {/* Center Building with Antenna */}
+            <rect x="500" y="100" width="90" height="200" fill="rgba(255,255,255,0.4)"/>
+            <rect x="535" y="80" width="20" height="20" fill="rgba(255,255,255,0.4)"/>
+            <rect x="542" y="65" width="6" height="15" fill="rgba(255,255,255,0.4)"/>
+            <circle cx="545" cy="62" r="3" fill="rgba(255,255,255,0.6)"/>
+            <g>
+              {[...Array(16)].map((_, i) => (
+                <g key={`bc2-${i}`}>
+                  <rect x="508" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                  <rect x="522" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                  <rect x="536" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                  <rect x="550" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                  <rect x="564" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                  <rect x="578" y={106 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.5)"/>
+                </g>
+              ))}
+            </g>
+
+            {/* Medium Center-Right Building */}
+            <rect x="680" y="160" width="75" height="140" fill="rgba(255,255,255,0.38)"/>
+            <g>
+              {[...Array(11)].map((_, i) => (
+                <g key={`bm2-${i}`}>
+                  <rect x="688" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
+                  <rect x="701" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
+                  <rect x="714" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
+                  <rect x="727" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
+                  <rect x="740" y={166 + i * 12} width="9" height="8" fill="rgba(100,150,200,0.45)"/>
+                </g>
+              ))}
+            </g>
+
+            {/* Tall Right Building */}
+            <rect x="850" y="130" width="85" height="170" fill="url(#rightBuildingGrad)"/>
+            <g>
+              {[...Array(14)].map((_, i) => (
+                <g key={`br1-${i}`}>
+                  <rect x="858" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
+                  <rect x="872" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
+                  <rect x="886" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
+                  <rect x="900" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
+                  <rect x="914" y={136 + i * 12} width="10" height="8" fill="rgba(100,150,200,0.48)"/>
+                </g>
+              ))}
+            </g>
+
+            {/* Far Right Building */}
+            <rect x="1000" y="190" width="65" height="110" fill="rgba(255,255,255,0.32)"/>
+            <g>
+              {[...Array(9)].map((_, i) => (
+                <g key={`br2-${i}`}>
+                  <rect x="1008" y={196 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
+                  <rect x="1020" y={196 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
+                  <rect x="1032" y={196 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
+                  <rect x="1044" y={196 + i * 12} width="8" height="8" fill="rgba(100,150,200,0.4)"/>
+                </g>
+              ))}
+            </g>
+
+            {/* Slanted Modern Building */}
+            <path d="M 1100 170 L 1180 150 L 1180 300 L 1100 300 Z" fill="rgba(255,255,255,0.36)"/>
+            <g>
+              {[...Array(12)].map((_, i) => (
+                <g key={`br3-${i}`}>
+                  <rect x="1110" y={176 + i * 10} width="8" height="7" fill="rgba(100,150,200,0.42)"/>
+                  <rect x="1125" y={171 + i * 10} width="8" height="7" fill="rgba(100,150,200,0.42)"/>
+                  <rect x="1140" y={166 + i * 10} width="8" height="7" fill="rgba(100,150,200,0.42)"/>
+                  <rect x="1155" y={161 + i * 10} width="8" height="7" fill="rgba(100,150,200,0.42)"/>
+                </g>
+              ))}
+            </g>
+          </svg>
+        </div>
+
         {/* Content Container */}
-        <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+        <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
           <div className="max-w-6xl mx-auto w-full">
             {/* Hero Text */}
-            <div className="text-center mb-8 sm:mb-12">
-              <div className="inline-flex items-center gap-2 mb-4 sm:mb-6 px-4 py-2 sm:px-6 sm:py-2.5 bg-white/10 backdrop-blur-md rounded-full border border-white/30">
-                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                <span className="text-white font-semibold text-xs sm:text-sm tracking-wider">100% CLEAR TITLE PROPERTIES</span>
+            <div className="text-center mb-6 sm:mb-10 lg:mb-12">
+              <div className="inline-flex items-center gap-2 mb-3 sm:mb-4 lg:mb-6 px-3 py-1.5 sm:px-4 sm:py-2 lg:px-6 lg:py-2.5 bg-white/10 backdrop-blur-md rounded-full border border-white/30 hover:bg-white/20 transition-all duration-300">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="5" fill="#FCD34D" className="animate-pulse"/>
+                  <g stroke="#FCD34D" strokeWidth="2" strokeLinecap="round">
+                    <line x1="12" y1="1" x2="12" y2="3">
+                      <animate attributeName="y2" values="3;4;3" dur="2s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="12" y1="21" x2="12" y2="23">
+                      <animate attributeName="y1" values="21;20;21" dur="2s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64">
+                      <animate attributeName="x2" values="5.64;6.44;5.64" dur="2s" repeatCount="indefinite"/>
+                      <animate attributeName="y2" values="5.64;6.44;5.64" dur="2s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78">
+                      <animate attributeName="x1" values="18.36;17.56;18.36" dur="2s" repeatCount="indefinite"/>
+                      <animate attributeName="y1" values="18.36;17.56;18.36" dur="2s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="1" y1="12" x2="3" y2="12">
+                      <animate attributeName="x2" values="3;4;3" dur="2s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="21" y1="12" x2="23" y2="12">
+                      <animate attributeName="x1" values="21;20;21" dur="2s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36">
+                      <animate attributeName="x2" values="5.64;6.44;5.64" dur="2s" repeatCount="indefinite"/>
+                      <animate attributeName="y2" values="18.36;17.56;18.36" dur="2s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22">
+                      <animate attributeName="x1" values="18.36;17.56;18.36" dur="2s" repeatCount="indefinite"/>
+                      <animate attributeName="y1" values="5.64;6.44;5.64" dur="2s" repeatCount="indefinite"/>
+                    </line>
+                  </g>
+                </svg>
+                <span className="text-white font-semibold text-xs sm:text-xs lg:text-sm tracking-wider">100% CLEAR TITLE PROPERTIES</span>
               </div>
               
-              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 text-white leading-tight tracking-tight">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 sm:mb-4 lg:mb-6 text-white leading-tight tracking-tight px-2">
                 Clear Title,
-                <span className="block bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-400 bg-clip-text text-transparent mt-2">
+                <span className="block bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-400 bg-clip-text text-transparent mt-1 sm:mt-2">
                   Clear Future
                 </span>
               </h1>
               
-              <p className="text-lg sm:text-xl md:text-2xl text-blue-100 font-light mb-6 sm:mb-8 max-w-3xl mx-auto px-4">
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-blue-100 font-light mb-4 sm:mb-6 lg:mb-8 max-w-3xl mx-auto px-4">
                 Invest with Confidence in Completely Verified Properties
               </p>
 
               {/* Trust Badges */}
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-3 sm:gap-6 mb-8 sm:mb-12 px-4">
-                <div className="px-3 py-2 sm:px-6 sm:py-4 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                    <Shield className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-300" />
-                    <div className="text-xl sm:text-3xl font-bold text-white">{formatNumber(allPropertyUnits.length)}+</div>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-2 sm:gap-4 lg:gap-6 mb-6 sm:mb-8 lg:mb-12 px-2 sm:px-4">
+                <div className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl lg:rounded-2xl border border-white/30 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+                  <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 mb-1">
+                    <Shield className="w-3 h-3 sm:w-4 sm:h-4 lg:w-6 lg:h-6 text-yellow-300" />
+                    <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-white">{formatNumber(allPropertyUnits.length)}+</div>
                   </div>
-                  <div className="text-xs sm:text-sm text-blue-100">Clear Title Properties</div>
+                  <div className="text-xs sm:text-xs lg:text-sm text-blue-100">Clear Title Properties</div>
                 </div>
                 
-                <div className="px-3 py-2 sm:px-6 sm:py-4 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                    <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6 text-green-300" />
-                    <div className="text-xl sm:text-3xl font-bold text-white">100%</div>
+                <div className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl lg:rounded-2xl border border-white/30 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+                  <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 mb-1">
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 lg:w-6 lg:h-6 text-green-300" />
+                    <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-white">100%</div>
                   </div>
-                  <div className="text-xs sm:text-sm text-blue-100">Verification Rate</div>
+                  <div className="text-xs sm:text-xs lg:text-sm text-blue-100">Verification Rate</div>
                 </div>
                 
-                <div className="px-3 py-2 sm:px-6 sm:py-4 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                    <MapPin className="w-4 h-4 sm:w-6 sm:h-6 text-red-300" />
-                    <div className="text-xl sm:text-3xl font-bold text-white">{formatNumber(availableCities.length)}+</div>
+                <div className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl lg:rounded-2xl border border-white/30 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+                  <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 mb-1">
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 lg:w-6 lg:h-6 text-red-300" />
+                    <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-white">{formatNumber(availableCities.length)}+</div>
                   </div>
-                  <div className="text-xs sm:text-sm text-blue-100">Prime Locations</div>
+                  <div className="text-xs sm:text-xs lg:text-sm text-blue-100">Prime Locations</div>
                 </div>
                 
-                <div className="px-3 py-2 sm:px-6 sm:py-4 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-                    <Award className="w-4 h-4 sm:w-6 sm:h-6 text-purple-300" />
-                    <div className="text-xl sm:text-3xl font-bold text-white">Legal</div>
+                <div className="px-2 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl lg:rounded-2xl border border-white/30 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+                  <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 mb-1">
+                    <Award className="w-3 h-3 sm:w-4 sm:h-4 lg:w-6 lg:h-6 text-purple-300" />
+                    <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-white">Legal</div>
                   </div>
-                  <div className="text-xs sm:text-sm text-blue-100">Complete Documentation</div>
+                  <div className="text-xs sm:text-xs lg:text-sm text-blue-100">Complete Documentation</div>
                 </div>
               </div>
 
               {/* Clear Title Features */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto mb-8 sm:mb-12 px-4">
-                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-                  <FileCheck className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300 mx-auto mb-2 sm:mb-3" />
-                  <h3 className="text-white font-bold text-sm sm:text-base mb-1 sm:mb-2">Clear Title Guarantee</h3>
-                  <p className="text-blue-100 text-xs sm:text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 max-w-4xl mx-auto mb-6 sm:mb-8 lg:mb-12 px-2 sm:px-4">
+                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 border border-white/30 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+                  <FileCheck className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-yellow-300 mx-auto mb-1 sm:mb-2 lg:mb-3" />
+                  <h3 className="text-white font-bold text-xs sm:text-sm lg:text-base mb-1">Clear Title Guarantee</h3>
+                  <p className="text-blue-100 text-xs sm:text-xs lg:text-sm">
                     Every property comes with verified clear title documentation
                   </p>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-                  <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-green-300 mx-auto mb-2 sm:mb-3" />
-                  <h3 className="text-white font-bold text-sm sm:text-base mb-1 sm:mb-2">Legal Verification</h3>
-                  <p className="text-blue-100 text-xs sm:text-sm">
+                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 border border-white/30 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-green-300 mx-auto mb-1 sm:mb-2 lg:mb-3" />
+                  <h3 className="text-white font-bold text-xs sm:text-sm lg:text-base mb-1">Legal Verification</h3>
+                  <p className="text-blue-100 text-xs sm:text-xs lg:text-sm">
                     Thorough legal checks and complete compliance assurance
                   </p>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30">
-                  <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-300 mx-auto mb-2 sm:mb-3" />
-                  <h3 className="text-white font-bold text-sm sm:text-base mb-1 sm:mb-2">Complete Transparency</h3>
-                  <p className="text-blue-100 text-xs sm:text-sm">
+                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 border border-white/30 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+                  <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-blue-300 mx-auto mb-1 sm:mb-2 lg:mb-3" />
+                  <h3 className="text-white font-bold text-xs sm:text-sm lg:text-base mb-1">Complete Transparency</h3>
+                  <p className="text-blue-100 text-xs sm:text-xs lg:text-sm">
                     No hidden clauses, full disclosure on every property
                   </p>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-4 sm:p-6 border border-white/30 lg:col-span-3">
-                  <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-purple-300 mx-auto mb-2 sm:mb-3" />
-                  <h3 className="text-white font-bold text-sm sm:text-base mb-1 sm:mb-2">Paperwork & Documentation</h3>
-                  <p className="text-blue-100 text-xs sm:text-sm text-center max-w-md mx-auto">
+                <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 border border-white/30 hover:bg-white/20 hover:scale-105 transition-all duration-300 lg:col-span-3">
+                  <FileText className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-purple-300 mx-auto mb-1 sm:mb-2 lg:mb-3" />
+                  <h3 className="text-white font-bold text-xs sm:text-sm lg:text-base mb-1">Paperwork & Documentation</h3>
+                  <p className="text-blue-100 text-xs sm:text-xs lg:text-sm text-center max-w-md mx-auto">
                     Khata conversion, registration, legal paperwork, and complete documentation support.
                   </p>
                 </div>
               </div>
 
               {/* Main Search Bar */}
-              <div className="bg-white rounded-2xl shadow-2xl p-2 max-w-3xl mx-auto">
-                <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl p-2 max-w-3xl mx-auto hover:shadow-3xl transition-shadow duration-300">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <div className="flex-1">
                     <div className="relative">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
                       <input
                         type="text"
-                        placeholder="Search by location, project, amenities, or keyword..."
+                        placeholder="Search by location, project, or keyword..."
                         value={filters.search}
                         onChange={(e) => handleFilterChange("search", e.target.value)}
-                        className="w-full pl-12 pr-4 py-4 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 text-gray-900 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base lg:text-lg"
                       />
                     </div>
                   </div>
                   <button
-                    type="submit"
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg hover:shadow-xl"
+                    onClick={handleSearch}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base lg:text-lg transition-all shadow-lg hover:shadow-xl hover:scale-105"
                   >
                     Search
                   </button>
-                </form>
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* Scroll Indicator */}
+          <div className="absolute bottom-2 sm:bottom-4 lg:bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
+            <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
           </div>
         </div>
       </div>
@@ -1228,15 +1421,6 @@ const PropertyUnitsPage = () => {
                 </button>
               ))}
             </div>
-
-            {/* Scroll Indicators - Mobile */}
-            {isMobile && propertyCategories.length > 4 && (
-              <div className="flex justify-center items-center gap-1 mt-2">
-                <div className="h-1 w-1 bg-gray-300 rounded-full"></div>
-                <div className="h-1 w-3 bg-gray-400 rounded-full"></div>
-                <div className="h-1 w-1 bg-gray-300 rounded-full"></div>
-              </div>
-            )}
           </div>
 
           {/* Quick Filter Chips for Mobile */}
@@ -1255,9 +1439,9 @@ const PropertyUnitsPage = () => {
                   Verified
                 </button>
                 <button
-                  onClick={() => handleFilterChange('possessionStatus', 'Ready to Move')}
+                  onClick={() => handleFilterChange('possessionStatus', 'ready-to-move')}
                   className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border transition-colors ${
-                    filters.possessionStatus === 'Ready to Move'
+                    filters.possessionStatus === 'ready-to-move'
                       ? 'bg-blue-100 border-blue-300 text-blue-700'
                       : 'border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
@@ -1266,9 +1450,9 @@ const PropertyUnitsPage = () => {
                   Ready to Move
                 </button>
                 <button
-                  onClick={() => handleFilterChange('furnishing', 'Furnished')}
+                  onClick={() => handleFilterChange('furnishing', 'fully-furnished')}
                   className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border transition-colors ${
-                    filters.furnishing === 'Furnished'
+                    filters.furnishing === 'fully-furnished'
                       ? 'bg-orange-100 border-orange-300 text-orange-700'
                       : 'border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
@@ -1287,27 +1471,25 @@ const PropertyUnitsPage = () => {
                 <div className="flex items-center gap-2">
                   <div className={`p-1.5 rounded-lg ${
                     activeCategory === 'all' ? 'bg-blue-100' :
-                    activeCategory === 'apartment' ? 'bg-blue-100' :
-                    activeCategory === 'villa' ? 'bg-purple-100' :
-                    activeCategory === 'commercial' ? 'bg-green-100' :
-                    activeCategory === 'plot' ? 'bg-yellow-100' :
-                    activeCategory === 'penthouse' ? 'bg-pink-100' :
-                    activeCategory === 'farmhouse' ? 'bg-emerald-100' :
-                    activeCategory === 'studio' ? 'bg-indigo-100' :
-                    activeCategory === 'duplex' ? 'bg-cyan-100' :
+                    activeCategory === 'Apartment' ? 'bg-blue-100' :
+                    activeCategory === 'Villa' ? 'bg-purple-100' :
+                    activeCategory === 'Independent House' ? 'bg-green-100' :
+                    activeCategory === 'Plot' ? 'bg-yellow-100' :
+                    activeCategory === 'Penthouse' ? 'bg-pink-100' :
+                    activeCategory === 'Studio' ? 'bg-indigo-100' :
+                    activeCategory === 'Duplex' ? 'bg-cyan-100' :
                     'bg-gray-100'
                   }`}>
                     {React.cloneElement(propertyCategories.find(c => c.id === activeCategory)?.icon || <Home className="w-4 h-4" />, {
                       className: `w-4 h-4 ${
                         activeCategory === 'all' ? 'text-blue-600' :
-                        activeCategory === 'apartment' ? 'text-blue-600' :
-                        activeCategory === 'villa' ? 'text-purple-600' :
-                        activeCategory === 'commercial' ? 'text-green-600' :
-                        activeCategory === 'plot' ? 'text-yellow-600' :
-                        activeCategory === 'penthouse' ? 'text-pink-600' :
-                        activeCategory === 'farmhouse' ? 'text-emerald-600' :
-                        activeCategory === 'studio' ? 'text-indigo-600' :
-                        activeCategory === 'duplex' ? 'text-cyan-600' :
+                        activeCategory === 'Apartment' ? 'text-blue-600' :
+                        activeCategory === 'Villa' ? 'text-purple-600' :
+                        activeCategory === 'Independent House' ? 'text-green-600' :
+                        activeCategory === 'Plot' ? 'text-yellow-600' :
+                        activeCategory === 'Penthouse' ? 'text-pink-600' :
+                        activeCategory === 'Studio' ? 'text-indigo-600' :
+                        activeCategory === 'Duplex' ? 'text-cyan-600' :
                         'text-gray-600'
                       }`
                     })}
@@ -1420,12 +1602,13 @@ const PropertyUnitsPage = () => {
                 <div className="flex-1 min-w-0">
                   <h2 className="text-xl lg:text-2xl font-bold text-gray-900 truncate">
                     Properties in {filters.city || "All Cities"}
-                    {filters.propertyType && ` • ${filters.propertyType}s`}
+                    {filters.propertyType && ` • ${filters.propertyType}`}
                   </h2>
                   <p className="text-gray-600 mt-1 text-sm lg:text-base">
                     Showing <span className="font-bold text-blue-600">{propertyUnits.length}</span> of{" "}
                     <span className="font-semibold">{formatNumber(totalResults)}</span> properties
                     {filters.search && ` matching "${filters.search}"`}
+                    {(filters.minArea || filters.maxArea) && ` • Area: ${filters.minArea || '0'} - ${filters.maxArea || '∞'} sq.ft.`}
                   </p>
                 </div>
 
@@ -1505,6 +1688,11 @@ const PropertyUnitsPage = () => {
                           bgColor = "bg-indigo-50";
                           textColor = "text-indigo-700";
                           borderColor = "border-indigo-100";
+                        } else if (key === 'listingType') {
+                          displayValue = `Listing: ${value.charAt(0).toUpperCase() + value.slice(1)}`;
+                          bgColor = "bg-orange-50";
+                          textColor = "text-orange-700";
+                          borderColor = "border-orange-100";
                         } else if (key === 'isVerified' && value === 'true') {
                           displayValue = "Verified";
                           bgColor = "bg-green-50";
@@ -1515,16 +1703,26 @@ const PropertyUnitsPage = () => {
                           bgColor = "bg-yellow-50";
                           textColor = "text-yellow-700";
                           borderColor = "border-yellow-100";
-                        } else if (key === 'isPremium' && value === 'true') {
-                          displayValue = "Premium";
-                          bgColor = "bg-purple-50";
-                          textColor = "text-purple-700";
-                          borderColor = "border-purple-100";
-                        } else if (['minArea', 'maxArea'].includes(key) && value) {
-                          displayValue = key === 'minArea' ? `Min: ${value} sq.ft.` : `Max: ${value} sq.ft.`;
+                        } else if (key === 'minArea' && value) {
+                          displayValue = `Min Area: ${value} sq.ft.`;
                           bgColor = "bg-orange-50";
                           textColor = "text-orange-700";
                           borderColor = "border-orange-100";
+                        } else if (key === 'maxArea' && value) {
+                          displayValue = `Max Area: ${value} sq.ft.`;
+                          bgColor = "bg-orange-50";
+                          textColor = "text-orange-700";
+                          borderColor = "border-orange-100";
+                        } else if (key === 'furnishing' && value) {
+                          displayValue = `Furnishing: ${value.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}`;
+                          bgColor = "bg-pink-50";
+                          textColor = "text-pink-700";
+                          borderColor = "border-pink-100";
+                        } else if (key === 'possessionStatus' && value) {
+                          displayValue = `Possession: ${value.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}`;
+                          bgColor = "bg-teal-50";
+                          textColor = "text-teal-700";
+                          borderColor = "border-teal-100";
                         }
                         
                         return (
