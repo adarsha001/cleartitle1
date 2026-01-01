@@ -29,6 +29,7 @@ const PropertyUnitsPage = () => {
   
   // State
   const [propertyUnits, setPropertyUnits] = useState([]);
+  const [allPropertyUnits, setAllPropertyUnits] = useState([]); // Store all units for category counts
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,17 +39,13 @@ const PropertyUnitsPage = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
-    price: false,
     area: false,
     details: false,
-    amenities: false,
     location: false,
     status: false,
     admin: false
   });
   const [activeCategory, setActiveCategory] = useState("all");
-  const [priceRange, setPriceRange] = useState([0, 50000000]);
-  const [areaRange, setAreaRange] = useState([0, 10000]);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(true);
   const [clearTitleStats, setClearTitleStats] = useState({
     total: 0,
@@ -67,11 +64,6 @@ const PropertyUnitsPage = () => {
     bedrooms: searchParams.get("bedrooms") || "",
     bathrooms: searchParams.get("bathrooms") || "",
     
-    // Price filters
-    minPrice: searchParams.get("minPrice") || "",
-    maxPrice: searchParams.get("maxPrice") || "",
-    priceType: searchParams.get("priceType") || "total",
-    
     // Area filters
     minArea: searchParams.get("minArea") || "",
     maxArea: searchParams.get("maxArea") || "",
@@ -85,9 +77,6 @@ const PropertyUnitsPage = () => {
     totalFloors: searchParams.get("totalFloors") || "",
     parking: searchParams.get("parking") || "",
     balcony: searchParams.get("balcony") || "",
-    
-    // Amenities (multiple selection)
-    amenities: searchParams.get("amenities") ? searchParams.get("amenities").split(",") : [],
     
     // Location filters
     locality: searchParams.get("locality") || "",
@@ -114,15 +103,13 @@ const PropertyUnitsPage = () => {
   const [availableBedrooms, setAvailableBedrooms] = useState([]);
   const [availableLocalities, setAvailableLocalities] = useState([]);
   const [availableProjects, setAvailableProjects] = useState([]);
-  const [availableAmenities, setAvailableAmenities] = useState([]);
-  const [priceStats, setPriceStats] = useState({ min: 0, max: 0, avg: 0 });
   
   // Property categories for horizontal scroll - Initialize with counts
   const [propertyCategories, setPropertyCategories] = useState([
     { id: "all", name: "All Properties", icon: <Home className="w-5 h-5" />, count: 0 },
     { id: "apartment", name: "Apartments", icon: <Building className="w-5 h-5" />, count: 0 },
     { id: "villa", name: "Villas", icon: <Crown className="w-5 h-5" />, count: 0 },
-    { id: "commercial", name: "Commercial", icon: <Building2 className="w-5 h-5" />, count: 0 },
+    { id: "commercial", name: "Commercial  Space", icon: <Building2 className="w-5 h-5" />, count: 0 },
     { id: "plot", name: "Plots", icon: <Map className="w-5 h-5" />, count: 0 },
     { id: "penthouse", name: "Penthouses", icon: <TrendingUp className="w-5 h-5" />, count: 0 },
     { id: "farmhouse", name: "Farm Houses", icon: <Tree className="w-5 h-5" />, count: 0 },
@@ -131,69 +118,26 @@ const PropertyUnitsPage = () => {
     { id: "bungalow", name: "Bungalows", icon: <Home className="w-5 h-5" />, count: 0 },
   ]);
 
-  // Price string to number converter
-  const priceStringToNumber = (priceStr) => {
-    if (!priceStr || typeof priceStr !== 'string') return 0;
-    
-    // Remove commas and spaces
-    let cleanStr = priceStr.toLowerCase().replace(/,/g, '').trim();
-    
-    // Extract numeric value and multiplier
-    let numericValue = 0;
-    let multiplier = 1;
-    
-    // Check for common price representations
-    if (cleanStr.includes('cr') || cleanStr.includes('crore')) {
-      const match = cleanStr.match(/(\d+(\.\d+)?)/);
-      if (match) numericValue = parseFloat(match[1]);
-      multiplier = 10000000; // 1 crore = 10 million
-    } 
-    else if (cleanStr.includes('l') || cleanStr.includes('lac') || cleanStr.includes('lakh')) {
-      const match = cleanStr.match(/(\d+(\.\d+)?)/);
-      if (match) numericValue = parseFloat(match[1]);
-      multiplier = 100000; // 1 lakh = 100,000
-    }
-    else if (cleanStr.includes('k') || cleanStr.includes('thousand')) {
-      const match = cleanStr.match(/(\d+(\.\d+)?)/);
-      if (match) numericValue = parseFloat(match[1]);
-      multiplier = 1000;
-    }
-    else if (cleanStr.includes('m') || cleanStr.includes('million')) {
-      const match = cleanStr.match(/(\d+(\.\d+)?)/);
-      if (match) numericValue = parseFloat(match[1]);
-      multiplier = 1000000;
-    }
-    else {
-      // Try to extract pure number
-      const match = cleanStr.match(/(\d+(\.\d+)?)/);
-      if (match) numericValue = parseFloat(match[1]);
-      // Assume it's already in proper number format
-      try {
-        return parseFloat(cleanStr) || 0;
-      } catch {
-        return 0;
-      }
-    }
-    
-    return numericValue * multiplier;
-  };
-
   // Format number with commas
   const formatNumber = (num) => {
-    if (!num && num !== 0) return '0';
+    if (num === null || num === undefined) return '0';
     return num.toLocaleString('en-IN');
   };
 
   // Format price for display
   const formatPrice = (price) => {
-    if (price >= 10000000) {
-      return `${(price / 10000000).toFixed(2)} Cr`;
-    } else if (price >= 100000) {
-      return `${(price / 100000).toFixed(2)} L`;
-    } else if (price >= 1000) {
-      return `${(price / 1000).toFixed(2)} K`;
+    if (!price && price !== 0) return '₹0';
+    
+    const numPrice = parseFloat(price) || 0;
+    
+    if (numPrice >= 10000000) {
+      return `₹${(numPrice / 10000000).toFixed(2)} Cr`;
+    } else if (numPrice >= 100000) {
+      return `₹${(numPrice / 100000).toFixed(2)} L`;
+    } else if (numPrice >= 1000) {
+      return `₹${(numPrice / 1000).toFixed(2)} K`;
     }
-    return `₹${price.toLocaleString()}`;
+    return `₹${numPrice.toLocaleString('en-IN')}`;
   };
 
   // Check if mobile on mount and resize
@@ -221,22 +165,34 @@ const PropertyUnitsPage = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, [location]);
 
-  // Fetch property units
+  // Fetch all properties for category counts
+  const fetchAllPropertiesForCategories = async () => {
+    try {
+      const response = await propertyUnitAPI.getPropertyUnits({ 
+        limit: 1000 // Fetch more properties for accurate category counts
+      });
+      
+      if (response.data.success) {
+        const allUnits = response.data.data || [];
+        setAllPropertyUnits(allUnits);
+        updateCategoryCounts(allUnits);
+      }
+    } catch (error) {
+      console.error("Error fetching all properties:", error);
+    }
+  };
+
+  // Fetch property units with filters
   const fetchPropertyUnits = async () => {
     setLoading(true);
     try {
       const cleanFilters = {};
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== '' && value !== null && value !== undefined && !(Array.isArray(value) && value.length === 0)) {
-          if (key === 'amenities' && Array.isArray(value)) {
-            cleanFilters[key] = value.join(',');
-          } else if (key === 'isFeatured' || key === 'isVerified' || key === 'isPremium') {
+          if (key === 'isFeatured' || key === 'isVerified' || key === 'isPremium') {
             cleanFilters[key] = value === 'true';
           } else if (['bedrooms', 'bathrooms', 'floor', 'totalFloors', 'parking', 'balcony'].includes(key)) {
             cleanFilters[key] = parseInt(value);
-          } else if (key === 'minPrice' || key === 'maxPrice') {
-            // Convert string price to number for filtering
-            cleanFilters[key] = parseFloat(value);
           } else if (key === 'minArea' || key === 'maxArea') {
             cleanFilters[key] = parseFloat(value);
           } else {
@@ -260,14 +216,7 @@ const PropertyUnitsPage = () => {
       if (response.data.success) {
         const units = response.data.data || [];
         
-        // Convert price strings to numbers for filtering purposes
-        const processedUnits = units.map(unit => ({
-          ...unit,
-          numericPrice: priceStringToNumber(unit.price),
-          numericPricePerSqFt: priceStringToNumber(unit.pricePerSqFt)
-        }));
-        
-        setPropertyUnits(processedUnits);
+        setPropertyUnits(units);
         setTotalPages(response.data.totalPages || 1);
         setCurrentPage(response.data.currentPage || 1);
         setTotalResults(response.data.total || 0);
@@ -278,28 +227,14 @@ const PropertyUnitsPage = () => {
         setAvailableBedrooms(response.data.filters?.availableBedrooms || []);
         setAvailableLocalities(response.data.filters?.availableLocalities || []);
         setAvailableProjects(response.data.filters?.availableProjects || []);
-        setAvailableAmenities(response.data.filters?.availableAmenities || []);
-        
-        // Calculate price stats
-        const prices = processedUnits.map(p => p.numericPrice).filter(p => p > 0);
-        if (prices.length > 0) {
-          const minPrice = Math.min(...prices);
-          const maxPrice = Math.max(...prices);
-          const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
-          setPriceStats({ min: minPrice, max: maxPrice, avg: avgPrice });
-          setPriceRange([minPrice, maxPrice]);
-        }
-        
-        // Update category counts
-        updateCategoryCounts(processedUnits);
         
         // Update clear title stats
-        const verifiedCount = processedUnits.filter(p => p.isVerified).length;
+        const verifiedCount = units.filter(p => p.isVerified).length;
         setClearTitleStats({
-          total: processedUnits.length,
+          total: units.length,
           verified: verifiedCount,
-          cities: availableCities.length || response.data.filters?.availableCities?.length || 0,
-          properties: totalResults
+          cities: response.data.filters?.availableCities?.length || 0,
+          properties: response.data.total || 0
         });
         
       } else {
@@ -313,49 +248,55 @@ const PropertyUnitsPage = () => {
     }
   };
 
-  // Update category counts - FIXED VERSION
+  // Update category counts - FIXED VERSION using allPropertyUnits
   const updateCategoryCounts = (units) => {
     const categoryCounts = {
       all: units.length,
-      apartment: units.filter(p => 
-        p.propertyType?.toLowerCase().includes('apartment') || 
-        p.propertyType?.toLowerCase() === 'apartment'
-      ).length,
-      villa: units.filter(p => 
-        p.propertyType?.toLowerCase().includes('villa') || 
-        p.propertyType?.toLowerCase() === 'villa'
-      ).length,
-      commercial: units.filter(p => 
-        p.propertyType?.toLowerCase().includes('commercial') || 
-        p.propertyType?.toLowerCase().includes('office') || 
-        p.propertyType?.toLowerCase().includes('shop') ||
-        p.propertyType?.toLowerCase() === 'commercial'
-      ).length,
-      plot: units.filter(p => 
-        p.propertyType?.toLowerCase().includes('plot') || 
-        p.propertyType?.toLowerCase() === 'plot'
-      ).length,
-      penthouse: units.filter(p => 
-        p.propertyType?.toLowerCase().includes('penthouse') || 
-        p.propertyType?.toLowerCase() === 'penthouse'
-      ).length,
-      farmhouse: units.filter(p => 
-        p.propertyType?.toLowerCase().includes('farm') || 
-        p.propertyType?.toLowerCase().includes('farmhouse') ||
-        p.propertyType?.toLowerCase() === 'farmhouse'
-      ).length,
-      studio: units.filter(p => 
-        p.propertyType?.toLowerCase().includes('studio') || 
-        p.propertyType?.toLowerCase() === 'studio'
-      ).length,
-      duplex: units.filter(p => 
-        p.propertyType?.toLowerCase().includes('duplex') || 
-        p.propertyType?.toLowerCase() === 'duplex'
-      ).length,
-      bungalow: units.filter(p => 
-        p.propertyType?.toLowerCase().includes('bungalow') || 
-        p.propertyType?.toLowerCase() === 'bungalow'
-      ).length,
+      apartment: units.filter(p => {
+        const type = p.propertyType?.toLowerCase() || '';
+        return type.includes('apartment') || type === 'apartment';
+      }).length,
+      villa: units.filter(p => {
+        const type = p.propertyType?.toLowerCase() || '';
+        return type.includes('villa') || type === 'villa';
+      }).length,
+      commercial: units.filter(p => {
+        const type = p.propertyType?.toLowerCase() || '';
+        return type.includes('commercial') || 
+               type.includes('office') || 
+               type.includes('shop') ||
+               type === 'commercial' ||
+               type === 'office space' ||
+               type === 'shop';
+      }).length,
+      plot: units.filter(p => {
+        const type = p.propertyType?.toLowerCase() || '';
+        return type.includes('plot') || 
+               type === 'plot' ||
+               type === 'land';
+      }).length,
+      penthouse: units.filter(p => {
+        const type = p.propertyType?.toLowerCase() || '';
+        return type.includes('penthouse') || type === 'penthouse';
+      }).length,
+      farmhouse: units.filter(p => {
+        const type = p.propertyType?.toLowerCase() || '';
+        return type.includes('farm') || 
+               type.includes('farmhouse') ||
+               type === 'farmhouse';
+      }).length,
+      studio: units.filter(p => {
+        const type = p.propertyType?.toLowerCase() || '';
+        return type.includes('studio') || type === 'studio';
+      }).length,
+      duplex: units.filter(p => {
+        const type = p.propertyType?.toLowerCase() || '';
+        return type.includes('duplex') || type === 'duplex';
+      }).length,
+      bungalow: units.filter(p => {
+        const type = p.propertyType?.toLowerCase() || '';
+        return type.includes('bungalow') || type === 'bungalow';
+      }).length,
     };
     
     // Update categories with counts
@@ -365,9 +306,18 @@ const PropertyUnitsPage = () => {
     })));
   };
 
-  // Initial fetch on component mount and filter changes
+  // Initial fetch on component mount
   useEffect(() => {
+    fetchAllPropertiesForCategories();
     fetchPropertyUnits();
+  }, []);
+
+  // Fetch when filters change
+  useEffect(() => {
+    // Don't fetch on initial mount
+    if (!loading) {
+      fetchPropertyUnits();
+    }
   }, [filters]);
 
   // Update URL params when filters change
@@ -375,11 +325,7 @@ const PropertyUnitsPage = () => {
     const newParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value && value !== '' && value !== '0' && !(Array.isArray(value) && value.length === 0)) {
-        if (Array.isArray(value)) {
-          newParams.set(key, value.join(','));
-        } else {
-          newParams.set(key, value.toString());
-        }
+        newParams.set(key, value.toString());
       }
     });
     setSearchParams(newParams);
@@ -399,8 +345,10 @@ const PropertyUnitsPage = () => {
     setActiveCategory(categoryId);
     
     if (categoryId === 'all') {
+      // Clear propertyType filter
       handleFilterChange('propertyType', '');
     } else {
+      // Map category IDs to property types - using capitalized values
       const typeMap = {
         apartment: 'Apartment',
         villa: 'Villa',
@@ -412,6 +360,7 @@ const PropertyUnitsPage = () => {
         duplex: 'Duplex',
         bungalow: 'Bungalow'
       };
+      
       handleFilterChange('propertyType', typeMap[categoryId] || '');
     }
     
@@ -419,26 +368,6 @@ const PropertyUnitsPage = () => {
     if (propertyGridRef.current) {
       propertyGridRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-
-  // Handle amenities toggle
-  const handleAmenityToggle = (amenity) => {
-    setFilters(prev => {
-      const currentAmenities = prev.amenities || [];
-      if (currentAmenities.includes(amenity)) {
-        return {
-          ...prev,
-          amenities: currentAmenities.filter(a => a !== amenity),
-          page: 1
-        };
-      } else {
-        return {
-          ...prev,
-          amenities: [...currentAmenities, amenity],
-          page: 1
-        };
-      }
-    });
   };
 
   // Reset all filters
@@ -450,9 +379,6 @@ const PropertyUnitsPage = () => {
       listingType: "",
       bedrooms: "",
       bathrooms: "",
-      minPrice: "",
-      maxPrice: "",
-      priceType: "total",
       minArea: "",
       maxArea: "",
       areaType: "carpet",
@@ -463,7 +389,6 @@ const PropertyUnitsPage = () => {
       totalFloors: "",
       parking: "",
       balcony: "",
-      amenities: [],
       locality: "",
       projectName: "",
       facing: "",
@@ -482,20 +407,20 @@ const PropertyUnitsPage = () => {
     setIsFilterPanelOpen(false);
   };
 
-const handleSearch = (e) => {
-  e.preventDefault();
-  fetchPropertyUnits();
-  
-  // Scroll to property grid after a short delay to allow data to load
-  setTimeout(() => {
-    if (propertyGridRef.current) {
-      propertyGridRef.current.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
-    }
-  }, 300); // Small delay to ensure data starts loading
-};
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchPropertyUnits();
+    
+    // Scroll to property grid after a short delay to allow data to load
+    setTimeout(() => {
+      if (propertyGridRef.current) {
+        propertyGridRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }, 300);
+  };
 
   // Toggle section expansion
   const toggleSection = (section) => {
@@ -514,7 +439,7 @@ const handleSearch = (e) => {
     fetchPropertyUnits();
   };
 
-  // Handle pagination - FIXED: Added missing functions
+  // Handle pagination
   const handlePrevPage = useCallback(() => {
     if (currentPage > 1) {
       setFilters(prev => ({ ...prev, page: prev.page - 1 }));
@@ -544,7 +469,6 @@ const handleSearch = (e) => {
   const facingOptions = ["North", "South", "East", "West", "North-East", "North-West", "South-East", "South-West"];
   const parkingOptions = ["0", "1", "2", "3", "4+"];
   const balconyOptions = ["0", "1", "2", "3", "4+"];
-  const priceTypes = ["total", "perSqFt"];
   const areaTypes = ["carpet", "builtup", "super"];
   const availabilityOptions = ["Available", "Sold", "Rented", "Under Offer", "Hold"];
   const approvalOptions = ["Approved", "Pending", "Rejected"];
@@ -582,63 +506,13 @@ const handleSearch = (e) => {
     let count = 0;
     Object.entries(filters).forEach(([key, value]) => {
       if (key !== 'sortBy' && key !== 'sortOrder' && key !== 'page' && key !== 'limit') {
-        if (Array.isArray(value) && value.length > 0) {
-          count += value.length;
-        } else if (value && value !== '' && value !== '0') {
+        if (value && value !== '' && value !== '0') {
           count++;
         }
       }
     });
     return count;
   };
-
-  // Render price range slider
-  const renderPriceRangeSlider = () => (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-700">Price Range</span>
-        <span className="text-sm font-semibold text-blue-600">
-          {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
-        </span>
-      </div>
-      <div className="relative pt-1">
-        <input
-          type="range"
-          min={priceStats.min}
-          max={priceStats.max}
-          value={priceRange[0]}
-          onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
-          onMouseUp={() => handleFilterChange("minPrice", priceRange[0])}
-          onTouchEnd={() => handleFilterChange("minPrice", priceRange[0])}
-          className="absolute w-full h-2 bg-transparent appearance-none pointer-events-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg"
-        />
-        <input
-          type="range"
-          min={priceStats.min}
-          max={priceStats.max}
-          value={priceRange[1]}
-          onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-          onMouseUp={() => handleFilterChange("maxPrice", priceRange[1])}
-          onTouchEnd={() => handleFilterChange("maxPrice", priceRange[1])}
-          className="absolute w-full h-2 bg-transparent appearance-none pointer-events-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-lg"
-        />
-        <div className="h-2 bg-gray-200 rounded-full">
-          <div 
-            className="h-2 bg-blue-500 rounded-full"
-            style={{
-              left: `${((priceRange[0] - priceStats.min) / (priceStats.max - priceStats.min)) * 100}%`,
-              width: `${((priceRange[1] - priceRange[0]) / (priceStats.max - priceStats.min)) * 100}%`
-            }}
-          />
-        </div>
-      </div>
-      <div className="flex justify-between text-xs text-gray-500">
-        <span>Min: {formatPrice(priceStats.min)}</span>
-        <span>Avg: {formatPrice(priceStats.avg)}</span>
-        <span>Max: {formatPrice(priceStats.max)}</span>
-      </div>
-    </div>
-  );
 
   // Render filter section
   const renderFilterSection = (title, icon, sectionKey, children, badge = null) => (
@@ -703,7 +577,16 @@ const handleSearch = (e) => {
                 if (filter.value === 'premium') handleFilterChange('isPremium', 'true');
                 if (filter.value === 'new') handleFilterChange('ageOfProperty', 'New Launch');
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
+                (filter.value === 'ready' && filters.possessionStatus === 'Ready to Move') ||
+                (filter.value === 'furnished' && filters.furnishing === 'Furnished') ||
+                (filter.value === 'verified' && filters.isVerified === 'true') ||
+                (filter.value === 'featured' && filters.isFeatured === 'true') ||
+                (filter.value === 'premium' && filters.isPremium === 'true') ||
+                (filter.value === 'new' && filters.ageOfProperty === 'New Launch')
+                  ? 'bg-blue-100 border-blue-300 text-blue-700'
+                  : 'bg-white border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700'
+              }`}
             >
               {filter.icon}
               {filter.label}
@@ -711,15 +594,6 @@ const handleSearch = (e) => {
           ))}
         </div>
       </div>
-
-      {/* Price Range */}
-      {renderFilterSection(
-        "Price Range",
-        <DollarSign className="w-5 h-5" />,
-        "price",
-        renderPriceRangeSlider(),
-        `${formatPrice(priceStats.min)} - ${formatPrice(priceStats.max)}`
-      )}
 
       {/* Basic Filters */}
       {renderFilterSection(
@@ -961,44 +835,6 @@ const handleSearch = (e) => {
         </div>
       )}
 
-      {/* Amenities */}
-      {renderFilterSection(
-        "Amenities",
-        <CheckSquare className="w-5 h-5" />,
-        "amenities",
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            {availableAmenities.slice(0, 10).map((amenity) => (
-              <button
-                key={amenity}
-                onClick={() => handleAmenityToggle(amenity)}
-                className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                  filters.amenities.includes(amenity)
-                    ? 'bg-blue-50 border-blue-500 text-blue-700'
-                    : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {filters.amenities.includes(amenity) ? (
-                  <CheckCircle className="w-4 h-4 text-blue-600" />
-                ) : (
-                  <Square className="w-4 h-4 text-gray-400" />
-                )}
-                <span className="text-xs truncate">{amenity}</span>
-              </button>
-            ))}
-          </div>
-          {availableAmenities.length > 10 && (
-            <button
-              onClick={() => setExpandedSections(prev => ({ ...prev, amenitiesMore: !prev.amenitiesMore }))}
-              className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium py-2"
-            >
-              {expandedSections.amenitiesMore ? 'Show Less' : 'Show More Amenities'}
-            </button>
-          )}
-        </div>,
-        `${filters.amenities.length} selected`
-      )}
-
       {/* Location */}
       {renderFilterSection(
         "Location",
@@ -1218,7 +1054,7 @@ const handleSearch = (e) => {
                 <div className="px-3 py-2 sm:px-6 sm:py-4 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30">
                   <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
                     <Shield className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-300" />
-                    <div className="text-xl sm:text-3xl font-bold text-white">{formatNumber(totalResults)}+</div>
+                    <div className="text-xl sm:text-3xl font-bold text-white">{formatNumber(allPropertyUnits.length)}+</div>
                   </div>
                   <div className="text-xs sm:text-sm text-blue-100">Clear Title Properties</div>
                 </div>
@@ -1312,601 +1148,577 @@ const handleSearch = (e) => {
       </div>
 
       {/* Property Categories */}
-     <div className="container mx-auto px-3 sm:px-4 lg:px-6 -mt-6 sm:-mt-8 relative z-20">
-  <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-1 sm:p-2">
-    {/* Header */}
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-3 sm:mb-4 px-3 sm:px-4 pt-3 sm:pt-4">
-      <div>
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Property Categories</h2>
-        <p className="text-xs sm:text-sm text-gray-600 mt-1">
-          Browse properties by type
-        </p>
-      </div>
-      <div className="text-xs sm:text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
-        {formatNumber(totalResults)} properties
-      </div>
-    </div>
-
-    {/* Categories Container */}
-    <div className="relative">
-      {/* Scroll Indicators - Desktop */}
-      <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
-      <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
-
-      {/* Categories - Mobile & Desktop */}
-      <div 
-        ref={categoryScrollRef}
-        className="flex space-x-2 sm:space-x-3 pb-3 sm:pb-4 px-3 sm:px-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
-      >
-        {propertyCategories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => handleCategoryClick(category.id)}
-            className={`flex flex-col items-center justify-center flex-shrink-0 transition-all duration-300 whitespace-nowrap ${
-              activeCategory === category.id
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:shadow-md'
-            } ${
-              // Responsive sizing
-              category.count === 0 ? 'opacity-60' : ''
-            }`}
-            style={{
-              // Dynamic width based on screen size
-              minWidth: isMobile ? '100px' : '120px',
-              maxWidth: isMobile ? '110px' : '140px',
-              padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem',
-              borderRadius: isMobile ? '0.75rem' : '1rem',
-              transform: activeCategory === category.id ? 'scale(1.05)' : 'scale(1)'
-            }}
-            disabled={category.count === 0}
-          >
-            <div className="mb-1 sm:mb-2 flex-shrink-0">
-              {React.cloneElement(category.icon, {
-                className: `${
-                  isMobile ? 'w-4 h-4' : 'w-5 h-5'
-                } ${
-                  activeCategory === category.id 
-                    ? 'text-white' 
-                    : category.count === 0
-                    ? 'text-gray-400'
-                    : 'text-gray-500'
-                }`
-              })}
-            </div>
-            
-            <span className={`font-medium text-center ${
-              isMobile ? 'text-xs' : 'text-sm'
-            } truncate w-full`}>
-              {category.name}
-            </span>
-            
-            <span className={`mt-0.5 sm:mt-1 ${
-              isMobile ? 'text-[10px]' : 'text-xs'
-            } ${
-              activeCategory === category.id 
-                ? 'text-blue-100' 
-                : category.count === 0
-                ? 'text-gray-400'
-                : 'text-gray-500'
-            } font-medium`}>
-              {category.count === 0 ? 'No properties' : `${formatNumber(category.count)} ${category.count === 1 ? 'property' : 'properties'}`}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Scroll Indicators - Mobile */}
-      {isMobile && propertyCategories.length > 4 && (
-        <div className="flex justify-center items-center gap-1 mt-2">
-          <div className="h-1 w-1 bg-gray-300 rounded-full"></div>
-          <div className="h-1 w-3 bg-gray-400 rounded-full"></div>
-          <div className="h-1 w-1 bg-gray-300 rounded-full"></div>
-        </div>
-      )}
-    </div>
-
-    {/* Quick Filter Chips for Mobile */}
-    {isMobile && (
-      <div className="px-3 sm:px-4 pt-2 border-t border-gray-100 mt-2">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => handleFilterChange('isVerified', 'true')}
-            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border transition-colors ${
-              filters.isVerified === 'true'
-                ? 'bg-green-100 border-green-300 text-green-700'
-                : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <CheckCircle className="w-3 h-3" />
-            Verified
-          </button>
-          <button
-            onClick={() => handleFilterChange('possessionStatus', 'Ready to Move')}
-            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border transition-colors ${
-              filters.possessionStatus === 'Ready to Move'
-                ? 'bg-blue-100 border-blue-300 text-blue-700'
-                : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <CheckCircle className="w-3 h-3" />
-            Ready to Move
-          </button>
-          <button
-            onClick={() => handleFilterChange('furnishing', 'Furnished')}
-            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border transition-colors ${
-              filters.furnishing === 'Furnished'
-                ? 'bg-orange-100 border-orange-300 text-orange-700'
-                : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Home className="w-3 h-3" />
-            Furnished
-          </button>
-        </div>
-      </div>
-    )}
-
-    {/* Selected Category Info */}
-    {activeCategory !== 'all' && (
-      <div className="px-3 sm:px-4 pt-3 border-t border-gray-200 mt-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`p-1.5 rounded-lg ${
-              activeCategory === 'all' ? 'bg-blue-100' :
-              activeCategory === 'apartment' ? 'bg-blue-100' :
-              activeCategory === 'villa' ? 'bg-purple-100' :
-              activeCategory === 'commercial' ? 'bg-green-100' :
-              activeCategory === 'plot' ? 'bg-yellow-100' :
-              activeCategory === 'penthouse' ? 'bg-pink-100' :
-              activeCategory === 'farmhouse' ? 'bg-emerald-100' :
-              activeCategory === 'studio' ? 'bg-indigo-100' :
-              activeCategory === 'duplex' ? 'bg-cyan-100' :
-              'bg-gray-100'
-            }`}>
-              {React.cloneElement(propertyCategories.find(c => c.id === activeCategory)?.icon || <Home className="w-4 h-4" />, {
-                className: `w-4 h-4 ${
-                  activeCategory === 'all' ? 'text-blue-600' :
-                  activeCategory === 'apartment' ? 'text-blue-600' :
-                  activeCategory === 'villa' ? 'text-purple-600' :
-                  activeCategory === 'commercial' ? 'text-green-600' :
-                  activeCategory === 'plot' ? 'text-yellow-600' :
-                  activeCategory === 'penthouse' ? 'text-pink-600' :
-                  activeCategory === 'farmhouse' ? 'text-emerald-600' :
-                  activeCategory === 'studio' ? 'text-indigo-600' :
-                  activeCategory === 'duplex' ? 'text-cyan-600' :
-                  'text-gray-600'
-                }`
-              })}
-            </div>
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 -mt-6 sm:-mt-8 relative z-20">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-1 sm:p-2">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-3 sm:mb-4 px-3 sm:px-4 pt-3 sm:pt-4">
             <div>
-              <span className="text-sm font-semibold text-gray-900">
-                {propertyCategories.find(c => c.id === activeCategory)?.name}
-              </span>
-              <span className="block text-xs text-gray-600">
-                {formatNumber(propertyCategories.find(c => c.id === activeCategory)?.count)} properties available
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={() => handleCategoryClick('all')}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline"
-          >
-            View All
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
-
-{/* Main Content */}
-<div className="px-0 lg:px-4 py-4 lg:py-8">
-  <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 max-w-[1920px] mx-auto">
-    {/* Filters Sidebar - Desktop */}
-    <div className={`hidden lg:block transition-all duration-300 ${
-      isFilterPanelOpen ? 'lg:w-72 xl:w-80' : 'lg:w-16'
-    }`}>
-      <div className="sticky top-4 h-[calc(100vh-2rem)] overflow-y-auto">
-        {/* Filters Header */}
-        <div className="bg-white rounded-xl shadow-lg p-4 mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <SlidersHorizontal className="w-5 h-5 text-blue-600" />
-              </button>
-              {isFilterPanelOpen && (
-                <>
-                  <h3 className="text-lg font-bold text-gray-900">Filters</h3>
-                  {getActiveFilterCount() > 0 && (
-                    <span className="bg-blue-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                      {getActiveFilterCount()} active
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-            {isFilterPanelOpen && getActiveFilterCount() > 0 && (
-              <button
-                onClick={handleResetFilters}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Filters Panel */}
-{isFilterPanelOpen && (
-  <div className="bg-white rounded-xl shadow-lg p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
-    {renderFilterPanel()}
-  </div>
-)}
-      </div>
-    </div>
-
-    {/* Main Content Area */}
-    <div className="flex-1 lg:min-w-0 px-4 lg:px-0" ref={propertyGridRef}>
-      {/* Mobile Filter Button */}
-      <div className="lg:hidden mb-4">
-        <button
-          onClick={() => setShowMobileFilters(true)}
-          className="w-full bg-white rounded-xl shadow-lg p-4 flex items-center justify-between hover:shadow-xl transition-all"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
-              <Filter className="w-4 h-4 text-white" />
-            </div>
-            <div className="text-left">
-              <h3 className="font-bold text-gray-900">Filters & Sort</h3>
-              <p className="text-sm text-gray-600">
-                {getActiveFilterCount() > 0 
-                  ? `${getActiveFilterCount()} filters applied` 
-                  : 'Customize your search'}
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Property Categories</h2>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                Browse properties by type
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {getActiveFilterCount() > 0 && (
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                {getActiveFilterCount()}
-              </span>
-            )}
-            <ChevronDown className="w-4 h-4 text-gray-400" />
-          </div>
-        </button>
-      </div>
-
-      {/* Results Header */}
-      <div className="bg-white rounded-xl shadow-lg p-4 lg:p-6 mb-4 lg:mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl lg:text-2xl font-bold text-gray-900 truncate">
-              Properties in {filters.city || "All Cities"}
-            </h2>
-            <p className="text-gray-600 mt-1 text-sm lg:text-base">
-              Showing <span className="font-bold text-blue-600">{propertyUnits.length}</span> of{" "}
-              <span className="font-semibold">{formatNumber(totalResults)}</span> properties
-              {filters.search && ` matching "${filters.search}"`}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 lg:gap-4">
-            {/* View Toggle */}
-            <div className="flex items-center bg-gray-100 rounded-lg lg:rounded-xl p-0.5 lg:p-1">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 lg:p-3 rounded-lg transition-all ${
-                  viewMode === "grid" 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
-                }`}
-                title="Grid View"
-              >
-                <Grid className="w-4 h-4 lg:w-5 lg:h-5" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 lg:p-3 rounded-lg transition-all ${
-                  viewMode === "list" 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
-                }`}
-                title="List View"
-              >
-                <List className="w-4 h-4 lg:w-5 lg:h-5" />
-              </button>
-            </div>
-
-            {/* Sort Dropdown */}
-            <div className="relative flex-shrink-0">
-              <select
-                value={getCurrentSortValue()}
-                onChange={(e) => handleSortChange(e.target.value)}
-                className="appearance-none bg-white border border-gray-200 rounded-lg lg:rounded-xl px-3 lg:px-4 py-2 lg:py-3 pr-8 lg:pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 font-medium lg:font-semibold text-sm lg:text-base min-w-[140px] lg:min-w-[180px] hover:border-gray-300 transition-colors"
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <ArrowUpDown className="absolute right-2 lg:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 lg:w-4 lg:h-4 text-gray-500 pointer-events-none" />
+            <div className="text-xs sm:text-sm text-gray-500 font-medium bg-gray-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
+              {formatNumber(allPropertyUnits.length)} properties
             </div>
           </div>
-        </div>
 
-        {/* Active Filters Display */}
-        {getActiveFilterCount() > 0 && (
-          <div className="mt-4 lg:mt-6 pt-4 lg:pt-6 border-t border-gray-200">
-            <div className="flex flex-wrap items-center gap-2 lg:gap-3">
-              <span className="text-sm font-semibold text-gray-700">Active filters:</span>
-              <div className="flex flex-wrap gap-1 lg:gap-2">
-                {Object.entries(filters).map(([key, value]) => {
-                  if (!value || key === 'sortBy' || key === 'sortOrder' || key === 'page' || key === 'limit') return null;
-                  
-                  if (Array.isArray(value) && value.length > 0) {
-                    return value.map((item, index) => (
-                      <span
-                        key={`${key}-${index}`}
-                        className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs lg:text-sm px-2 lg:px-3 py-1 lg:py-1.5 rounded-full border border-blue-100"
-                      >
-                        <CheckCircle className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
-                        <span className="truncate max-w-[120px] lg:max-w-[150px]">{item}</span>
-                        <button
-                          onClick={() => {
-                            const newAmenities = filters.amenities.filter(a => a !== item);
-                            handleFilterChange("amenities", newAmenities);
-                          }}
-                          className="ml-0.5 hover:text-blue-900"
-                        >
-                          <XCircle className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
-                        </button>
-                      </span>
-                    ));
-                  }
-                  
-                  let displayValue = value;
-                  let bgColor = "bg-blue-50";
-                  let textColor = "text-blue-700";
-                  let borderColor = "border-blue-100";
-                  
-                  if (key === 'city') {
-                    displayValue = `${value}`;
-                  } else if (key === 'propertyType') {
-                    displayValue = `Type: ${value}`;
-                    bgColor = "bg-green-50";
-                    textColor = "text-green-700";
-                    borderColor = "border-green-100";
-                  } else if (key === 'bedrooms') {
-                    displayValue = `${value} Beds`;
-                    bgColor = "bg-purple-50";
-                    textColor = "text-purple-700";
-                    borderColor = "border-purple-100";
-                  } else if (key === 'bathrooms') {
-                    displayValue = `${value} Baths`;
-                    bgColor = "bg-indigo-50";
-                    textColor = "text-indigo-700";
-                    borderColor = "border-indigo-100";
-                  } else if (key === 'priceType') {
-                    return null;
-                  } else if (key === 'isVerified' && value === 'true') {
-                    displayValue = "Verified";
-                    bgColor = "bg-green-50";
-                    textColor = "text-green-700";
-                    borderColor = "border-green-100";
-                  } else if (key === 'isFeatured' && value === 'true') {
-                    displayValue = "Featured";
-                    bgColor = "bg-yellow-50";
-                    textColor = "text-yellow-700";
-                    borderColor = "border-yellow-100";
-                  } else if (key === 'isPremium' && value === 'true') {
-                    displayValue = "Premium";
-                    bgColor = "bg-purple-50";
-                    textColor = "text-purple-700";
-                    borderColor = "border-purple-100";
-                  } else if (['minPrice', 'maxPrice'].includes(key) && value) {
-                    displayValue = key === 'minPrice' ? `Min: ${formatPrice(parseFloat(value))}` : `Max: ${formatPrice(parseFloat(value))}`;
-                    bgColor = "bg-orange-50";
-                    textColor = "text-orange-700";
-                    borderColor = "border-orange-100";
-                  }
-                  
-                  return (
-                    <span
-                      key={key}
-                      className={`inline-flex items-center gap-1 ${bgColor} ${textColor} ${borderColor} text-xs lg:text-sm px-2 lg:px-3 py-1 lg:py-1.5 rounded-full border truncate max-w-[180px]`}
-                    >
-                      <Filter className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
-                      <span className="truncate">{displayValue}</span>
-                      <button
-                        onClick={() => handleFilterChange(key, "")}
-                        className="ml-0.5 hover:opacity-80"
-                      >
-                        <XCircle className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
-              <button
-                onClick={handleResetFilters}
-                className="text-xs lg:text-sm font-semibold text-gray-600 hover:text-gray-900 hover:underline whitespace-nowrap"
-              >
-                Clear all
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+          {/* Categories Container */}
+          <div className="relative">
+            {/* Scroll Indicators - Desktop */}
+            <div className="hidden lg:block absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+            <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
 
-      {/* Property Units */}
-      {loading ? (
-        renderSkeleton()
-      ) : propertyUnits.length === 0 ? (
-        <div className="text-center py-12 lg:py-16 bg-white rounded-xl lg:rounded-2xl shadow-lg">
-          <div className="w-24 h-24 lg:w-32 lg:h-32 mx-auto mb-4 lg:mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center">
-            <Home className="w-12 h-12 lg:w-16 lg:h-16 text-blue-600" />
-          </div>
-          <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2 lg:mb-3">No properties found</h3>
-          <p className="text-gray-600 mb-4 lg:mb-6 max-w-md mx-auto text-sm lg:text-base">
-            {getActiveFilterCount() > 0
-              ? "Try adjusting your filters to see more results"
-              : "No properties are currently listed. Check back soon!"}
-          </p>
-          {getActiveFilterCount() > 0 && (
-            <button
-              onClick={handleResetFilters}
-              className="px-6 lg:px-8 py-2 lg:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold text-sm lg:text-base shadow-lg hover:shadow-xl"
+            {/* Categories - Mobile & Desktop */}
+            <div 
+              ref={categoryScrollRef}
+              className="flex space-x-2 sm:space-x-3 pb-3 sm:pb-4 px-3 sm:px-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
             >
-              Clear all filters
-            </button>
+              {propertyCategories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategoryClick(category.id)}
+                  className={`flex flex-col items-center justify-center flex-shrink-0 transition-all duration-300 whitespace-nowrap ${
+                    activeCategory === category.id
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:shadow-md'
+                  } ${
+                    category.count === 0 ? 'opacity-60' : ''
+                  }`}
+                  style={{
+                    minWidth: isMobile ? '100px' : '120px',
+                    maxWidth: isMobile ? '110px' : '140px',
+                    padding: isMobile ? '0.75rem 1rem' : '1rem 1.5rem',
+                    borderRadius: isMobile ? '0.75rem' : '1rem',
+                    transform: activeCategory === category.id ? 'scale(1.05)' : 'scale(1)'
+                  }}
+                  disabled={category.count === 0}
+                >
+                  <div className="mb-1 sm:mb-2 flex-shrink-0">
+                    {React.cloneElement(category.icon, {
+                      className: `${
+                        isMobile ? 'w-4 h-4' : 'w-5 h-5'
+                      } ${
+                        activeCategory === category.id 
+                          ? 'text-white' 
+                          : category.count === 0
+                          ? 'text-gray-400'
+                          : 'text-gray-500'
+                      }`
+                    })}
+                  </div>
+                  
+                  <span className={`font-medium text-center ${
+                    isMobile ? 'text-xs' : 'text-sm'
+                  } truncate w-full`}>
+                    {category.name}
+                  </span>
+                  
+                  <span className={`mt-0.5 sm:mt-1 ${
+                    isMobile ? 'text-[10px]' : 'text-xs'
+                  } ${
+                    activeCategory === category.id 
+                      ? 'text-blue-100' 
+                      : category.count === 0
+                      ? 'text-gray-400'
+                      : 'text-gray-500'
+                  } font-medium`}>
+                    {category.count === 0 ? 'No properties' : `${formatNumber(category.count)} ${category.count === 1 ? 'property' : 'properties'}`}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Scroll Indicators - Mobile */}
+            {isMobile && propertyCategories.length > 4 && (
+              <div className="flex justify-center items-center gap-1 mt-2">
+                <div className="h-1 w-1 bg-gray-300 rounded-full"></div>
+                <div className="h-1 w-3 bg-gray-400 rounded-full"></div>
+                <div className="h-1 w-1 bg-gray-300 rounded-full"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Filter Chips for Mobile */}
+          {isMobile && (
+            <div className="px-3 sm:px-4 pt-2 border-t border-gray-100 mt-2">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleFilterChange('isVerified', filters.isVerified === 'true' ? '' : 'true')}
+                  className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border transition-colors ${
+                    filters.isVerified === 'true'
+                      ? 'bg-green-100 border-green-300 text-green-700'
+                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <CheckCircle className="w-3 h-3" />
+                  Verified
+                </button>
+                <button
+                  onClick={() => handleFilterChange('possessionStatus', 'Ready to Move')}
+                  className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border transition-colors ${
+                    filters.possessionStatus === 'Ready to Move'
+                      ? 'bg-blue-100 border-blue-300 text-blue-700'
+                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <CheckCircle className="w-3 h-3" />
+                  Ready to Move
+                </button>
+                <button
+                  onClick={() => handleFilterChange('furnishing', 'Furnished')}
+                  className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-lg border transition-colors ${
+                    filters.furnishing === 'Furnished'
+                      ? 'bg-orange-100 border-orange-300 text-orange-700'
+                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Home className="w-3 h-3" />
+                  Furnished
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Selected Category Info */}
+          {activeCategory !== 'all' && (
+            <div className="px-3 sm:px-4 pt-3 border-t border-gray-200 mt-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`p-1.5 rounded-lg ${
+                    activeCategory === 'all' ? 'bg-blue-100' :
+                    activeCategory === 'apartment' ? 'bg-blue-100' :
+                    activeCategory === 'villa' ? 'bg-purple-100' :
+                    activeCategory === 'commercial' ? 'bg-green-100' :
+                    activeCategory === 'plot' ? 'bg-yellow-100' :
+                    activeCategory === 'penthouse' ? 'bg-pink-100' :
+                    activeCategory === 'farmhouse' ? 'bg-emerald-100' :
+                    activeCategory === 'studio' ? 'bg-indigo-100' :
+                    activeCategory === 'duplex' ? 'bg-cyan-100' :
+                    'bg-gray-100'
+                  }`}>
+                    {React.cloneElement(propertyCategories.find(c => c.id === activeCategory)?.icon || <Home className="w-4 h-4" />, {
+                      className: `w-4 h-4 ${
+                        activeCategory === 'all' ? 'text-blue-600' :
+                        activeCategory === 'apartment' ? 'text-blue-600' :
+                        activeCategory === 'villa' ? 'text-purple-600' :
+                        activeCategory === 'commercial' ? 'text-green-600' :
+                        activeCategory === 'plot' ? 'text-yellow-600' :
+                        activeCategory === 'penthouse' ? 'text-pink-600' :
+                        activeCategory === 'farmhouse' ? 'text-emerald-600' :
+                        activeCategory === 'studio' ? 'text-indigo-600' :
+                        activeCategory === 'duplex' ? 'text-cyan-600' :
+                        'text-gray-600'
+                      }`
+                    })}
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {propertyCategories.find(c => c.id === activeCategory)?.name}
+                    </span>
+                    <span className="block text-xs text-gray-600">
+                      {formatNumber(propertyCategories.find(c => c.id === activeCategory)?.count)} properties available
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleCategoryClick('all')}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                >
+                  View All
+                </button>
+              </div>
+            </div>
           )}
         </div>
-      ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6" id="property-grid">
-          {propertyUnits.map((property, index) => (
-            <div key={property._id} id={`property-${property._id}`}>
-              <PropertyUnitCard 
-                propertyUnit={property} 
-                viewMode="grid"
-                index={index}
-              />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4 lg:space-y-6" id="property-list">
-          {propertyUnits.map((property, index) => (
-            <div key={property._id} id={`property-${property._id}`}>
-              <PropertyUnitCard 
-                propertyUnit={property} 
-                viewMode="list"
-                index={index}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && !loading && (
-        <div className="mt-8 lg:mt-12">
-          <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg p-4 lg:p-6">
-            <nav className="flex items-center justify-between gap-2 lg:gap-0">
-              <button
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                className={`flex items-center gap-1 lg:gap-2 px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base transition-all ${
-                  currentPage === 1
-                    ? "text-gray-400 cursor-not-allowed bg-gray-100"
-                    : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
-                }`}
-              >
-                <ChevronLeft className="w-4 h-4 lg:w-5 lg:h-5" />
-                <span className="hidden sm:inline">Previous</span>
-              </button>
-
-              <div className="flex items-center gap-1 lg:gap-2">
-                {(() => {
-                  const pages = [];
-                  const maxVisible = 5;
-                  
-                  // Always show first page
-                  pages.push(1);
-                  
-                  // Calculate range
-                  let start = Math.max(2, currentPage - 1);
-                  let end = Math.min(totalPages - 1, currentPage + 1);
-                  
-                  // Adjust if near edges
-                  if (currentPage <= 3) {
-                    end = Math.min(4, totalPages - 1);
-                  }
-                  if (currentPage >= totalPages - 2) {
-                    start = Math.max(2, totalPages - 3);
-                  }
-                  
-                  // Add ellipsis after first if needed
-                  if (start > 2) {
-                    pages.push('...');
-                  }
-                  
-                  // Add middle pages
-                  for (let i = start; i <= end; i++) {
-                    if (i > 1 && i < totalPages) {
-                      pages.push(i);
-                    }
-                  }
-                  
-                  // Add ellipsis before last if needed
-                  if (end < totalPages - 1) {
-                    pages.push('...');
-                  }
-                  
-                  // Always show last page if more than 1 page
-                  if (totalPages > 1) {
-                    pages.push(totalPages);
-                  }
-                  
-                  return pages.map((page, index) => {
-                    if (page === '...') {
-                      return (
-                        <span key={`ellipsis-${index}`} className="px-2 lg:px-4 py-1 lg:py-2 text-gray-500">
-                          ...
-                        </span>
-                      );
-                    }
-                    
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => {
-                          setFilters(prev => ({ ...prev, page }));
-                          // Scroll to top of property grid
-                          if (propertyGridRef.current) {
-                            propertyGridRef.current.scrollIntoView({ behavior: 'smooth' });
-                          }
-                        }}
-                        className={`w-8 h-8 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base transition-all ${
-                          currentPage === page
-                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                            : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  });
-                })()}
+      {/* Main Content */}
+      <div className="px-0 lg:px-4 py-4 lg:py-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 max-w-[1920px] mx-auto">
+          {/* Filters Sidebar - Desktop */}
+          <div className={`hidden lg:block transition-all duration-300 ${
+            isFilterPanelOpen ? 'lg:w-72 xl:w-80' : 'lg:w-16'
+          }`}>
+            <div className="sticky top-4 h-[calc(100vh-2rem)] overflow-y-auto">
+              {/* Filters Header */}
+              <div className="bg-white rounded-xl shadow-lg p-4 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <SlidersHorizontal className="w-5 h-5 text-blue-600" />
+                    </button>
+                    {isFilterPanelOpen && (
+                      <>
+                        <h3 className="text-lg font-bold text-gray-900">Filters</h3>
+                        {getActiveFilterCount() > 0 && (
+                          <span className="bg-blue-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+                            {getActiveFilterCount()} active
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  {isFilterPanelOpen && getActiveFilterCount() > 0 && (
+                    <button
+                      onClick={handleResetFilters}
+                      className="text-sm text-gray-600 hover:text-gray-900"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className={`flex items-center gap-1 lg:gap-2 px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base transition-all ${
-                  currentPage === totalPages
-                    ? "text-gray-400 cursor-not-allowed bg-gray-100"
-                    : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
-                }`}
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="w-4 h-4 lg:w-5 lg:h-5" />
-              </button>
-            </nav>
-            
-            <div className="text-center mt-4 lg:mt-6 text-xs lg:text-sm text-gray-600">
-              Page {currentPage} of {totalPages} • {formatNumber(totalResults)} properties total
+              {/* Filters Panel */}
+              {isFilterPanelOpen && (
+                <div className="bg-white rounded-xl shadow-lg p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
+                  {renderFilterPanel()}
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1 lg:min-w-0 px-4 lg:px-0" ref={propertyGridRef}>
+            {/* Mobile Filter Button */}
+            <div className="lg:hidden mb-4">
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className="w-full bg-white rounded-xl shadow-lg p-4 flex items-center justify-between hover:shadow-xl transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg">
+                    <Filter className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-bold text-gray-900">Filters & Sort</h3>
+                    <p className="text-sm text-gray-600">
+                      {getActiveFilterCount() > 0 
+                        ? `${getActiveFilterCount()} filters applied` 
+                        : 'Customize your search'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {getActiveFilterCount() > 0 && (
+                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </div>
+              </button>
+            </div>
+
+            {/* Results Header */}
+            <div className="bg-white rounded-xl shadow-lg p-4 lg:p-6 mb-4 lg:mb-6">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl lg:text-2xl font-bold text-gray-900 truncate">
+                    Properties in {filters.city || "All Cities"}
+                    {filters.propertyType && ` • ${filters.propertyType}s`}
+                  </h2>
+                  <p className="text-gray-600 mt-1 text-sm lg:text-base">
+                    Showing <span className="font-bold text-blue-600">{propertyUnits.length}</span> of{" "}
+                    <span className="font-semibold">{formatNumber(totalResults)}</span> properties
+                    {filters.search && ` matching "${filters.search}"`}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 lg:gap-4">
+                  {/* View Toggle */}
+                  <div className="flex items-center bg-gray-100 rounded-lg lg:rounded-xl p-0.5 lg:p-1">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`p-2 lg:p-3 rounded-lg transition-all ${
+                        viewMode === "grid" 
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
+                      }`}
+                      title="Grid View"
+                    >
+                      <Grid className="w-4 h-4 lg:w-5 lg:h-5" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`p-2 lg:p-3 rounded-lg transition-all ${
+                        viewMode === "list" 
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
+                      }`}
+                      title="List View"
+                    >
+                      <List className="w-4 h-4 lg:w-5 lg:h-5" />
+                    </button>
+                  </div>
+
+                  {/* Sort Dropdown */}
+                  <div className="relative flex-shrink-0">
+                    <select
+                      value={getCurrentSortValue()}
+                      onChange={(e) => handleSortChange(e.target.value)}
+                      className="appearance-none bg-white border border-gray-200 rounded-lg lg:rounded-xl px-3 lg:px-4 py-2 lg:py-3 pr-8 lg:pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 font-medium lg:font-semibold text-sm lg:text-base min-w-[140px] lg:min-w-[180px] hover:border-gray-300 transition-colors"
+                    >
+                      {sortOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ArrowUpDown className="absolute right-2 lg:right-3 top-1/2 transform -translate-y-1/2 w-3 h-3 lg:w-4 lg:h-4 text-gray-500 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Filters Display */}
+              {getActiveFilterCount() > 0 && (
+                <div className="mt-4 lg:mt-6 pt-4 lg:pt-6 border-t border-gray-200">
+                  <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+                    <span className="text-sm font-semibold text-gray-700">Active filters:</span>
+                    <div className="flex flex-wrap gap-1 lg:gap-2">
+                      {Object.entries(filters).map(([key, value]) => {
+                        if (!value || key === 'sortBy' || key === 'sortOrder' || key === 'page' || key === 'limit') return null;
+                        
+                        let displayValue = value;
+                        let bgColor = "bg-blue-50";
+                        let textColor = "text-blue-700";
+                        let borderColor = "border-blue-100";
+                        
+                        if (key === 'city') {
+                          displayValue = `${value}`;
+                        } else if (key === 'propertyType') {
+                          displayValue = `Type: ${value}`;
+                          bgColor = "bg-green-50";
+                          textColor = "text-green-700";
+                          borderColor = "border-green-100";
+                        } else if (key === 'bedrooms') {
+                          displayValue = `${value} Beds`;
+                          bgColor = "bg-purple-50";
+                          textColor = "text-purple-700";
+                          borderColor = "border-purple-100";
+                        } else if (key === 'bathrooms') {
+                          displayValue = `${value} Baths`;
+                          bgColor = "bg-indigo-50";
+                          textColor = "text-indigo-700";
+                          borderColor = "border-indigo-100";
+                        } else if (key === 'isVerified' && value === 'true') {
+                          displayValue = "Verified";
+                          bgColor = "bg-green-50";
+                          textColor = "text-green-700";
+                          borderColor = "border-green-100";
+                        } else if (key === 'isFeatured' && value === 'true') {
+                          displayValue = "Featured";
+                          bgColor = "bg-yellow-50";
+                          textColor = "text-yellow-700";
+                          borderColor = "border-yellow-100";
+                        } else if (key === 'isPremium' && value === 'true') {
+                          displayValue = "Premium";
+                          bgColor = "bg-purple-50";
+                          textColor = "text-purple-700";
+                          borderColor = "border-purple-100";
+                        } else if (['minArea', 'maxArea'].includes(key) && value) {
+                          displayValue = key === 'minArea' ? `Min: ${value} sq.ft.` : `Max: ${value} sq.ft.`;
+                          bgColor = "bg-orange-50";
+                          textColor = "text-orange-700";
+                          borderColor = "border-orange-100";
+                        }
+                        
+                        return (
+                          <span
+                            key={key}
+                            className={`inline-flex items-center gap-1 ${bgColor} ${textColor} ${borderColor} text-xs lg:text-sm px-2 lg:px-3 py-1 lg:py-1.5 rounded-full border truncate max-w-[180px]`}
+                          >
+                            <Filter className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
+                            <span className="truncate">{displayValue}</span>
+                            <button
+                              onClick={() => handleFilterChange(key, "")}
+                              className="ml-0.5 hover:opacity-80"
+                            >
+                              <XCircle className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <button
+                      onClick={handleResetFilters}
+                      className="text-xs lg:text-sm font-semibold text-gray-600 hover:text-gray-900 hover:underline whitespace-nowrap"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Property Units */}
+            {loading ? (
+              renderSkeleton()
+            ) : propertyUnits.length === 0 ? (
+              <div className="text-center py-12 lg:py-16 bg-white rounded-xl lg:rounded-2xl shadow-lg">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 mx-auto mb-4 lg:mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center">
+                  <Home className="w-12 h-12 lg:w-16 lg:h-16 text-blue-600" />
+                </div>
+                <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2 lg:mb-3">No properties found</h3>
+                <p className="text-gray-600 mb-4 lg:mb-6 max-w-md mx-auto text-sm lg:text-base">
+                  {getActiveFilterCount() > 0
+                    ? "Try adjusting your filters to see more results"
+                    : "No properties are currently listed. Check back soon!"}
+                </p>
+                {getActiveFilterCount() > 0 && (
+                  <button
+                    onClick={handleResetFilters}
+                    className="px-6 lg:px-8 py-2 lg:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg lg:rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold text-sm lg:text-base shadow-lg hover:shadow-xl"
+                  >
+                    Clear all filters
+                  </button>
+                )}
+              </div>
+            ) : viewMode === "grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6" id="property-grid">
+                {propertyUnits.map((property, index) => (
+                  <div key={property._id} id={`property-${property._id}`}>
+                    <PropertyUnitCard 
+                      propertyUnit={property} 
+                      viewMode="grid"
+                      index={index}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4 lg:space-y-6" id="property-list">
+                {propertyUnits.map((property, index) => (
+                  <div key={property._id} id={`property-${property._id}`}>
+                    <PropertyUnitCard 
+                      propertyUnit={property} 
+                      viewMode="list"
+                      index={index}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && !loading && (
+              <div className="mt-8 lg:mt-12">
+                <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg p-4 lg:p-6">
+                  <nav className="flex items-center justify-between gap-2 lg:gap-0">
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1}
+                      className={`flex items-center gap-1 lg:gap-2 px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base transition-all ${
+                        currentPage === 1
+                          ? "text-gray-400 cursor-not-allowed bg-gray-100"
+                          : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                      }`}
+                    >
+                      <ChevronLeft className="w-4 h-4 lg:w-5 lg:h-5" />
+                      <span className="hidden sm:inline">Previous</span>
+                    </button>
+
+                    <div className="flex items-center gap-1 lg:gap-2">
+                      {(() => {
+                        const pages = [];
+                        const maxVisible = 5;
+                        
+                        // Always show first page
+                        pages.push(1);
+                        
+                        // Calculate range
+                        let start = Math.max(2, currentPage - 1);
+                        let end = Math.min(totalPages - 1, currentPage + 1);
+                        
+                        // Adjust if near edges
+                        if (currentPage <= 3) {
+                          end = Math.min(4, totalPages - 1);
+                        }
+                        if (currentPage >= totalPages - 2) {
+                          start = Math.max(2, totalPages - 3);
+                        }
+                        
+                        // Add ellipsis after first if needed
+                        if (start > 2) {
+                          pages.push('...');
+                        }
+                        
+                        // Add middle pages
+                        for (let i = start; i <= end; i++) {
+                          if (i > 1 && i < totalPages) {
+                            pages.push(i);
+                          }
+                        }
+                        
+                        // Add ellipsis before last if needed
+                        if (end < totalPages - 1) {
+                          pages.push('...');
+                        }
+                        
+                        // Always show last page if more than 1 page
+                        if (totalPages > 1) {
+                          pages.push(totalPages);
+                        }
+                        
+                        return pages.map((page, index) => {
+                          if (page === '...') {
+                            return (
+                              <span key={`ellipsis-${index}`} className="px-2 lg:px-4 py-1 lg:py-2 text-gray-500">
+                                ...
+                              </span>
+                            );
+                          }
+                          
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => {
+                                setFilters(prev => ({ ...prev, page }));
+                                // Scroll to top of property grid
+                                if (propertyGridRef.current) {
+                                  propertyGridRef.current.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }}
+                              className={`w-8 h-8 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base transition-all ${
+                                currentPage === page
+                                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                                  : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        });
+                      })()}
+                    </div>
+
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className={`flex items-center gap-1 lg:gap-2 px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base transition-all ${
+                        currentPage === totalPages
+                          ? "text-gray-400 cursor-not-allowed bg-gray-100"
+                          : "text-gray-700 hover:bg-gray-100 hover:shadow-md"
+                      }`}
+                    >
+                      <span className="hidden sm:inline">Next</span>
+                      <ChevronRight className="w-4 h-4 lg:w-5 lg:h-5" />
+                    </button>
+                  </nav>
+                  
+                  <div className="text-center mt-4 lg:mt-6 text-xs lg:text-sm text-gray-600">
+                    Page {currentPage} of {totalPages} • {formatNumber(totalResults)} properties total
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      )}
-    </div>
-  </div>
-</div>
+      </div>
 
       {/* Mobile Filters Modal */}
       {showMobileFilters && (
@@ -1940,8 +1752,6 @@ const handleSearch = (e) => {
           </div>
         </div>
       )}
-
-  
     </div>
   );
 };
