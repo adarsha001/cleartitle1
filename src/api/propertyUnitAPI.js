@@ -37,10 +37,28 @@ API.interceptors.response.use(
 // Property Unit API methods
 export const propertyUnitAPI = {
   // Get all property units with filters
-  getPropertyUnits: (params = {}) => {
-    return API.get('/property-units', { params });
-  },
-
+// Get all property units with filters
+getPropertyUnits: (params = {}) => {
+  // Clean up params - remove empty strings
+  const cleanParams = {};
+  Object.keys(params).forEach(key => {
+    if (params[key] !== '' && params[key] !== null && params[key] !== undefined) {
+      cleanParams[key] = params[key];
+    }
+  });
+  
+  console.log('API - Sending params:', cleanParams);
+  
+  return API.get('/property-units', { 
+    params: cleanParams,
+    paramsSerializer: {
+      indexes: null
+    }
+  }).then(response => {
+    console.log('API - Response data:', response.data);
+    return response;
+  });
+},
   // Get single property unit
   getPropertyUnit: (id) => {
     return API.get(`/property-units/${id}`);
@@ -85,5 +103,32 @@ export const propertyUnitAPI = {
   // Get my properties
   getMyProperties: () => {
     return API.get('/property-units/my-properties');
+  },
+
+  // Get featured property units
+ getFeaturedPropertyUnits: async (params = {}) => {
+  try {
+    console.log('getFeaturedPropertyUnits called with params:', params);
+    
+    // For featured endpoint, we don't send any parameters
+    // Remove all parameters or only send essential ones if backend expects them
+    const cleanParams = {};
+    
+    // Only include parameters that the backend actually accepts
+    // If backend doesn't accept any params, leave cleanParams empty
+    
+    console.log('Making request with cleaned params:', cleanParams);
+    
+    const response = await API.get('/property-units/featured', { 
+      // Remove params entirely or keep empty object
+      // params: cleanParams, // Comment this out if backend doesn't accept params
+    });
+    
+    console.log('Featured properties response:', response.data);
+    return response;
+  } catch (error) {
+    console.error('Error in getFeaturedPropertyUnits:', error.response?.data || error.message);
+    throw error;
   }
+}
 };
