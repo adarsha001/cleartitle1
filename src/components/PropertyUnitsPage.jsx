@@ -873,7 +873,7 @@ const PropertyUnitsPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b  from-gray-50 to-white ">
       {/* Clear Title Hero Section */}
       <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800">
         {/* Animated Background Grid */}
