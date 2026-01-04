@@ -50,7 +50,7 @@ export default function Home() {
       "Pets Allow", "Spa & Massage", "Electricity", "Gated Community",
       "Street Lamp", "Drainage", "Tennis Court", "Lift(s)", "Golf Course",
       "Jogging Track", "Club House", "Senior Citizen Siteout", "Squash Court",
-      "Yoga / Meditation Area", "Jacuzzi", "Mini Theatre"
+      "Yoga / Meditation Area", "bore water", "Mini Theatre"
     ],
     nearbyOptions: ["Hospital", "SuperMarket", "School", "Airport", "BusStop", "Pharmacy", "Metro"]
   };

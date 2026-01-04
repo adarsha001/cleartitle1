@@ -211,7 +211,7 @@ const [formData, setFormData] = useState({
   const unitFeatureOptions = [
     'Air Conditioning', 'Modular Kitchen', 'Wardrobes', 'Geyser',
     'Exhaust Fan', 'Chimney', 'Lighting', 'Ceiling Fans',
-    'Smart Home Automation', 'Central AC', 'Jacuzzi', 'Walk-in Closet',
+    'Smart Home Automation', 'Central AC', 'bore water', 'Walk-in Closet',
     'Study Room', 'Pooja Room', 'Utility Area', 'Servant Room',
     'Private Garden', 'Terrace', 'Balcony', 'Swimming Pool',
     'Video Door Phone', 'Security Alarm', 'Fire Safety', 'CCTV',

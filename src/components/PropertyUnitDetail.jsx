@@ -374,7 +374,7 @@ const featureIcons = {
   "Refrigerator": <Home className="w-5 h-5" />,
   "Dishwasher": <Utensils className="w-5 h-5" />,
   "Washing Machine": <Home className="w-5 h-5" />,
-  "Jacuzzi": <Droplets className="w-5 h-5" />,
+  "bore water": <Droplets className="w-5 h-5" />,
   "Shower Cubicle": <Droplets className="w-5 h-5" />,
   
   // Safety & Security
