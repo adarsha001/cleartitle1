@@ -113,7 +113,7 @@ export default function App() {
                 }
               />
      <Route
-                path="/add-property-unit"
+                path="/add-listing"
                 element={
                   <ProtectedRoute>
                     <PropertyUnitForm />
@@ -125,7 +125,7 @@ export default function App() {
 <Route path="/terms-and-conditions" element={<TermsAndConditionsClearTitle1 />} />
               <Route path="/property-units/:id" element={<PropertyUnitDetail />} /> 
               <Route path="/property-units" element={<PropertyUnitsPage />} /> 
-               <Route path="/add-listing" element={<PropertySelectionPage />} />
+               {/* <Route path="/add-listing" element={<PropertySelectionPage />} /> */}
               {/* Admin Routes */}
               <Route
                 path="/admin"

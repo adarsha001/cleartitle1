@@ -475,13 +475,13 @@ const PropertyUnitsPage = () => {
       filterKey: "isVerified",
       filterValue: "true"
     },
-    { 
-      label: "Featured", 
-      value: "featured", 
-      icon: <Star className="w-4 h-4" />,
-      filterKey: "isFeatured",
-      filterValue: "true"
-    },
+    // { 
+    //   label: "Featured", 
+    //   value: "featured", 
+    //   icon: <Star className="w-4 h-4" />,
+    //   filterKey: "isFeatured",
+    //   filterValue: "true"
+    // },
     { 
       label: "For Sale", 
       value: "sale", 
