@@ -1683,7 +1683,7 @@ const PropertyUnitsPage = () => {
   </div>
 </div>
       {/* Main Content */}
-  <div className="px-0 lg:px-4 py-4 lg:py-8">
+<div className="px-0 lg:px-4 py-4 lg:py-8">
   <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 max-w-[1920px] mx-auto">
     {/* Filters Sidebar - Desktop */}
     <div className={`hidden lg:block transition-all duration-300 ${
@@ -1763,33 +1763,8 @@ const PropertyUnitsPage = () => {
             </button>
           </div>
 
-          {/* View Toggle and Sort - Mobile */}
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-            <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-lg transition-all ${
-                  viewMode === "grid" 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
-                }`}
-                title="Grid View"
-              >
-                <Grid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 rounded-lg transition-all ${
-                  viewMode === "list" 
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
-                }`}
-                title="List View"
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-
+          {/* Sort Dropdown Only - Mobile (View Toggle Removed) */}
+          <div className="flex items-center justify-end pt-3 border-t border-gray-100">
             {/* Sort Dropdown - Mobile */}
             <div className="relative">
               <select
@@ -1915,7 +1890,7 @@ const PropertyUnitsPage = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* View Toggle - Desktop */}
+            {/* View Toggle - Desktop Only */}
             <div className="flex items-center bg-gray-100 rounded-xl p-1">
               <button
                 onClick={() => setViewMode("grid")}

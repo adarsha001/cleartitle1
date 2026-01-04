@@ -153,7 +153,7 @@ const fetchFeaturedProperties = async () => {
             </div>
 
             {/* View Mode Toggle */}
-            <div className="bg-white border-2 border-blue-600 rounded-xl p-2 inline-flex">
+            {/* <div className="bg-white border-2 border-blue-600 rounded-xl p-2 inline-flex">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
@@ -176,7 +176,7 @@ const fetchFeaturedProperties = async () => {
                 <List className="w-4 h-4" />
                 List View
               </button>
-            </div>
+            </div> */}
           </div>
 
           {/* Assurance Badges */}
