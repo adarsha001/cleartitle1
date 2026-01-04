@@ -883,7 +883,135 @@ const PropertyUnitsPage = () => {
             backgroundSize: '30px 30px'
           }}></div>
         </div>
+{/* Glowing Orbs */}
+        <div className="absolute top-10 left-4 w-48 h-48 sm:w-96 sm:h-96 bg-blue-400 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
+        <div className="absolute bottom-10 right-4 w-48 h-48 sm:w-96 sm:h-96 bg-purple-400 rounded-full filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
 
+        {/* Animated Clouds */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Cloud 1 - Fluffy irregular shape */}
+          <svg className="absolute top-10 w-32 sm:w-48 md:w-64 opacity-40" viewBox="0 0 250 80" style={{ left: '-15%' }}>
+            <defs>
+              <filter id="cloud-blur-1">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+              </filter>
+            </defs>
+            <g filter="url(#cloud-blur-1)">
+              <ellipse cx="60" cy="45" rx="45" ry="28" fill="white" opacity="0.7"/>
+              <ellipse cx="95" cy="38" rx="38" ry="25" fill="white" opacity="0.6"/>
+              <ellipse cx="125" cy="42" rx="35" ry="22" fill="white" opacity="0.65"/>
+              <ellipse cx="75" cy="52" rx="32" ry="20" fill="white" opacity="0.55"/>
+              <ellipse cx="105" cy="50" rx="40" ry="26" fill="white" opacity="0.6"/>
+              <ellipse cx="140" cy="48" rx="30" ry="18" fill="white" opacity="0.5"/>
+            </g>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="2000 0" dur="50s" repeatCount="indefinite"/>
+          </svg>
+
+          {/* Cloud 2 - Coming from right */}
+          <svg className="absolute top-24 w-40 sm:w-56 md:w-72 opacity-35" viewBox="0 0 280 90" style={{ right: '-20%' }}>
+            <defs>
+              <filter id="cloud-blur-2">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+              </filter>
+            </defs>
+            <g filter="url(#cloud-blur-2)">
+              <ellipse cx="65" cy="50" rx="50" ry="30" fill="white" opacity="0.65"/>
+              <ellipse cx="105" cy="42" rx="42" ry="26" fill="white" opacity="0.7"/>
+              <ellipse cx="140" cy="48" rx="45" ry="28" fill="white" opacity="0.6"/>
+              <ellipse cx="80" cy="58" rx="38" ry="24" fill="white" opacity="0.55"/>
+              <ellipse cx="115" cy="55" rx="36" ry="22" fill="white" opacity="0.6"/>
+              <ellipse cx="150" cy="52" rx="32" ry="20" fill="white" opacity="0.5"/>
+              <ellipse cx="95" cy="48" rx="28" ry="18" fill="white" opacity="0.55"/>
+            </g>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="-2200 0" dur="60s" repeatCount="indefinite"/>
+          </svg>
+
+          {/* Cloud 3 - Irregular fluffy */}
+          <svg className="absolute top-40 w-36 sm:w-52 md:w-68 opacity-38" viewBox="0 0 260 85" style={{ left: '-18%' }}>
+            <defs>
+              <filter id="cloud-blur-3">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" />
+              </filter>
+            </defs>
+            <g filter="url(#cloud-blur-3)">
+              <ellipse cx="70" cy="48" rx="48" ry="30" fill="white" opacity="0.68"/>
+              <ellipse cx="110" cy="40" rx="40" ry="24" fill="white" opacity="0.62"/>
+              <ellipse cx="140" cy="45" rx="38" ry="26" fill="white" opacity="0.58"/>
+              <ellipse cx="85" cy="55" rx="35" ry="22" fill="white" opacity="0.6"/>
+              <ellipse cx="120" cy="52" rx="42" ry="28" fill="white" opacity="0.65"/>
+              <ellipse cx="155" cy="50" rx="28" ry="18" fill="white" opacity="0.52"/>
+            </g>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="2100 0" dur="70s" repeatCount="indefinite"/>
+          </svg>
+
+          {/* Cloud 4 - Higher up */}
+          <svg className="absolute top-56 w-44 sm:w-60 md:w-76 opacity-32" viewBox="0 0 290 95" style={{ right: '-22%' }}>
+            <defs>
+              <filter id="cloud-blur-4">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" />
+              </filter>
+            </defs>
+            <g filter="url(#cloud-blur-4)">
+              <ellipse cx="75" cy="52" rx="52" ry="32" fill="white" opacity="0.66"/>
+              <ellipse cx="115" cy="45" rx="45" ry="28" fill="white" opacity="0.7"/>
+              <ellipse cx="150" cy="50" rx="48" ry="30" fill="white" opacity="0.63"/>
+              <ellipse cx="90" cy="60" rx="40" ry="25" fill="white" opacity="0.58"/>
+              <ellipse cx="125" cy="58" rx="38" ry="24" fill="white" opacity="0.62"/>
+            </g>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="-2300 0" dur="55s" repeatCount="indefinite"/>
+          </svg>
+        </div>
+
+        {/* Flying Birds */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Bird 1 */}
+          <svg className="absolute top-16 w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none" style={{ left: '-5%' }}>
+            <path d="M2 12 Q8 8 12 12 Q16 8 22 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.7">
+              <animate attributeName="d" values="M2 12 Q8 8 12 12 Q16 8 22 12;M2 12 Q8 16 12 12 Q16 16 22 12;M2 12 Q8 8 12 12 Q16 8 22 12" dur="0.5s" repeatCount="indefinite"/>
+            </path>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="1800 -30" dur="40s" repeatCount="indefinite"/>
+          </svg>
+
+          {/* Bird 2 */}
+          <svg className="absolute top-32 w-5 h-5 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" style={{ right: '-5%' }}>
+            <path d="M2 12 Q8 8 12 12 Q16 8 22 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.6">
+              <animate attributeName="d" values="M2 12 Q8 8 12 12 Q16 8 22 12;M2 12 Q8 16 12 12 Q16 16 22 12;M2 12 Q8 8 12 12 Q16 8 22 12" dur="0.4s" repeatCount="indefinite"/>
+            </path>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="-1900 -20" dur="45s" repeatCount="indefinite"/>
+          </svg>
+
+          {/* Bird 3 */}
+          <svg className="absolute top-20 w-5 h-5 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" style={{ left: '-5%' }}>
+            <path d="M2 12 Q8 8 12 12 Q16 8 22 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.5">
+              <animate attributeName="d" values="M2 12 Q8 8 12 12 Q16 8 22 12;M2 12 Q8 16 12 12 Q16 16 22 12;M2 12 Q8 8 12 12 Q16 8 22 12" dur="0.45s" repeatCount="indefinite"/>
+            </path>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="2000 -40" dur="52s" repeatCount="indefinite"/>
+          </svg>
+
+          {/* Bird 4 */}
+          <svg className="absolute top-28 w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 24 24" fill="none" style={{ right: '-5%' }}>
+            <path d="M2 12 Q8 8 12 12 Q16 8 22 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.65">
+              <animate attributeName="d" values="M2 12 Q8 8 12 12 Q16 8 22 12;M2 12 Q8 16 12 12 Q16 16 22 12;M2 12 Q8 8 12 12 Q16 8 22 12" dur="0.42s" repeatCount="indefinite"/>
+            </path>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="-1850 -25" dur="42s" repeatCount="indefinite"/>
+          </svg>
+
+          {/* Bird 5 */}
+          <svg className="absolute top-36 w-4 h-4 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" style={{ left: '-5%' }}>
+            <path d="M2 12 Q8 8 12 12 Q16 8 22 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.55">
+              <animate attributeName="d" values="M2 12 Q8 8 12 12 Q16 8 22 12;M2 12 Q8 16 12 12 Q16 16 22 12;M2 12 Q8 8 12 12 Q16 8 22 12" dur="0.48s" repeatCount="indefinite"/>
+            </path>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="1950 -35" dur="58s" repeatCount="indefinite"/>
+          </svg>
+
+          {/* Bird 6 */}
+          <svg className="absolute top-44 w-5 h-5 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" style={{ right: '-5%' }}>
+            <path d="M2 12 Q8 8 12 12 Q16 8 22 12" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.62">
+              <animate attributeName="d" values="M2 12 Q8 8 12 12 Q16 8 22 12;M2 12 Q8 16 12 12 Q16 16 22 12;M2 12 Q8 8 12 12 Q16 8 22 12" dur="0.46s" repeatCount="indefinite"/>
+            </path>
+            <animateTransform attributeName="transform" type="translate" from="0 0" to="-2000 -28" dur="48s" repeatCount="indefinite"/>
+          </svg>
+        </div>
         {/* Glowing Orbs */}
         <div className="absolute top-10 left-4 w-48 h-48 sm:w-96 sm:h-96 bg-blue-400 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
         <div className="absolute bottom-10 right-4 w-48 h-48 sm:w-96 sm:h-96 bg-purple-400 rounded-full filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
