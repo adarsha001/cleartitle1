@@ -117,12 +117,12 @@ const fetchFeaturedProperties = async () => {
         {/* Header Section */}
         <div className="text-center mb-12">
           {/* Premium Badge */}
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-6 py-3 rounded-full mb-6 shadow-lg">
+          {/* <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-6 py-3 rounded-full mb-6 shadow-lg">
             <Star className="w-5 h-5 fill-current" />
             <span className="text-sm font-semibold tracking-widest uppercase">
               Featured Properties
             </span>
-          </div>
+          </div> */}
 
           {/* Main Title */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 tracking-tight">
