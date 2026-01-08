@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import Footer from "./Footer";
 import FeaturedProperties from "./FeaturedProperties";
-import VerifiedProperties from "./VerifiedProperties";
+// import VerifiedProperties from "./VerifiedProperties";
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -910,7 +910,7 @@ export default function PropertyDetail() {
       </div>
 
       <FeaturedProperties/>
-      <VerifiedProperties/>
+      {/* <VerifiedProperties/> */}
       <Footer/>
     </div>
   );

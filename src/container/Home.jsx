@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import FeaturedProperties from '../newapproach/pages/FeaturedProperties';
-import PropertyList from '../newapproach/pages/PropertyList';
-import QualityAssurance from '../newapproach/pages/QualityAsurence';
-import Footer from '../newapproach/pages/Footer';
+import FeaturedProperties from '../pages/FeaturedProperties';
+import PropertyList from '../pages/PropertyList';
+import QualityAssurance from '../pages/QualityAsurence';
+import Footer from '../pages/Footer';
 import PropertyUnitsPage from '../newapproach/newapproachpropertyunit';
 import ServiceCategoriesScroll from '../newapproach/ServiceCategoriesScroll';
 import CarouselSlider from '../newapproach/CarouselSlider';
@@ -59,22 +59,22 @@ const Home = () => {
   return (
     <div className="relative">
 
-<div className='block max-w-full sm:flex '>
+<div className=' max-w-full sm:flex '>
 
 <div className='  sm:w-full'>
   
 <CarouselSlider/>
 
-<div className='sm:hidden'>
+{/* <div className='sm:hidden'>
 
   <ServiceCategoriesScroll/>
-  </div>
+  </div> */}
 
 </div>
-
+{/* 
 <div className='hidden w-0 sm:block sm:w-4xl bg-amber-400'>
 <ServicesCarousel/> 
-</div>
+</div> */}
 </div>
 
 
@@ -132,7 +132,7 @@ const Home = () => {
           </section>
         );
       })}
-{/* <ServicesSection/> */}
+<ServicesSection/>
       {/* Footer stays at bottom (not in scroll sections) */}
       <Footer />
     </div>
