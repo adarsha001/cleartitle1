@@ -3,7 +3,11 @@ import FeaturedProperties from '../pages/FeaturedProperties';
 import PropertyList from '../pages/PropertyList';
 import QualityAssurance from '../pages/QualityAsurence';
 import Footer from '../pages/Footer';
-import PropertyUnitsPage from '../components/PropertyUnitsPage';
+import PropertyUnitsPage from '../newapproach/newapproachpropertyunit';
+import ServiceCategoriesScroll from '../newapproach/ServiceCategoriesScroll';
+import CarouselSlider from '../newapproach/CarouselSlider';
+import ServicesSection from '../newapproach/ServicesSection';
+import ServicesCarousel from '../newapproach/ServicesCarousel';
 
 const Home = () => {
   const [currentSection, setCurrentSection] = useState(0);
@@ -11,9 +15,11 @@ const Home = () => {
 
   const sections = [
     // { name: 'Properties', component: PropertyList },
+
     { name: 'Units', component: PropertyUnitsPage },
     { name: 'Featured', component: FeaturedProperties },
     { name: 'Quality', component: QualityAssurance },
+    // {name :'Category',component:ServiceCategoriesScroll}
   ];
 
   // 🟦 Intersection Observer (same logic from your working version)
@@ -52,6 +58,25 @@ const Home = () => {
 
   return (
     <div className="relative">
+
+<div className='block max-w-full sm:flex '>
+
+<div className='  sm:w-full'>
+  
+<CarouselSlider/>
+
+<div className='sm:hidden'>
+
+  <ServiceCategoriesScroll/>
+  </div>
+
+</div>
+
+<div className='hidden w-0 sm:block sm:w-4xl bg-amber-400'>
+<ServicesCarousel/> 
+</div>
+</div>
+
 
       {/* Navigation Arrows & Dots */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center space-y-3">
@@ -107,7 +132,7 @@ const Home = () => {
           </section>
         );
       })}
-
+<ServicesSection/>
       {/* Footer stays at bottom (not in scroll sections) */}
       <Footer />
     </div>
