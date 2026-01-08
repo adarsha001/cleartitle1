@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import FeaturedProperties from '../pages/FeaturedProperties';
-import PropertyList from '../pages/PropertyList';
-import QualityAssurance from '../pages/QualityAsurence';
-import Footer from '../pages/Footer';
+import FeaturedProperties from '../newapproach/pages/FeaturedProperties';
+import PropertyList from '../newapproach/pages/PropertyList';
+import QualityAssurance from '../newapproach/pages/QualityAsurence';
+import Footer from '../newapproach/pages/Footer';
 import PropertyUnitsPage from '../newapproach/newapproachpropertyunit';
 import ServiceCategoriesScroll from '../newapproach/ServiceCategoriesScroll';
 import CarouselSlider from '../newapproach/CarouselSlider';
@@ -132,7 +132,7 @@ const Home = () => {
           </section>
         );
       })}
-<ServicesSection/>
+{/* <ServicesSection/> */}
       {/* Footer stays at bottom (not in scroll sections) */}
       <Footer />
     </div>

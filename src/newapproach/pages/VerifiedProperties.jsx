@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getProperties } from "../api/axios"
-import PropertyCard from "../components/PropertyCard";
+import { getProperties } from "../../api/axios"
+import PropertyCard from "../../components/PropertyCard";
 import { ShieldCheck, Building2, Home, CheckCircle, Award, ArrowRight, FileCheck, Lock } from "lucide-react";
 
 export default function VerifiedProperties() {
