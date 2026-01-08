@@ -132,7 +132,7 @@ const Home = () => {
           </section>
         );
       })}
-<ServicesSection/>
+{/* <ServicesSection/> */}
       {/* Footer stays at bottom (not in scroll sections) */}
       <Footer />
     </div>
