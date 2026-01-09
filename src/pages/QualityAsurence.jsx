@@ -89,7 +89,7 @@ export default function QualityAssuranceSection() {
   const propertyTypes = [
     {
       title: 'Residential',
-      items: ['Apartments', 'Villas', 'Independent', 'Studio', 'Penthouses', 'Duplex', 'Row Houses'],
+      items: ['Apartments', 'Villas', 'Independent', 'Studio', 'Penthouses', 'Duplex', 'Pg house'],
       color: 'border-blue-600',
       bgColor: 'bg-gradient-to-br from-blue-50 to-white',
       icon: '🏠',
@@ -257,7 +257,7 @@ export default function QualityAssuranceSection() {
 
       {/* WhatsApp Button - Mobile Optimized */}
       <a 
-        href="https://wa.me/917788999022" 
+        href="https://wa.me/9190190 67239" 
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-4 left-4 z-50 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"

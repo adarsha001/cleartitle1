@@ -89,7 +89,7 @@ const PropertyUnitsPage = () => {
     { id: "Studio", name: "Studio", icon: <Maximize2 className="w-5 h-5" />, count: 0 },
     { id: "Penthouse", name: "Penthouses", icon: <Layers className="w-5 h-5" />, count: 0 },
     { id: "Duplex", name: "Duplex", icon: <Building2 className="w-5 h-5" />, count: 0 },
-    { id: "Row House", name: "Row Houses", icon: <BuildingIcon className="w-5 h-5" />, count: 0 },
+    { id: "Row House", name: "Pg house", icon: <BuildingIcon className="w-5 h-5" />, count: 0 },
     { id: "Plot", name: "Plots", icon: <Ruler className="w-5 h-5" />, count: 0 },
     { id: "Commercial Space", name: "Commercial", icon: <Building2 className="w-5 h-5" />, count: 0 },
   ]);

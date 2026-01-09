@@ -392,7 +392,7 @@ export default function EnhancedFooter() {
         <li className="flex items-center gap-3">
           <Phone className="w-5 h-5 text-green-300" />
           <a 
-            href="tel:+917788999022" 
+            href="tel:+9190190 67239" 
             className="text-blue-100 hover:text-white transition-colors"
           >
             +91 77889 99022

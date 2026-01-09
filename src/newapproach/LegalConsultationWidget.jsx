@@ -60,9 +60,9 @@ const LegalConsultationForm = () => {
   const contactMethods = [
     {
       type: 'phone',
-      value: '+917788999022',
+      value: '+9190190 67239',
       displayName: 'Primary Phone',
-      url: 'tel:+917788999022',
+      url: 'tel:+9190190 67239',
       icon: <Phone className="w-5 h-5" />,
       label: 'Call Now',
       description: 'Speak directly with our legal team',
@@ -70,9 +70,9 @@ const LegalConsultationForm = () => {
     },
     {
       type: 'whatsapp',
-      value: '+917788999022',
+      value: '+9190190 67239',
       displayName: 'WhatsApp',
-      url: 'https://wa.me/917788999022',
+      url: 'https://wa.me/9190190 67239',
       icon: <MessageCircle className="w-5 h-5" />,
       label: 'WhatsApp',
       description: 'Instant chat with legal experts',
