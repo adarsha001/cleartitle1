@@ -728,18 +728,18 @@ const PropertyUnitsPage = () => {
     </div>
   );
 
-  // Render loading skeleton
+  // Render loading skeleton - Updated for mobile 2-column layout
   const renderSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
       {[...Array(8)].map((_, i) => (
         <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
-          <div className="h-48 bg-gray-200"></div>
-          <div className="p-4 space-y-3">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-            <div className="flex gap-4">
-              <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-36 md:h-48 bg-gray-200"></div>
+          <div className="p-3 md:p-4 space-y-2 md:space-y-3">
+            <div className="h-3 md:h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-2.5 md:h-3 bg-gray-200 rounded w-1/2"></div>
+            <div className="flex gap-2 md:gap-4">
+              <div className="h-2.5 md:h-3 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-2.5 md:h-3 bg-gray-200 rounded w-1/4"></div>
             </div>
           </div>
         </div>
@@ -1194,12 +1194,13 @@ const PropertyUnitsPage = () => {
                   )}
                 </div>
               ) : viewMode === "grid" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                // UPDATED: Mobile 2-column, Desktop 4-column layout
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                   {propertyUnits.map((property) => (
                     <PropertyUnitCard 
                       key={property._id}
                       propertyUnit={property} 
-                      viewMode="grid"
+                      viewMode="compact" // New view mode for mobile
                     />
                   ))}
                 </div>
