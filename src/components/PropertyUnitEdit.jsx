@@ -142,7 +142,7 @@ const [formData, setFormData] = useState({
   // Available options
   const propertyTypes = [
     'Apartment', 'Villa', 'Independent House', 'Studio', 
-    'Penthouse', 'Duplex', 'Row House', 'Plot', 'Commercial Space'
+    'Penthouse', 'Duplex', 'Pg house', 'Plot', 'Commercial Space'
   ];
 
   const listingTypes = [

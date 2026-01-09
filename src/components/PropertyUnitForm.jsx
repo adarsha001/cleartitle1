@@ -78,7 +78,7 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   // Memoized options arrays to prevent re-renders
   const propertyTypes = useMemo(() => [
     "Apartment", "Villa", "Independent House", "Studio", 
-    "Penthouse", "Duplex", "Row House", "Plot", "Commercial Space"
+    "Penthouse", "Duplex", "Pg house", "Plot", "Commercial Space"
   ], []);
 
   const furnishingOptions = useMemo(() => ["unfurnished", "semi-furnished", "fully-furnished"], []);

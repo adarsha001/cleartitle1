@@ -138,7 +138,7 @@ const PropertyUnitCreate = ({ onSubmit, onCancel }) => {
 
   const propertyTypes = [
     'Apartment', 'Villa', 'Plot', 'Commercial Space', 
-    'Independent House', 'Penthouse', 'Duplex', 'Row House', 'Studio'
+    'Independent House', 'Penthouse', 'Duplex', 'Pg house', 'Studio'
   ];
 
   const listingTypes = [

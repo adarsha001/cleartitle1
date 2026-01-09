@@ -89,7 +89,7 @@ const PropertyUnitsPage = () => {
     { id: "Studio", name: "Studio", icon: <Maximize2 className="w-5 h-5" />, count: 0 },
     { id: "Penthouse", name: "Penthouses", icon: <Layers className="w-5 h-5" />, count: 0 },
     { id: "Duplex", name: "Duplex", icon: <Building2 className="w-5 h-5" />, count: 0 },
-    { id: "Row House", name: "Pg house", icon: <BuildingIcon className="w-5 h-5" />, count: 0 },
+    { id: "Pg house", name: "Pg house", icon: <BuildingIcon className="w-5 h-5" />, count: 0 },
     { id: "Plot", name: "Plots", icon: <Ruler className="w-5 h-5" />, count: 0 },
     { id: "Commercial Space", name: "Commercial", icon: <Building2 className="w-5 h-5" />, count: 0 },
   ]);
@@ -202,7 +202,7 @@ const PropertyUnitsPage = () => {
       "Studio": units.filter(p => p.propertyType === "Studio").length,
       "Penthouse": units.filter(p => p.propertyType === "Penthouse").length,
       "Duplex": units.filter(p => p.propertyType === "Duplex").length,
-      "Row House": units.filter(p => p.propertyType === "Row House").length,
+      "Pg house": units.filter(p => p.propertyType === "Pg house").length,
       "Plot": units.filter(p => p.propertyType === "Plot").length,
       "Commercial Space": units.filter(p => p.propertyType === "Commercial Space").length,
     };
