@@ -8,6 +8,7 @@ import ServiceCategoriesScroll from '../newapproach/ServiceCategoriesScroll';
 import CarouselSlider from '../newapproach/CarouselSlider';
 import ServicesSection from '../newapproach/ServicesSection';
 import ServicesCarousel from '../newapproach/ServicesCarousel';
+import LegalConsultationWidget from '../newapproach/LegalConsultationWidget';
 
 const Home = () => {
   const [currentSection, setCurrentSection] = useState(0);
@@ -134,6 +135,7 @@ const Home = () => {
       })}
 {/* <ServicesSection/> */}
       {/* Footer stays at bottom (not in scroll sections) */}
+      {/* <LegalConsultationWidget/> */}
       <Footer />
     </div>
   );
