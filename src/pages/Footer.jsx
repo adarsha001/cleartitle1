@@ -5,7 +5,7 @@ export default function EnhancedFooter() {
   return (
     <footer className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-indigo-950 to-purple-950 text-white">
       {/* Animated Background Grid */}
-      <div className="absolute inset-0 opacity-20">
+      <div className="absolute inset-0  opacity-20">
         <div className="absolute inset-0" style={{
           backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
           backgroundSize: '30px 30px'
@@ -13,7 +13,7 @@ export default function EnhancedFooter() {
       </div>
 
       {/* Glowing Orbs */}
-      <div className="absolute top-4 sm:top-8 md:top-10 left-2 sm:left-4 md:left-6 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-blue-400 rounded-full filter blur-3xl opacity-25 sm:opacity-30 animate-pulse"></div>
+      <div className="absolute top-4 sm:top-8 md:top-10 left-2 sm:left-4 md:left-6 w-32 h-32 sm:w-32 sm:h-32 md:w-32 md:h-32 bg-blue-400 rounded-full filter blur-3xl opacity-25 sm:opacity-30 animate-pulse"></div>
       <div className="absolute bottom-4 sm:bottom-8 md:bottom-10 right-2 sm:right-4 md:right-6 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-purple-400 rounded-full filter blur-3xl opacity-25 sm:opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
 
       {/* Animated Clouds */}

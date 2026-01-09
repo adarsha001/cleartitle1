@@ -16,7 +16,6 @@ const Home = () => {
 
   const sections = [
     // { name: 'Properties', component: PropertyList },
-
     { name: 'Units', component: PropertyUnitsPage },
     { name: 'Featured', component: FeaturedProperties },
     { name: 'Quality', component: QualityAssurance },
@@ -59,30 +58,21 @@ const Home = () => {
 
   return (
     <div className="relative">
+      <div className='max-w-full sm:flex'>
+        <div className='sm:w-full'>
+          <CarouselSlider/>
+          {/* <div className='sm:hidden'>
+            <ServiceCategoriesScroll/>
+          </div> */}
+        </div>
+        {/* <div className='hidden w-0 sm:block sm:w-4xl bg-amber-400'>
+          <ServicesCarousel/> 
+        </div> */}
+      </div>
 
-<div className=' max-w-full sm:flex '>
-
-<div className='  sm:w-full'>
-  
-<CarouselSlider/>
-
-{/* <div className='sm:hidden'>
-
-  <ServiceCategoriesScroll/>
-  </div> */}
-
-</div>
-{/* 
-<div className='hidden w-0 sm:block sm:w-4xl bg-amber-400'>
-<ServicesCarousel/> 
-</div> */}
-</div>
-
-
-      {/* Navigation Arrows & Dots */}
-      <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center space-y-3">
-
-        {/* Up Arrow
+      {/* Navigation Arrows & Dots - Hidden on small screens, visible from md */}
+      <div className="hidden md:flex fixed right-4 top-1/2 -translate-y-1/2 z-50 flex-col items-center space-y-3">
+        {/* Up Arrow (optional - uncomment if needed)
         <button
           onClick={scrollPrev}
           className="p-2 rounded-full bg-gray-100 shadow hover:bg-gray-200"
@@ -104,7 +94,7 @@ const Home = () => {
           ))}
         </div>
 
-        {/* Down Arrow
+        {/* Down Arrow (optional - uncomment if needed)
         <button
           onClick={scrollNext}
           className="p-2 rounded-full bg-gray-100 shadow hover:bg-gray-200"
@@ -113,8 +103,8 @@ const Home = () => {
         </button> */}
       </div>
 
-      {/* Progress Display */}
-      {/* <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow z-50">
+      {/* Progress Display (optional - uncomment if needed)
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow z-50">
         <span className="text-sm font-medium">
           {sections[currentSection].name} ({currentSection + 1}/{sections.length})
         </span>
@@ -133,7 +123,8 @@ const Home = () => {
           </section>
         );
       })}
-{/* <ServicesSection/> */}
+      
+      {/* <ServicesSection/> */}
       {/* Footer stays at bottom (not in scroll sections) */}
       {/* <LegalConsultationWidget/> */}
       <Footer />
