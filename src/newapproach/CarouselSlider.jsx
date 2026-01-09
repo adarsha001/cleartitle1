@@ -172,7 +172,7 @@ const ImprovedCarousel = () => {
             ))}
 
             {/* Mobile Navigation Arrows - Always visible */}
-            <div className="md:hidden absolute inset-y-0 flex items-center justify-between w-full px-3 z-10">
+            {/* <div className="md:hidden absolute inset-y-0 flex items-center justify-between w-full px-3 z-10">
               <button
                 onClick={goToPrev}
                 className="w-12 h-12 bg-white/20 backdrop-blur-md hover:bg-white/30 border border-white/30
@@ -192,7 +192,7 @@ const ImprovedCarousel = () => {
               >
                 <ChevronRight className="w-6 h-6 text-white" />
               </button>
-            </div>
+            </div> */}
 
             {/* Desktop Navigation Arrows */}
             <button
