@@ -65,10 +65,10 @@ export default function PropertyUnitDetail() {
   
   // State for mobile expand/collapse
   const [expandedSections, setExpandedSections] = useState({
-    features: false,
-    specifications: false,
-    amenities: false,
-    buildingDetails: false
+    features: true,
+    specifications: true,
+    amenities: true,
+    buildingDetails: true
   });
 
   // Toggle section for mobile
@@ -1052,7 +1052,7 @@ export default function PropertyUnitDetail() {
                 
                 <div className={`${expandedSections.features ? 'block' : 'hidden'} sm:block px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
                   {/* Mobile: Compact grid with 5 items per row */}
-                  <div className="grid grid-cols-5 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
+                  <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
                     {safeUnitFeatures.map((feature, index) => (
                       <div
                         key={index}
