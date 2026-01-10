@@ -99,11 +99,11 @@ export default function Navbar() {
             </Link>
 
             <div className="hidden md:flex items-center space-x-4">
-              <Link to="/" className="text-gray-700 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
+              <Link to="/" className="text-gray-50 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
                 Properties
               </Link>
 
-              <Link to="/featured" className="text-gray-700 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
+              <Link to="/featured" className="text-gray-50 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
                 Featured
               </Link>
 
@@ -130,7 +130,7 @@ export default function Navbar() {
 
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <Link to="/profile" className="text-gray-700 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
+                  <Link to="/profile" className="text-gray-50 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
                     Profile
                   </Link>
 
@@ -140,14 +140,14 @@ export default function Navbar() {
 
                   <button
                     onClick={handleLogout}
-                    className="text-gray-700 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition"
+                    className="text-gray-50 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition"
                   >
                     Logout
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center space-x-4">
-                  <Link to="/login" className="text-gray-700 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
+                  <Link to="/login" className="text-gray-50 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
                     Login
                   </Link>
                   <Link
