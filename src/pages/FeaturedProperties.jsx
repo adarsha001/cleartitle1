@@ -4,32 +4,22 @@ import {
   Star, 
   CheckCircle2, 
   Shield, 
-  Grid, 
-  List,
   AlertCircle,
-  Home,
-  TrendingUp
+  Home
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
 
-// Main Component
 export default function FeaturedProperties() {
   const [propertyUnits, setPropertyUnits] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState("grid");
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Check if mobile on mount and resize
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -63,27 +53,78 @@ export default function FeaturedProperties() {
     fetchFeaturedProperties();
   }, []);
 
-  // Retry loading
   const handleRetry = () => {
     fetchFeaturedProperties();
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center py-12">
-        <div className="text-center px-4">
-          <div className="inline-block w-12 h-12 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mb-3" />
-          <p className="text-blue-600 tracking-wide uppercase text-xs md:text-sm font-semibold">
-            Loading Featured Properties
-          </p>
-          <p className="text-gray-500 text-xs mt-1">Please wait...</p>
+  // Loading skeleton for mobile (2 columns)
+  const renderSkeleton = () => (
+    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center mb-4 animate-pulse">
+            <div className="bg-gradient-to-r from-yellow-200 to-yellow-300 w-24 h-7 rounded-full"></div>
+          </div>
+
+          <div className="space-y-2 mb-4">
+            <div className="h-8 md:h-10 bg-gradient-to-r from-blue-200 to-indigo-300 rounded-lg w-3/4 mx-auto"></div>
+            <div className="h-4 bg-gradient-to-r from-blue-100 to-indigo-200 rounded-lg w-1/2 mx-auto"></div>
+          </div>
+          
+          <div className="flex items-center justify-center gap-2 md:gap-3 mb-4 animate-pulse">
+            <div className="w-8 md:w-20 h-0.5 bg-gradient-to-r from-blue-200 to-transparent" />
+            <div className="w-4 h-4 md:w-5 md:h-5 bg-gradient-to-r from-blue-300 to-indigo-400 rounded-full" />
+            <div className="w-8 md:w-20 h-0.5 bg-gradient-to-l from-blue-200 to-transparent" />
+          </div>
+
+          <div className="space-y-2 mb-4 max-w-2xl mx-auto">
+            <div className="h-3 bg-gradient-to-r from-blue-100 to-indigo-200 rounded w-full"></div>
+            <div className="h-3 bg-gradient-to-r from-blue-100 to-indigo-200 rounded w-5/6 mx-auto"></div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 max-w-4xl mx-auto">
+            {[1, 2, 3, 4].map((i) => (
+              <div 
+                key={i}
+                className="bg-gradient-to-r from-blue-50 to-indigo-100 h-10 rounded-lg animate-pulse"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              ></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile: 2 columns, Desktop: 3 columns */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div 
+              key={i}
+              className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl overflow-hidden animate-pulse"
+              style={{ animationDelay: `${i * 0.1}s` }}
+            >
+              <div className="h-40 md:h-48 bg-gradient-to-r from-blue-200 to-indigo-300"></div>
+              <div className="p-3 md:p-4 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1.5 flex-1">
+                    <div className="h-3 md:h-4 bg-gradient-to-r from-blue-200 to-indigo-300 rounded w-3/4"></div>
+                    <div className="h-2.5 md:h-3 bg-gradient-to-r from-blue-100 to-indigo-200 rounded w-1/2"></div>
+                  </div>
+                  <div className="h-4 md:h-6 bg-gradient-to-r from-blue-200 to-indigo-300 rounded-full w-8 md:w-12"></div>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <div className="h-2.5 md:h-3 bg-gradient-to-r from-blue-100 to-indigo-200 rounded w-full"></div>
+                  <div className="h-2.5 md:h-3 bg-gradient-to-r from-blue-100 to-indigo-200 rounded w-5/6"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Error state
+  if (loading) return renderSkeleton();
+
   if (error) {
     return (
       <div className="min-h-[60vh] bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center py-12">
@@ -104,7 +145,6 @@ export default function FeaturedProperties() {
     );
   }
 
-  // Empty state
   if (propertyUnits.length === 0) {
     return (
       <div className="bg-gradient-to-br from-blue-50 to-gray-50 py-12">
@@ -126,75 +166,38 @@ export default function FeaturedProperties() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 md:py-12">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Header Section - Compact */}
-        <div className="text-center mb-8">
-          {/* Premium Badge - Compact */}
-          <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-4 py-2 rounded-full mb-4 md:mb-6 shadow-sm">
-            <Star className="w-4 h-4 fill-current" />
+        {/* Header Section */}
+        <div className="text-center mb-6 md:mb-8">
+          {/* Premium Badge */}
+          <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-3 py-1.5 md:px-4 md:py-2 rounded-full mb-3 md:mb-4 shadow-sm">
+            <Star className="w-3.5 h-3.5 md:w-4 md:h-4 fill-current" />
             <span className="text-xs font-semibold tracking-wider uppercase">
               Featured
             </span>
           </div>
 
-          {/* Main Title - Responsive */}
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3 tracking-tight">
+          {/* Main Title */}
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
             <span className="text-blue-600">Featured</span>{" "}
             <span className="text-gray-800">Properties</span>
           </h1>
           
-          {/* Decorative Line - Responsive */}
-          <div className="flex items-center justify-center gap-2 md:gap-3 mb-4">
-            <div className="w-12 md:w-20 h-0.5 bg-gradient-to-r from-blue-600 to-transparent" />
-            <Building2 className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
-            <div className="w-12 md:w-20 h-0.5 bg-gradient-to-l from-blue-600 to-transparent" />
+          {/* Decorative Line */}
+          <div className="flex items-center justify-center gap-2 md:gap-3 mb-3 md:mb-4">
+            <div className="w-8 md:w-20 h-0.5 bg-gradient-to-r from-blue-600 to-transparent" />
+            <Building2 className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" />
+            <div className="w-8 md:w-20 h-0.5 bg-gradient-to-l from-blue-600 to-transparent" />
           </div>
 
-          {/* Subtitle - Responsive */}
-          <p className="text-gray-700 text-sm md:text-base max-w-2xl mx-auto leading-relaxed mb-4 md:mb-6">
+          {/* Subtitle */}
+          <p className="text-gray-700 text-xs md:text-base max-w-2xl mx-auto leading-relaxed mb-3 md:mb-4">
             Handpicked properties with verified documentation and premium quality.
           </p>
 
-          {/* Stats - Compact Grid */}
-          <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-6 mb-6">
-            {/* Total Units Count */}
-            <div className="bg-white border border-blue-600 px-4 py-2 rounded-xl shadow-sm w-full md:w-auto">
-              <div className="text-xl md:text-2xl font-bold text-blue-600">{propertyUnits.length}</div>
-              <div className="text-xs font-semibold text-gray-900 uppercase tracking-wider">
-                Featured Properties
-              </div>
-            </div>
-
-            {/* View Mode Toggle - Compact */}
-            {/* <div className="bg-white border border-blue-600 rounded-xl p-1 inline-flex w-full md:w-auto">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`px-4 py-1.5 md:px-5 md:py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-xs md:text-sm ${
-                  viewMode === "grid" 
-                    ? "bg-blue-600 text-white shadow-sm" 
-                    : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
-                }`}
-              >
-                <Grid className="w-3.5 h-3.5" />
-                Grid
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`px-4 py-1.5 md:px-5 md:py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-xs md:text-sm ${
-                  viewMode === "list" 
-                    ? "bg-blue-600 text-white shadow-sm" 
-                    : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
-                }`}
-              >
-                <List className="w-3.5 h-3.5" />
-                List
-              </button>
-            </div> */}
-          </div>
-
-          {/* Assurance Badges - Responsive Grid */}
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 max-w-4xl mx-auto">
+          {/* Assurance Badges - Hide on mobile to save space */}
+          <div className="hidden md:grid md:grid-cols-4 gap-2 md:gap-3 max-w-4xl mx-auto">
             {[
               { icon: Shield, text: "Verified Title", color: "blue" },
               { icon: CheckCircle2, text: "Approved", color: "green" },
@@ -229,40 +232,56 @@ export default function FeaturedProperties() {
           </div>
         </div>
 
-        {/* Results Summary - Compact */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 bg-white p-3 md:p-4 rounded-xl shadow-sm">
+        {/* Results Summary - Compact for mobile */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 bg-white p-3 rounded-xl shadow-sm">
           <div className="mb-2 md:mb-0">
-            <h2 className="text-lg md:text-xl font-bold text-gray-900">
+            <h2 className="text-base md:text-xl font-bold text-gray-900">
               Featured Properties
             </h2>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 text-xs md:text-sm">
               Showing {propertyUnits.length} premium properties
             </p>
           </div>
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              {viewMode === "grid" ? "Grid View" : "List View"}
-            </span>
-            <span className="text-xs text-gray-500 hidden md:inline">
-              Sorted by: Featured
+              Premium Selection
             </span>
           </div>
         </div>
 
-        {/* Property Units Display - Responsive Grid */}
+        {/* Property Units Display - Mobile: 2 columns, Desktop: 3 columns */}
         <div className="mb-8">
           {propertyUnits.length > 0 ? (
-            <div className={
-              viewMode === "grid" 
-                ? `grid gap-4 md:gap-6 ${isMobile ? "grid-cols-1" : "md:grid-cols-2 lg:grid-cols-3"}` 
-                : "space-y-4"
-            }>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {propertyUnits.map((unit, index) => (
-                <PropertyUnitCard 
-                  key={unit._id || index} 
-                  propertyUnit={unit} 
-                  viewMode={isMobile ? "compact" : viewMode}
-                />
+                <div key={unit._id || index} className="relative group">
+                  {/* Featured Badge */}
+                  <div className="absolute top-1.5 left-1.5 z-10">
+                    <span className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full flex items-center gap-0.5 md:gap-1 shadow-sm">
+                      <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" />
+                      <span className="hidden xs:inline">FEATURED</span>
+                      <span className="xs:hidden">PREMIUM</span>
+                    </span>
+                  </div>
+                  
+                  {/* Verification Badge */}
+                  {unit.isVerified && (
+                    <div className="absolute top-1.5 right-1.5 z-10">
+                      <span className="bg-white/90 backdrop-blur-sm text-green-700 text-[10px] md:text-xs font-medium px-1.5 py-0.5 md:px-2 md:py-1 rounded-full border border-green-200 flex items-center gap-0.5 md:gap-1 shadow-sm">
+                        <CheckCircle2 className="w-2.5 h-2.5 md:w-3 md:h-3 text-green-600" />
+                        <span className="hidden xs:inline">Verified</span>
+                        <span className="xs:hidden">✓</span>
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="group-hover:shadow-md transition-all duration-300">
+                    <PropertyUnitCard 
+                      propertyUnit={unit} 
+                      viewMode="compact"
+                    />
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
@@ -283,40 +302,6 @@ export default function FeaturedProperties() {
             </div>
           )}
         </div>
-
-        {/* CTA Section - Compact */}
-        {/* <div className="mt-8 md:mt-12 text-center border-t border-blue-100 pt-8">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 md:p-6 text-white max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-1.5 bg-yellow-400 text-gray-900 px-3 py-1.5 rounded-full mb-3 shadow-sm">
-              <TrendingUp className="w-4 h-4 fill-current" />
-              <span className="text-xs font-semibold">WHY CHOOSE FEATURED?</span>
-            </div>
-            
-            <h3 className="text-lg md:text-xl font-bold mb-3">Premium Quality Assurance</h3>
-            <p className="text-blue-100 text-sm mb-4 max-w-2xl mx-auto">
-              Every featured property undergoes verification and offers exceptional value with complete peace of mind.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3 max-w-3xl mx-auto mb-4">
-              {[
-                "✓ Verified & Approved",
-                "✓ Premium Quality", 
-                "✓ Complete Docs"
-              ].map((feature, index) => (
-                <div key={index} className="flex items-center gap-2 bg-blue-800/50 px-3 py-2 rounded-lg justify-center">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-yellow-400" />
-                  <span className="text-xs font-medium">{feature}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-4 pt-4 border-t border-blue-500">
-              <p className="text-blue-200 text-xs">
-                All featured properties are handpicked by our real estate experts.
-              </p>
-            </div>
-          </div>
-        </div> */}
       </div>
     </div>
   );

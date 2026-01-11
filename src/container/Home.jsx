@@ -1,115 +1,24 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import FeaturedProperties from '../pages/FeaturedProperties';
-import PropertyList from '../pages/PropertyList';
 import QualityAssurance from '../pages/QualityAsurence';
 import Footer from '../pages/Footer';
 import PropertyUnitsPage from '../newapproach/newapproachpropertyunit';
-import ServiceCategoriesScroll from '../newapproach/ServiceCategoriesScroll';
-import CarouselSlider from '../newapproach/CarouselSlider';
-import ServicesSection from '../newapproach/ServicesSection';
-import ServicesCarousel from '../newapproach/ServicesCarousel';
-import LegalConsultationWidget from '../newapproach/LegalConsultationWidget';
+import NewlyLaunchedProperties from '../newapproach/NewlyLaunchedProperties';
+import PossessionTimeline from '../newapproach/PossessionTimeline';
 
 const Home = () => {
-  const [currentSection, setCurrentSection] = useState(0);
   const sectionRefs = useRef([]);
 
   const sections = [
-    // { name: 'Properties', component: PropertyList },
-    { name: 'Units', component: PropertyUnitsPage },
+    { name: 'All Properties', component: PropertyUnitsPage },
+    { name: 'Newly Launched', component: NewlyLaunchedProperties },
     { name: 'Featured', component: FeaturedProperties },
+    { name: 'Possession Timeline', component: PossessionTimeline },
     { name: 'Quality', component: QualityAssurance },
-    // {name :'Category',component:ServiceCategoriesScroll}
   ];
-
-  // 🟦 Intersection Observer (same logic from your working version)
-  useEffect(() => {
-    const observerOptions = {
-      root: null,
-      rootMargin: '-50% 0px -50% 0px', // focused on center
-      threshold: 0
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const index = sectionRefs.current.indexOf(entry.target);
-          if (index !== -1) setCurrentSection(index);
-        }
-      });
-    }, observerOptions);
-
-    sectionRefs.current.forEach((ref) => ref && observer.observe(ref));
-
-    return () => {
-      sectionRefs.current.forEach((ref) => ref && observer.unobserve(ref));
-    };
-  }, []);
-
-  const scrollToSection = (index) => {
-    sectionRefs.current[index]?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  };
-
-  const scrollNext = () => scrollToSection((currentSection + 1) % sections.length);
-  const scrollPrev = () => scrollToSection(currentSection === 0 ? sections.length - 1 : currentSection - 1);
 
   return (
     <div className="relative">
-      <div className='max-w-full sm:flex'>
-        <div className='sm:w-full'>
-       
-          {/* <div className='sm:hidden'>
-            <ServiceCategoriesScroll/>
-          </div> */}
-        </div>
-        {/* <div className='hidden w-0 sm:block sm:w-4xl bg-amber-400'>
-          <ServicesCarousel/> 
-        </div> */}
-      </div>
-
-      {/* Navigation Arrows & Dots - Hidden on small screens, visible from md */}
-      <div className="hidden md:flex fixed right-4 top-1/2 -translate-y-1/2 z-50 flex-col items-center space-y-3">
-        {/* Up Arrow (optional - uncomment if needed)
-        <button
-          onClick={scrollPrev}
-          className="p-2 rounded-full bg-gray-100 shadow hover:bg-gray-200"
-        >
-          ↑
-        </button> */}
-
-        {/* Dots */}
-        <div className="flex flex-col items-center space-y-3 py-2">
-          {sections.map((s, index) => (
-            <button
-              key={index}
-              onClick={() => scrollToSection(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                currentSection === index ? 'bg-blue-600 scale-125' : 'bg-gray-300 hover:bg-gray-400'
-              }`}
-              title={s.name}
-            />
-          ))}
-        </div>
-
-        {/* Down Arrow (optional - uncomment if needed)
-        <button
-          onClick={scrollNext}
-          className="p-2 rounded-full bg-gray-100 shadow hover:bg-gray-200"
-        >
-          ↓
-        </button> */}
-      </div>
-
-      {/* Progress Display (optional - uncomment if needed)
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow z-50">
-        <span className="text-sm font-medium">
-          {sections[currentSection].name} ({currentSection + 1}/{sections.length})
-        </span>
-      </div> */}
-
       {/* Sections */}
       {sections.map((sec, index) => {
         const Component = sec.component;
@@ -117,16 +26,13 @@ const Home = () => {
           <section
             key={index}
             ref={(el) => (sectionRefs.current[index] = el)}
-            className="min-h-screen"
+            className=""
           >
             <Component />
           </section>
         );
       })}
-      
-      {/* <ServicesSection/> */}
-      {/* Footer stays at bottom (not in scroll sections) */}
-      {/* <LegalConsultationWidget/> */}
+
       <Footer />
     </div>
   );
