@@ -13,8 +13,8 @@ const ImprovedCarousel = () => {
   const slides = [
     {
       id: 1,
-      image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
-      mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
+      image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-kns-sampada.webp',
+      mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-kns-sampada.webp',
       title: 'Professional Borewell Services',
       description: 'Expert drilling solutions for your water needs',
       cta: 'Book Now',
@@ -29,33 +29,33 @@ const ImprovedCarousel = () => {
       cta: 'Get Started',
       badge: 'Featured'
     },
-    {
-      id: 3,
-      image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
-      mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
-      title: 'Reliable Packers & Movers',
-      description: 'Safe and efficient relocation services',
-      cta: 'Request Quote',
-      badge: 'Limited Time'
-    },
-    {
-      id: 4,
-      image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
-      mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
-      title: 'Expert Plumbing Services',
-      description: '24/7 emergency plumbing solutions',
-      cta: 'Call Now',
-      badge: 'Hot Deal'
-    },
-    {
-      id: 5,
-      image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
-      mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
-      title: 'Professional Home Painting',
-      description: 'Quality painting with premium finishes',
-      cta: 'Schedule Visit',
-      badge: 'Popular'
-    }
+    // {
+    //   id: 3,
+    //   image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
+    //   mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
+    //   title: 'Reliable Packers & Movers',
+    //   description: 'Safe and efficient relocation services',
+    //   cta: 'Request Quote',
+    //   badge: 'Limited Time'
+    // },
+    // {
+    //   id: 4,
+    //   image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
+    //   mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
+    //   title: 'Expert Plumbing Services',
+    //   description: '24/7 emergency plumbing solutions',
+    //   cta: 'Call Now',
+    //   badge: 'Hot Deal'
+    // },
+    // {
+    //   id: 5,
+    //   image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
+    //   mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
+    //   title: 'Professional Home Painting',
+    //   description: 'Quality painting with premium finishes',
+    //   cta: 'Schedule Visit',
+    //   badge: 'Popular'
+    // }
   ];
 
   // Check if mobile on mount and resize
