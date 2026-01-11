@@ -216,17 +216,10 @@ export default function NewlyLaunchedProperties() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-6">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center">
-          <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full mb-3 md:mb-4 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 fill-current" />
-            <span className="text-xs font-semibold tracking-wider uppercase">
-              Newly Launched
-            </span>
-          </div>
-
-          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
             <span className="text-blue-600">Newly Launched</span>{" "}
             <span className="text-gray-800">Properties</span>
           </h1>

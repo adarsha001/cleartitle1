@@ -171,12 +171,12 @@ export default function FeaturedProperties() {
         {/* Header Section */}
         <div className="text-center mb-6 md:mb-8">
           {/* Premium Badge */}
-          <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-3 py-1.5 md:px-4 md:py-2 rounded-full mb-3 md:mb-4 shadow-sm">
+          {/* <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-3 py-1.5 md:px-4 md:py-2 rounded-full mb-3 md:mb-4 shadow-sm">
             <Star className="w-3.5 h-3.5 md:w-4 md:h-4 fill-current" />
             <span className="text-xs font-semibold tracking-wider uppercase">
               Featured
             </span>
-          </div>
+          </div> */}
 
           {/* Main Title */}
           <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
