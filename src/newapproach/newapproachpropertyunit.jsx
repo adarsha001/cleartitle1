@@ -887,47 +887,49 @@ const PropertyUnitsPage = () => {
 
         {/* Mobile Search Bar - Positioned at bottom of carousel */}
         <div className="block md:hidden">
-          <div className="absolute bottom-0 left-0 right-0 z-10" style={{ transform: 'translateY(27%)' }}>
-            <div className="container mx-auto px-4">
-              <div className="bg-white rounded-xl shadow-2xl p-4 border-t-4 border-blue-600">
-                {/* <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">Search Properties</h3> */}
-                {isInitialLoading ? renderSearchSkeleton() : (
-                  <div className="flex flex-col gap-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="text"
-                        placeholder="Search properties..."
-                        value={filters.search}
-                        onChange={(e) => handleFilterChange("search", e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
-                        className="w-full pl-10 pr-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSearch}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors"
-                      >
-                        Search
-                      </button>
-                      <button
-                        onClick={() => setShowMobileFilters(true)}
-                        className="flex items-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-                      >
-                        <Filter className="w-5 h-5" />
-                        {getActiveFilterCount() > 0 && (
-                          <span className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                            {getActiveFilterCount()}
-                          </span>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+    <div className="absolute bottom-0 left-0 right-0 z-10" style={{ transform: 'translateY(-49%)' }}>
+  <div className="container mx-auto px-4">
+    <div className="bg-white rounded-xl shadow-lg p-3 border-t-2 border-blue-600">
+      {isInitialLoading ? renderSearchSkeleton() : (
+        <div className="flex items-center gap-2">
+          {/* Search Input - More compact */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search properties..."
+              value={filters.search}
+              onChange={(e) => handleFilterChange("search", e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
+              className="w-full pl-9 pr-3 py-2.5 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
           </div>
+          
+          {/* Action Buttons - More compact */}
+          <div className="flex gap-1.5">
+            <button
+              onClick={handleSearch}
+              className="bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-3 rounded-lg font-medium transition-colors whitespace-nowrap text-sm"
+            >
+              Search
+            </button>
+            <button
+              onClick={() => setShowMobileFilters(true)}
+              className="flex items-center gap-1 px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors text-sm"
+            >
+              <Filter className="w-4 h-4" />
+              {getActiveFilterCount() > 0 && (
+                <span className="bg-blue-600 text-white text-xs font-bold px-1 py-0.5 rounded-full min-w-[16px] h-4 flex items-center justify-center">
+                  {getActiveFilterCount()}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
         </div>
 
         {/* Desktop Layout - Original Design */}
@@ -1053,7 +1055,7 @@ const PropertyUnitsPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="py-6 md:py-48" ref={propertyGridRef}>
+<div className=" mt-[-120px] sm:mt-80 " ref={propertyGridRef}>
         <div className="container mx-auto px-4">
           {isInitialLoading ? (
             <div className="space-y-6">
