@@ -758,16 +758,90 @@ const PropertyUnitsPage = () => {
   );
 
   // Render carousel skeleton
-  const renderCarouselSkeleton = () => (
-    <div className="h-[45vh] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-32 bg-gray-400 rounded mx-auto mb-2"></div>
-          <div className="h-4 w-48 bg-gray-400 rounded mx-auto"></div>
+const renderCarouselSkeleton = () => (
+  <div className="h-[45vh] relative overflow-hidden">
+    {/* Animated gradient background */}
+    <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 animate-pulse">
+      {/* Moving gradient overlay for shimmer effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+    </div>
+    
+    {/* Content overlay */}
+    <div className="relative h-full flex flex-col items-center justify-center px-4">
+      {/* Top decorative elements */}
+      <div className="flex items-center justify-center gap-2 mb-6">
+        <div className="h-2 w-20 bg-gray-300 rounded-full"></div>
+        <div className="h-2 w-2 bg-gray-300 rounded-full"></div>
+        <div className="h-2 w-20 bg-gray-300 rounded-full"></div>
+      </div>
+      
+      {/* Main title skeleton with icon */}
+      <div className="flex flex-col items-center mb-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-6 w-6 bg-gray-400 rounded-full"></div>
+          <div className="h-8 w-48 bg-gray-400 rounded-lg"></div>
+          <div className="h-6 w-6 bg-gray-400 rounded-full"></div>
+        </div>
+        <div className="h-4 w-64 bg-gray-300 rounded-lg"></div>
+      </div>
+      
+      {/* Search bar skeleton */}
+      <div className="w-full max-w-md mb-8">
+        <div className="flex items-center gap-2 p-3 bg-white/80 backdrop-blur-sm rounded-xl shadow-lg">
+          <div className="h-4 w-4 bg-gray-400 rounded-full"></div>
+          <div className="flex-1 h-4 bg-gray-300 rounded"></div>
+          <div className="h-8 w-20 bg-gray-400 rounded-lg"></div>
         </div>
       </div>
+      
+      {/* Category pills skeleton */}
+      <div className="flex flex-wrap justify-center gap-2 max-w-2xl">
+        {[...Array(6)].map((_, i) => (
+          <div 
+            key={i}
+            className="h-8 px-4 bg-white/80 backdrop-blur-sm rounded-full flex items-center gap-2"
+            style={{
+              animationDelay: `${i * 0.1}s`,
+              animationDuration: '2s'
+            }}
+          >
+            <div className="h-3 w-3 bg-gray-400 rounded-full"></div>
+            <div className="h-3 w-12 bg-gray-300 rounded"></div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Bottom navigation indicators */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2">
+        {[...Array(4)].map((_, i) => (
+          <div 
+            key={i}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              i === 1 
+                ? 'w-8 bg-gray-600' 
+                : 'w-2 bg-gray-400'
+            }`}
+          />
+        ))}
+      </div>
     </div>
-  );
+
+    {/* Add CSS for shimmer animation */}
+    <style jsx>{`
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+      .animate-shimmer {
+        animation: shimmer 2s infinite;
+      }
+    `}</style>
+  </div>
+);
 
   // Render categories skeleton for mobile
   const renderMobileCategoriesSkeleton = () => (
