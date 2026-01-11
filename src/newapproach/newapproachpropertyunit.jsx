@@ -892,7 +892,7 @@ const renderCarouselSkeleton = () => (
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Hero Section with Carousel and Search Overlay */}
       <div className="relative mb-24 md:mb-32">
         {/* Mobile Categories Section - ABOVE THE CAROUSEL */}

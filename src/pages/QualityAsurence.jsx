@@ -140,7 +140,7 @@ export default function QualityAssuranceSection() {
   return (
     <div 
       ref={sectionRef} 
-      className="relative w-full p-3 md:p-4 min-h-[110vh] md:min-h-[100vh] bg-[#F9FAFB] overflow-hidden"
+      className="relative w-full p-3 md:p-4 min-h-[110vh] md:min-h-[100vh] bg-[#F9FAFB] bg-gradient-to-br from-blue-50 via-white to-indigo-50 overflow-hidden"
     >
       
       {/* Background Image Section */}

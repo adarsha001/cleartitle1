@@ -220,7 +220,7 @@ const PossessionTimeline = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 md:py-16">
+    <div className="bg-gradient-to-tr from-blue-50 via-white to-indigo-50 py-8 md:py-16">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">

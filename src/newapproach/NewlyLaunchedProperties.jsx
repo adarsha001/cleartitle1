@@ -216,7 +216,7 @@ export default function NewlyLaunchedProperties() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-6">
+    <div className="bg-gradient-to-tr from-blue-50 via-white to-indigo-50 py-6">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center">
           <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
