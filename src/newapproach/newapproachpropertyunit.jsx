@@ -769,44 +769,35 @@ const PropertyUnitsPage = () => {
     </div>
   );
 
-  // Render categories skeleton
-  const renderCategoriesSkeleton = () => (
-    <div className="animate-pulse">
-      {/* Mobile skeleton */}
-      <div className="block md:hidden">
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100">
-              <div className="w-4 h-4 bg-gray-300 rounded"></div>
+  // Render categories skeleton for mobile
+  const renderMobileCategoriesSkeleton = () => (
+    <div className="animate-pulse overflow-x-auto">
+      <div className="flex space-x-2 pb-2">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="flex-shrink-0 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100" style={{ minWidth: '90px' }}>
+            <div className="flex flex-col items-center">
+              <div className="w-4 h-4 bg-gray-300 rounded mb-1"></div>
               <div className="h-3 w-16 bg-gray-300 rounded"></div>
             </div>
-          ))}
-        </div>
-        {[...Array(4)].map((_, row) => (
-          <div key={row} className="grid grid-cols-2 gap-2 mb-2">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100">
-                <div className="w-4 h-4 bg-gray-300 rounded"></div>
-                <div className="h-3 w-20 bg-gray-300 rounded"></div>
-              </div>
-            ))}
           </div>
         ))}
       </div>
-      
-      {/* Desktop skeleton */}
-      <div className="hidden md:block">
-        <div className="flex space-x-2 pb-2">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="flex-shrink-0 px-4 py-3 rounded-lg border border-gray-200 bg-gray-100" style={{ minWidth: '100px' }}>
-              <div className="flex flex-col items-center">
-                <div className="w-4 h-4 bg-gray-300 rounded mb-1"></div>
-                <div className="h-3 w-16 bg-gray-300 rounded mb-1"></div>
-                <div className="h-2 w-8 bg-gray-300 rounded"></div>
-              </div>
+    </div>
+  );
+
+  // Render categories skeleton for desktop
+  const renderDesktopCategoriesSkeleton = () => (
+    <div className="hidden md:block animate-pulse">
+      <div className="flex space-x-2 pb-2">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="flex-shrink-0 px-4 py-3 rounded-lg border border-gray-200 bg-gray-100" style={{ minWidth: '100px' }}>
+            <div className="flex flex-col items-center">
+              <div className="w-4 h-4 bg-gray-300 rounded mb-1"></div>
+              <div className="h-3 w-16 bg-gray-300 rounded mb-1"></div>
+              <div className="h-2 w-8 bg-gray-300 rounded"></div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -830,68 +821,76 @@ const PropertyUnitsPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section with Carousel and Search Overlay */}
       <div className="relative mb-24 md:mb-32">
-        {/* Carousel */}
-        <div className="h-[45vh] overflow-hidden">
-          {isInitialLoading ? renderCarouselSkeleton() : <CarouselSlider />}
-        </div>
-
-        {/* Mobile Layout - Categories Above Carousel */}
+        {/* Mobile Categories Section - ABOVE THE CAROUSEL */}
         <div className="block md:hidden">
-          {/* Categories Section - Positioned above carousel */}
-          <div className="bg-white border-b border-gray-200 py-4 px-4">
-            <div className="mb-3">
+          {/* Categories Section - Positioned ABOVE carousel */}
+          <div className="bg-white  px-4">
+            {/* <div className="mb-3">
               <h2 className="text-lg font-semibold text-gray-900">Browse Properties</h2>
               <p className="text-sm text-gray-600">
                 {isInitialLoading ? 'Loading...' : `${formatNumber(allPropertyUnits.length)} properties available`}
               </p>
-            </div>
+            </div> */}
 
-            {/* Property Type Categories - Mobile */}
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Property Types</h3>
-              {isInitialLoading ? renderCategoriesSkeleton() : (
-                <div className="grid grid-cols-2 gap-2">
-                  {propertyCategories.slice(0, 4).map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryClick(category.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all border ${
-                        activeCategory === category.id
-                          ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                          : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                      }`}
-                    >
-                      <div>
-                        {React.cloneElement(category.icon, {
-                          className: `w-4 h-4 ${
-                            activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
-                          }`
-                        })}
-                      </div>
-                      <span className="text-xs font-medium truncate">
-                        {category.name}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* See More Categories Button */}
-            {!isInitialLoading && (
-              <div className="text-center">
-                <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                  See More Categories →
-                </button>
+            {/* Property Type Categories - Mobile Horizontal Scrollable */}
+            <div className="">
+              <div className="relative">
+                {isInitialLoading ? renderMobileCategoriesSkeleton() : (
+                  <div 
+                    ref={categoryScrollRef}
+                    className="flex space-x-2 pb-2 overflow-x-auto scrollbar-none -mx-4 px-4"
+                    style={{ 
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
+                    }}
+                  >
+                    <style>
+                      {`
+                        .scrollbar-none::-webkit-scrollbar {
+                          display: none;
+                        }
+                      `}
+                    </style>
+                    {propertyCategories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategoryClick(category.id)}
+                        className={`flex flex-col items-center flex-shrink-0 px-3 py-2 rounded-lg transition-all border min-w-[90px] ${
+                          activeCategory === category.id
+                            ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
+                            : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="mb-1">
+                          {React.cloneElement(category.icon, {
+                            className: `w-4 h-4 ${
+                              activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
+                            }`
+                          })}
+                        </div>
+                        <span className="text-xs font-medium truncate w-full text-center">
+                          {category.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
+        </div>
 
-          {/* Mobile Search Bar - Positioned at bottom of carousel */}
-          <div className="absolute bottom-0 left-0 right-0 z-10" style={{ transform: 'translateY(90%)' }}>
+        {/* Carousel - For mobile, it comes AFTER categories */}
+        <div className="h-[45vh] overflow-hidden">
+          {isInitialLoading ? renderCarouselSkeleton() : <CarouselSlider />}
+        </div>
+
+        {/* Mobile Search Bar - Positioned at bottom of carousel */}
+        <div className="block md:hidden">
+          <div className="absolute bottom-0 left-0 right-0 z-10" style={{ transform: 'translateY(27%)' }}>
             <div className="container mx-auto px-4">
               <div className="bg-white rounded-xl shadow-2xl p-4 border-t-4 border-blue-600">
-                <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">Search Properties</h3>
+                {/* <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">Search Properties</h3> */}
                 {isInitialLoading ? renderSearchSkeleton() : (
                   <div className="flex flex-col gap-3">
                     <div className="relative">
@@ -972,7 +971,7 @@ const PropertyUnitsPage = () => {
                     {/* Property Type Categories - Compact Grid */}
                     <div className="mb-4">
                       <h3 className="text-sm font-medium text-gray-700 mb-3">Browse by Property Type</h3>
-                      {isInitialLoading ? renderCategoriesSkeleton() : (
+                      {isInitialLoading ? renderDesktopCategoriesSkeleton() : (
                         <div className="relative">
                           <div className="flex space-x-2 pb-2 overflow-x-auto scrollbar-thin">
                             {propertyCategories.map((category) => (
