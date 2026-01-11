@@ -11,6 +11,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
+import CarouselSlider from './CarouselSlider';
 
 const PropertyUnitsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,6 +22,7 @@ const PropertyUnitsPage = () => {
   // Refs
   const categoryScrollRef = useRef(null);
   const propertyGridRef = useRef(null);
+  const carouselRef = useRef(null);
   
   // State
   const [propertyUnits, setPropertyUnits] = useState([]);
@@ -42,6 +44,7 @@ const PropertyUnitsPage = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeListingCategory, setActiveListingCategory] = useState("all");
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -189,6 +192,7 @@ const PropertyUnitsPage = () => {
       toast.error(error.response?.data?.message || "Failed to load properties");
     } finally {
       setLoading(false);
+      setIsInitialLoading(false);
     }
   };
 
@@ -215,13 +219,19 @@ const PropertyUnitsPage = () => {
 
   // Initial fetch
   useEffect(() => {
-    fetchAllPropertiesForCategories();
-    fetchPropertyUnits();
+    const fetchData = async () => {
+      setIsInitialLoading(true);
+      await Promise.all([
+        fetchAllPropertiesForCategories(),
+        fetchPropertyUnits()
+      ]);
+    };
+    fetchData();
   }, []);
 
   // Fetch when filters change
   useEffect(() => {
-    if (!loading) {
+    if (!isInitialLoading) {
       fetchPropertyUnits();
     }
   }, [filters]);
@@ -747,300 +757,296 @@ const PropertyUnitsPage = () => {
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Search Bar */}
-      <div className="bg-white border-b border-gray-200 py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search properties by location, project, or keyword..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
-                  className="w-full pl-10 pr-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+  // Render carousel skeleton
+  const renderCarouselSkeleton = () => (
+    <div className="h-[45vh] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse">
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-32 bg-gray-400 rounded mx-auto mb-2"></div>
+          <div className="h-4 w-48 bg-gray-400 rounded mx-auto"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Render categories skeleton
+  const renderCategoriesSkeleton = () => (
+    <div className="animate-pulse">
+      {/* Mobile skeleton */}
+      <div className="block md:hidden">
+        <div className="grid grid-cols-2 gap-2 mb-2">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100">
+              <div className="w-4 h-4 bg-gray-300 rounded"></div>
+              <div className="h-3 w-16 bg-gray-300 rounded"></div>
+            </div>
+          ))}
+        </div>
+        {[...Array(4)].map((_, row) => (
+          <div key={row} className="grid grid-cols-2 gap-2 mb-2">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-gray-100">
+                <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                <div className="h-3 w-20 bg-gray-300 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      
+      {/* Desktop skeleton */}
+      <div className="hidden md:block">
+        <div className="flex space-x-2 pb-2">
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="flex-shrink-0 px-4 py-3 rounded-lg border border-gray-200 bg-gray-100" style={{ minWidth: '100px' }}>
+              <div className="flex flex-col items-center">
+                <div className="w-4 h-4 bg-gray-300 rounded mb-1"></div>
+                <div className="h-3 w-16 bg-gray-300 rounded mb-1"></div>
+                <div className="h-2 w-8 bg-gray-300 rounded"></div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSearch}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors whitespace-nowrap"
-              >
-                Search
-              </button>
-              <button
-                onClick={() => setShowMobileFilters(true)}
-                className="md:hidden flex items-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-              >
-                <Filter className="w-5 h-5" />
-                {getActiveFilterCount() > 0 && (
-                  <span className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                    {getActiveFilterCount()}
-                  </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Render search bar skeleton
+  const renderSearchSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="flex flex-col md:flex-row gap-3 mb-4">
+        <div className="flex-1">
+          <div className="w-full h-12 bg-gray-200 rounded-lg"></div>
+        </div>
+        <div className="flex gap-2">
+          <div className="w-24 h-12 bg-gray-300 rounded-lg"></div>
+          <div className="md:hidden w-12 h-12 bg-gray-200 rounded-lg"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section with Carousel and Search Overlay */}
+      <div className="relative mb-24 md:mb-32">
+        {/* Carousel */}
+        <div className="h-[45vh] overflow-hidden">
+          {isInitialLoading ? renderCarouselSkeleton() : <CarouselSlider />}
+        </div>
+
+        {/* Mobile Layout - Categories Above Carousel */}
+        <div className="block md:hidden">
+          {/* Categories Section - Positioned above carousel */}
+          <div className="bg-white border-b border-gray-200 py-4 px-4">
+            <div className="mb-3">
+              <h2 className="text-lg font-semibold text-gray-900">Browse Properties</h2>
+              <p className="text-sm text-gray-600">
+                {isInitialLoading ? 'Loading...' : `${formatNumber(allPropertyUnits.length)} properties available`}
+              </p>
+            </div>
+
+            {/* Property Type Categories - Mobile */}
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Property Types</h3>
+              {isInitialLoading ? renderCategoriesSkeleton() : (
+                <div className="grid grid-cols-2 gap-2">
+                  {propertyCategories.slice(0, 4).map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => handleCategoryClick(category.id)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all border ${
+                        activeCategory === category.id
+                          ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
+                          : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                      }`}
+                    >
+                      <div>
+                        {React.cloneElement(category.icon, {
+                          className: `w-4 h-4 ${
+                            activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
+                          }`
+                        })}
+                      </div>
+                      <span className="text-xs font-medium truncate">
+                        {category.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* See More Categories Button */}
+            {!isInitialLoading && (
+              <div className="text-center">
+                <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                  See More Categories →
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Search Bar - Positioned at bottom of carousel */}
+          <div className="absolute bottom-0 left-0 right-0 z-10" style={{ transform: 'translateY(90%)' }}>
+            <div className="container mx-auto px-4">
+              <div className="bg-white rounded-xl shadow-2xl p-4 border-t-4 border-blue-600">
+                <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">Search Properties</h3>
+                {isInitialLoading ? renderSearchSkeleton() : (
+                  <div className="flex flex-col gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        placeholder="Search properties..."
+                        value={filters.search}
+                        onChange={(e) => handleFilterChange("search", e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
+                        className="w-full pl-10 pr-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSearch}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors"
+                      >
+                        Search
+                      </button>
+                      <button
+                        onClick={() => setShowMobileFilters(true)}
+                        className="flex items-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                      >
+                        <Filter className="w-5 h-5" />
+                        {getActiveFilterCount() > 0 && (
+                          <span className="bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                            {getActiveFilterCount()}
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Property Categories - Mobile Grid Layout */}
-      <div className="bg-white border-b border-gray-200 py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">Browse Properties</h2>
-            <div className="text-sm text-gray-600">
-              {formatNumber(allPropertyUnits.length)} properties available
-            </div>
-          </div>
+        {/* Desktop Layout - Original Design */}
+        <div className="hidden md:block">
+          {/* Search and Categories Overlay - Positioned 75% from bottom */}
+          <div className="absolute bottom-0 left-0 right-0 z-10" style={{ transform: 'translateY(75%)' }}>
+            <div className="container mx-auto px-4">
+              {/* Main Search Card - No margin at bottom */}
+              <div className="bg-white rounded-xl shadow-2xl p-4 md:p-6 border-t-4 border-blue-600">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 text-center">
+                  Find Your Dream Property
+                </h2>
+                
+                {/* Search Bar */}
+                {isInitialLoading ? renderSearchSkeleton() : (
+                  <>
+                    <div className="flex flex-col md:flex-row gap-3 mb-4">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          <input
+                            type="text"
+                            placeholder="Search properties by location, project, or keyword..."
+                            value={filters.search}
+                            onChange={(e) => handleFilterChange("search", e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
+                            className="w-full pl-10 pr-4 py-3 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSearch}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors whitespace-nowrap"
+                        >
+                          Search
+                        </button>
+                      </div>
+                    </div>
 
-          {/* Property Type Categories */}
-          <div className="mb-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Property Types</h3>
-            
-            {/* Mobile: Grid 2x2 Layout - 5 rows to accommodate all 10 categories */}
-            <div className="block md:hidden">
-              {/* Row 1 */}
-              <div className="grid grid-cols-2 gap-2">
-                {propertyCategories.slice(0, 2).map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`flex flex-col items-center justify-center px-3 py-3 rounded-lg transition-all border ${
-                      activeCategory === category.id
-                        ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                        : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="mb-2">
-                      {React.cloneElement(category.icon, {
-                        className: `w-5 h-5 ${
-                          activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
-                        }`
-                      })}
+                    {/* Property Type Categories - Compact Grid */}
+                    <div className="mb-4">
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">Browse by Property Type</h3>
+                      {isInitialLoading ? renderCategoriesSkeleton() : (
+                        <div className="relative">
+                          <div className="flex space-x-2 pb-2 overflow-x-auto scrollbar-thin">
+                            {propertyCategories.map((category) => (
+                              <button
+                                key={category.id}
+                                onClick={() => handleCategoryClick(category.id)}
+                                className={`flex flex-col items-center flex-shrink-0 px-4 py-3 rounded-lg transition-all border ${
+                                  activeCategory === category.id
+                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                    : 'text-gray-700 border-gray-200 hover:bg-gray-50'
+                                }`}
+                                style={{ minWidth: '100px' }}
+                              >
+                                <div className="mb-1">
+                                  {React.cloneElement(category.icon, {
+                                    className: `w-4 h-4 ${
+                                      activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
+                                    }`
+                                  })}
+                                </div>
+                                <span className="text-xs font-medium truncate w-full text-center">
+                                  {category.name}
+                                </span>
+                                <span className="text-xs text-gray-500 mt-0.5">
+                                  {category.count}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <span className="text-xs font-medium truncate w-full text-center">
-                      {category.name}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-1">
-                      {category.count}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              
-              {/* Row 2 */}
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {propertyCategories.slice(2, 4).map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`flex flex-col items-center justify-center px-3 py-3 rounded-lg transition-all border ${
-                      activeCategory === category.id
-                        ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                        : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="mb-2">
-                      {React.cloneElement(category.icon, {
-                        className: `w-5 h-5 ${
-                          activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
-                        }`
-                      })}
-                    </div>
-                    <span className="text-xs font-medium truncate w-full text-center">
-                      {category.name}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-1">
-                      {category.count}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              
-              {/* Row 3 */}
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {propertyCategories.slice(4, 6).map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`flex flex-col items-center justify-center px-3 py-3 rounded-lg transition-all border ${
-                      activeCategory === category.id
-                        ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                        : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="mb-2">
-                      {React.cloneElement(category.icon, {
-                        className: `w-5 h-5 ${
-                          activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
-                        }`
-                      })}
-                    </div>
-                    <span className="text-xs font-medium truncate w-full text-center">
-                      {category.name}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-1">
-                      {category.count}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              
-              {/* Row 4 */}
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {propertyCategories.slice(6, 8).map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`flex flex-col items-center justify-center px-3 py-3 rounded-lg transition-all border ${
-                      activeCategory === category.id
-                        ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                        : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="mb-2">
-                      {React.cloneElement(category.icon, {
-                        className: `w-5 h-5 ${
-                          activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
-                        }`
-                      })}
-                    </div>
-                    <span className="text-xs font-medium truncate w-full text-center">
-                      {category.name}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-1">
-                      {category.count}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              
-              {/* Row 5 */}
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {propertyCategories.slice(8, 10).map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`flex flex-col items-center justify-center px-3 py-3 rounded-lg transition-all border ${
-                      activeCategory === category.id
-                        ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                        : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="mb-2">
-                      {React.cloneElement(category.icon, {
-                        className: `w-5 h-5 ${
-                          activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
-                        }`
-                      })}
-                    </div>
-                    <span className="text-xs font-medium truncate w-full text-center">
-                      {category.name}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-1">
-                      {category.count}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Desktop: Horizontal Scroll */}
-            <div className="hidden md:block relative">
-              <div className="flex space-x-2 pb-2 overflow-x-auto scrollbar-thin">
-                {propertyCategories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category.id)}
-                    className={`flex flex-col items-center flex-shrink-0 px-4 py-3 rounded-lg transition-all border ${
-                      activeCategory === category.id
-                        ? 'bg-blue-50 text-blue-700 border-blue-200'
-                        : 'text-gray-700 border-gray-200 hover:bg-gray-50'
-                    }`}
-                    style={{ minWidth: '100px' }}
-                  >
-                    <div className="mb-1">
-                      {React.cloneElement(category.icon, {
-                        className: `w-4 h-4 ${
-                          activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
-                        }`
-                      })}
-                    </div>
-                    <span className="text-xs font-medium truncate w-full text-center">
-                      {category.name}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-0.5">
-                      {category.count}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Listing Type Categories */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Listing Types</h3>
-            
-            {/* Mobile: Grid 2x2 Layout */}
-            <div className="block md:hidden">
-              <div className="grid grid-cols-2 gap-2">
-                {listingCategories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleListingCategoryClick(category.id)}
-                    className={`flex flex-col items-center justify-center px-3 py-3 rounded-lg transition-all border ${
-                      activeListingCategory === category.id
-                        ? 'bg-green-50 text-green-700 border-green-200 shadow-sm'
-                        : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="mb-2">
-                      {React.cloneElement(category.icon, {
-                        className: `w-5 h-5 ${
-                          activeListingCategory === category.id ? 'text-green-600' : 'text-gray-500'
-                        }`
-                      })}
-                    </div>
-                    <span className="text-xs font-medium truncate w-full text-center">
-                      {category.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Desktop: Horizontal Layout */}
-            <div className="hidden md:block">
-              <div className="flex space-x-2">
-                {listingCategories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleListingCategoryClick(category.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${
-                      activeListingCategory === category.id
-                        ? 'bg-green-50 text-green-700 border-green-200'
-                        : 'text-gray-700 border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
+                    {/* Listing Type Categories */}
                     <div>
-                      {React.cloneElement(category.icon, {
-                        className: `w-4 h-4 ${
-                          activeListingCategory === category.id ? 'text-green-600' : 'text-gray-500'
-                        }`
-                      })}
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">Listing Types</h3>
+                      {isInitialLoading ? (
+                        <div className="flex space-x-2">
+                          {[...Array(4)].map((_, i) => (
+                            <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-gray-100">
+                              <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                              <div className="h-3 w-16 bg-gray-300 rounded"></div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex space-x-2">
+                          {listingCategories.map((category) => (
+                            <button
+                              key={category.id}
+                              onClick={() => handleListingCategoryClick(category.id)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${
+                                activeListingCategory === category.id
+                                  ? 'bg-green-50 text-green-700 border-green-200'
+                                  : 'text-gray-700 border-gray-200 hover:bg-gray-50'
+                              }`}
+                            >
+                              <div>
+                                {React.cloneElement(category.icon, {
+                                  className: `w-4 h-4 ${
+                                    activeListingCategory === category.id ? 'text-green-600' : 'text-gray-500'
+                                  }`
+                                })}
+                              </div>
+                              <span className="text-sm font-medium">
+                                {category.name}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <span className="text-sm font-medium">
-                      {category.name}
-                    </span>
-                  </button>
-                ))}
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -1048,232 +1054,245 @@ const PropertyUnitsPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="py-6">
+      <div className="py-6 md:py-48" ref={propertyGridRef}>
         <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Filters Sidebar - Desktop */}
-            <div className="hidden lg:block w-64 flex-shrink-0">
-              <div className="sticky top-6">
-                <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">Filters</h3>
+          {isInitialLoading ? (
+            <div className="space-y-6">
+              {/* Results Header Skeleton */}
+              <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+              </div>
+              
+              {/* Property Units Skeleton */}
+              {renderSkeleton()}
+            </div>
+          ) : (
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Filters Sidebar - Desktop */}
+              <div className="hidden lg:block w-64 flex-shrink-0">
+                <div className="sticky top-6">
+                  <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-gray-900">Filters</h3>
+                      {getActiveFilterCount() > 0 && (
+                        <button
+                          onClick={handleResetFilters}
+                          className="text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+                    {getActiveFilterCount() > 0 && (
+                      <div className="text-sm text-gray-600 mb-3">
+                        {getActiveFilterCount()} active filter(s)
+                      </div>
+                    )}
+                    {renderFilterPanel()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Content Area */}
+              <div className="flex-1 lg:min-w-0">
+                {/* Results Header */}
+                <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        {filters.propertyType || "All Properties"} {filters.listingType ? `for ${filters.listingType}` : ""} in {filters.city || "All Cities"}
+                      </h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Showing {propertyUnits.length} of {formatNumber(totalResults)} properties
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      {/* View Toggle */}
+                      <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                        <button
+                          onClick={() => setViewMode("grid")}
+                          className={`p-2 rounded transition-colors ${
+                            viewMode === "grid" 
+                              ? "bg-white text-blue-600 shadow-sm" 
+                              : "text-gray-600 hover:text-gray-900"
+                          }`}
+                        >
+                          <Grid className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setViewMode("list")}
+                          className={`p-2 rounded transition-colors ${
+                            viewMode === "list" 
+                              ? "bg-white text-blue-600 shadow-sm" 
+                              : "text-gray-600 hover:text-gray-900"
+                          }`}
+                        >
+                          <List className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Sort Dropdown */}
+                      <div className="relative">
+                        <select
+                          value={getCurrentSortValue()}
+                          onChange={(e) => handleSortChange(e.target.value)}
+                          className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium min-w-[140px]"
+                        >
+                          {sortOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <ArrowUpDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Filters Display */}
+                  {getActiveFilterCount() > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-medium text-gray-700">Active:</span>
+                        {Object.entries(filters).map(([key, value]) => {
+                          if (!value || key === 'sortBy' || key === 'sortOrder' || key === 'page' || key === 'limit') return null;
+                          
+                          let displayValue = value;
+                          if (key === 'city') displayValue = `${value}`;
+                          else if (key === 'propertyType') displayValue = `Type: ${value}`;
+                          else if (key === 'bedrooms') displayValue = `${value} Beds`;
+                          else if (key === 'bathrooms') displayValue = `${value} Baths`;
+                          else if (key === 'listingType') displayValue = `For ${value}`;
+                          else if (key === 'isVerified' && value === 'true') displayValue = "Verified";
+                          else if (key === 'minArea' && value) displayValue = `Min: ${value} sq.ft.`;
+                          else if (key === 'maxArea' && value) displayValue = `Max: ${value} sq.ft.`;
+                          else if (key === 'furnishing' && value) displayValue = `${value.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}`;
+                          
+                          return (
+                            <span
+                              key={key}
+                              className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full border border-gray-200"
+                            >
+                              <span>{displayValue}</span>
+                              <button
+                                onClick={() => handleFilterChange(key, "")}
+                                className="hover:text-red-600"
+                              >
+                                <XCircle className="w-3 h-3" />
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Property Units */}
+                {loading ? (
+                  renderSkeleton()
+                ) : propertyUnits.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+                    <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No properties found</h3>
+                    <p className="text-gray-600 mb-4">
+                      {getActiveFilterCount() > 0
+                        ? "Try adjusting your filters"
+                        : "No properties available"}
+                    </p>
                     {getActiveFilterCount() > 0 && (
                       <button
                         onClick={handleResetFilters}
-                        className="text-sm text-blue-600 hover:text-blue-800"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                       >
-                        Clear all
+                        Clear filters
                       </button>
                     )}
                   </div>
-                  {getActiveFilterCount() > 0 && (
-                    <div className="text-sm text-gray-600 mb-3">
-                      {getActiveFilterCount()} active filter(s)
-                    </div>
-                  )}
-                  {renderFilterPanel()}
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="flex-1 lg:min-w-0" ref={propertyGridRef}>
-              {/* Results Header */}
-              <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      {filters.propertyType || "All Properties"} {filters.listingType ? `for ${filters.listingType}` : ""} in {filters.city || "All Cities"}
-                    </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Showing {propertyUnits.length} of {formatNumber(totalResults)} properties
-                    </p>
+                ) : viewMode === "grid" ? (
+                  // UPDATED: Mobile 2-column, Desktop 4-column layout
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    {propertyUnits.map((property) => (
+                      <PropertyUnitCard 
+                        key={property._id}
+                        propertyUnit={property} 
+                        viewMode="compact" // New view mode for mobile
+                      />
+                    ))}
                   </div>
-                  
-                  <div className="flex items-center gap-3">
-                    {/* View Toggle */}
-                    <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                      <button
-                        onClick={() => setViewMode("grid")}
-                        className={`p-2 rounded transition-colors ${
-                          viewMode === "grid" 
-                            ? "bg-white text-blue-600 shadow-sm" 
-                            : "text-gray-600 hover:text-gray-900"
-                        }`}
-                      >
-                        <Grid className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setViewMode("list")}
-                        className={`p-2 rounded transition-colors ${
-                          viewMode === "list" 
-                            ? "bg-white text-blue-600 shadow-sm" 
-                            : "text-gray-600 hover:text-gray-900"
-                        }`}
-                      >
-                        <List className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Sort Dropdown */}
-                    <div className="relative">
-                      <select
-                        value={getCurrentSortValue()}
-                        onChange={(e) => handleSortChange(e.target.value)}
-                        className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium min-w-[140px]"
-                      >
-                        {sortOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <ArrowUpDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
-                    </div>
+                ) : (
+                  <div className="space-y-4">
+                    {propertyUnits.map((property) => (
+                      <PropertyUnitCard 
+                        key={property._id}
+                        propertyUnit={property} 
+                        viewMode="list"
+                      />
+                    ))}
                   </div>
-                </div>
+                )}
 
-                {/* Active Filters Display */}
-                {getActiveFilterCount() > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-medium text-gray-700">Active:</span>
-                      {Object.entries(filters).map(([key, value]) => {
-                        if (!value || key === 'sortBy' || key === 'sortOrder' || key === 'page' || key === 'limit') return null;
-                        
-                        let displayValue = value;
-                        if (key === 'city') displayValue = `${value}`;
-                        else if (key === 'propertyType') displayValue = `Type: ${value}`;
-                        else if (key === 'bedrooms') displayValue = `${value} Beds`;
-                        else if (key === 'bathrooms') displayValue = `${value} Baths`;
-                        else if (key === 'listingType') displayValue = `For ${value}`;
-                        else if (key === 'isVerified' && value === 'true') displayValue = "Verified";
-                        else if (key === 'minArea' && value) displayValue = `Min: ${value} sq.ft.`;
-                        else if (key === 'maxArea' && value) displayValue = `Max: ${value} sq.ft.`;
-                        else if (key === 'furnishing' && value) displayValue = `${value.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}`;
-                        
-                        return (
-                          <span
-                            key={key}
-                            className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full border border-gray-200"
-                          >
-                            <span>{displayValue}</span>
-                            <button
-                              onClick={() => handleFilterChange(key, "")}
-                              className="hover:text-red-600"
-                            >
-                              <XCircle className="w-3 h-3" />
-                            </button>
-                          </span>
-                        );
-                      })}
+                {/* Pagination */}
+                {totalPages > 1 && !loading && (
+                  <div className="mt-8">
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                      <nav className="flex items-center justify-between">
+                        <button
+                          onClick={handlePrevPage}
+                          disabled={currentPage === 1}
+                          className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                            currentPage === 1
+                              ? "text-gray-400 cursor-not-allowed"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                          Previous
+                        </button>
+
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            const pageNum = i + 1;
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => setFilters(prev => ({ ...prev, page: pageNum }))}
+                                className={`w-8 h-8 rounded-lg font-medium text-sm transition-colors ${
+                                  currentPage === pageNum
+                                    ? "bg-blue-600 text-white"
+                                    : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <button
+                          onClick={handleNextPage}
+                          disabled={currentPage === totalPages}
+                          className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                            currentPage === totalPages
+                              ? "text-gray-400 cursor-not-allowed"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          Next
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </nav>
+                      <div className="text-center mt-3 text-sm text-gray-600">
+                        Page {currentPage} of {totalPages}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* Property Units */}
-              {loading ? (
-                renderSkeleton()
-              ) : propertyUnits.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-                  <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No properties found</h3>
-                  <p className="text-gray-600 mb-4">
-                    {getActiveFilterCount() > 0
-                      ? "Try adjusting your filters"
-                      : "No properties available"}
-                  </p>
-                  {getActiveFilterCount() > 0 && (
-                    <button
-                      onClick={handleResetFilters}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Clear filters
-                    </button>
-                  )}
-                </div>
-              ) : viewMode === "grid" ? (
-                // UPDATED: Mobile 2-column, Desktop 4-column layout
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                  {propertyUnits.map((property) => (
-                    <PropertyUnitCard 
-                      key={property._id}
-                      propertyUnit={property} 
-                      viewMode="compact" // New view mode for mobile
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {propertyUnits.map((property) => (
-                    <PropertyUnitCard 
-                      key={property._id}
-                      propertyUnit={property} 
-                      viewMode="list"
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Pagination */}
-              {totalPages > 1 && !loading && (
-                <div className="mt-8">
-                  <div className="bg-white rounded-lg border border-gray-200 p-4">
-                    <nav className="flex items-center justify-between">
-                      <button
-                        onClick={handlePrevPage}
-                        disabled={currentPage === 1}
-                        className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                          currentPage === 1
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                        Previous
-                      </button>
-
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                          const pageNum = i + 1;
-                          return (
-                            <button
-                              key={pageNum}
-                              onClick={() => setFilters(prev => ({ ...prev, page: pageNum }))}
-                              className={`w-8 h-8 rounded-lg font-medium text-sm transition-colors ${
-                                currentPage === pageNum
-                                  ? "bg-blue-600 text-white"
-                                  : "text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      <button
-                        onClick={handleNextPage}
-                        disabled={currentPage === totalPages}
-                        className={`flex items-center gap-1 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                          currentPage === totalPages
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        Next
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </nav>
-                    <div className="text-center mt-3 text-sm text-gray-600">
-                      Page {currentPage} of {totalPages}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
+          )}
         </div>
       </div>
 

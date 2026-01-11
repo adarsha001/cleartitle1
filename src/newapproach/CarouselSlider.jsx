@@ -136,7 +136,7 @@ const ImprovedCarousel = () => {
 
   // Desktop Carousel
   const renderDesktopCarousel = () => (
-    <div className="w-full h-[45vh]">
+    <div className="w-full h-[50vh]">
       <div className="h-full">
         <div className="relative w-full h-full overflow-hidden group">
           <div 

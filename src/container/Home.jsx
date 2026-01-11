@@ -60,7 +60,7 @@ const Home = () => {
     <div className="relative">
       <div className='max-w-full sm:flex'>
         <div className='sm:w-full'>
-          <CarouselSlider/>
+       
           {/* <div className='sm:hidden'>
             <ServiceCategoriesScroll/>
           </div> */}
