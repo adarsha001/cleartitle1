@@ -483,9 +483,9 @@ const PossessionTimeline = () => {
           </div>
           
           {/* Decorative Elements */}
-          <div className="absolute right-0 top-0 opacity-10">
+          {/* <div className="absolute right-0 top-0 opacity-10">
             <Building className="w-32 h-32 md:w-64 md:h-64" />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
