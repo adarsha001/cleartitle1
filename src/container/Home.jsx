@@ -19,6 +19,8 @@ const Home = () => {
   ];
 
   return (
+    <div>
+<Navbar/>
     <div className="relative">
       {/* Sections */}
       <Navbar/>
@@ -36,6 +38,7 @@ const Home = () => {
       })}
 
       <Footer />
+    </div>
     </div>
   );
 };
