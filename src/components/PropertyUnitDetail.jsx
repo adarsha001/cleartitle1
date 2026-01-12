@@ -606,7 +606,7 @@ export default function PropertyUnitDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <button
-              onClick={() => navigate('/property-units')}
+              onClick={() => navigate('/')}
               className="flex items-center gap-2 sm:gap-3 text-blue-600 hover:text-blue-800 transition-colors group"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />

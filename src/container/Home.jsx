@@ -5,6 +5,7 @@ import Footer from '../pages/Footer';
 import PropertyUnitsPage from '../newapproach/newapproachpropertyunit';
 import NewlyLaunchedProperties from '../newapproach/NewlyLaunchedProperties';
 import PossessionTimeline from '../newapproach/PossessionTimeline';
+import Navbar from '../components/Navbar';
 
 const Home = () => {
   const sectionRefs = useRef([]);
@@ -18,6 +19,8 @@ const Home = () => {
   ];
 
   return (
+    <div>
+<Navbar/>
     <div className="relative">
       {/* Sections */}
       {sections.map((sec, index) => {
@@ -34,6 +37,7 @@ const Home = () => {
       })}
 
       <Footer />
+    </div>
     </div>
   );
 };

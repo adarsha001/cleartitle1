@@ -50,7 +50,7 @@ export default function App() {
         <LikesProvider>
           <ViewModeProvider>
             <ScrollToTop />
-            <Navbar />
+            {/* <Navbar /> */}
                   <ToastContainer 
         position="top-right"
         autoClose={5000}
