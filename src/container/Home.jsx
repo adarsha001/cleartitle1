@@ -23,7 +23,7 @@ const Home = () => {
 <Navbar/>
     <div className="relative">
       {/* Sections */}
-      <Navbar/>
+      {/* <Navbar/> */}
       {sections.map((sec, index) => {
         const Component = sec.component;
         return (
