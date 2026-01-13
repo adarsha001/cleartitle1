@@ -337,7 +337,7 @@ export default function NewlyLaunchedProperties() {
           ))}
         </div>
 
-        {propertyUnits.length > 6 && (
+        {/* {propertyUnits.length > 6 && (
           <div className="mt-6 text-center md:hidden">
             <button
               onClick={handleViewAll}
@@ -347,7 +347,7 @@ export default function NewlyLaunchedProperties() {
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
