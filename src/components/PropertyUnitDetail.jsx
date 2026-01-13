@@ -1345,8 +1345,11 @@ export default function PropertyUnitDetail() {
                   <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
                     Property ID
                   </span>
-                  <span className="font-bold text-blue-600 text-sm sm:text-base">
+                  <span className="font-bold text-blue-600 text-sm sm:text-base z-50">
                     #{id?.slice(-6).toUpperCase()}
+                    <div>
+                    {id}  
+                      </div>
                   </span>
                 </div>
                 <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">

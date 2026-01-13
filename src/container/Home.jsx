@@ -6,6 +6,7 @@ import PropertyUnitsPage from '../newapproach/newapproachpropertyunit';
 import NewlyLaunchedProperties from '../newapproach/NewlyLaunchedProperties';
 import PossessionTimeline from '../newapproach/PossessionTimeline';
 import Navbar from '../components/Navbar';
+import ListingTypeView from '../newapproach/ListingTypeView';
 
 const Home = () => {
   const sectionRefs = useRef([]);
@@ -15,6 +16,7 @@ const Home = () => {
     { name: 'Newly Launched', component: NewlyLaunchedProperties },
     { name: 'Featured', component: FeaturedProperties },
     { name: 'Possession Timeline', component: PossessionTimeline },
+    { name: 'ListingTypeView', component:  ListingTypeView},
     { name: 'Quality', component: QualityAssurance },
   ];
 
