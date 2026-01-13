@@ -52,6 +52,9 @@ import {
   ChevronUp // Added for mobile expand/collapse
 } from "lucide-react";
 import Footer from "../pages/Footer";
+import PossessionTimeline from "../newapproach/PossessionTimeline";
+import NewlyLaunchedProperties from "../newapproach/NewlyLaunchedProperties";
+import FeaturedProperties from "../pages/FeaturedProperties";
 
 export default function PropertyUnitDetail() {
   const { id } = useParams();
@@ -580,7 +583,7 @@ export default function PropertyUnitDetail() {
   } = propertyUnit;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50">
       {/* Verification Banner */}
       {isVerified && (
         <div className="bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-4 sm:py-4 sm:px-6">
@@ -847,7 +850,7 @@ export default function PropertyUnitDetail() {
           <div className="lg:col-span-2 space-y-6 sm:space-y-8">
             {/* Images Gallery */}
             {safeImages.length > 0 ? (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl overflow-hidden border border-blue-200">
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl overflow-hidden ">
                 {/* Main Image Container - Mobile optimized */}
                 <div className="relative rounded-xl sm:rounded-2xl overflow-hidden" style={{ height: '300px', maxHeight: '500px' }}>
                   <img
@@ -1345,7 +1348,7 @@ export default function PropertyUnitDetail() {
                   <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
                     Property ID
                   </span>
-                  <span className="font-bold text-blue-600 text-sm sm:text-base z-50">
+                  <span className="font-bold text-blue-600 text-sm sm:text-base">
                     #{id?.slice(-6).toUpperCase()}
                     <div>
                     {id}  
@@ -1384,6 +1387,8 @@ export default function PropertyUnitDetail() {
           </div>
         </div>
       </div>
+<FeaturedProperties/>
+      <PossessionTimeline/>
 
       {/* Footer */}
       <Footer />

@@ -233,21 +233,8 @@ export default function FeaturedProperties() {
         </div>
 
         {/* Results Summary - Compact for mobile */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 bg-white p-3 rounded-xl shadow-sm">
-          <div className="mb-2 md:mb-0">
-            <h2 className="text-base md:text-xl font-bold text-gray-900">
-              Featured Properties
-            </h2>
-            <p className="text-gray-600 text-xs md:text-sm">
-              Showing {propertyUnits.length} premium properties
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-              Premium Selection
-            </span>
-          </div>
-        </div>
+
+
 
         {/* Property Units Display - Mobile: 2 columns, Desktop: 3 columns */}
         <div className="mb-8">

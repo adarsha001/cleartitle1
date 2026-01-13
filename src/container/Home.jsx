@@ -7,6 +7,7 @@ import NewlyLaunchedProperties from '../newapproach/NewlyLaunchedProperties';
 import PossessionTimeline from '../newapproach/PossessionTimeline';
 import Navbar from '../components/Navbar';
 import ListingTypeView from '../newapproach/ListingTypeView';
+import BengaluruEastLandPriceChart from '../newapproach/BengaluruEastLandPriceChart';
 
 const Home = () => {
   const sectionRefs = useRef([]);
@@ -17,6 +18,7 @@ const Home = () => {
     { name: 'Featured', component: FeaturedProperties },
     { name: 'Possession Timeline', component: PossessionTimeline },
     { name: 'ListingTypeView', component:  ListingTypeView},
+    // { name: 'BengaluruEastLandPriceChart', component:  BengaluruEastLandPriceChart},
     { name: 'Quality', component: QualityAssurance },
   ];
 
