@@ -209,278 +209,243 @@ const PossessionTimeline = () => {
   }
 
   return (
-    <div className="bg-gradient-to-tr from-blue-50 via-white to-indigo-50 py-8 md:py-16">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-8 md:mb-12">
-          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
-            Find Properties by <span className="text-blue-600">Possession Status</span>
-          </h1>
-          
-          <p className="text-gray-600 text-base md:text-lg max-w-3xl mx-auto mb-6">
-            Browse properties based on their availability and construction status. Choose from ready-to-move, under-construction, or resale properties.
-          </p>
+ <div className="bg-gradient-to-tr from-blue-50 via-white to-indigo-50 py-8 md:py-16">
+  <div className="max-w-7xl mx-auto px-4">
+    {/* Header */}
+    <div className="text-center mb-6 md:mb-12">
+      <h1 className="text-xl md:text-4xl font-bold text-gray-900 mb-2 md:mb-4">
+        Find by <span className="text-blue-600">Possession Status</span>
+      </h1>
+      
+      <p className="text-gray-600 text-sm md:text-lg max-w-3xl mx-auto mb-4 md:mb-6">
+        Browse properties based on availability and construction status.
+      </p>
 
-          {/* Stats Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto mb-8">
-            {[
-              { label: "Total Properties", value: stats.total, color: "gray" },
-              { label: "Ready to Move", value: stats["ready-to-move"], color: "green" },
-              { label: "Under Construction", value: stats["under-construction"], color: "blue" },
-              { label: "Resale", value: stats["resale"], color: "purple" }
-            ].map((stat) => (
-              <div 
-                key={stat.label}
-                className={`bg-white rounded-lg p-3 md:p-4 shadow-sm border-l-4 ${
-                  stat.color === 'green' ? 'border-green-500' :
-                  stat.color === 'blue' ? 'border-blue-500' :
-                  stat.color === 'purple' ? 'border-purple-500' :
-                  'border-gray-500'
-                }`}
-              >
-                <div className={`text-xl md:text-3xl font-bold ${
-                  stat.color === 'green' ? 'text-green-600' :
-                  stat.color === 'blue' ? 'text-blue-600' :
-                  stat.color === 'purple' ? 'text-purple-600' :
-                  'text-gray-600'
-                }`}>
-                  {stat.value}
-                </div>
-                <div className="text-xs md:text-sm text-gray-600 font-medium mt-1">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+      {/* Stats Bar - Compact on mobile */}
+      {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 max-w-4xl mx-auto mb-6 md:mb-8">
+        {[
+          { label: "Total", value: stats.total, color: "gray" },
+          { label: "Ready", value: stats["ready-to-move"], color: "green" },
+          { label: "Under Const.", value: stats["under-construction"], color: "blue" },
+          { label: "Resale", value: stats["resale"], color: "purple" }
+        ].map((stat) => (
+          <div 
+            key={stat.label}
+            className={`bg-white rounded-lg p-2 md:p-4 shadow-sm border-l-2 md:border-l-4 ${
+              stat.color === 'green' ? 'border-green-500' :
+              stat.color === 'blue' ? 'border-blue-500' :
+              stat.color === 'purple' ? 'border-purple-500' :
+              'border-gray-500'
+            }`}
+          >
+            <div className={`text-base md:text-3xl font-bold ${
+              stat.color === 'green' ? 'text-green-600' :
+              stat.color === 'blue' ? 'text-blue-600' :
+              stat.color === 'purple' ? 'text-purple-600' :
+              'text-gray-600'
+            }`}>
+              {stat.value}
+            </div>
+            <div className="text-xs text-gray-600 font-medium mt-0.5 md:mt-1">
+              {stat.label}
+            </div>
           </div>
-        </div>
+        ))}
+      </div> */}
+    </div>
 
-        {/* Possession Category Selector */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
-          {possessionCategories.map((category) => {
-            const isSelected = selectedTimeframe === category.id;
-            const count = stats[category.id];
-            
-            return (
-              <button
-                key={category.id}
-                onClick={() => handleCategorySelect(category.id)}
-                className={`relative p-4 md:p-6 rounded-xl border-2 transition-all duration-300 text-left group ${
-                  isSelected
-                    ? `border-${category.color}-500 bg-${category.color}-50 shadow-lg transform -translate-y-1`
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                }`}
-              >
-                {/* Badge */}
-        
-
-                {/* Icon */}
-                <div className={`mb-3 md:mb-4 p-2 md:p-3 rounded-full inline-block ${
+    {/* Possession Category Selector - Compact mobile view */}
+    <div className="mb-6 md:mb-12">
+      {/* Mobile: Horizontal scroll for compact view */}
+      <div className="md:hidden flex space-x-3 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+        {possessionCategories.map((category) => {
+          const isSelected = selectedTimeframe === category.id;
+          const count = stats[category.id];
+          
+          return (
+            <button
+              key={category.id}
+              onClick={() => handleCategorySelect(category.id)}
+              className={`flex-shrink-0 w-40 p-3 rounded-xl border transition-all duration-300 text-left ${
+                isSelected
+                  ? `border-${category.color}-500 bg-${category.color}-50 shadow-lg`
+                  : 'border-gray-200 bg-white'
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`p-1.5 rounded-full ${
                   isSelected
                     ? `bg-${category.color}-100 text-${category.color}-600`
                     : 'bg-gray-100 text-gray-500'
                 }`}>
                   {React.cloneElement(category.icon, {
-                    className: `w-5 h-5 md:w-6 md:h-6 ${isSelected ? '' : 'group-hover:scale-110 transition-transform'}`
+                    className: "w-4 h-4"
                   })}
                 </div>
-
-                {/* Content */}
                 <div>
-                  <h3 className={`text-base md:text-xl font-bold mb-1 ${
+                  <h3 className={`text-sm font-bold ${
                     isSelected ? `text-${category.color}-700` : 'text-gray-900'
                   }`}>
-                    {category.title}
+                    {category.id === "ready-to-move" ? "Ready Now" : 
+                     category.id === "under-construction" ? "Under Const." : "Resale"}
                   </h3>
-                  <p className="text-xs md:text-sm text-gray-600 mb-1 md:mb-2">
-                    {category.subtitle}
-                  </p>
-                  <p className="text-gray-500 text-xs md:text-sm">
-                    {category.description}
-                  </p>
+                  {/* <p className="text-xs text-gray-500">
+                    {count} properties
+                  </p> */}
                 </div>
-
-                {/* Arrow Indicator */}
-                <div className={`mt-3 md:mt-4 flex items-center gap-1 text-xs md:text-sm font-medium ${
-                  isSelected ? `text-${category.color}-600` : 'text-gray-500'
-                }`}>
-                  <span>View Properties</span>
-                  <ChevronRight className={`w-3 h-3 md:w-4 md:h-4 transition-transform ${
-                    isSelected ? 'translate-x-1' : ''
-                  }`} />
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-     
-        <div className="mb-6 md:mb-8">
-          {/* <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm mb-4 md:mb-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">
-                  {
-                    possessionCategories.find(t => t.id === selectedTimeframe)?.title
-                  } Properties
-                </h2>
-                <p className="text-gray-600 text-sm md:text-base">
-                  {
-                    possessionCategories.find(t => t.id === selectedTimeframe)?.description
-                  }
-                </p>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="px-2 md:px-3 py-1 md:py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs md:text-sm font-medium">
-                  {stats[selectedTimeframe]} Properties Available
-                </span>
-              </div>
-            </div>
-          </div> */}
-
-          {/* Features for selected category */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
-            {selectedTimeframe === "ready-to-move" && [
-              { icon: CheckCircle, text: "No waiting period", color: "green" },
-              { icon: Home, text: "Immediate occupancy", color: "green" },
-              { icon: Shield, text: "No construction risks", color: "green" }
-            ].map((feature, index) => (
-              <div key={index} className="bg-green-50 border border-green-100 rounded-lg p-3 md:p-4 flex items-center gap-2 md:gap-3">
-                <feature.icon className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
-                <span className="text-xs md:text-sm font-medium text-green-700">{feature.text}</span>
-              </div>
-            ))}
-
-            {selectedTimeframe === "under-construction" && [
-              { icon: Building, text: "New construction", color: "blue" },
-              { icon: CalendarDays, text: "Customization options", color: "blue" },
-              { icon: TrendingUp, text: "Better appreciation potential", color: "blue" }
-            ].map((feature, index) => (
-              <div key={index} className="bg-blue-50 border border-blue-100 rounded-lg p-3 md:p-4 flex items-center gap-2 md:gap-3">
-                <feature.icon className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
-                <span className="text-xs md:text-sm font-medium text-blue-700">{feature.text}</span>
-              </div>
-            ))}
-
-            {selectedTimeframe === "resale" && [
-              { icon: Home, text: "Established neighborhoods", color: "purple" },
-              { icon: Star, text: "Proven quality", color: "purple" },
-              { icon: Award, text: "Negotiable pricing", color: "purple" }
-            ].map((feature, index) => (
-              <div key={index} className="bg-purple-50 border border-purple-100 rounded-lg p-3 md:p-4 flex items-center gap-2 md:gap-3">
-                <feature.icon className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
-                <span className="text-xs md:text-sm font-medium text-purple-700">{feature.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Properties Grid */}
-        <div className="mb-8 md:mb-12">
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm animate-pulse">
-                  <div className="h-40 md:h-48 bg-gradient-to-r from-blue-100 to-indigo-200"></div>
-                  <div className="p-3 md:p-4 space-y-3">
-                    <div className="h-4 bg-gradient-to-r from-blue-200 to-indigo-300 rounded w-3/4"></div>
-                    <div className="h-3 bg-gradient-to-r from-blue-100 to-indigo-200 rounded w-1/2"></div>
-                    <div className="h-8 bg-gradient-to-r from-blue-100 to-indigo-200 rounded w-full"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : propertyUnits.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
-              {propertyUnits.map((property) => (
-                <div key={property._id} className="relative">
-                  {/* Status Badge */}
-                  {/* <div className="absolute top-2 left-2 z-10">
-                    <span className={`text-xs font-medium px-1.5 py-0.5 md:px-2 md:py-1 rounded-full backdrop-blur-sm flex items-center gap-1 ${
-                      property.possessionStatus === "ready-to-move" 
-                        ? "bg-green-100/90 text-green-800 border border-green-200"
-                        : property.possessionStatus === "under-construction"
-                        ? "bg-blue-100/90 text-blue-800 border border-blue-200"
-                        : "bg-purple-100/90 text-purple-800 border border-purple-200"
-                    }`}>
-                      {property.possessionStatus === "ready-to-move" ? (
-                        <>
-                          <CheckCircle className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                          <span className="hidden xs:inline">Ready Now</span>
-                          <span className="xs:hidden">Ready</span>
-                        </>
-                      ) : property.possessionStatus === "under-construction" ? (
-                        <>
-                          <Building className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                          <span className="hidden xs:inline">Under Construction</span>
-                          <span className="xs:hidden">UC</span>
-                        </>
-                      ) : (
-                        <>
-                          <Home className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                          <span className="hidden xs:inline">Resale</span>
-                          <span className="xs:hidden">Resale</span>
-                        </>
-                      )}
-                    </span>
-                  </div> */}
-                  
-                  <PropertyUnitCard 
-                    propertyUnit={property}
-                    viewMode="compact"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 md:py-12 bg-white rounded-xl border border-dashed border-gray-300">
-              <Building2 className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-3 md:mb-4" />
-              <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-2">
-                No Properties Found
-              </h3>
-              <p className="text-gray-600 mb-4 md:mb-6 max-w-md mx-auto text-sm md:text-base">
-                No properties available for {selectedTimeframe === "ready-to-move" ? "immediate possession" :
-                selectedTimeframe === "under-construction" ? "under construction" :
-                "resale"} at the moment.
+              <p className="text-xs text-gray-600 line-clamp-2">
+                {category.description}
               </p>
-              <button
-                onClick={() => handleCategorySelect("ready-to-move")}
-                className="inline-flex items-center gap-2 bg-blue-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm md:text-base"
-              >
-                View Ready Properties
-                <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-              </button>
-            </div>
-          )}
-        </div>
+            </button>
+          );
+        })}
+      </div>
 
-        {/* CTA Section */}
-        {/* <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 text-white overflow-hidden">
-          <div className="relative z-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
-              <div className="max-w-2xl">
-                <h3 className="text-lg md:text-xl lg:text-2xl font-bold mb-2 md:mb-3">
-                  Need Help Choosing?
-                </h3>
-                <p className="text-blue-100 mb-3 md:mb-4 text-sm md:text-base">
-                  Our property experts can help you decide between ready-to-move, under-construction, or resale properties based on your needs.
-                </p>
-                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 md:gap-3">
-                  {["✓ Personalized Recommendations", "✓ Investment Advice", "✓ Property Comparison"].map((feature, index) => (
-                    <div key={index} className="flex items-center gap-1 md:gap-2">
-                      <CheckCircle className="w-3 h-3 md:w-4 md:h-4" />
-                      <span className="text-xs md:text-sm">{feature}</span>
-                    </div>
-                  ))}
-                </div>
+      {/* Desktop: Grid view */}
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        {possessionCategories.map((category) => {
+          const isSelected = selectedTimeframe === category.id;
+          const count = stats[category.id];
+          
+          return (
+            <button
+              key={category.id}
+              onClick={() => handleCategorySelect(category.id)}
+              className={`relative p-4 md:p-6 rounded-xl border-2 transition-all duration-300 text-left group ${
+                isSelected
+                  ? `border-${category.color}-500 bg-${category.color}-50 shadow-lg transform -translate-y-1`
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+              }`}
+            >
+              {/* Icon */}
+              <div className={`mb-3 md:mb-4 p-2 md:p-3 rounded-full inline-block ${
+                isSelected
+                  ? `bg-${category.color}-100 text-${category.color}-600`
+                  : 'bg-gray-100 text-gray-500'
+              }`}>
+                {React.cloneElement(category.icon, {
+                  className: `w-5 h-5 md:w-6 md:h-6 ${isSelected ? '' : 'group-hover:scale-110 transition-transform'}`
+                })}
               </div>
-              <button className="bg-white text-blue-700 px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors whitespace-nowrap text-sm md:text-base mt-4 md:mt-0">
-                Talk to an Expert
-              </button>
-            </div>
-          </div>
-        </div> */}
+
+              {/* Content */}
+              <div>
+                <h3 className={`text-base md:text-xl font-bold mb-1 ${
+                  isSelected ? `text-${category.color}-700` : 'text-gray-900'
+                }`}>
+                  {category.title}
+                </h3>
+                <p className="text-xs md:text-sm text-gray-600 mb-1 md:mb-2">
+                  {category.subtitle}
+                </p>
+                <p className="text-gray-500 text-xs md:text-sm">
+                  {category.description}
+                </p>
+              </div>
+
+              {/* Arrow Indicator */}
+              <div className={`mt-3 md:mt-4 flex items-center gap-1 text-xs md:text-sm font-medium ${
+                isSelected ? `text-${category.color}-600` : 'text-gray-500'
+              }`}>
+                <span>View Properties</span>
+                <ChevronRight className={`w-3 h-3 md:w-4 md:h-4 transition-transform ${
+                  isSelected ? 'translate-x-1' : ''
+                }`} />
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
+
+    {/* Features for selected category - Compact on mobile */}
+    <div className="mb-4 md:mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-8">
+        {selectedTimeframe === "ready-to-move" && [
+          { icon: CheckCircle, text: "No waiting", color: "green" },
+          { icon: Home, text: "Move-in ready", color: "green" },
+          { icon: Shield, text: "No risks", color: "green" }
+        ].map((feature, index) => (
+          <div key={index} className="bg-green-50 border border-green-100 rounded-lg p-2 md:p-4 flex items-center gap-2">
+            <feature.icon className="w-3 h-3 md:w-5 md:h-5 text-green-600" />
+            <span className="text-xs md:text-sm font-medium text-green-700">{feature.text}</span>
+          </div>
+        ))}
+
+        {selectedTimeframe === "under-construction" && [
+          { icon: Building, text: "New build", color: "blue" },
+          { icon: CalendarDays, text: "Customizable", color: "blue" },
+          { icon: TrendingUp, text: "Appreciation", color: "blue" }
+        ].map((feature, index) => (
+          <div key={index} className="bg-blue-50 border border-blue-100 rounded-lg p-2 md:p-4 flex items-center gap-2">
+            <feature.icon className="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
+            <span className="text-xs md:text-sm font-medium text-blue-700">{feature.text}</span>
+          </div>
+        ))}
+
+        {selectedTimeframe === "resale" && [
+          { icon: Home, text: "Established", color: "purple" },
+          { icon: Star, text: "Proven quality", color: "purple" },
+          { icon: Award, text: "Negotiable", color: "purple" }
+        ].map((feature, index) => (
+          <div key={index} className="bg-purple-50 border border-purple-100 rounded-lg p-2 md:p-4 flex items-center gap-2">
+            <feature.icon className="w-3 h-3 md:w-5 md:h-5 text-purple-600" />
+            <span className="text-xs md:text-sm font-medium text-purple-700">{feature.text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Properties Grid */}
+    <div className="mb-6 md:mb-12">
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white rounded-lg md:rounded-xl overflow-hidden shadow-sm animate-pulse">
+              <div className="h-32 md:h-48 bg-gradient-to-r from-blue-100 to-indigo-200"></div>
+              <div className="p-2 md:p-4 space-y-2 md:space-y-3">
+                <div className="h-3 md:h-4 bg-gradient-to-r from-blue-200 to-indigo-300 rounded w-3/4"></div>
+                <div className="h-2 md:h-3 bg-gradient-to-r from-blue-100 to-indigo-200 rounded w-1/2"></div>
+                <div className="h-6 md:h-8 bg-gradient-to-r from-blue-100 to-indigo-200 rounded w-full"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : propertyUnits.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+          {propertyUnits.map((property) => (
+            <div key={property._id}>
+              <PropertyUnitCard 
+                propertyUnit={property}
+                viewMode="compact"
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-6 md:py-12 bg-white rounded-lg md:rounded-xl border border-dashed border-gray-300">
+          <Building2 className="w-10 h-10 md:w-16 md:h-16 text-gray-400 mx-auto mb-2 md:mb-4" />
+          <h3 className="text-base md:text-xl font-bold text-gray-900 mb-1 md:mb-2">
+            No Properties Found
+          </h3>
+          <p className="text-gray-600 mb-3 md:mb-6 max-w-md mx-auto text-xs md:text-base">
+            No {selectedTimeframe === "ready-to-move" ? "ready" :
+            selectedTimeframe === "under-construction" ? "under construction" :
+            "resale"} properties available.
+          </p>
+          <button
+            onClick={() => handleCategorySelect("ready-to-move")}
+            className="inline-flex items-center gap-1 md:gap-2 bg-blue-600 text-white px-2 md:px-4 py-1 md:py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-xs md:text-base"
+          >
+            View Ready Properties
+            <ChevronRight className="w-2 h-2 md:w-4 md:h-4" />
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
   );
 };
 
