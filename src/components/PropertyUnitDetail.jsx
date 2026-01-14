@@ -1,4 +1,4 @@
-// PropertyUnitDetail.jsx
+// PropertyUnitDetail.jsx - Updated with Booking Appointment Feature
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -49,7 +49,10 @@ import {
   FileText,
   LandPlot,
   ChevronDown,
-  ChevronUp // Added for mobile expand/collapse
+  ChevronUp,
+  Calendar as CalendarIcon, // Renamed for clarity
+  Clock as ClockIcon, // Renamed for clarity
+  Check
 } from "lucide-react";
 import Footer from "../pages/Footer";
 import PossessionTimeline from "../newapproach/PossessionTimeline";
@@ -63,6 +66,10 @@ export default function PropertyUnitDetail() {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [bookingStep, setBookingStep] = useState(1); // 1: Date selection, 2: Time selection
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -73,6 +80,23 @@ export default function PropertyUnitDetail() {
     amenities: true,
     buildingDetails: true
   });
+
+  // Available time slots (you can customize these)
+  const timeSlots = [
+    "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
+    "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
+    "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM",
+    "04:00 PM", "04:30 PM", "05:00 PM", "05:30 PM"
+  ];
+
+  // Get today's date for min date
+  const today = new Date();
+  const todayString = today.toISOString().split('T')[0];
+  
+  // Get date for 30 days from now for max date
+  const maxDate = new Date();
+  maxDate.setDate(today.getDate() + 30);
+  const maxDateString = maxDate.toISOString().split('T')[0];
 
   // Toggle section for mobile
   const toggleSection = (section) => {
@@ -189,6 +213,116 @@ export default function PropertyUnitDetail() {
       alert('Property link copied to clipboard!');
       setShowShareOptions(false);
     }
+  };
+
+  // BOOKING FUNCTIONS
+  const handleBookAppointment = () => {
+    if (!user) {
+      navigate('/login', { state: { from: `/property-units/${id}` } });
+      return;
+    }
+    setShowBookingModal(true);
+    setBookingStep(1);
+    setSelectedDate("");
+    setSelectedTime("");
+  };
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    setBookingStep(2);
+  };
+
+  const handleTimeSelect = (time) => {
+    setSelectedTime(time);
+    // Auto-proceed to WhatsApp after time selection
+    setTimeout(() => {
+      sendBookingToWhatsApp();
+    }, 500);
+  };
+
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const sendBookingToWhatsApp = () => {
+    if (!propertyUnit || !selectedDate || !selectedTime) return;
+    
+    const {
+      title,
+      address,
+      city,
+      price,
+      description,
+      unitNumber,
+      propertyType,
+      specifications
+    } = propertyUnit;
+
+    // Format selected date
+    const appointmentDate = formatDateForDisplay(selectedDate);
+    
+    // Create the WhatsApp message
+    let message = `*📅 PROPERTY VIEWING APPOINTMENT REQUEST*\n\n`;
+    message += `*Property Details:*\n`;
+    message += `🏢 *${title}*${unitNumber ? ` #${unitNumber}` : ''}\n`;
+    message += `📍 ${address}, ${city}\n`;
+    message += `💰 ${formatPrice(price)}\n`;
+    message += `📐 ${propertyType}\n`;
+    
+    if (specifications?.bedrooms > 0) {
+      message += `🛏️ ${specifications.bedrooms} BHK\n`;
+    }
+    
+    if (specifications?.carpetArea > 0) {
+      message += `📏 ${specifications.carpetArea.toLocaleString()} sq.ft.\n`;
+    }
+    
+    message += `\n`;
+    message += `*Appointment Details:*\n`;
+    message += `📅 Date: ${appointmentDate}\n`;
+    message += `⏰ Time: ${selectedTime}\n`;
+    message += `\n`;
+    message += `*Client Information:*\n`;
+    message += `👤 Name: ${user?.name || 'Not specified'}\n`;
+    message += `📧 Email: ${user?.email || 'Not specified'}\n`;
+    message += `📱 Phone: ${user?.phoneNumber || 'Not specified'}\n`;
+    message += `\n`;
+    message += `_This appointment request was sent via Property Portal_\n`;
+    message += `Property URL: ${window.location.href}`;
+
+    // Clean phone number (remove non-numeric characters)
+    const agentPhoneNumber = propertyUnit?.createdBy?.phoneNumber || "";
+    const cleanPhoneNumber = agentPhoneNumber.replace(/\D/g, '');
+    
+    if (!cleanPhoneNumber) {
+      alert('Agent phone number not available');
+      return;
+    }
+
+    // Encode message for URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Create WhatsApp URL
+    const whatsappUrl = `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`;
+    
+    // Open WhatsApp in new tab
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    
+    // Close modal
+    setShowBookingModal(false);
+    setSelectedDate("");
+    setSelectedTime("");
+    setBookingStep(1);
+    
+    // Show confirmation message
+    alert(`Appointment request sent to WhatsApp!\n\nDate: ${appointmentDate}\nTime: ${selectedTime}`);
   };
 
   // Format price with null checks
@@ -836,6 +970,17 @@ export default function PropertyUnitDetail() {
         </div>
       </div>
 
+      {/* BOOK YOUR APPOINTMENT BUTTON - Fixed at bottom for mobile */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-white border-t border-blue-200 shadow-2xl p-4">
+        <button
+          onClick={handleBookAppointment}
+          className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-lg flex items-center justify-center gap-3"
+        >
+          <CalendarIcon className="w-6 h-6" />
+          Book Your Appointment
+        </button>
+      </div>
+
       {/* Close dropdown when clicking outside */}
       {showShareOptions && (
         <div 
@@ -844,7 +989,160 @@ export default function PropertyUnitDetail() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      {/* BOOKING MODAL */}
+      {showBookingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-white p-6 border-b border-blue-200 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {bookingStep === 1 ? "Select Date" : "Select Time"}
+                </h2>
+                <button
+                  onClick={() => setShowBookingModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <div className={`w-3 h-3 rounded-full ${bookingStep === 1 ? 'bg-green-600' : 'bg-green-300'}`}></div>
+                <div className={`w-3 h-3 rounded-full ${bookingStep === 2 ? 'bg-green-600' : 'bg-gray-300'}`}></div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              {bookingStep === 1 ? (
+                // Date Selection
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl">
+                    <CalendarIcon className="w-6 h-6 text-blue-600" />
+                    <div>
+                      <p className="font-bold text-gray-900">Choose a date</p>
+                      <p className="text-sm text-gray-600">Select your preferred date for property viewing</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-900 mb-3">
+                      Select Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => handleDateSelect(e.target.value)}
+                      min={todayString}
+                      max={maxDateString}
+                      className="w-full p-4 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Available dates: {today.toLocaleDateString()} - {maxDate.toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  {selectedDate && (
+                    <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-green-600" />
+                        <div>
+                          <p className="font-bold text-green-800">Selected Date</p>
+                          <p className="text-green-700">{formatDateForDisplay(selectedDate)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Time Selection
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl">
+                    <ClockIcon className="w-6 h-6 text-blue-600" />
+                    <div>
+                      <p className="font-bold text-gray-900">Choose a time</p>
+                      <p className="text-sm text-gray-600">Select your preferred time slot</p>
+                    </div>
+                  </div>
+
+                  {selectedDate && (
+                    <div className="p-4 bg-blue-50 rounded-xl">
+                      <p className="font-bold text-blue-800">Date: {formatDateForDisplay(selectedDate)}</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-900 mb-3">
+                      Available Time Slots *
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {timeSlots.map((time, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleTimeSelect(time)}
+                          className={`p-4 rounded-xl border-2 transition-all ${
+                            selectedTime === time
+                              ? 'border-green-500 bg-green-50 text-green-700'
+                              : 'border-blue-200 hover:border-blue-400 hover:bg-blue-50'
+                          }`}
+                        >
+                          <span className="font-bold">{time}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedTime && (
+                    <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-green-600" />
+                        <div>
+                          <p className="font-bold text-green-800">Selected Time</p>
+                          <p className="text-green-700">{selectedTime}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="sticky bottom-0 bg-white p-6 border-t border-blue-200 rounded-b-2xl">
+              <div className="flex gap-3">
+                {bookingStep === 2 && (
+                  <button
+                    onClick={() => setBookingStep(1)}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-bold"
+                  >
+                    Back
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (bookingStep === 1 && selectedDate) {
+                      setBookingStep(2);
+                    } else if (bookingStep === 2 && selectedTime) {
+                      sendBookingToWhatsApp();
+                    }
+                  }}
+                  disabled={(bookingStep === 1 && !selectedDate) || (bookingStep === 2 && !selectedTime)}
+                  className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${
+                    (bookingStep === 1 && selectedDate) || (bookingStep === 2 && selectedTime)
+                      ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {bookingStep === 1 ? "Continue" : "Confirm & Send to WhatsApp"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-20 sm:pb-8">
         <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6 sm:space-y-8">
@@ -925,6 +1223,41 @@ export default function PropertyUnitDetail() {
                 </p>
               </div>
             )}
+
+            {/* BOOK YOUR APPOINTMENT CARD - Desktop Version */}
+            <div className="hidden sm:block bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-6 md:p-8 border-2 border-green-200">
+              <div className="flex flex-col md:flex-row md:items-center gap-6">
+                <div className="flex-1">
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+                    Schedule a Property Viewing
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Book an appointment to visit this property in person. Select your preferred date and time.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="flex items-center gap-2 text-green-700">
+                      <CalendarIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Select Date</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-green-700">
+                      <ClockIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Choose Time</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-green-700">
+                      <MessageCircle className="w-4 h-4" />
+                      <span className="text-sm font-medium">Send via WhatsApp</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={handleBookAppointment}
+                  className="bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-lg flex items-center justify-center gap-3 whitespace-nowrap"
+                >
+                  <CalendarIcon className="w-5 h-5" />
+                  Book Your Appointment
+                </button>
+              </div>
+            </div>
 
             {/* Specifications - Mobile compact with expand/collapse */}
             {(safeSpecifications.bedrooms > 0 || safeSpecifications.bathrooms > 0 || safeSpecifications.carpetArea > 0) && (
