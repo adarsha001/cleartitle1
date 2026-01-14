@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useLikes } from "../context/LikesContext";
 import { toast } from "react-hot-toast";
 import { 
   Building, Home, MapPin, ExternalLink, Ruler, 
@@ -13,15 +11,6 @@ import { gsap } from "gsap";
 
 export default function PropertyUnitCard({ propertyUnit, viewMode }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { 
-    toggleLike, 
-    isPropertyLiked, 
-    loading: likesLoading,
-    error 
-  } = useLikes();
-
-  const [showLoginTooltip, setShowLoginTooltip] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   
   // Refs for GSAP animations
@@ -155,48 +144,6 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
     return null;
   };
 
-  // Check if property unit is liked using global state
-  const isLiked = _id ? isPropertyLiked(_id) : false;
-
-  const handleLikeToggle = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!user) {
-      setShowLoginTooltip(true);
-      setTimeout(() => setShowLoginTooltip(false), 3000);
-      toast.error("Please login to save properties to your favorites");
-      return;
-    }
-
-    if (!_id) {
-      toast.error("Invalid property data");
-      return;
-    }
-
-    const success = await toggleLike(_id);
-    
-    if (success) {
-      if (isLiked) {
-        toast.success("Removed from favorites");
-      } else {
-        toast.success("Added to favorites");
-      }
-    } else if (error) {
-      toast.error(error);
-    }
-  };
-
-  const handleLikeHover = () => {
-    if (!user) {
-      setShowLoginTooltip(true);
-    }
-  };
-
-  const handleLikeLeave = () => {
-    setShowLoginTooltip(false);
-  };
-
   // Get property type icon
   const getPropertyTypeIcon = () => {
     switch (propertyType) {
@@ -239,39 +186,8 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
     }
   };
 
-  // Get availability color
-  const getAvailabilityColor = () => {
-    switch (availability) {
-      case "available":
-        return "bg-green-100 text-green-800 border-green-300";
-      case "sold":
-        return "bg-red-100 text-red-800 border-red-300";
-      case "rented":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "under-negotiation":
-        return "bg-orange-100 text-orange-800 border-orange-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
-    }
-  };
-
-  // Get approval status color
-  const getApprovalColor = () => {
-    switch (approvalStatus) {
-      case "approved":
-        return "bg-green-100 text-green-800 border-green-300";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "rejected":
-        return "bg-red-100 text-red-800 border-red-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
-    }
-  };
-
   // Handle card click
   const handleCardClick = (e) => {
-    // Don't navigate if clicking on like button or external link
     if (e.target.closest('button') || e.target.closest('a')) {
       return;
     }
@@ -324,35 +240,6 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
             <div className={`absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium border ${getListingTypeColor()}`}>
               {listingType === 'rent' ? 'Rent' : listingType === 'sale' ? 'Sale' : listingType || 'Sale'}
             </div>
-
-            {/* Like Button */}
-            <button
-              onClick={handleLikeToggle}
-              onMouseEnter={handleLikeHover}
-              onMouseLeave={handleLikeLeave}
-              disabled={likesLoading && user}
-              className={`absolute bottom-1.5 right-1.5 p-1 rounded-full transition-colors backdrop-blur-sm ${
-                user 
-                  ? (isLiked 
-                      ? "bg-blue-600 text-white" 
-                      : "bg-white/90 text-blue-600 hover:bg-yellow-300")
-                  : "bg-white/90 text-blue-600 hover:bg-yellow-300"
-              } ${(likesLoading && user) ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              <svg
-                className="w-3 h-3"
-                fill={user && isLiked ? "currentColor" : "none"}
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                />
-              </svg>
-            </button>
           </div>
 
           {/* Content Section */}
@@ -472,29 +359,6 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
                 {getPropertyTypeIcon()}
                 {propertyType || "Property"}
               </div>
-
-              {/* Like Button */}
-              <button
-                onClick={handleLikeToggle}
-                onMouseEnter={handleLikeHover}
-                onMouseLeave={handleLikeLeave}
-                disabled={likesLoading && user}
-                className="absolute top-4 right-4 p-2.5 rounded-full bg-white/90 text-blue-600 hover:bg-yellow-300 hover:scale-110 hover:border-yellow-400 transition-all duration-300 shadow-lg backdrop-blur-sm z-10 border border-blue-200"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill={user && isLiked ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
-              </button>
             </div>
 
             {/* Content Section */}
@@ -656,35 +520,6 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
           <div className={`absolute bottom-3 left-3 px-3 py-1 rounded-full text-xs font-medium border ${getListingTypeColor()}`}>
             For {listingType === 'rent' ? 'Rent' : listingType === 'sale' ? 'Sale' : listingType || 'Sale'}
           </div>
-
-          {/* Like Button */}
-          <button
-            onClick={handleLikeToggle}
-            onMouseEnter={handleLikeHover}
-            onMouseLeave={handleLikeLeave}
-            disabled={likesLoading && user}
-            className={`absolute bottom-3 right-3 p-2 rounded-full transition-all duration-300 shadow-lg backdrop-blur-sm z-10 border border-blue-200 ${
-              user 
-                ? (isLiked 
-                    ? "bg-blue-600 text-white scale-110" 
-                    : "bg-white/90 text-blue-600 hover:bg-yellow-300 hover:scale-110 hover:border-yellow-400")
-                : "bg-white/90 text-blue-600 hover:bg-yellow-300 hover:scale-110 hover:border-yellow-400"
-            } ${(likesLoading && user) ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            <svg
-              className="w-4 h-4"
-              fill={user && isLiked ? "currentColor" : "none"}
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
-            </svg>
-          </button>
         </div>
 
         {/* Content Section */}
