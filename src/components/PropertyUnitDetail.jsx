@@ -310,7 +310,7 @@ export default function PropertyUnitDetail() {
     const encodedMessage = encodeURIComponent(message);
     
     // Create WhatsApp URL
-    const whatsappUrl = `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/9019067239?text=${encodedMessage}`;
     
     // Open WhatsApp in new tab
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
