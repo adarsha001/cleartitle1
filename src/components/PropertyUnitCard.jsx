@@ -89,93 +89,107 @@ const formatPrice = () => {
   try {
     let amount = 0;
     
-    // If price is an object with amount and currency
-    if (typeof price === 'object' && price !== null) {
-      amount = price.amount || price.value || 0;
-    }
-    // If price is a number
-    else if (typeof price === 'number') {
-      amount = price;
-    }
-    // If price is a string
-    else if (typeof price === 'string') {
-      // Try to extract number from string
-      const match = price.match(/\d+/g);
-      if (match) {
-        amount = parseInt(match.join(''), 10);
-      } else {
-        return price;
+    // Helper function to parse numeric value from various formats
+    const parsePriceValue = (value) => {
+      if (value === null || value === undefined) return 0;
+      
+      // If it's already a number
+      if (typeof value === 'number') {
+        return value;
       }
-    } else {
+      
+      // If it's a string
+      if (typeof value === 'string') {
+        // Check for special cases
+        const lowerValue = value.toLowerCase().trim();
+        if (lowerValue.includes('price on request') || 
+            lowerValue.includes('contact for price') ||
+            lowerValue.includes('negotiable') ||
+            lowerValue.includes('on request')) {
+          return 'special';
+        }
+        
+        // Remove currency symbols, spaces, and commas
+        let cleanValue = value
+          .replace(/[₹$,€£\s]/g, '')  // Remove currency symbols
+          .replace(/,/g, '');          // Remove commas
+        
+        // Parse as float
+        const parsed = parseFloat(cleanValue);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      
+      // If it's an object
+      if (typeof value === 'object') {
+        return parsePriceValue(value.amount || value.value || 0);
+      }
+      
+      return 0;
+    };
+    
+    // Parse the price
+    const parsedValue = parsePriceValue(price);
+    
+    // Handle special cases
+    if (parsedValue === 'special') {
+      if (typeof price === 'string') {
+        // Capitalize first letter of each word
+        return price.split(' ').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+      }
       return "Price on request";
     }
-
-    // If amount is 0 or invalid
+    
+    // Get the numeric amount
+    amount = parsedValue;
+    
+    // Validate amount
     if (!amount || amount <= 0) return "Price on request";
-
+    
     // Function to convert number to Indian price words
     const numberToWords = (num) => {
       const crore = 10000000;
       const lakh = 100000;
       const thousand = 1000;
-
+      
+      // Helper to format decimal places nicely
+      const formatDecimal = (value) => {
+        const fixed = value.toFixed(2);
+        return fixed.replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+      };
+      
       // For crore range
       if (num >= crore) {
         const crores = num / crore;
-        const croresFixed = crores.toFixed(2);
-        
-        // Check if it's a whole number
         if (num % crore === 0) {
-          const croreInt = Math.floor(crores);
-          return `${croreInt.toLocaleString('en-IN')} Crore${croreInt > 1 ? 's' : ''}`;
+          return `${Math.floor(crores).toLocaleString('en-IN')} Crore${crores > 1 ? 's' : ''}`;
         }
-        
-        // Check if decimal part is a whole number in lakhs
-        const decimalPart = (crores - Math.floor(crores)) * 100;
-        if (decimalPart % 1 === 0 && decimalPart > 0) {
-          // Format like "2.24 Crore"
-          return `${croresFixed.replace(/\.?0+$/, '')} Crore`;
-        }
-        
-        // General case
-        return `${croresFixed.replace(/\.?0+$/, '')} Crore`;
+        return `${formatDecimal(crores)} Crore`;
       }
-
+      
       // For lakh range
       if (num >= lakh) {
         const lakhs = num / lakh;
-        const lakhsFixed = lakhs.toFixed(2);
-        
-        // Check if it's a whole number
         if (num % lakh === 0) {
-          const lakhInt = Math.floor(lakhs);
-          return `${lakhInt.toLocaleString('en-IN')} Lakh${lakhInt > 1 ? 's' : ''}`;
+          return `${Math.floor(lakhs).toLocaleString('en-IN')} Lakh${lakhs > 1 ? 's' : ''}`;
         }
-        
-        // Check if decimal part is a whole number in thousands
-        const decimalPart = (lakhs - Math.floor(lakhs)) * 100;
-        if (decimalPart % 1 === 0 && decimalPart > 0) {
-          // Format like "1.50 Lakh"
-          return `${lakhsFixed.replace(/\.?0+$/, '')} Lakh`;
-        }
-        
-        // General case
-        return `${lakhsFixed.replace(/\.?0+$/, '')} Lakh`;
+        return `${formatDecimal(lakhs)} Lakh`;
       }
-
+      
       // For thousand range
       if (num >= thousand) {
         const thousands = num / thousand;
-        if (thousands % 1 === 0) {
-          return `${thousands.toLocaleString('en-IN')} Thousand`;
+        if (num % thousand === 0) {
+          return `${Math.floor(thousands).toLocaleString('en-IN')} Thousand`;
         }
-        return `${thousands.toFixed(2).replace(/\.?0+$/, '')} Thousand`;
+        return `${formatDecimal(thousands)} Thousand`;
       }
-
+      
       // For amounts less than thousand
-      return `${num.toLocaleString('en-IN')}`;
+      return `${Math.floor(num).toLocaleString('en-IN')}`;
     };
-
+    
     const priceInWords = numberToWords(amount);
     return `₹ ${priceInWords}`;
     
