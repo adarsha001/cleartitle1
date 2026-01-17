@@ -1349,10 +1349,10 @@ const formatPrice = (price) => {
               {fullscreenImageIndex + 1} / {safeImages.length}
             </div>
 
-            {/* Watermark */}
-            <div className="absolute bottom-70 left-1/2 -translate-x-1/2 z-10 text-white/50 text-4xl font-bold tracking-wider pointer-events-none">
-              cleartitle1
-            </div>
+       {/* Watermark */}
+<div className="absolute bottom-70 left-1/2 -translate-x-1/2 z-10 text-white/50 text-4xl font-bold tracking-wider pointer-events-none">
+  cleartitle1
+</div>
 
             {/* Image container */}
             <div 
@@ -1379,21 +1379,23 @@ const formatPrice = (price) => {
             {safeImages.length > 0 ? (
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl overflow-hidden">
                 {/* Main Image Container - Maintain aspect ratio */}
-                <div className="relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer"
-                     onClick={() => openFullscreenImage(selectedImage)}>
-                  <div className="relative w-full" style={{ paddingTop: '56.25%' }}> {/* 16:9 Aspect Ratio */}
-                    <img
-                      src={safeImages[selectedImage]?.url || "https://via.placeholder.com/600x400"}
-                      alt={title}
-                      className="absolute inset-0 w-full h-full object-contain bg-gray-100"
-                    />
+        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer"
+     onClick={() => openFullscreenImage(selectedImage)}>
+  {/* REMOVED forced aspect ratio - Images display in original size */}
+  <div className="relative w-full max-h-[600px] overflow-hidden">
+    <img
+      src={safeImages[selectedImage]?.url || "https://via.placeholder.com/600x400"}
+      alt={title}
+      className="w-full h-auto max-h-[600px] object-contain bg-gray-100"
+    />
                     {/* Watermark overlay */}
-                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                      <div className="text-white/30 text-6xl font-bold tracking-wider rotate-[-30deg] opacity-30">
-                        cleartitle1
-                      </div>
-                    </div>
-                    
+             {/* Watermark overlay */}
+{/* Watermark overlay - DARKER for better download protection */}
+<div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+  <div className="text-black/60 text-7xl font-bold tracking-wider rotate-[-30deg] opacity-70">
+    cleartitle1
+  </div>
+</div>         
                     {/* Fullscreen button */}
                     <button
                       onClick={(e) => {
