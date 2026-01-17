@@ -433,24 +433,62 @@ const formatPrice = (price) => {
     let amount = 0;
     let currency = '₹';
     
+    // Helper function to extract numeric value from string with commas
+    const extractNumericValue = (str) => {
+      if (!str) return 0;
+      
+      // Check for special cases
+      const lowerStr = str.toString().toLowerCase().trim();
+      if (lowerStr.includes('price on request') || 
+          lowerStr.includes('contact for price') ||
+          lowerStr.includes('negotiable') ||
+          lowerStr === 'on request') {
+        return null; // Special marker
+      }
+      
+      // Remove currency symbols, spaces, and other non-numeric characters except commas, dots, and minus
+      let cleanStr = str.toString()
+        .replace(/[₹$,€£\s]/g, '')  // Remove currency symbols
+        .replace(/[^\d,.-]/g, '');  // Keep only digits, commas, dots, and minus
+      
+      // If string contains commas, remove them for parsing
+      cleanStr = cleanStr.replace(/,/g, '');
+      
+      // Parse as float
+      const parsed = parseFloat(cleanStr);
+      return isNaN(parsed) ? 0 : parsed;
+    };
+    
     // Extract amount from different price formats
     if (typeof price === 'object' && price !== null) {
-      amount = price.amount || price.value || 0;
+      const priceValue = price.amount || price.value || 0;
+      if (typeof priceValue === 'string' && priceValue.includes(',')) {
+        amount = extractNumericValue(priceValue);
+      } else {
+        amount = typeof priceValue === 'string' ? parseFloat(priceValue) : priceValue;
+      }
     } else if (typeof price === 'number') {
       amount = price;
     } else if (typeof price === 'string') {
-      // Try to parse string to number
-      const parsed = parseFloat(price.replace(/[^0-9.-]+/g, ""));
-      amount = isNaN(parsed) ? 0 : parsed;
+      // Handle comma-separated values
+      if (price.includes(',')) {
+        amount = extractNumericValue(price);
+        if (amount === null) return "Price on request";
+      } else {
+        // Try to parse normally
+        const parsed = parseFloat(price.replace(/[^0-9.-]+/g, ""));
+        amount = isNaN(parsed) ? 0 : parsed;
+      }
     }
     
-    // If amount is 0 or invalid
-    if (!amount || amount <= 0) return "Price on request";
+    // If amount is 0, NaN, or invalid
+    if (!amount || isNaN(amount) || amount <= 0) return "Price on request";
     
     // Format number to words with proper Indian numbering system
     const formatToIndianWords = (num) => {
       const crore = 10000000;
       const lakh = 100000;
+      const thousand = 1000;
       
       // Format function to remove trailing zeros
       const cleanNumber = (n) => {
@@ -469,13 +507,7 @@ const formatPrice = (price) => {
           return `${croresInt.toLocaleString('en-IN')} Crore${croresInt > 1 ? 's' : ''}`;
         } else {
           // Crores with decimal
-          const lakhsFromDecimal = Math.round(croresDecimal * 100); // Convert .24 to 24 lakhs
-          
-          if (lakhsFromDecimal > 0) {
-            return `${cleanNumber(crores)} Crore`;
-          } else {
-            return `${cleanNumber(crores)} Crore`;
-          }
+          return `${cleanNumber(crores)} Crore`;
         }
       }
       
@@ -495,8 +527,8 @@ const formatPrice = (price) => {
       }
       
       // For thousands
-      if (num >= 1000) {
-        const thousands = num / 1000;
+      if (num >= thousand) {
+        const thousands = num / thousand;
         if (thousands % 1 === 0) {
           return `${thousands.toLocaleString('en-IN')} Thousand`;
         } else {
@@ -508,24 +540,8 @@ const formatPrice = (price) => {
       return `${num.toLocaleString('en-IN')}`;
     };
     
-    // Format as per price range
-    const formatPriceWithCurrency = (num) => {
-      if (num >= 10000000) { // Crore range
-        const crores = num / 10000000;
-        const formatted = formatToIndianWords(num);
-        return `${currency} ${formatted}`;
-      } else if (num >= 100000) { // Lakh range
-        const lakhs = num / 100000;
-        const formatted = formatToIndianWords(num);
-        return `${currency} ${formatted}`;
-      } else {
-        // Show both number and words for smaller amounts
-        const formatted = formatToIndianWords(num);
-        return `${currency} ${num.toLocaleString('en-IN')}`;
-      }
-    };
-    
-    return formatPriceWithCurrency(amount);
+    const formatted = formatToIndianWords(amount);
+    return `${currency} ${formatted}`;
     
   } catch (err) {
     console.error("Error formatting price:", err);
