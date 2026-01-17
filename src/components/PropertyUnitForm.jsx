@@ -3,6 +3,8 @@ import { propertyUnitAPI } from '../api/propertyUnitAPI';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+// import { CurrencyRupee, X } from 'lucide-react'; // Added missing imports
+import {  X } from 'lucide-react'; // Added missing imports
 
 const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const navigate = useNavigate();
@@ -74,6 +76,7 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
   const [parentProperty, setParentProperty] = useState('');
+  const [priceInWords, setPriceInWords] = useState(''); // Added price in words state
 
   // Memoized options arrays to prevent re-renders
   const propertyTypes = useMemo(() => [
@@ -116,12 +119,82 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     (_, i) => currentYear - i
   );
 
+  // Helper function to format number with Indian comma system
+  const formatNumberWithCommas = (number) => {
+    if (!number) return '';
+    const numStr = number.toString().replace(/,/g, '');
+    return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',').replace(/(\d{2})(?=\d{2}$)/, '$1,');
+  };
+
+  // Helper function to convert number to Indian words
+  const convertToIndianWords = (numberString) => {
+    if (!numberString || numberString.trim() === '') return '';
+    
+    try {
+      const num = parseFloat(numberString.replace(/,/g, ''));
+      if (isNaN(num) || num <= 0) return '';
+      
+      const crore = 10000000;
+      const lakh = 100000;
+      const thousand = 1000;
+      
+      // For amounts in crores
+      if (num >= crore) {
+        const crores = num / crore;
+        if (num % crore === 0) {
+          // Exact crore amount
+          return `₹ ${parseInt(crores).toLocaleString('en-IN')} Crore${crores > 1 ? 's' : ''}`;
+        } else {
+          // Crore with decimal
+          return `₹ ${crores.toFixed(2).replace(/\.00$/, '')} Crore`;
+        }
+      }
+      
+      // For amounts in lakhs
+      if (num >= lakh) {
+        const lakhs = num / lakh;
+        if (num % lakh === 0) {
+          // Exact lakh amount
+          return `₹ ${parseInt(lakhs).toLocaleString('en-IN')} Lakh${lakhs > 1 ? 's' : ''}`;
+        } else {
+          // Lakh with decimal
+          return `₹ ${lakhs.toFixed(2).replace(/\.00$/, '')} Lakh`;
+        }
+      }
+      
+      // For amounts in thousands
+      if (num >= thousand) {
+        const thousands = num / thousand;
+        if (num % thousand === 0) {
+          return `₹ ${parseInt(thousands).toLocaleString('en-IN')} Thousand`;
+        } else {
+          return `₹ ${thousands.toFixed(2).replace(/\.00$/, '')} Thousand`;
+        }
+      }
+      
+      // For amounts less than thousand
+      return `₹ ${num.toLocaleString('en-IN')}`;
+      
+    } catch (error) {
+      console.error('Error converting number to words:', error);
+      return '';
+    }
+  };
+
   // Fetch property unit data for edit mode
   useEffect(() => {
     if (mode === 'edit' && propertyUnitId) {
       fetchPropertyUnit();
     }
   }, [propertyUnitId, mode]);
+
+  // Also update priceInWords when priceAmount changes (for edit mode)
+  useEffect(() => {
+    if (priceAmount && priceAmount !== 'price-on-request' && priceAmount.trim() !== '') {
+      const priceInWords = convertToIndianWords(priceAmount);
+      setPriceInWords(priceInWords);
+    }
+  }, []); // Run once on component mount for edit mode
 
   const fetchPropertyUnit = async () => {
     try {
@@ -141,7 +214,20 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       setCoordinatesLat(data.coordinates?.latitude || '');
       setCoordinatesLng(data.coordinates?.longitude || '');
       setMapUrl(data.mapUrl || '');
-      setPriceAmount(data.price?.amount?.toString() || '');
+      
+      // Handle price for edit mode
+      if (data.price?.amount === 'price-on-request') {
+        setPriceAmount('price-on-request');
+        setPriceInWords('Price on Request');
+      } else {
+        const amount = data.price?.amount?.toString() || '';
+        setPriceAmount(amount);
+        if (amount) {
+          const priceInWords = convertToIndianWords(amount);
+          setPriceInWords(priceInWords);
+        }
+      }
+      
       setPriceCurrency(data.price?.currency || 'INR');
       setPricePerUnit(data.price?.perUnit || 'total');
       setMaintenanceCharges(data.maintenanceCharges || 0);
@@ -244,9 +330,11 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     if (!title.trim()) errors.push('Title is required');
     if (!city.trim()) errors.push('City is required');
     if (!address.trim()) errors.push('Address is required');
-    if (!priceAmount || priceAmount.trim() === '') errors.push('Price amount is required');
     
-    if (priceAmount) {
+    // Price validation
+    if (!priceAmount || priceAmount.trim() === '') {
+      errors.push('Price is required');
+    } else if (priceAmount !== 'price-on-request') {
       const priceNum = parseFloat(priceAmount.replace(/,/g, ''));
       if (isNaN(priceNum)) {
         errors.push('Price amount must be a valid number');
@@ -595,7 +683,6 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     }
   };
 
-  // Helper Components - Moved outside main component to prevent re-renders
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 py-4 sm:py-6 lg:py-8">
       <div className="bg-white rounded-lg sm:rounded-xl shadow-sm sm:shadow-lg overflow-hidden p-3 sm:p-4 md:p-6 lg:p-8">
@@ -695,44 +782,179 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
           {/* Price Section */}
           <div className="border-b pb-4 sm:pb-6 md:pb-8">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Pricing Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-              <ResponsiveInput 
-                label="Price Amount *" 
-                value={priceAmount} 
-                onChange={setPriceAmount} 
-                placeholder="e.g., 10000000" 
-                required 
-                min="1"
-              />
-              <ResponsiveSelect 
-                label="Currency" 
-                value={priceCurrency} 
-                onChange={setPriceCurrency} 
-                options={currencies} 
-              />
-              <ResponsiveSelect 
-                label="Per Unit" 
-                value={pricePerUnit} 
-                onChange={setPricePerUnit} 
-                options={perUnitOptions} 
-              />
-              <ResponsiveInput 
-                label="Maintenance Charges" 
-                value={maintenanceCharges} 
-                onChange={setMaintenanceCharges} 
-                type="number" 
-                placeholder="Monthly charges" 
-                min="0"
-              />
-              <ResponsiveInput 
-                label="Security Deposit" 
-                value={securityDeposit} 
-                onChange={setSecurityDeposit} 
-                type="number" 
-                placeholder="Refundable deposit" 
-                min="0"
-              />
+            
+            {/* Price Type Selection */}
+            <div className="mb-4 sm:mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Price Type *
+              </label>
+              <div className="flex flex-wrap gap-4">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    checked={priceAmount !== 'price-on-request'}
+                    onChange={() => {
+                      setPriceAmount('');
+                      setPriceInWords('');
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Enter Price</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    checked={priceAmount === 'price-on-request'}
+                    onChange={() => {
+                      setPriceAmount('price-on-request');
+                      setPriceInWords('Price on Request');
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Price on Request</span>
+                </label>
+              </div>
             </div>
+
+            {/* Price Input Section - Only show if not "Price on Request" */}
+            {priceAmount !== 'price-on-request' && (
+              <div className="space-y-4 sm:space-y-6">
+                {/* Real-time Price in Words Display */}
+                {priceAmount && priceAmount.trim() !== '' && (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl p-4 border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-blue-700 uppercase tracking-wider mb-1">
+                          Price in Words
+                        </p>
+                        <p className="text-lg sm:text-xl font-bold text-gray-900">
+                          {priceInWords || convertToIndianWords(priceAmount)}
+                        </p>
+                      </div>
+                      {/* <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <CurrencyRupee className="w-5 h-5 text-white" />
+                      </div> */}
+                    </div>
+                    {parseFloat(priceAmount.replace(/,/g, '')) > 0 && (
+                      <p className="text-xs text-blue-600 mt-2">
+                        <span className="font-medium">Numeric:</span> ₹{parseFloat(priceAmount.replace(/,/g, '')).toLocaleString('en-IN')}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                      Price Amount *
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 sm:text-sm">₹</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={priceAmount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Allow only numbers and commas
+                          const numericValue = value.replace(/[^\d,]/g, '');
+                          // Format with commas
+                          const formatted = formatNumberWithCommas(numericValue.replace(/,/g, ''));
+                          setPriceAmount(formatted);
+                          
+                          // Update price in words in real-time
+                          if (formatted.trim() !== '') {
+                            const priceInWords = convertToIndianWords(formatted);
+                            setPriceInWords(priceInWords);
+                          } else {
+                            setPriceInWords('');
+                          }
+                        }}
+                        className="w-full pl-8 pr-3 sm:pl-10 sm:pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., 1,00,00,000"
+                        required={priceAmount !== 'price-on-request'}
+                      />
+                      {priceAmount && priceAmount.trim() !== '' && priceAmount !== 'price-on-request' && (
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPriceAmount('');
+                              setPriceInWords('');
+                            }}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Enter amount in Indian Rupees</p>
+                  </div>
+
+                  <ResponsiveSelect 
+                    label="Currency" 
+                    value={priceCurrency} 
+                    onChange={setPriceCurrency} 
+                    options={currencies} 
+                  />
+                  
+                  <ResponsiveSelect 
+                    label="Per Unit" 
+                    value={pricePerUnit} 
+                    onChange={setPricePerUnit} 
+                    options={perUnitOptions} 
+                  />
+                  
+                  <ResponsiveInput 
+                    label="Maintenance Charges" 
+                    value={maintenanceCharges} 
+                    onChange={setMaintenanceCharges} 
+                    type="number" 
+                    placeholder="Monthly charges" 
+                    min="0"
+                  />
+                  
+                  <ResponsiveInput 
+                    label="Security Deposit" 
+                    value={securityDeposit} 
+                    onChange={setSecurityDeposit} 
+                    type="number" 
+                    placeholder="Refundable deposit" 
+                    min="0"
+                  />
+                </div>
+
+                {/* Price Examples */}
+                <div className="mt-4">
+                  <p className="text-xs font-medium text-gray-700 mb-2">Quick Examples:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { value: '10000000', label: '₹1 Crore' },
+                      { value: '5000000', label: '₹50 Lakh' },
+                      { value: '2500000', label: '₹25 Lakh' },
+                      { value: '7500000', label: '₹75 Lakh' },
+                      { value: '1500000', label: '₹15 Lakh' },
+                    ].map((example) => (
+                      <button
+                        key={example.value}
+                        type="button"
+                        onClick={() => {
+                          const formatted = formatNumberWithCommas(example.value);
+                          setPriceAmount(formatted);
+                          const priceInWords = convertToIndianWords(formatted);
+                          setPriceInWords(priceInWords);
+                        }}
+                        className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                      >
+                        {example.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Property Type & Status */}

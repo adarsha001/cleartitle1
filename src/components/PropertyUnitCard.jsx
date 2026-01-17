@@ -83,34 +83,112 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
 
   // Add null checks for nested properties
   const safeSpecifications = specifications || {};
+const formatPrice = () => {
+  if (!price) return "Price on request";
+  
+  try {
+    let amount = 0;
+    
+    // If price is an object with amount and currency
+    if (typeof price === 'object' && price !== null) {
+      amount = price.amount || price.value || 0;
+    }
+    // If price is a number
+    else if (typeof price === 'number') {
+      amount = price;
+    }
+    // If price is a string
+    else if (typeof price === 'string') {
+      // Try to extract number from string
+      const match = price.match(/\d+/g);
+      if (match) {
+        amount = parseInt(match.join(''), 10);
+      } else {
+        return price;
+      }
+    } else {
+      return "Price on request";
+    }
+
+    // If amount is 0 or invalid
+    if (!amount || amount <= 0) return "Price on request";
+
+    // Function to convert number to Indian price words
+    const numberToWords = (num) => {
+      const crore = 10000000;
+      const lakh = 100000;
+      const thousand = 1000;
+
+      // For crore range
+      if (num >= crore) {
+        const crores = num / crore;
+        const croresFixed = crores.toFixed(2);
+        
+        // Check if it's a whole number
+        if (num % crore === 0) {
+          const croreInt = Math.floor(crores);
+          return `${croreInt.toLocaleString('en-IN')} Crore${croreInt > 1 ? 's' : ''}`;
+        }
+        
+        // Check if decimal part is a whole number in lakhs
+        const decimalPart = (crores - Math.floor(crores)) * 100;
+        if (decimalPart % 1 === 0 && decimalPart > 0) {
+          // Format like "2.24 Crore"
+          return `${croresFixed.replace(/\.?0+$/, '')} Crore`;
+        }
+        
+        // General case
+        return `${croresFixed.replace(/\.?0+$/, '')} Crore`;
+      }
+
+      // For lakh range
+      if (num >= lakh) {
+        const lakhs = num / lakh;
+        const lakhsFixed = lakhs.toFixed(2);
+        
+        // Check if it's a whole number
+        if (num % lakh === 0) {
+          const lakhInt = Math.floor(lakhs);
+          return `${lakhInt.toLocaleString('en-IN')} Lakh${lakhInt > 1 ? 's' : ''}`;
+        }
+        
+        // Check if decimal part is a whole number in thousands
+        const decimalPart = (lakhs - Math.floor(lakhs)) * 100;
+        if (decimalPart % 1 === 0 && decimalPart > 0) {
+          // Format like "1.50 Lakh"
+          return `${lakhsFixed.replace(/\.?0+$/, '')} Lakh`;
+        }
+        
+        // General case
+        return `${lakhsFixed.replace(/\.?0+$/, '')} Lakh`;
+      }
+
+      // For thousand range
+      if (num >= thousand) {
+        const thousands = num / thousand;
+        if (thousands % 1 === 0) {
+          return `${thousands.toLocaleString('en-IN')} Thousand`;
+        }
+        return `${thousands.toFixed(2).replace(/\.?0+$/, '')} Thousand`;
+      }
+
+      // For amounts less than thousand
+      return `${num.toLocaleString('en-IN')}`;
+    };
+
+    const priceInWords = numberToWords(amount);
+    return `₹ ${priceInWords}`;
+    
+  } catch (err) {
+    console.error("Error formatting price:", err);
+    return "Price on request";
+  }
+};
   const safeImages = images || [];
   const safeBuildingDetails = buildingDetails || {};
 
   // Format price function
-  const formatPrice = () => {
-    if (!price) return "Price on request";
-    
-    // If price is an object with amount and currency
-    if (typeof price === 'object' && price !== null) {
-      const amount = price.amount || price.value || 0;
-      const currency = price.currency || '₹';
-      const formattedAmount = amount.toLocaleString('en-IN');
-      
-      return `${currency}${formattedAmount}`;
-    }
-    
-    // If price is a number
-    if (typeof price === 'number') {
-      return `₹${price.toLocaleString('en-IN')}`;
-    }
-    
-    // If price is a string
-    if (typeof price === 'string') {
-      return price;
-    }
-    
-    return "Price on request";
-  };
+
 
   // Get price amount for calculations
   const getPriceAmount = () => {

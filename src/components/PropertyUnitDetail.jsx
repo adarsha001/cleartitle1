@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import { 
   ArrowLeft, 
-  MapPin, 
+  MapPin, ArrowRight,
   Calendar, 
   Phone, 
   Mail, 
@@ -426,34 +426,112 @@ export default function PropertyUnitDetail() {
   };
 
   // Format price with null checks
-  const formatPrice = (price) => {
-    if (!price) return "Price on request";
+const formatPrice = (price) => {
+  if (!price) return "Price on request";
+  
+  try {
+    let amount = 0;
+    let currency = '₹';
     
-    try {
-      // If price is an object with amount and currency
-      if (typeof price === 'object' && price !== null) {
-        const amount = price.amount || price.value || 0;
-        const currency = price.currency || '₹';
-        const formattedAmount = amount.toLocaleString('en-IN');
-        
-        return `${currency}${formattedAmount}`;
-      }
-      
-      // If price is a number
-      if (typeof price === 'number') {
-        return `₹${price.toLocaleString('en-IN')}`;
-      }
-      
-      // If price is a string
-      if (typeof price === 'string') {
-        return price;
-      }
-    } catch (err) {
-      console.error("Error formatting price:", err);
+    // Extract amount from different price formats
+    if (typeof price === 'object' && price !== null) {
+      amount = price.amount || price.value || 0;
+    } else if (typeof price === 'number') {
+      amount = price;
+    } else if (typeof price === 'string') {
+      // Try to parse string to number
+      const parsed = parseFloat(price.replace(/[^0-9.-]+/g, ""));
+      amount = isNaN(parsed) ? 0 : parsed;
     }
     
+    // If amount is 0 or invalid
+    if (!amount || amount <= 0) return "Price on request";
+    
+    // Format number to words with proper Indian numbering system
+    const formatToIndianWords = (num) => {
+      const crore = 10000000;
+      const lakh = 100000;
+      
+      // Format function to remove trailing zeros
+      const cleanNumber = (n) => {
+        const str = n.toFixed(2);
+        return str.replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+      };
+      
+      // For crores with lakhs
+      if (num >= crore) {
+        const crores = num / crore;
+        const croresInt = Math.floor(crores);
+        const croresDecimal = crores - croresInt;
+        
+        if (croresDecimal === 0) {
+          // Whole crores
+          return `${croresInt.toLocaleString('en-IN')} Crore${croresInt > 1 ? 's' : ''}`;
+        } else {
+          // Crores with decimal
+          const lakhsFromDecimal = Math.round(croresDecimal * 100); // Convert .24 to 24 lakhs
+          
+          if (lakhsFromDecimal > 0) {
+            return `${cleanNumber(crores)} Crore`;
+          } else {
+            return `${cleanNumber(crores)} Crore`;
+          }
+        }
+      }
+      
+      // For lakhs
+      if (num >= lakh) {
+        const lakhs = num / lakh;
+        const lakhsInt = Math.floor(lakhs);
+        const lakhsDecimal = lakhs - lakhsInt;
+        
+        if (lakhsDecimal === 0) {
+          // Whole lakhs
+          return `${lakhsInt.toLocaleString('en-IN')} Lakh${lakhsInt > 1 ? 's' : ''}`;
+        } else {
+          // Lakhs with decimal (like 1.50 Lakh)
+          return `${cleanNumber(lakhs)} Lakh`;
+        }
+      }
+      
+      // For thousands
+      if (num >= 1000) {
+        const thousands = num / 1000;
+        if (thousands % 1 === 0) {
+          return `${thousands.toLocaleString('en-IN')} Thousand`;
+        } else {
+          return `${cleanNumber(thousands)} Thousand`;
+        }
+      }
+      
+      // For amounts less than 1000
+      return `${num.toLocaleString('en-IN')}`;
+    };
+    
+    // Format as per price range
+    const formatPriceWithCurrency = (num) => {
+      if (num >= 10000000) { // Crore range
+        const crores = num / 10000000;
+        const formatted = formatToIndianWords(num);
+        return `${currency} ${formatted}`;
+      } else if (num >= 100000) { // Lakh range
+        const lakhs = num / 100000;
+        const formatted = formatToIndianWords(num);
+        return `${currency} ${formatted}`;
+      } else {
+        // Show both number and words for smaller amounts
+        const formatted = formatToIndianWords(num);
+        return `${currency} ${num.toLocaleString('en-IN')}`;
+      }
+    };
+    
+    return formatPriceWithCurrency(amount);
+    
+  } catch (err) {
+    console.error("Error formatting price:", err);
     return "Price on request";
-  };
+  }
+};
 
   // Get property type icon
   const getPropertyTypeIcon = (type) => {
@@ -765,7 +843,7 @@ export default function PropertyUnitDetail() {
                 )}
                 
                 <span className="bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
-                  {listingType === 'Sale' ? '🏷️' : '📋'}
+                  {listingType === 'sale' ? '🏷️' : '📋'}
                   <span className="hidden sm:inline">{listingType}</span>
                 </span>
 
@@ -896,23 +974,138 @@ export default function PropertyUnitDetail() {
                 )}
               </div>
             </div>
-            <div className="mt-4 sm:mt-0 lg:text-right">
-              <div className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-1 sm:mb-2">
-                {formatPrice(price)}
+<div className="mt-4 sm:mt-0 lg:text-right">
+  {/* Premium Pricing Card */}
+  <div className="inline-block max-w-sm w-full group">
+    {/* Pricing Header - Professional Real Estate Gradient */}
+    <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-t-xl sm:rounded-t-2xl p-5 sm:p-7 relative overflow-hidden">
+      {/* Subtle pattern overlay */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: '30px'
+        }}></div>
+      </div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-blue-300 to-cyan-300 rounded-full animate-pulse"></div>
+            <span className="text-xs font-semibold text-white/90 uppercase tracking-[0.15em]">
+              Clear Title Value
+            </span>
+          </div>
+          <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-full border border-white/30">
+            <span className="text-xs font-bold text-white tracking-wide">
+              {listingType === 'sale' ? 'FOR SALE' : listingType === 'rent' ? 'FOR RENT' : 'lease'}
+            </span>
+          </div>
+        </div>
+        
+        {/* Main Price with subtle shine effect */}
+        <div className="relative">
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
+              {formatPrice(price)}
+            </span>
+          </div>
+          {/* Subtle glow effect */}
+          <div className="absolute -bottom-2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+        </div>
+        
+        {/* Property Type Indicator */}
+        <div className="mt-4 flex items-center justify-end">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+            <Verified className="w-3 h-3 text-emerald-300" />
+            <span className="text-xs font-medium text-white/90">
+              Verified {propertyType}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Pricing Details - Clean Professional Card */}
+    <div className="bg-gradient-to-b from-white to-blue-50/30 rounded-b-xl sm:rounded-b-2xl border border-blue-100 shadow-xl shadow-blue-900/5">
+      <div className="p-5 sm:p-7 space-y-4">
+        {/* Price per sq.ft - Premium Styling */}
+        {safeSpecifications.carpetArea > 0 && price?.amount && (
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-50/70 rounded-xl border border-blue-200 hover:border-blue-300 transition-colors group/item">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
+                <Maximize className="w-5 h-5 text-white" />
               </div>
-              
-              {maintenanceCharges > 0 && (
-                <p className="text-sm text-gray-600 mb-1">
-                  Maintenance: ₹{maintenanceCharges.toLocaleString()}/month
+              <div>
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider">Unit Rate</p>
+                <p className="text-lg font-bold text-gray-900">
+                  ₹{(price.amount / safeSpecifications.carpetArea).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  <span className="text-sm font-medium text-gray-600 ml-1">/sq.ft</span>
                 </p>
-              )}
-              
-              {securityDeposit > 0 && (
-                <p className="text-sm text-gray-600">
-                  Security Deposit: ₹{securityDeposit.toLocaleString()}
-                </p>
-              )}
+              </div>
             </div>
+            <div className="w-2 h-8 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full opacity-70"></div>
+          </div>
+        )}
+
+        {/* Maintenance Charges - Elegant Card */}
+        {maintenanceCharges > 0 && (
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-cyan-50/70 rounded-xl border border-cyan-200 hover:border-cyan-300 transition-colors group/item">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-105 transition-transform">
+                <Building className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-cyan-700 uppercase tracking-wider">Maintenance</p>
+                <p className="text-lg font-bold text-gray-900">
+                  ₹{maintenanceCharges.toLocaleString('en-IN')}
+                  <span className="text-sm font-medium text-gray-600 ml-1">/month</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Security Deposit - Elegant Card */}
+        {securityDeposit > 0 && (
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-emerald-50/70 rounded-xl border border-emerald-200 hover:border-emerald-300 transition-colors group/item">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-green-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-105 transition-transform">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Security Deposit</p>
+                <p className="text-lg font-bold text-gray-900">
+                  ₹{securityDeposit.toLocaleString('en-IN')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Registration Charges */}
+
+ 
+        {/* Call to Action */}
+        <div className="pt-4">
+          <button 
+            onClick={handleBookAppointment}
+            className="w-full group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="relative z-10 flex items-center justify-center gap-3">
+              <CalendarIcon className="w-5 h-5" />
+              <span className="tracking-wide">Schedule Property Tour</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+            {/* Shine effect */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          </button>
+          
+    
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
           </div>
         </div>
       </div>
@@ -1141,7 +1334,7 @@ export default function PropertyUnitDetail() {
             </div>
 
             {/* Watermark */}
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 text-white/50 text-4xl font-bold tracking-wider pointer-events-none">
+            <div className="absolute bottom-70 left-1/2 -translate-x-1/2 z-10 text-white/50 text-4xl font-bold tracking-wider pointer-events-none">
               cleartitle1
             </div>
 
@@ -1736,9 +1929,9 @@ export default function PropertyUnitDetail() {
                   </span>
                   <span className="font-bold text-blue-600 text-sm sm:text-base">
                     #{id?.slice(-6).toUpperCase()}
-                    <div>
+                    {/* <div>
                     {id}  
-                      </div>
+                      </div> */}
                   </span>
                 </div>
                 <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
@@ -1749,7 +1942,7 @@ export default function PropertyUnitDetail() {
                     {viewCount || 0}
                   </span>
                 </div>
-                <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
+                {/* <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
                   <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
                     Favorites
                   </span>
@@ -1767,7 +1960,7 @@ export default function PropertyUnitDetail() {
                      availability === 'rented' ? '🏠 Rented' : 
                      '🤝 Under Negotiation'}
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
