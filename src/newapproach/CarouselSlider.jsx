@@ -29,15 +29,15 @@ const ImprovedCarousel = () => {
       cta: 'Get Started',
       badge: 'Featured'
     },
-    // {
-    //   id: 3,
-    //   image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
-    //   mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
-    //   title: 'Reliable Packers & Movers',
-    //   description: 'Safe and efficient relocation services',
-    //   cta: 'Request Quote',
-    //   badge: 'Limited Time'
-    // },
+    {
+      id: 3,
+      image: '/demo.jpeg',
+      mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
+      title: 'Reliable Packers & Movers',
+      description: 'Safe and efficient relocation services',
+      cta: 'Request Quote',
+      badge: 'Limited Time'
+    },
     // {
     //   id: 4,
     //   image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',

@@ -13,6 +13,7 @@ export default function Register() {
   const [googleError, setGoogleError] = useState("");
   const recaptchaRef = useRef();
   const googleButtonRef = useRef();
+  const [googleSDKLoaded, setGoogleSDKLoaded] = useState(false);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -22,7 +23,7 @@ export default function Register() {
     phoneNumber: "",
     gmail: "",
     password: "",
-    sourceWebsite: 'cleartitle1' // Keep only for regular registration
+    sourceWebsite: 'cleartitle1'
   });
 
   const [captchaToken, setCaptchaToken] = useState("");
@@ -32,10 +33,32 @@ export default function Register() {
 
   // Load Google SDK
   useEffect(() => {
+    let script = null;
+    let initializationAttempts = 0;
+    const MAX_INIT_ATTEMPTS = 3;
+
     const initializeGoogleSignIn = () => {
-      if (window.google && GOOGLE_CLIENT_ID) {
-        console.log("Initializing Google Sign-In for registration page");
-        
+      // Check if Google SDK is fully loaded
+      if (!window.google || !window.google.accounts) {
+        console.warn("Google SDK not fully loaded yet");
+        initializationAttempts++;
+        if (initializationAttempts < MAX_INIT_ATTEMPTS) {
+          setTimeout(initializeGoogleSignIn, 500);
+        } else {
+          setGoogleError("Failed to load Google Sign-In. Please refresh the page.");
+        }
+        return;
+      }
+
+      if (!window.google.accounts.id) {
+        console.error("Google accounts.id API not available");
+        setGoogleError("Google Sign-In API not available in this browser");
+        return;
+      }
+
+      console.log("Initializing Google Sign-In for registration page");
+      
+      try {
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleResponse,
@@ -60,36 +83,64 @@ export default function Register() {
                 locale: "en"
               }
             );
-          } catch (error) {
-            console.error("Error rendering Google button:", error);
+            setGoogleSDKLoaded(true);
+          } catch (renderError) {
+            console.error("Error rendering Google button:", renderError);
             setGoogleError("Unable to load Google Sign-In button");
           }
         }
-      } else {
-        console.error("Google Client ID not found or Google SDK not loaded");
-        setGoogleError("Google Sign-In is not properly configured");
+      } catch (initError) {
+        console.error("Error initializing Google Sign-In:", initError);
+        setGoogleError("Failed to initialize Google Sign-In");
       }
     };
 
     // Load Google SDK script
     const loadGoogleSDK = () => {
-      if (!window.google) {
-        const script = document.createElement("script");
-        script.src = "https://accounts.google.com/gsi/client";
-        script.async = true;
-        script.defer = true;
-        script.onload = initializeGoogleSignIn;
-        script.onerror = (error) => {
-          console.error("Failed to load Google Sign-In script:", error);
-          setGoogleError("Failed to load Google Sign-In. Please check your internet connection.");
-        };
-        document.head.appendChild(script);
-      } else {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        // Already loaded
         initializeGoogleSignIn();
+        return;
       }
+
+      if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+        // Script already added but not loaded yet
+        const checkGoogleLoaded = setInterval(() => {
+          if (window.google && window.google.accounts) {
+            clearInterval(checkGoogleLoaded);
+            initializeGoogleSignIn();
+          }
+        }, 100);
+        
+        // Timeout after 5 seconds
+        setTimeout(() => {
+          clearInterval(checkGoogleLoaded);
+          if (!window.google || !window.google.accounts) {
+            setGoogleError("Google Sign-In timed out. Please check your connection.");
+          }
+        }, 5000);
+        
+        return;
+      }
+
+      script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        console.log("Google Sign-In script loaded");
+        setTimeout(initializeGoogleSignIn, 100); // Small delay to ensure full initialization
+      };
+      script.onerror = (error) => {
+        console.error("Failed to load Google Sign-In script:", error);
+        setGoogleError("Failed to load Google Sign-In. Please check your internet connection.");
+      };
+      
+      document.head.appendChild(script);
     };
 
     if (GOOGLE_CLIENT_ID) {
+      console.log("Google Client ID found, loading SDK...");
       loadGoogleSDK();
     } else {
       setGoogleError("Google Client ID is missing. Please check environment configuration.");
@@ -98,13 +149,26 @@ export default function Register() {
 
     return () => {
       // Cleanup
-      if (window.google && window.google.accounts) {
-        window.google.accounts.id.cancel();
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+          window.google.accounts.id.cancel();
+        } catch (error) {
+          console.warn("Error during Google Sign-In cleanup:", error);
+        }
+      }
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
       }
     };
   }, [GOOGLE_CLIENT_ID]);
 
   const handleGoogleResponse = async (response) => {
+    if (!response || !response.credential) {
+      console.error("Invalid Google response received");
+      setGoogleError("Invalid response from Google. Please try again.");
+      return;
+    }
+
     setIsGoogleLoading(true);
     setGoogleError("");
     console.log("Google Sign-In response received for registration");
@@ -163,8 +227,13 @@ export default function Register() {
 
   // Fallback Google button
   const triggerManualGoogleSignIn = () => {
-    if (window.google && window.google.accounts) {
-      window.google.accounts.id.prompt();
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      try {
+        window.google.accounts.id.prompt();
+      } catch (error) {
+        console.error("Error prompting Google Sign-In:", error);
+        setGoogleError("Google Sign-In is not available. Please refresh the page.");
+      }
     } else {
       setGoogleError("Google Sign-In is not available. Please refresh the page.");
     }
