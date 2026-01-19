@@ -32,7 +32,7 @@ const ImprovedCarousel = () => {
     {
       id: 3,
       image: '/demo.jpeg',
-      mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
+      mobileImage: '/demo.jpeg',
       title: 'Reliable Packers & Movers',
       description: 'Safe and efficient relocation services',
       cta: 'Request Quote',
