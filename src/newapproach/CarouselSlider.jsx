@@ -47,15 +47,15 @@ const ImprovedCarousel = () => {
       cta: 'Call Now',
       badge: 'Hot Deal'
     },
-    // {
-    //   id: 5,
-    //   image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
-    //   mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
-    //   title: 'Professional Home Painting',
-    //   description: 'Quality painting with premium finishes',
-    //   cta: 'Schedule Visit',
-    //   badge: 'Popular'
-    // }
+    {
+      id: 5,
+      image: '/hello.jpeg',
+      mobileImage: '/hello.jpeg',
+      title: 'Professional Home Painting',
+      description: 'Quality painting with premium finishes',
+      cta: 'Schedule Visit',
+      badge: 'Popular'
+    }
   ];
 
   // Check if mobile on mount and resize
