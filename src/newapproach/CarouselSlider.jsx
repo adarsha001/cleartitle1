@@ -38,15 +38,15 @@ const ImprovedCarousel = () => {
       cta: 'Request Quote',
       badge: 'Limited Time'
     },
-    // {
-    //   id: 4,
-    //   image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
-    //   mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
-    //   title: 'Expert Plumbing Services',
-    //   description: '24/7 emergency plumbing solutions',
-    //   cta: 'Call Now',
-    //   badge: 'Hot Deal'
-    // },
+    {
+      id: 4,
+      image: '/test.png',
+      mobileImage: '/test.png',
+      title: 'Expert Plumbing Services',
+      description: '24/7 emergency plumbing solutions',
+      cta: 'Call Now',
+      badge: 'Hot Deal'
+    },
     // {
     //   id: 5,
     //   image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
