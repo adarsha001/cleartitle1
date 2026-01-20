@@ -1,4 +1,4 @@
-/* ---- RESPONSIVE VERSION WITH PLACEHOLDERS + UI FIX + BIG LOGO ---- */
+/* ---- RESPONSIVE VERSION WITH PLACEHOLDER FIX + GOOGLE SIGN-IN IMPROVEMENT ---- */
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +23,7 @@ export default function Login() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [googleError, setGoogleError] = useState("");
+  const [isGoogleSDKLoaded, setIsGoogleSDKLoaded] = useState(false);
 
   const googleButtonRef = useRef(null);
   const isMounted = useRef(true);
@@ -30,18 +31,31 @@ export default function Login() {
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
-    return () => (isMounted.current = false);
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
-  /* ---------------- GOOGLE LOGIN SDK ---------------- */
+  /* ---------------- IMPROVED GOOGLE LOGIN SDK ---------------- */
   useEffect(() => {
+    // Clean up any existing Google button
+    if (googleButtonRef.current) {
+      googleButtonRef.current.innerHTML = "";
+    }
+
+    // Skip if no client ID
+    if (!GOOGLE_CLIENT_ID) {
+      setGoogleError("Google Client ID Missing");
+      return;
+    }
+
     let googleScript = null;
-    let isInitialized = false;
+    let googleSDKInitialized = false;
 
-    const initializeGoogleSignIn = () => {
-      if (window.google && GOOGLE_CLIENT_ID && !isInitialized) {
-        isInitialized = true;
-
+    const handleGoogleLoad = () => {
+      if (!isMounted.current) return;
+      
+      if (window.google && window.google.accounts && !googleSDKInitialized) {
         try {
           window.google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
@@ -50,68 +64,163 @@ export default function Login() {
             auto_select: false,
           });
 
-          if (googleButtonRef.current && !googleButtonRef.current.hasChildNodes()) {
-            window.google.accounts.id.renderButton(googleButtonRef.current, {
-              theme: "outline",
-              size: "large",
-              width: "100%"
-            });
-
-            setTimeout(() => {
-              try {
-                window.google.accounts.id.prompt();
-              } catch {}
-            }, 1000);
-          }
+          googleSDKInitialized = true;
+          setIsGoogleSDKLoaded(true);
+          
+          // Force re-render to ensure button renders
+          setTimeout(() => {
+            if (isMounted.current && googleButtonRef.current && googleButtonRef.current.children.length === 0) {
+              renderGoogleButton();
+            }
+          }, 100);
+          
         } catch (err) {
-          setGoogleError("Unable to load Google Sign-In");
+          console.error("Google SDK initialization error:", err);
+          setGoogleError("Unable to initialize Google Sign-In");
         }
       }
     };
 
-    const loadGoogleSDK = () => {
-      if (!window.google) {
-        googleScript = document.createElement("script");
-        googleScript.src = "https://accounts.google.com/gsi/client";
-        googleScript.async = true;
-        googleScript.onload = initializeGoogleSignIn;
-        googleScript.onerror = () => setGoogleError("Google script failed to load");
-        document.head.appendChild(googleScript);
-      } else {
-        initializeGoogleSignIn();
+    const renderGoogleButton = () => {
+      if (!isMounted.current || !window.google || !googleSDKInitialized) return;
+      
+      try {
+        // Clear any existing button
+        if (googleButtonRef.current) {
+          googleButtonRef.current.innerHTML = "";
+        }
+        
+        window.google.accounts.id.renderButton(
+          googleButtonRef.current,
+          {
+            theme: "outline",
+            size: "large",
+            width: "100%",
+            type: "standard",
+            shape: "rectangular",
+            text: "signin_with",
+            logo_alignment: "left"
+          }
+        );
+
+        // Optional: Prompt the One Tap UI after a delay
+        setTimeout(() => {
+          try {
+            window.google.accounts.id.prompt((notification) => {
+              if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                // One Tap UI was not shown - that's okay
+              }
+            });
+          } catch (e) {
+            // Ignore prompt errors
+          }
+        }, 500);
+        
+      } catch (err) {
+        console.error("Google button render error:", err);
       }
     };
 
-    if (GOOGLE_CLIENT_ID) loadGoogleSDK();
-    else setGoogleError("Google Client ID Missing");
-
-    return () => {
-      isInitialized = false;
-      if (googleButtonRef.current) googleButtonRef.current.innerHTML = "";
-
-      if (window.google) {
-        try {
-          window.google.accounts.id.cancel();
-        } catch {}
+    const loadGoogleSDK = () => {
+      // Check if SDK is already loaded
+      if (window.google && window.google.accounts) {
+        handleGoogleLoad();
+        return;
       }
 
-      if (googleScript && document.head.contains(googleScript)) {
-        document.head.removeChild(googleScript);
+      // Remove any existing script to avoid duplicates
+      const existingScript = document.querySelector('script[src^="https://accounts.google.com/gsi/client"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+
+      // Create and load new script
+      googleScript = document.createElement('script');
+      googleScript.src = 'https://accounts.google.com/gsi/client';
+      googleScript.async = true;
+      googleScript.defer = true;
+      googleScript.onload = handleGoogleLoad;
+      googleScript.onerror = () => {
+        if (isMounted.current) {
+          setGoogleError("Failed to load Google Sign-In. Please refresh the page.");
+        }
+      };
+      
+      document.head.appendChild(googleScript);
+    };
+
+    // Load Google SDK with a small delay to ensure DOM is ready
+    const loadTimer = setTimeout(() => {
+      loadGoogleSDK();
+    }, 300);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(loadTimer);
+      
+      if (googleScript && googleScript.parentNode) {
+        googleScript.parentNode.removeChild(googleScript);
+      }
+      
+      // Cancel any pending Google One Tap UI
+      if (window.google && window.google.accounts) {
+        try {
+          window.google.accounts.id.cancel();
+        } catch (e) {
+          // Ignore cancel errors
+        }
       }
     };
   }, [GOOGLE_CLIENT_ID]);
 
+  // Re-render Google button when SDK is loaded
+  useEffect(() => {
+    if (isGoogleSDKLoaded && googleButtonRef.current) {
+      const timer = setTimeout(() => {
+        if (googleButtonRef.current && googleButtonRef.current.children.length === 0) {
+          window.google?.accounts?.id?.renderButton(
+            googleButtonRef.current,
+            {
+              theme: "outline",
+              size: "large",
+              width: "100%"
+            }
+          );
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isGoogleSDKLoaded]);
+
   const handleGoogleResponse = async (response) => {
     if (!isMounted.current) return;
+    
     setIsGoogleLoading(true);
+    setGoogleError("");
 
     try {
       await googleLogin(response.credential);
       navigate("/profile");
-    } catch {
-      setGoogleError("Google sign-in failed");
+    } catch (error) {
+      if (isMounted.current) {
+        setGoogleError("Google sign-in failed. Please try again.");
+      }
     } finally {
       if (isMounted.current) setIsGoogleLoading(false);
+    }
+  };
+
+  // Manual Google Sign-In fallback
+  const handleManualGoogleSignIn = () => {
+    if (window.google && window.google.accounts) {
+      try {
+        window.google.accounts.id.prompt();
+      } catch (error) {
+        setGoogleError("Please click the Google button above to sign in");
+      }
+    } else {
+      setGoogleError("Google Sign-In not loaded. Please refresh the page.");
     }
   };
 
@@ -185,7 +294,26 @@ export default function Login() {
 
           {/* GOOGLE SIGN-IN */}
           <div className="space-y-3">
-            <div ref={googleButtonRef} className="w-full flex justify-center" />
+            <div className="w-full flex justify-center">
+              <div 
+                ref={googleButtonRef} 
+                className="w-full min-h-[40px] flex justify-center items-center"
+              >
+                {!isGoogleSDKLoaded && (
+                  <button
+                    type="button"
+                    onClick={handleManualGoogleSignIn}
+                    className="w-full bg-white text-gray-800 py-2.5 px-4 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors"
+                    disabled={isGoogleLoading}
+                  >
+                    <div className="w-5 h-5 bg-[#4285F4] rounded-sm flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">G</span>
+                    </div>
+                    {isGoogleLoading ? "Loading..." : "Sign in with Google"}
+                  </button>
+                )}
+              </div>
+            </div>
 
             {isGoogleLoading && (
               <p className="text-center text-white/60 text-sm">Signing in with Google…</p>
@@ -193,6 +321,17 @@ export default function Login() {
 
             {googleError && (
               <p className="text-center text-red-400 text-sm">{googleError}</p>
+            )}
+            
+            {/* Fallback button for slow connections */}
+            {isGoogleSDKLoaded && (
+              <button
+                type="button"
+                onClick={handleManualGoogleSignIn}
+                className="text-sm text-blue-300 hover:text-blue-200 mx-auto block"
+              >
+                Not seeing the Google button? Click here
+              </button>
             )}
           </div>
 
@@ -220,7 +359,7 @@ export default function Login() {
                   placeholder="Enter your email or username"
                   value={form.emailOrUsername}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 bg-white/10 border border-white/20 rounded-xl py-3 text-white placeholder:text-white/40"
+                  className="w-full pl-10 pr-4 bg-white/10 border border-white/20 rounded-xl py-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -230,7 +369,6 @@ export default function Login() {
             <div>
               <div className="flex justify-between mb-1">
                 <label className="text-sm text-white/70">Password</label>
-              
               </div>
 
               <div className="relative">
@@ -241,13 +379,13 @@ export default function Login() {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-12 bg-white/10 border border-white/20 rounded-xl py-3 text-white placeholder:text-white/40"
+                  className="w-full pl-10 pr-12 bg-white/10 border border-white/20 rounded-xl py-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
                 >
                   {showPassword ? <EyeOff /> : <Eye />}
                 </button>
@@ -256,8 +394,9 @@ export default function Login() {
 
             {/* SUBMIT */}
             <button
-              className="group w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-yellow-500 hover:to-yellow-600 transition-all"
+              className="group w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-yellow-500 hover:to-yellow-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading}
+              type="submit"
             >
               {isLoading ? (
                 "Signing in..."
@@ -270,7 +409,7 @@ export default function Login() {
             </button>
           </form>
 
-          {/* NEW USER (Original UI Style Restored) */}
+          {/* NEW USER */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-white/10"></div>
