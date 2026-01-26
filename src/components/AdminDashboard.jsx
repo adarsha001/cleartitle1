@@ -15,6 +15,8 @@ import AgentsPage from "./AgentsPage";
 import AdminWebsiteAssignment from "./AdminWebsiteAssignment";
 import AdminPropertyUnits from "./AdminPropertyUnits";
 import AdminAgentPanel from "./AdminAgentPanel"; // Add this import
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Inline LoadingSpinner component
 const LoadingSpinner = ({ message = "Loading..." }) => {
@@ -36,7 +38,7 @@ const AdminDashboard = () => {
   const [editingProperty, setEditingProperty] = useState(null);
   const [analyticsView, setAnalyticsView] = useState("overview");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+    const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   // Safe check for auth
@@ -293,7 +295,17 @@ const AdminDashboard = () => {
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex justify-between items-start sm:items-center">
+         
             <div>
+                    <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 sm:gap-3 text-blue-600 hover:text-blue-800 transition-colors group"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-bold tracking-wide text-sm sm:text-base">
+                Back to Properties
+              </span>
+            </button>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
               <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Manage your real estate platform</p>
               {user && (

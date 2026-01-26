@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios.js';
 import { useAuth } from '../context/AuthContext';
+// import { useNavigate } from 'react-router-dom';
 import { 
   Edit, 
   Save, 
@@ -45,7 +46,8 @@ import {
   Download,
   Share2,
   ExternalLink,
-  MoreVertical
+  MoreVertical,
+  ArrowLeft
 } from 'lucide-react';
 
 export default function Profile() {
@@ -825,13 +827,23 @@ export default function Profile() {
     { value: "other", label: "Other" },
     { value: "prefer-not-to-say", label: "Prefer not to say" }
   ];
-
+//  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-white py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Header */}
+   <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 sm:gap-3 text-blue-600 hover:text-blue-800 transition-colors group"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-bold tracking-wide text-sm sm:text-base">
+                Back to Properties
+              </span>
+            </button>
       <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-8 border border-gray-200">
   {/* Header Section */}
+
   <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-6 gap-4">
     <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-6">
       {/* Avatar Section */}

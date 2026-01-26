@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 // import { CurrencyRupee, X } from 'lucide-react'; // Added missing imports
-import {  X } from 'lucide-react'; // Added missing imports
+import {  ArrowLeft, X } from 'lucide-react'; // Added missing imports
 
 const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const navigate = useNavigate();
@@ -687,6 +687,15 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 py-4 sm:py-6 lg:py-8">
       <div className="bg-white rounded-lg sm:rounded-xl shadow-sm sm:shadow-lg overflow-hidden p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="mb-4 sm:mb-6">
+             <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 sm:gap-3 text-blue-600 hover:text-blue-800 transition-colors group"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-bold tracking-wide text-sm sm:text-base">
+                Back to Properties
+              </span>
+            </button>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
             {mode === 'create' ? 'Add New Property Unit' : 'Edit Property Unit'}
           </h1>
