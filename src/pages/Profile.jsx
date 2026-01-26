@@ -69,7 +69,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [enquiriesLoading, setEnquiriesLoading] = useState(false);
   const [postedLoading, setPostedLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('favorites');
+  const [activeTab, setActiveTab] = useState('posted');
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -1332,7 +1332,7 @@ export default function Profile() {
         {/* Tabs Navigation */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-200">
           <div className="flex border-b border-gray-200 overflow-x-auto">
-            <button
+            {/* <button
               onClick={() => { setActiveTab('favorites'); setIsEditing(false); }}
               className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'favorites' && !isEditing
@@ -1342,7 +1342,7 @@ export default function Profile() {
             >
               <Heart className="w-4 h-4 inline mr-2" />
               Favorite Properties 
-            </button>
+            </button> */}
             <button
               onClick={() => { setActiveTab('posted'); setIsEditing(false); }}
               className={`px-4 py-3 font-medium text-sm border-b-2 transition-colors whitespace-nowrap ${
@@ -1382,7 +1382,7 @@ export default function Profile() {
         {/* Content Section */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
           {/* Favorites Tab */}
-          {activeTab === 'favorites' && !isEditing && (
+          {/* {activeTab === 'favorites' && !isEditing && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <Heart className="w-6 h-6 text-blue-900" />
@@ -1412,7 +1412,7 @@ export default function Profile() {
                 </div>
               )}
             </div>
-          )}
+          )} */}
 
           {/* Posted Properties Tab */}
           {activeTab === 'posted' && !isEditing && (
