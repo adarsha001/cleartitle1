@@ -6,7 +6,9 @@ import {
   Home, Building, MapPin, Ruler, Bed, Bath,
   CheckCircle, XCircle, Loader2, X, ChevronDown, ChevronUp,
   DollarSign, Calendar, Layers, Star, SlidersHorizontal,
-  ArrowUpDown, Maximize2, Minimize2, Building2, Building as BuildingIcon
+  ArrowUpDown, Maximize2, Minimize2, Building2, Building as BuildingIcon,
+  Clock,
+  Tag
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -88,22 +90,22 @@ const PropertyUnitsPage = () => {
     { id: "all", name: "All Properties", icon: <Home className="w-5 h-5" />, count: 0 },
     { id: "Apartment", name: "Apartments", icon: <Building className="w-5 h-5" />, count: 0 },
     { id: "Villa", name: "Villas", icon: <Home className="w-5 h-5" />, count: 0 },
+    { id: "Commercial Space", name: "Commercial", icon: <Building2 className="w-5 h-5" />, count: 0 },
     { id: "Independent House", name: "Independent", icon: <Building2 className="w-5 h-5" />, count: 0 },
-    { id: "Studio", name: "Studio", icon: <Maximize2 className="w-5 h-5" />, count: 0 },
     { id: "Penthouse", name: "Penthouses", icon: <Layers className="w-5 h-5" />, count: 0 },
     { id: "Duplex", name: "Duplex", icon: <Building2 className="w-5 h-5" />, count: 0 },
     { id: "Pg house", name: "Pg house", icon: <BuildingIcon className="w-5 h-5" />, count: 0 },
     { id: "Plot", name: "Plots", icon: <Ruler className="w-5 h-5" />, count: 0 },
-    { id: "Commercial Space", name: "Commercial", icon: <Building2 className="w-5 h-5" />, count: 0 },
+    { id: "Studio", name: "Studio", icon: <Maximize2 className="w-5 h-5" />, count: 0 },
   ]);
 
   // Listing type categories
-  const [listingCategories] = useState([
-    { id: "all", name: "Mixed", icon: <Home className="w-5 h-5" />, count: 0 },
-    { id: "rent", name: "For Rent", icon: <Calendar className="w-5 h-5" />, count: 0 },
-    { id: "lease", name: "For Lease", icon: <DollarSign className="w-5 h-5" />, count: 0 },
-    { id: "sale", name: "For Sale", icon: <DollarSign className="w-5 h-5" />, count: 0 },
-  ]);
+const [listingCategories] = useState([
+  { id: "all", name: "Mixed", icon: <Layers className="w-5 h-5" />, count: 0 },
+  { id: "rent", name: "For Rent", icon: <Calendar className="w-5 h-5" />, count: 0 },
+  { id: "lease", name: "For Lease", icon: <Clock className="w-5 h-5" />, count: 0 },
+  { id: "sale", name: "For Sale", icon: <Tag className="w-5 h-5" />, count: 0 },
+]);
 
   // Format number with commas
   const formatNumber = (num) => {
@@ -925,28 +927,43 @@ const renderCarouselSkeleton = () => (
                         }
                       `}
                     </style>
-                    {propertyCategories.map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => handleCategoryClick(category.id)}
-                        className={`flex flex-col items-center flex-shrink-0 px-3 py-2 rounded-lg transition-all border min-w-[90px] ${
-                          activeCategory === category.id
-                            ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
-                            : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="mb-1">
-                          {React.cloneElement(category.icon, {
-                            className: `w-4 h-4 ${
-                              activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
-                            }`
-                          })}
-                        </div>
-                        <span className="text-xs font-medium truncate w-full text-center">
-                          {category.name}
-                        </span>
-                      </button>
-                    ))}
+            {propertyCategories.map((category) => {
+  const isDisabled = category.id !== "all" && category.count === 0;
+  const isActive = activeCategory === category.id;
+  
+  return (
+    <button
+      key={category.id}
+      onClick={() => handleCategoryClick(category.id)}
+      disabled={isDisabled}
+      className={`flex flex-col items-center flex-shrink-0 px-3 py-2 rounded-lg transition-all border min-w-[90px] ${
+        isActive
+          ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
+          : isDisabled
+          ? 'text-gray-400 border-gray-100 bg-gray-50 cursor-not-allowed'
+          : 'text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+      }`}
+    >
+      <div className="mb-1">
+        {React.cloneElement(category.icon, {
+          className: `w-4 h-4 ${
+            isActive 
+              ? 'text-blue-600' 
+              : isDisabled 
+              ? 'text-gray-300' 
+              : 'text-gray-500'
+          }`
+        })}
+      </div>
+      <span className="text-xs font-medium truncate w-full text-center">
+        {category.name}
+        {category.count > 0 && (
+          <span className="ml-1 text-gray-500">({category.count})</span>
+        )}
+      </span>
+    </button>
+  );
+})}
                   </div>
                 )}
               </div>
@@ -1050,32 +1067,50 @@ const renderCarouselSkeleton = () => (
                       {isInitialLoading ? renderDesktopCategoriesSkeleton() : (
                         <div className="relative">
                           <div className="flex space-x-2 pb-2 overflow-x-auto scrollbar-thin">
-                            {propertyCategories.map((category) => (
-                              <button
-                                key={category.id}
-                                onClick={() => handleCategoryClick(category.id)}
-                                className={`flex flex-col items-center flex-shrink-0 px-4 py-3 rounded-lg transition-all border ${
-                                  activeCategory === category.id
-                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                    : 'text-gray-700 border-gray-200 hover:bg-gray-50'
-                                }`}
-                                style={{ minWidth: '100px' }}
-                              >
-                                <div className="mb-1">
-                                  {React.cloneElement(category.icon, {
-                                    className: `w-4 h-4 ${
-                                      activeCategory === category.id ? 'text-blue-600' : 'text-gray-500'
-                                    }`
-                                  })}
-                                </div>
-                                <span className="text-xs font-medium truncate w-full text-center">
-                                  {category.name}
-                                </span>
-                                <span className="text-xs text-gray-500 mt-0.5">
-                                  {category.count}
-                                </span>
-                              </button>
-                            ))}
+                    {propertyCategories.map((category) => {
+  const isDisabled = category.id !== "all" && category.count === 0;
+  const isActive = activeCategory === category.id;
+  
+  return (
+    <button
+      key={category.id}
+      onClick={() => handleCategoryClick(category.id)}
+      disabled={isDisabled}
+      className={`flex flex-col items-center flex-shrink-0 px-4 py-3 rounded-lg transition-all border ${
+        isActive
+          ? 'bg-blue-50 text-blue-700 border-blue-200'
+          : isDisabled
+          ? 'text-gray-400 border-gray-100 bg-gray-50 cursor-not-allowed'
+          : 'text-gray-700 border-gray-200 hover:bg-gray-50'
+      }`}
+      style={{ minWidth: '100px' }}
+    >
+      <div className="mb-1">
+        {React.cloneElement(category.icon, {
+          className: `w-4 h-4 ${
+            isActive 
+              ? 'text-blue-600' 
+              : isDisabled 
+              ? 'text-gray-300' 
+              : 'text-gray-500'
+          }`
+        })}
+      </div>
+      <span className="text-xs font-medium truncate w-full text-center">
+        {category.name}
+      </span>
+      <span className={`text-xs mt-0.5 ${
+        isActive 
+          ? 'text-blue-500' 
+          : isDisabled 
+          ? 'text-gray-300' 
+          : 'text-gray-500'
+      }`}>
+        {category.count}
+      </span>
+    </button>
+  );
+})}
                           </div>
                         </div>
                       )}
