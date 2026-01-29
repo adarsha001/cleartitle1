@@ -11,51 +11,51 @@ const ImprovedCarousel = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const slides = [
-    {
-      id: 1,
-      image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-kns-sampada.webp',
-      mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-kns-sampada.webp',
-      title: 'Professional Borewell Services',
-      description: 'Expert drilling solutions for your water needs',
-      cta: 'Book Now',
-      badge: 'New Launch'
-    },
+    // {
+    //   id: 1,
+    //   image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-kns-sampada.webp',
+    //   mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-kns-sampada.webp',
+    //   title: 'Professional Borewell Services',
+    //   description: 'Expert drilling solutions for your water needs',
+    //   cta: 'Book Now',
+    //   badge: 'New Launch'
+    // },
     {
       id: 2,
-      image: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/1366/1366-casagrand-pongal-campaign.webp',
-      mobileImage: 'https://static.ieplads.com/bmsjs/banners/99acres-hp/360m/360-m-casagrand-pongal-campaign.webp',
+      image: 'Green and White Modern Nature Presentation.png',
+      mobileImage: 'Green and White Modern Nature Presentation.png',
       title: 'Premium Home Interiors',
       description: 'Transform your space with stunning designs',
       cta: 'Get Started',
       badge: 'Featured'
     },
-    {
-      id: 3,
-      image: '/demo.jpeg',
-      mobileImage: '/demo.jpeg',
-      title: 'Reliable Packers & Movers',
-      description: 'Safe and efficient relocation services',
-      cta: 'Request Quote',
-      badge: 'Limited Time'
-    },
-    {
-      id: 4,
-      image: '/test.png',
-      mobileImage: '/test.png',
-      title: 'Expert Plumbing Services',
-      description: '24/7 emergency plumbing solutions',
-      cta: 'Call Now',
-      badge: 'Hot Deal'
-    },
-    {
-      id: 5,
-      image: '/hello.jpeg',
-      mobileImage: '/hello.jpeg',
-      title: 'Professional Home Painting',
-      description: 'Quality painting with premium finishes',
-      cta: 'Schedule Visit',
-      badge: 'Popular'
-    }
+    // {
+    //   id: 3,
+    //   image: '/demo.jpeg',
+    //   mobileImage: '/demo.jpeg',
+    //   title: 'Reliable Packers & Movers',
+    //   description: 'Safe and efficient relocation services',
+    //   cta: 'Request Quote',
+    //   badge: 'Limited Time'
+    // },
+    // {
+    //   id: 4,
+    //   image: '/test.png',
+    //   mobileImage: '/test.png',
+    //   title: 'Expert Plumbing Services',
+    //   description: '24/7 emergency plumbing solutions',
+    //   cta: 'Call Now',
+    //   badge: 'Hot Deal'
+    // },
+    // {
+    //   id: 5,
+    //   image: '/hello.jpeg',
+    //   mobileImage: '/hello.jpeg',
+    //   title: 'Professional Home Painting',
+    //   description: 'Quality painting with premium finishes',
+    //   cta: 'Schedule Visit',
+    //   badge: 'Popular'
+    // }
   ];
 
   // Check if mobile on mount and resize
