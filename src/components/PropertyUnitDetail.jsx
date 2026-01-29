@@ -612,7 +612,15 @@ const formatPrice = (price) => {
     
     try {
       const { coordinates, mapUrl, address, city } = propertyUnit;
-      
+        if (address && city) {
+        const query = encodeURIComponent(`${address}, ${city}`);
+        return `https://maps.google.com/maps?q=${query}&z=15&output=embed`;
+      }
+          
+      if (city) {
+        const query = encodeURIComponent(city);
+        return `https://maps.google.com/maps?q=${query}&z=15&output=embed`;
+      }
       if (coordinates?.latitude && coordinates?.longitude) {
         return `https://maps.google.com/maps?q=${coordinates.latitude},${coordinates.longitude}&z=15&output=embed`;
       }
@@ -628,15 +636,8 @@ const formatPrice = (price) => {
         }
       }
       
-      if (address && city) {
-        const query = encodeURIComponent(`${address}, ${city}`);
-        return `https://maps.google.com/maps?q=${query}&z=15&output=embed`;
-      }
-      
-      if (city) {
-        const query = encodeURIComponent(city);
-        return `https://maps.google.com/maps?q=${query}&z=15&output=embed`;
-      }
+    
+  
     } catch (err) {
       console.error("Error generating Google Maps URL:", err);
     }
@@ -650,20 +651,21 @@ const formatPrice = (price) => {
     
     try {
       const { mapUrl, coordinates, address, city } = propertyUnit;
-      
+         if (address && city) {
+        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address + ', ' + city)}`;
+      }
+       if (city) {
+        return `https://www.google.com/maps/place/${encodeURIComponent(city)}`;
+      }
       if (mapUrl) return mapUrl;
       
       if (coordinates?.latitude && coordinates?.longitude) {
         return `https://www.google.com/maps?q=${coordinates.latitude},${coordinates.longitude}`;
       }
       
-      if (address && city) {
-        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address + ', ' + city)}`;
-      }
+   
       
-      if (city) {
-        return `https://www.google.com/maps/place/${encodeURIComponent(city)}`;
-      }
+     
     } catch (err) {
       console.error("Error generating Google Maps view URL:", err);
     }

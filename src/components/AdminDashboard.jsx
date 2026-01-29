@@ -34,7 +34,7 @@ const AdminDashboard = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeSection, setActiveSection] = useState("properties");
+  const [activeSection, setActiveSection] = useState("property-units");
   const [editingProperty, setEditingProperty] = useState(null);
   const [analyticsView, setAnalyticsView] = useState("overview");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
