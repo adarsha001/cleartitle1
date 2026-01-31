@@ -63,7 +63,7 @@ const LocationBatches = () => {
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-slate-900">
       {/* Hero Section */}
-      <section className="px-4">
+      <section className="py-8 md:py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3">
             <span className="text-blue-600">Explore</span>{" "}
