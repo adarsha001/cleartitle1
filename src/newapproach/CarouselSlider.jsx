@@ -29,15 +29,15 @@ const ImprovedCarousel = () => {
       cta: 'Get Started',
       badge: 'Featured'
     },
-    // {
-    //   id: 3,
-    //   image: '/demo.jpeg',
-    //   mobileImage: '/demo.jpeg',
-    //   title: 'Reliable Packers & Movers',
-    //   description: 'Safe and efficient relocation services',
-    //   cta: 'Request Quote',
-    //   badge: 'Limited Time'
-    // },
+    {
+      id: 3,
+      image: '/gemini.png',
+      mobileImage: '/demo.jpeg',
+      title: 'Reliable Packers & Movers',
+      description: 'Safe and efficient relocation services',
+      cta: 'Request Quote',
+      badge: 'Limited Time'
+    },
     // {
     //   id: 4,
     //   image: '/test.png',
@@ -135,125 +135,111 @@ const ImprovedCarousel = () => {
   };
 
   // Desktop Carousel
-  const renderDesktopCarousel = () => (
-    <div className="w-full h-[50vh]">
-      <div className="h-full">
-        <div className="relative w-full h-full overflow-hidden group">
-          <div 
-            className="relative w-full h-full shadow-2xl overflow-hidden"
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            {slides.map((slide, index) => (
-              <div
-                key={slide.id}
-                className={`absolute inset-0 transition-transform duration-500 ease-out ${
-                  index === currentIndex
-                    ? 'translate-x-0 opacity-100'
-                    : index < currentIndex
-                    ? '-translate-x-full opacity-0'
-                    : 'translate-x-full opacity-0'
-                }`}
-              >
-                <div className="absolute inset-0">
-                  <img
-                    src={slide.image}
-                    alt={slide.title}
-                    className="w-full h-full object-cover"
-                    loading={index === currentIndex ? 'eager' : 'lazy'}
-                  />
-                  {/* <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/60 to-transparent" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent" /> */}
-                </div>
+const renderDesktopCarousel = () => (
+  <div className="w-full h-[50vh] shadow-transparent relative">
+    {/* Top shadow overlay for navbar visibility */}
+  <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/80 via-black/30 via-black/10 to-transparent pointer-events-none z-30 transition-opacity duration-300"></div>
+    
+    <div className="h-full">
+      <div className="relative w-full h-full overflow-hidden group">
+        <div 
+          className="relative w-full h-full shadow-2xl overflow-hidden"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {slides.map((slide, index) => (
+            <div
+              key={slide.id}
+              className={`absolute inset-0 transition-transform duration-500 ease-out ${
+                index === currentIndex
+                  ? 'translate-x-0 opacity-100'
+                  : index < currentIndex
+                  ? '-translate-x-full opacity-0'
+                  : 'translate-x-full opacity-0'
+              }`}
+            >
+              <div className="absolute inset-0">
+                <img
+                  src={slide.image}
+                  alt={slide.title}
+                  className="w-full h-full object-cover"
+                  loading={index === currentIndex ? 'eager' : 'lazy'}
+                />
+                {/* Optional: Additional overlays if needed */}
+                {/* <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent" /> */}
               </div>
-            ))}
-
-            <button
-              onClick={goToPrev}
-              className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 lg:w-12 lg:h-12
-                bg-white/10 backdrop-blur-md hover:bg-white/25 border border-white/20
-                rounded-full items-center justify-center transition-all duration-300
-                opacity-0 group-hover:opacity-100 hover:scale-110 hover:shadow-xl z-10"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-            </button>
-
-            <button
-              onClick={goToNext}
-              className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 lg:w-12 lg:h-12
-                bg-white/10 backdrop-blur-md hover:bg-white/25 border border-white/20
-                rounded-full items-center justify-center transition-all duration-300
-                opacity-0 group-hover:opacity-100 hover:scale-110 hover:shadow-xl z-10"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-            </button>
-
-            {/* <button
-              onClick={togglePlayPause}
-              className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-10 sm:h-10
-                bg-black/40 backdrop-blur-md hover:bg-black/60 border border-white/20
-                rounded-full flex items-center justify-center transition-all duration-300
-                hover:scale-110 active:scale-95 z-20 shadow-xl"
-              aria-label={isPlaying ? "Pause slideshow" : "Play slideshow"}
-            >
-              {isPlaying ? (
-                <Pause className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              ) : (
-                <Play className="w-4 h-4 sm:w-5 sm:h-5 text-white ml-0.5" />
-              )}
-            </button> */}
-
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 z-10">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300 ease-linear"
-                style={{ 
-                  width: `${((currentIndex + 1) / slides.length) * 100}%`,
-                  transition: isPlaying ? 'width 4s linear' : 'width 0.3s ease'
-                }}
-              />
             </div>
-          </div>
+          ))}
 
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className="focus:outline-none transition-all duration-300 active:scale-125"
-                aria-label={`Go to slide ${index + 1}`}
-              >
-                <div className="relative">
-                  <Circle 
-                    className={`w-3 h-3 transition-all duration-300 ${
-                      index === currentIndex 
-                        ? 'text-white fill-white scale-125' 
-                        : 'text-white/60 fill-white/40 hover:text-white/80 hover:fill-white/60'
-                    }`}
-                  />
-                  {index === currentIndex && (
-                    <div className="absolute inset-0 animate-ping">
-                      <Circle className="w-3 h-3 text-white opacity-40" />
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
+          {/* Navigation buttons */}
+          <button
+            onClick={goToPrev}
+            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 lg:w-12 lg:h-12
+              bg-white/10 backdrop-blur-md hover:bg-white/25 border border-white/20
+              rounded-full items-center justify-center transition-all duration-300
+              opacity-0 group-hover:opacity-100 hover:scale-110 hover:shadow-xl z-40"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+          </button>
 
-          {/* <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 px-2 py-1 
-            bg-black/40 backdrop-blur-md rounded border border-white/20 text-white 
-            text-xs sm:text-sm font-medium z-20 shadow-lg">
-            {currentIndex + 1} / {slides.length}
-          </div> */}
+          <button
+            onClick={goToNext}
+            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 lg:w-12 lg:h-12
+              bg-white/10 backdrop-blur-md hover:bg-white/25 border border-white/20
+              rounded-full items-center justify-center transition-all duration-300
+              opacity-0 group-hover:opacity-100 hover:scale-110 hover:shadow-xl z-40"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+          </button>
+
+          {/* Progress bar */}
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 z-10">
+            <div 
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300 ease-linear"
+              style={{ 
+                width: `${((currentIndex + 1) / slides.length) * 100}%`,
+                transition: isPlaying ? 'width 4s linear' : 'width 0.3s ease'
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Dot indicators */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className="focus:outline-none transition-all duration-300 active:scale-125"
+              aria-label={`Go to slide ${index + 1}`}
+            >
+              <div className="relative">
+                <Circle 
+                  className={`w-3 h-3 transition-all duration-300 ${
+                    index === currentIndex 
+                      ? 'text-white fill-white scale-125' 
+                      : 'text-white/60 fill-white/40 hover:text-white/80 hover:fill-white/60'
+                  }`}
+                />
+                {index === currentIndex && (
+                  <div className="absolute inset-0 animate-ping">
+                    <Circle className="w-3 h-3 text-white opacity-40" />
+                  </div>
+                )}
+              </div>
+            </button>
+          ))}
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 
   // Mobile Carousel - Compact Vertical Layout
   const renderMobileCarousel = () => (
