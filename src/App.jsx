@@ -37,6 +37,7 @@ import PropertyUnitsPage from "./components/PropertyUnitsPage";
 import PropertyUnitDetail from "./components/PropertyUnitDetail";
 import TermsAndConditionsClearTitle1 from "./components/TermsAndConditions_SAIMR_Groups";
 import PropertyUnitList from "./components/PropertyUnitList";
+import BatchCreateForm from "./components/BatchCreateForm";
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
@@ -121,6 +122,7 @@ export default function App() {
                 }
               />
                  <Route path="/property-units" element={<PropertyUnitList />} />
+                 <Route path="batch/post/property-units" element={<BatchCreateForm />} />
 
 <Route path="/terms-and-conditions" element={<TermsAndConditionsClearTitle1 />} />
               <Route path="/property-units/:id" element={<PropertyUnitDetail />} /> 
