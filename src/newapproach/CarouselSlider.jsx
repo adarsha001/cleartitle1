@@ -38,6 +38,15 @@ const ImprovedCarousel = () => {
       cta: 'Request Quote',
       badge: 'Limited Time'
     },
+       {
+      id: 3,
+      image: '/gemini2d.jpeg',
+      mobileImage: '/gemini2.png',
+      title: 'Reliable Packers & Movers',
+      description: 'Safe and efficient relocation services',
+      cta: 'Request Quote',
+      badge: 'Limited Time'
+    },
     // {
     //   id: 4,
     //   image: '/test.png',
