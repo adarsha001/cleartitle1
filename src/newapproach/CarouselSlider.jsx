@@ -32,7 +32,7 @@ const ImprovedCarousel = () => {
     {
       id: 3,
       image: '/gemini.png',
-      mobileImage: '/demo.jpeg',
+      mobileImage: '/gemini1.jpeg',
       title: 'Reliable Packers & Movers',
       description: 'Safe and efficient relocation services',
       cta: 'Request Quote',
