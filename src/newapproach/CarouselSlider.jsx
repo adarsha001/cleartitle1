@@ -23,7 +23,7 @@ const ImprovedCarousel = () => {
     {
       id: 2,
       image: 'Green and White Modern Nature Presentation.png',
-      mobileImage: 'Green and White Modern Nature Presentation.png',
+      mobileImage: '/gemini1.png',
       title: 'Premium Home Interiors',
       description: 'Transform your space with stunning designs',
       cta: 'Get Started',
@@ -32,7 +32,7 @@ const ImprovedCarousel = () => {
     {
       id: 3,
       image: '/gemini.png',
-      mobileImage: '/gemini1.jpeg',
+      mobileImage: '/gemini1.png',
       title: 'Reliable Packers & Movers',
       description: 'Safe and efficient relocation services',
       cta: 'Request Quote',
@@ -292,7 +292,7 @@ const renderDesktopCarousel = () => (
               <img
                 src={slide.mobileImage}
                 alt={slide.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-fit"
               />
          
               {/* <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
