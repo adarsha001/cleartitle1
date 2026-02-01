@@ -6,7 +6,11 @@ export default defineConfig({
   plugins: [tailwindcss(), react()],
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    minify: 'esbuild',
+    esbuild: {
+      drop: ['console', 'debugger']
+    }
   }
 })
 
