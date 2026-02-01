@@ -17,6 +17,7 @@ import AdminPropertyUnits from "./AdminPropertyUnits";
 import AdminAgentPanel from "./AdminAgentPanel"; // Add this import
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import BatchAdminPanel from "./BatchAdminPanel";
 
 // Inline LoadingSpinner component
 const LoadingSpinner = ({ message = "Loading..." }) => {
@@ -194,6 +195,8 @@ const AdminDashboard = () => {
         );
       case "users":
         return <AdminUsers />;
+            case "BatchAdminPanel":
+        return <BatchAdminPanel />;
       case "analytics":
         return (
           <div className="p-4 sm:p-6">
@@ -450,6 +453,26 @@ const AdminDashboard = () => {
               <span>Users</span>
             </button>
 
+            
+            <button
+              onClick={() => {
+                setActiveSection("BatchAdminPanel");
+                setAnalyticsView("overview");
+                setError(null);
+              }}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+                activeSection === "users"
+                  ? "bg-purple-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              </svg>
+              <span>Batch assignment</span>
+            </button>
+
+
             <button
               onClick={() => {
                 setActiveSection("analytics");
@@ -595,7 +618,23 @@ const AdminDashboard = () => {
                 </svg>
                 <span>Website Assignment</span>
               </button>
-
+      <button
+                onClick={() => {
+                  setActiveSection("BatchAdminPanel");
+                  setError(null);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
+                  activeSection === "website-assignment"
+                    ? "bg-cyan-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Batch Assignment</span>
+              </button>
               <button
                 onClick={() => {
                   setActiveSection("property-form");

@@ -20,15 +20,15 @@ const ImprovedCarousel = () => {
     //   cta: 'Book Now',
     //   badge: 'New Launch'
     // },
-    {
-      id: 2,
-      image: 'Green and White Modern Nature Presentation.png',
-      mobileImage: '/gemini1.png',
-      title: 'Premium Home Interiors',
-      description: 'Transform your space with stunning designs',
-      cta: 'Get Started',
-      badge: 'Featured'
-    },
+    // {
+    //   id: 2,
+    //   image: 'Green and White Modern Nature Presentation.png',
+    //   mobileImage: '/gemini1.png',
+    //   title: 'Premium Home Interiors',
+    //   description: 'Transform your space with stunning designs',
+    //   cta: 'Get Started',
+    //   badge: 'Featured'
+    // },
     {
       id: 3,
       image: '/gemini.png',
@@ -40,7 +40,7 @@ const ImprovedCarousel = () => {
     },
        {
       id: 3,
-      image: '/gemini2d.jpeg',
+      image: '/gemini2d.png',
       mobileImage: '/gemini2.png',
       title: 'Reliable Packers & Movers',
       description: 'Safe and efficient relocation services',

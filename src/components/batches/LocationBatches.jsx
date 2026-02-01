@@ -160,14 +160,14 @@ const LocationBatches = () => {
                       <h4 className="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold text-slate-900">Available Residences</h4>
                       <span className="text-slate-400 text-xs md:text-sm font-light">{propertyUnits.length} Properties</span>
                    </div>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                   <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                     {propertyUnits.map((unit) => (
                       <div key={unit._id} className="hover:-translate-y-1 transition-transform duration-300">
                         <PropertyUnitCard propertyUnit={unit} />
                       </div>
                     ))}
                   </div>
-                </div>
+                </div>  
               )}
             </div>
             
