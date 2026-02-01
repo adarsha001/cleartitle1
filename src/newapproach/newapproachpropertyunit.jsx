@@ -829,7 +829,7 @@ const renderCarouselSkeleton = () => (
     </div>
 
     {/* Add CSS for shimmer animation */}
-    <style jsx>{`
+    {/* <style jsx>{`
       @keyframes shimmer {
         0% {
           transform: translateX(-100%);
@@ -841,7 +841,7 @@ const renderCarouselSkeleton = () => (
       .animate-shimmer {
         animation: shimmer 2s infinite;
       }
-    `}</style>
+    `}</style> */}
   </div>
 );
 

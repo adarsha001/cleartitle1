@@ -344,20 +344,20 @@ const handleSubmit = async (e) => {
   setSuccess(false);
   
   try {
-    console.log('🧪 [DEBUG] Starting form submission...');
-    console.log('🧪 [DEBUG] Is editing?', !!property);
-    console.log('🧪 [DEBUG] Total imagePreviews:', imagePreviews.length);
+  //('🧪 [DEBUG] Starting form submission...');
+  //('🧪 [DEBUG] Is editing?', !!property);
+  //('🧪 [DEBUG] Total imagePreviews:', imagePreviews.length);
     
-    // Debug each image preview
-    imagePreviews.forEach((preview, index) => {
-      console.log(`  Image ${index}:`, {
-        isExisting: preview.isExisting,
-        hasFile: !!preview.file,
-        fileInstance: preview.file instanceof File,
-        name: preview.name || preview.file?.name,
-        preview: preview.preview?.substring(0, 50) + '...'
-      });
-    });
+    // // Debug each image preview
+    // imagePreviews.forEach((preview, index) => {
+    // //(`  Image ${index}:`, {
+    //   //   isExisting: preview.isExisting,
+    //   //   hasFile: !!preview.file,
+    //   //   fileInstance: preview.file instanceof File,
+    //   //   name: preview.name || preview.file?.name,
+    //   //   preview: preview.preview?.substring(0, 50) + '...'
+    //   // });
+    // });
 
     // Validate required fields
     if (!formData.title || !formData.city || !formData.propertyLocation || !formData.price || !formData.category) {
@@ -459,13 +459,13 @@ const handleSubmit = async (e) => {
       }
     }
 
-    console.log('🧪 [DEBUG] New image files found:', newImageFiles.length);
+  //('🧪 [DEBUG] New image files found:', newImageFiles.length);
     
     // Append new images to FormData
     if (newImageFiles.length > 0) {
-      console.log('📤 Appending images to FormData:');
+    //('📤 Appending images to FormData:');
       newImageFiles.forEach((file, index) => {
-        console.log(`  Image ${index + 1}: ${file.name} (${file.size} bytes, ${file.type})`);
+      //(`  Image ${index + 1}: ${file.name} (${file.size} bytes, ${file.type})`);
         submitFormData.append('images', file);
       });
     } else if (!property) {
@@ -476,12 +476,12 @@ const handleSubmit = async (e) => {
 
     // For editing existing properties without new images, we need to send existing image URLs
     if (property && newImageFiles.length === 0) {
-      console.log('ℹ️ Editing property with no new images - preserving existing images');
+    //('ℹ️ Editing property with no new images - preserving existing images');
       const existingImageUrls = imagePreviews
         .filter(preview => preview.isExisting)
         .map(preview => preview.preview);
       
-      console.log(`🖼️ Found ${existingImageUrls.length} existing images`);
+    //(`🖼️ Found ${existingImageUrls.length} existing images`);
       
       if (existingImageUrls.length > 0) {
         // Send existing image URLs so backend knows to preserve them
@@ -490,25 +490,25 @@ const handleSubmit = async (e) => {
     }
 
     // ✅ Debug FormData contents
-    console.log('🔍 FormData contents before sending:');
+  //('🔍 FormData contents before sending:');
     let imageCount = 0;
     for (let [key, value] of submitFormData.entries()) {
       if (key === 'images') {
         imageCount++;
         if (value instanceof File) {
-          console.log(`  ${key}[${imageCount}]: ${value.name} (${value.size} bytes)`);
+        //(`  ${key}[${imageCount}]: ${value.name} (${value.size} bytes)`);
         } else {
-          console.log(`  ${key}[${imageCount}]: Not a File - ${typeof value}`);
+        //(`  ${key}[${imageCount}]: Not a File - ${typeof value}`);
         }
       } else if (key === 'existingImages') {
-        console.log(`  ${key}: ${value}`);
+      //(`  ${key}: ${value}`);
       } else {
-        console.log(`  ${key}: ${typeof value === 'string' ? value.substring(0, 50) + '...' : 'Object'}`);
+      //(`  ${key}: ${typeof value === 'string' ? value.substring(0, 50) + '...' : 'Object'}`);
       }
     }
     
-    console.log(`📊 Total images in FormData: ${imageCount}`);
-    console.log(`📊 Total image previews: ${imagePreviews.length}`);
+  //(`📊 Total images in FormData: ${imageCount}`);
+  //(`📊 Total image previews: ${imagePreviews.length}`);
 
     // Final validation - different for new vs edit
     if (!property && imageCount === 0) {
@@ -519,21 +519,21 @@ const handleSubmit = async (e) => {
       throw new Error('No images found. Please add at least one image.');
     }
 
-    console.log('🚀 Calling API...');
+  //('🚀 Calling API...');
     
     // ✅ FIX: Call the correct API based on whether we're creating or editing
     let response;
     if (property) {
       // Editing existing property - use updatePropertyByAdmin
-      console.log(`🔄 Updating property with ID: ${property._id}`);
+    //(`🔄 Updating property with ID: ${property._id}`);
       response = await updatePropertyByAdmin(property._id, submitFormData);
     } else {
       // Creating new property - use createPropertyByAdmin
-      console.log('🆕 Creating new property');
+    //('🆕 Creating new property');
       response = await createPropertyByAdmin(submitFormData);
     }
     
-    console.log('✅ Success:', response);
+  //('✅ Success:', response);
     setSuccess(true);
     
     if (onSubmit) {

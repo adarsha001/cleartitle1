@@ -29,7 +29,7 @@ const useClickTracker = () => {
         userAgent: navigator.userAgent
       };
 
-      console.log('📤 Sending click data with auth:', trackingData);
+    //('📤 Sending click data with auth:', trackingData);
 
       const response = await fetch('/api/clicks/track', {
         method: 'POST',
@@ -44,7 +44,7 @@ const useClickTracker = () => {
       }
       
       const result = await response.json();
-      console.log('✅ Click tracking response:', result);
+    //('✅ Click tracking response:', result);
       return result.success;
     } catch (error) {
       console.error('❌ Click tracking failed:', error);

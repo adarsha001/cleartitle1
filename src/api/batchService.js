@@ -43,7 +43,7 @@ export const checkAdminAccess = async () => {
     
     return isAdmin;
   } catch (error) {
-    console.error('Error checking admin access:', error);
+  //error('Error checking admin access:', error);
     return false;
   }
 };

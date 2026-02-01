@@ -308,23 +308,23 @@ const AdminPropertyUnits = () => {
 
   // Debug API functions
   useEffect(() => {
-    console.log('propertyUnitAPI available?', propertyUnitAPI);
-    console.log('Methods available:', Object.keys(propertyUnitAPI));
-    console.log('getAllPropertyUnits exists?', typeof propertyUnitAPI.getAllPropertyUnits);
+  //('propertyUnitAPI available?', propertyUnitAPI);
+  //('Methods available:', Object.keys(propertyUnitAPI));
+  //('getAllPropertyUnits exists?', typeof propertyUnitAPI.getAllPropertyUnits);
   }, []);
 
   // Fetch property units (admin endpoint)
   const fetchPropertyUnits = async (params = {}) => {
     try {
       setLoading(true);
-      console.log('Fetching properties with filters:', { ...filters, ...params });
+    //('Fetching properties with filters:', { ...filters, ...params });
       
       const response = await propertyUnitAPI.getAllPropertyUnits({
         ...filters,
         ...params
       });
       
-      console.log('API Response:', response);
+    //('API Response:', response);
       
       if (response.success) {
         const processedData = (response.data || []).map(property => ({
@@ -371,9 +371,9 @@ const AdminPropertyUnits = () => {
   // Fetch stats (admin endpoint)
   const fetchStats = async () => {
     try {
-      console.log('Fetching stats...');
+    //('Fetching stats...');
       const response = await propertyUnitAPI.getPropertyUnitStats();
-      console.log('Stats response:', response);
+    //('Stats response:', response);
       if (response.success) {
         setStats(response.data || response.stats || response);
       }
@@ -413,7 +413,7 @@ const savePropertyOrder = async () => {
       displayOrder: index + 1
     }));
 
-    console.log('Saving display orders:', displayOrders);
+  //('Saving display orders:', displayOrders);
     
     const response = await propertyUnitAPI.updateDisplayOrders(displayOrders);
     

@@ -213,13 +213,13 @@ export default function PropertyUnitDetail() {
         setLoading(true);
         setError(null);
         
-        console.log("Fetching property unit with ID:", id);
+      //("Fetching property unit with ID:", id);
         const response = await propertyUnitAPI.getPropertyUnit(id);
         
-        console.log("API Response:", response);
+      //("API Response:", response);
         
         if (response.data.success) {
-          console.log("Property unit data:", response.data.data);
+        //("Property unit data:", response.data.data);
           setPropertyUnit(response.data.data);
         } else {
           console.error("Failed to fetch property unit:", response.data.message);

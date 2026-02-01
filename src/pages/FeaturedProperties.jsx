@@ -28,11 +28,11 @@ export default function FeaturedProperties() {
       setLoading(true);
       setError(null);
       
-      console.log("Fetching featured properties...");
+    //("Fetching featured properties...");
       
       const res = await propertyUnitAPI.getFeaturedPropertyUnits();
       
-      console.log("Featured properties response:", res.data);
+    //("Featured properties response:", res.data);
       
       if (res.data && res.data.success) {
         setPropertyUnits(res.data.data || []);

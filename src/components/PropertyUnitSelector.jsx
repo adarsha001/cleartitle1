@@ -79,14 +79,14 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         }
       });
 
-      console.log('Fetching property units with params:', params);
+    //('Fetching property units with params:', params);
       
       // Try to use batchService first, fall back to propertyUnitAPI
       let response;
       try {
         response = await batchService.getAssignablePropertyUnits(params);
       } catch (error) {
-        console.log('batchService failed, using propertyUnitAPI:', error);
+      //('batchService failed, using propertyUnitAPI:', error);
         // Fall back to propertyUnitAPI
         const apiResponse = await propertyUnitAPI.getPropertyUnits(params);
         response = {

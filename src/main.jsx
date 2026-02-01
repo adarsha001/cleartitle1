@@ -38,12 +38,12 @@ const clearGoogleTranslateCookies = () => {
     }
   });
   
-  console.log('Cleared Google Translate cookies');
+//log('Cleared Google Translate cookies');
 };
 
 // Global function to change language
 window.changeLanguage = (langCode) => {
-  console.log('Changing language to:', langCode);
+//log('Changing language to:', langCode);
   
   // Save preference to localStorage
   localStorage.setItem('preferredLanguage', langCode);
@@ -87,7 +87,7 @@ const initializeGoogleTranslate = () => {
     return;
   }
 
-  console.log('Initializing Google Translate...');
+//log('Initializing Google Translate...');
   window.googleTranslateLoading = true;
 
   const script = document.createElement('script');
@@ -95,11 +95,11 @@ const initializeGoogleTranslate = () => {
   script.src = `//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit&${Date.now()}`;
   
   script.onload = () => {
-    console.log('Google Translate script loaded');
+  //log('Google Translate script loaded');
   };
   
   script.onerror = () => {
-    console.error('Failed to load Google Translate');
+  //error('Failed to load Google Translate');
     window.googleTranslateLoading = false;
   };
   
@@ -110,7 +110,7 @@ const initializeGoogleTranslate = () => {
 window.googleTranslateElementInit = () => {
   if (window.googleTranslateReady) return;
   
-  console.log('Google Translate Element Init called');
+//log('Google Translate Element Init called');
   
   try {
     new window.google.translate.TranslateElement({
@@ -121,7 +121,7 @@ window.googleTranslateElementInit = () => {
     }, 'google_translate_element');
     
     window.googleTranslateReady = true;
-    console.log('Google Translate widget initialized');
+  //log('Google Translate widget initialized');
     
     // Apply saved language if any
     setTimeout(() => {
@@ -132,7 +132,7 @@ window.googleTranslateElementInit = () => {
         const langCode = sessionLanguage || urlLang || 'en';
         
         if (langCode && langCode !== 'en') {
-          console.log('Applying session language:', langCode);
+        //log('Applying session language:', langCode);
           
           const iframe = document.querySelector('.goog-te-menu-frame');
           if (iframe && iframe.contentWindow) {
@@ -144,12 +144,12 @@ window.googleTranslateElementInit = () => {
           }
         }
       } catch (error) {
-        console.warn('Could not apply saved language:', error);
+      //warn('Could not apply saved language:', error);
       }
     }, 1500);
     
   } catch (error) {
-    console.error('Error initializing Google Translate:', error);
+  //error('Error initializing Google Translate:', error);
   }
 };
 

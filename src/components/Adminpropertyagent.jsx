@@ -66,14 +66,14 @@ const Adminpropertyagent = () => {
   const fetchAllProperties = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching all properties...');
+    //('🔄 Fetching all properties...');
       
       // Fetch all properties without pagination from backend
       const response = await getPropertiesWithAgents({ limit: 1000 }); // Fetch large number
-      console.log("📨 Response data received:", response.data);
+    //("📨 Response data received:", response.data);
       
       const properties = response.data.data || [];
-      console.log('✅ Total properties fetched:', properties.length);
+    //('✅ Total properties fetched:', properties.length);
       
       setAllProperties(properties);
       setError(null);
@@ -91,7 +91,7 @@ const Adminpropertyagent = () => {
       return;
     }
 
-    console.log('🔍 Applying filters:', filters);
+  //('🔍 Applying filters:', filters);
     
     // Start with all properties
     let result = [...allProperties];
@@ -203,7 +203,7 @@ const Adminpropertyagent = () => {
       }
     });
 
-    console.log('✅ Filtered properties:', result.length);
+  //('✅ Filtered properties:', result.length);
     setFilteredProperties(result);
   };
 
@@ -231,7 +231,7 @@ const Adminpropertyagent = () => {
     try {
       const response = await getPropertyStats();
       setStats(response.data.data);
-      console.log("📊 Stats response:", response.data);
+    //("📊 Stats response:", response.data);
     } catch (err) {
       console.error('Failed to fetch stats:', err);
     }
@@ -317,13 +317,13 @@ const Adminpropertyagent = () => {
  // In Adminpropertyagent.jsx, update the handlePropertyFormSubmit function:
 const handlePropertyFormSubmit = async (formData, isEdit = false) => {
   try {
-    console.log('🔄 Processing property form submission, isEdit:', isEdit);
+  //('🔄 Processing property form submission, isEdit:', isEdit);
     
     if (isEdit && editingProperty) {
-      console.log(`📝 Updating property: ${editingProperty._id}`);
+    //(`📝 Updating property: ${editingProperty._id}`);
       await updatePropertyByAdmin(editingProperty._id, formData);
     } else {
-      console.log('🆕 Creating new property');
+    //('🆕 Creating new property');
       await createPropertyByAdmin(formData);
     }
     

@@ -20,7 +20,7 @@ API.interceptors.request.use((config) => {
   config.headers['Content-Type'] = 'application/json';
   
   if (isDevelopment) {
-    console.log(`🔐 Admin API: ${config.method?.toUpperCase()} ${config.url}`);
+  //log(`🔐 Admin API: ${config.method?.toUpperCase()} ${config.url}`);
   }
   
   return config;
@@ -30,7 +30,7 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => {
     if (isDevelopment) {
-      console.log(`✅ Admin API Success: ${response.status} ${response.config.url}`);
+    //log(`✅ Admin API Success: ${response.status} ${response.config.url}`);
     }
     return response;
   },
@@ -75,7 +75,7 @@ const fetchWithRetry = async (apiCall, retries = 2) => {
     return await apiCall();
   } catch (error) {
     if (retries > 0 && (error.code === 'ECONNABORTED' || !error.response)) {
-      console.log(`🔄 Retrying request... ${retries} attempts left`);
+    //log(`🔄 Retrying request... ${retries} attempts left`);
       await new Promise(resolve => setTimeout(resolve, 1000));
       return fetchWithRetry(apiCall, retries - 1);
     }
@@ -192,7 +192,7 @@ export const exportEnquiries = async (format = 'json', timeframe = '30d', status
       return { success: true, message: 'Enquiries JSON exported successfully' };
     }
   } catch (error) {
-    console.error('Enquiry export error:', error);
+  //error('Enquiry export error:', error);
     throw error;
   }
 };
@@ -332,7 +332,7 @@ export const exportClickData = async (format = 'json', timeframe = '30d') => {
       return { success: true, message: 'JSON exported successfully' };
     }
   } catch (error) {
-    console.error('Export error:', error);
+  //error('Export error:', error);
     throw error;
   }
 };
@@ -346,7 +346,7 @@ export const fetchHourlyDistribution = async (timeframe = '7d', groupBy = 'hour'
     return response.data;
     
   } catch (error) {
-    console.error('❌ Hourly distribution fetch error:', error);
+  //error('❌ Hourly distribution fetch error:', error);
     throw error;
   }
 };
@@ -360,35 +360,35 @@ export const createPropertyByAdmin = async (formData) => {
   try {
     const token = localStorage.getItem('token');
     
-    console.log('📤 [API] Sending FormData to server...');
+  //log('📤 [API] Sending FormData to server...');
     
     // Debug FormData contents BEFORE sending
     if (formData instanceof FormData) {
-      console.log('📋 [API] FormData contents before sending:');
+    //log('📋 [API] FormData contents before sending:');
       let imageCount = 0;
       for (let [key, value] of formData.entries()) {
         if (key === 'images') {
           imageCount++;
           if (value instanceof File) {
-            console.log(`  ${key}[${imageCount}]:`, value.name, `(${value.size} bytes, ${value.type})`);
+          //log(`  ${key}[${imageCount}]:`, value.name, `(${value.size} bytes, ${value.type})`);
           } else {
-            console.log(`  ${key}[${imageCount}]:`, 'Not a File object:', typeof value, value);
+          //log(`  ${key}[${imageCount}]:`, 'Not a File object:', typeof value, value);
           }
         } else if (key === 'preserveExistingImages') {
-          console.log(`  ${key}:`, value);
+        //log(`  ${key}:`, value);
         } else {
           const valStr = typeof value === 'string' ? value : JSON.stringify(value);
-          console.log(`  ${key}:`, valStr.length > 50 ? valStr.substring(0, 50) + '...' : valStr);
+        //log(`  ${key}:`, valStr.length > 50 ? valStr.substring(0, 50) + '...' : valStr);
         }
       }
-      console.log(`📊 [API] Total image files in FormData: ${imageCount}`);
+    //log(`📊 [API] Total image files in FormData: ${imageCount}`);
       
       // If no images found, throw error immediately
       if (imageCount === 0) {
-        console.warn('⚠️ [API] No image files found in FormData');
+      //warn('⚠️ [API] No image files found in FormData');
       }
     } else {
-      console.error('❌ [API] formData is not FormData instance:', typeof formData);
+    //error('❌ [API] formData is not FormData instance:', typeof formData);
     }
 
     const response = await fetch(`${baseURL}/agent/properties`, {
@@ -401,13 +401,13 @@ export const createPropertyByAdmin = async (formData) => {
     });
 
     // Check response status
-    console.log(`📥 [API] Server response status: ${response.status} ${response.statusText}`);
+  //log(`📥 [API] Server response status: ${response.status} ${response.statusText}`);
     
     const responseData = await response.json();
-    console.log('📥 [API] Server response data:', responseData);
+  //log('📥 [API] Server response data:', responseData);
     
     if (!response.ok) {
-      console.error('❌ [API] Server error response:', responseData);
+    //error('❌ [API] Server error response:', responseData);
       
       // More specific error handling
       if (response.status === 400) {
@@ -426,11 +426,11 @@ export const createPropertyByAdmin = async (formData) => {
       }
     }
 
-    console.log('✅ [API] Property created successfully:', responseData);
+  //log('✅ [API] Property created successfully:', responseData);
     return responseData;
     
   } catch (error) {
-    console.error('❌ [API] Request failed:', error);
+  //error('❌ [API] Request failed:', error);
     
     // Enhanced error handling
     if (error.message.includes('Failed to fetch')) {
@@ -445,16 +445,16 @@ export const updatePropertyByAdmin = async (id, formData) => {
   try {
     const token = localStorage.getItem('token');
     
-    console.log('📤 Sending UPDATE FormData with fetch...');
+  //log('📤 Sending UPDATE FormData with fetch...');
     
     // Debug: Check FormData contents
     for (let [key, value] of formData.entries()) {
       if (key === 'images') {
-        console.log(`  ${key}:`, value.name || 'File', `(${value.size} bytes)`);
+      //log(`  ${key}:`, value.name || 'File', `(${value.size} bytes)`);
       } else if (key === 'existingImages') {
-        console.log(`  ${key}:`, value); // Array of existing image URLs
+      //log(`  ${key}:`, value); // Array of existing image URLs
       } else {
-        console.log(`  ${key}:`, value);
+      //log(`  ${key}:`, value);
       }
     }
 
@@ -469,16 +469,16 @@ export const updatePropertyByAdmin = async (id, formData) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('❌ Server error response:', errorData);
+    //error('❌ Server error response:', errorData);
       throw new Error(errorData.message || 'Failed to update property');
     }
 
     const result = await response.json();
-    console.log('✅ Property updated successfully:', result);
+  //log('✅ Property updated successfully:', result);
     return result;
     
   } catch (error) {
-    console.error('❌ API Error:', error);
+  //error('❌ API Error:', error);
     throw error;
   }
 };

@@ -180,7 +180,7 @@ const PropertyUnitsPage = () => {
         limit: limit || 12
       };
 
-      console.log("Fetching with params:", params); // Debug log
+    //("Fetching with params:", params); // Debug log
 
       const response = await propertyUnitAPI.getPropertyUnits(params);
       

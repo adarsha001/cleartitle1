@@ -26,13 +26,13 @@ API.interceptors.request.use(
     
     config.headers['Content-Type'] = 'application/json';
     
-    console.log(`🚀 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  //log(`🚀 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     
     return config;
   },
   (error) => {
-    console.error('❌ Request error:', error);
-    return Promise.reject(error);
+  //error('❌ Request error:', error);
+    // return Promise.reject(error);
   }
 );
 
@@ -50,13 +50,13 @@ APII.interceptors.request.use(
       config.headers['Content-Type'] = 'application/json';
     }
     
-    console.log(`📁 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, 
-                config.data instanceof FormData ? '(FormData)' : '');
+  //log(`📁 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, 
+                // config.data instanceof FormData ? '(FormData)' : '');
     
     return config;
   },
   (error) => {
-    console.error('❌ FormData Request error:', error);
+  //error('❌ FormData Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -94,7 +94,7 @@ const handleResponseError = (error) => {
 
 API.interceptors.response.use(
   (response) => {
-    console.log(`✅ ${response.status} ${response.config.url}`);
+  //log(`✅ ${response.status} ${response.config.url}`);
     return response;
   },
   handleResponseError
@@ -102,7 +102,7 @@ API.interceptors.response.use(
 
 APII.interceptors.response.use(
   (response) => {
-    console.log(`✅ ${response.status} ${response.config.url} (FormData)`);
+  //log(`✅ ${response.status} ${response.config.url} (FormData)`);
     return response;
   },
   handleResponseError
@@ -121,10 +121,10 @@ export const getProperties = (params = {}) => {
   });
 };
 export const getPropertyById = (id) => API.get(`/properties/${id}`);
-export const likeProperty = (propertyId) => API.post(`/users/like/${propertyId}`);
-export const unlikeProperty = (propertyId) => API.delete(`/users/like/${propertyId}`);
-export const checkIfLiked = (propertyId) => API.get(`/users/like/${propertyId}/check`);
-export const toggleLike = (propertyId) => API.post(`/users/like/${propertyId}/toggle`);
+// export const likeProperty = (propertyId) => API.post(`/users/like/${propertyId}`);
+// export const unlikeProperty = (propertyId) => API.delete(`/users/like/${propertyId}`);
+// export const checkIfLiked = (propertyId) => API.get(`/users/like/${propertyId}/check`);
+// export const toggleLike = (propertyId) => API.post(`/users/like/${propertyId}/toggle`);
 export const getAllProperties = () => API.get("/properties", { 
   params: { 
     limit: 1000, 

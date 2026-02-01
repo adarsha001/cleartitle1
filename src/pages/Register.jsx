@@ -56,7 +56,7 @@ export default function Register() {
         return;
       }
 
-      console.log("Initializing Google Sign-In for registration page");
+    //("Initializing Google Sign-In for registration page");
       
       try {
         window.google.accounts.id.initialize({
@@ -128,7 +128,7 @@ export default function Register() {
       script.async = true;
       script.defer = true;
       script.onload = () => {
-        console.log("Google Sign-In script loaded");
+      //("Google Sign-In script loaded");
         setTimeout(initializeGoogleSignIn, 100); // Small delay to ensure full initialization
       };
       script.onerror = (error) => {
@@ -140,7 +140,7 @@ export default function Register() {
     };
 
     if (GOOGLE_CLIENT_ID) {
-      console.log("Google Client ID found, loading SDK...");
+    //("Google Client ID found, loading SDK...");
       loadGoogleSDK();
     } else {
       setGoogleError("Google Client ID is missing. Please check environment configuration.");
@@ -171,7 +171,7 @@ export default function Register() {
 
     setIsGoogleLoading(true);
     setGoogleError("");
-    console.log("Google Sign-In response received for registration");
+  //("Google Sign-In response received for registration");
     
     try {
       // Send only the token for Google login (remove sourceWebsite)

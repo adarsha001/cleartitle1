@@ -14,10 +14,10 @@ const PublicAPI = axios.create({
 // Add request interceptor to log all outgoing requests
 PublicAPI.interceptors.request.use((config) => {
   if (isDevelopment) {
-    console.log('📤 Public API Request:', {
-      url: config.url,
-      method: config.method,
-    });
+  //log('📤 Public API Request:', {
+    //   url: config.url,
+    //   method: config.method,
+    // });
   }
   return config;
 });
@@ -26,7 +26,7 @@ PublicAPI.interceptors.request.use((config) => {
 PublicAPI.interceptors.response.use(
   (response) => {
     if (isDevelopment) {
-      console.log('✅ Public API Response:', response.config.url, response.status);
+    //log('✅ Public API Response:', response.config.url, response.status);
     }
     return response;
   },
@@ -70,22 +70,22 @@ export const trackClickPublic = async (clickData) => {
     };
 
     if (isDevelopment) {
-      console.log('📤 Tracking click with user data:', {
-        ...trackingData,
-        hasUser: !!user,
-        userId: user?.id,
-        userName: user?.name
-      });
+    //log('📤 Tracking click with user data:', {
+      //   ...trackingData,
+      //   hasUser: !!user,
+      //   userId: user?.id,
+      //   userName: user?.name
+      // });
     }
 
     const response = await PublicAPI.post("/clicks/track", trackingData);
     
     if (isDevelopment) {
-      console.log('✅ Click tracked successfully:', response.data);
+    //log('✅ Click tracked successfully:', response.data);
     }
     return response.data;
   } catch (error) {
-    console.warn('⚠️ Click tracking failed:', error.message);
+  //warn('⚠️ Click tracking failed:', error.message);
     // Fail gracefully - don't break the user experience
     return { 
       success: false, 
@@ -107,7 +107,7 @@ export const trackClickAnonymous = async (clickData) => {
     
     return response.data;
   } catch (error) {
-    console.warn('⚠️ Click tracking failed:', error.message);
+  //warn('⚠️ Click tracking failed:', error.message);
     return { success: false, message: 'Tracking failed but action completed' };
   }
 };

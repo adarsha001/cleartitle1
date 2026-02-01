@@ -42,11 +42,11 @@ export default function GoogleLogin() {
           // Also display the One Tap UI
           window.google.accounts.id.prompt(notification => {
             if (notification.isNotDisplayed()) {
-              console.log('One Tap not displayed:', notification.getNotDisplayedReason());
+            //('One Tap not displayed:', notification.getNotDisplayedReason());
             } else if (notification.isSkippedMoment()) {
-              console.log('One Tap skipped:', notification.getSkippedReason());
+            //('One Tap skipped:', notification.getSkippedReason());
             } else if (notification.isDismissedMoment()) {
-              console.log('One Tap dismissed:', notification.getDismissedReason());
+            //('One Tap dismissed:', notification.getDismissedReason());
             }
           });
         }
@@ -97,7 +97,7 @@ export default function GoogleLogin() {
       // Revoke token on error
       if (window.google && window.google.accounts) {
         window.google.accounts.id.revoke(response.credential, done => {
-          console.log('Token revoked due to error');
+        //('Token revoked due to error');
         });
       }
     } finally {

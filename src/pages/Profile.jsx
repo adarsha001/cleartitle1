@@ -132,7 +132,7 @@ export default function Profile() {
       try {
         // Fetch user profile
         const profileResponse = await API.get('/users/profile');
-        console.log("Full user profile response:", profileResponse.data);
+      //("Full user profile response:", profileResponse.data);
         setUserData(profileResponse.data.user);
         
         // Initialize edit form data
@@ -211,12 +211,12 @@ export default function Profile() {
   const fetchPostedProperties = async () => {
     setPostedLoading(true);
     try {
-      console.log("Fetching posted properties with filters:", postedFilters);
+    //("Fetching posted properties with filters:", postedFilters);
       const response = await API.get('/users/posted-properties', {
         params: postedFilters
       });
       
-      console.log("Posted properties response:", response.data);
+    //("Posted properties response:", response.data);
       
       if (response.data.success) {
         setPostedProperties(response.data.postedProperties || []);
@@ -247,9 +247,9 @@ export default function Profile() {
   // Fetch liked properties
   const fetchLikedProperties = async () => {
     try {
-      console.log("Fetching liked properties...");
+    //("Fetching liked properties...");
       const response = await API.get('/users/liked-properties');
-      console.log("Liked properties response:", response.data);
+    //("Liked properties response:", response.data);
       
       if (response.data.success) {
         setLikedProperties(response.data.likedProperties || []);

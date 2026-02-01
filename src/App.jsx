@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import PropertyList from "./pages/PropertyList";
+// import PropertyList from "./pages/PropertyList";
 import PropertyDetail from "./pages/PropertyDetail";
 import FeaturedProperties from "./pages/FeaturedProperties";
 import AddProperty from "./pages/AddProperty";
@@ -8,7 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { LikesProvider } from "./context/LikesContext";
+// import { LikesProvider } from "./context/LikesContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import Home from "./container/Home";
@@ -50,7 +50,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <LikesProvider>
+        {/* <LikesProvider> */}
           <ViewModeProvider>
             <ScrollToTop />
             {/* <Navbar /> */}
@@ -75,7 +75,7 @@ export default function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home/>} />
-              <Route path="/properties" element={<PropertyList />} />
+              {/* <Route path="/properties" element={<PropertyList />} /> */}
               <Route path="/properties-unit" element={<PropertyUnitsPage />} />
               <Route path="/featured" element={<FeaturedProperties />} />
               <Route path="/property/:id" element={<PropertyDetail />} />
@@ -181,7 +181,7 @@ export default function App() {
             </Routes>
             
           </ViewModeProvider>
-        </LikesProvider>
+        {/* </LikesProvider> */}
       </AuthProvider>
     </BrowserRouter>
   );

@@ -45,13 +45,13 @@ const AdminDashboard = () => {
   // Safe check for auth
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      console.log('🔒 Not authenticated, redirecting to login');
+    //('🔒 Not authenticated, redirecting to login');
       window.location.href = '/login';
       return;
     }
     
     if (!authLoading && isAuthenticated && !user?.isAdmin) {
-      console.log('🚫 Not admin, redirecting to home');
+    //('🚫 Not admin, redirecting to home');
       window.location.href = '/';
       return;
     }
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
 
   const handleCreateProperty = async (propertyData) => {
     try {
-      console.log('Creating property:', propertyData);
+    //('Creating property:', propertyData);
       setActiveSection("properties");
     } catch (err) {
       setError(err.message || 'Failed to create property');

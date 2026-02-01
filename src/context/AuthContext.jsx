@@ -44,14 +44,14 @@ export const AuthProvider = ({ children }) => {
 // In AuthContext.js - FIXED version
 const googleLogin = async (token) => { // Expect just a string token
   try {
-    console.log('🔍 Google login attempt started');
-    console.log('✅ Token received:', {
-      type: typeof token,
-      isString: typeof token === 'string',
-      length: token?.length,
-      first50: token?.substring(0, 50),
-      isValidJWT: token?.split('.').length === 3
-    });
+  //('🔍 Google login attempt started');
+  //('✅ Token received:', {
+    //   type: typeof token,
+    //   isString: typeof token === 'string',
+    //   length: token?.length,
+    //   first50: token?.substring(0, 50),
+    //   isValidJWT: token?.split('.').length === 3
+    // });
     
     if (!token || typeof token !== 'string') {
       console.error('❌ Invalid token format:', token);
@@ -59,16 +59,16 @@ const googleLogin = async (token) => { // Expect just a string token
     }
     
     // Send only the token string to backend
-    console.log('📤 Sending to backend:', {
-      endpoint: '/auth/google-signin',
-      payload: { token: token }
-    });
+  //('📤 Sending to backend:', {
+    //   endpoint: '/auth/google-signin',
+    //   payload: { token: token }
+    // });
     
     const { data } = await API.post('/auth/google-signin', {
       token: token
     });
     
-    console.log('✅ Backend response:', data);
+  //('✅ Backend response:', data);
     
     if (data.success && data.token && data.user) {
       localStorage.setItem('token', data.token);
@@ -145,7 +145,7 @@ const register = async (registerData) => {
       sourceWebsite: registerData.sourceWebsite || 'cleartitle1'
     };
     
-    console.log('Registering user from:', dataToSend.sourceWebsite);
+  //('Registering user from:', dataToSend.sourceWebsite);
     
     const { data } = await API.post('/auth/register', dataToSend);
     

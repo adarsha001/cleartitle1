@@ -100,22 +100,22 @@ const ClickAnalyticsDetails = () => {
 const getRawData = () => {
   if (!analytics) return [];
   
-  console.log('🔍 Full analytics structure:', analytics);
+//('🔍 Full analytics structure:', analytics);
   
   // For raw-data view (from /analytics/clicks/raw endpoint)
   if (viewMode === 'raw-data') {
     // The raw data endpoint returns data in this structure:
     // { success: true, data: { clicks: [], pagination: {}, ... } }
     if (analytics.clicks) {
-      console.log('✅ Found raw data at analytics.clicks');
+    //('✅ Found raw data at analytics.clicks');
       return analytics.clicks;
     }
     if (analytics.data?.clicks) {
-      console.log('✅ Found raw data at analytics.data.clicks');
+    //('✅ Found raw data at analytics.data.clicks');
       return analytics.data.clicks;
     }
     if (Array.isArray(analytics)) {
-      console.log('✅ Found raw data as direct array');
+    //('✅ Found raw data as direct array');
       return analytics;
     }
   }
@@ -128,7 +128,7 @@ const getRawData = () => {
     return analytics.data.rawData;
   }
   
-  console.log('❌ No raw data found in analytics object');
+//('❌ No raw data found in analytics object');
   return [];
 };
 
@@ -142,7 +142,7 @@ const getRawData = () => {
   const hourlyDistribution = useMemo(() => getHourlyDistribution(), [analytics]);
   const rawData = useMemo(() => getRawData(), [analytics]);
   
-  console.log("analytics raw data",rawData)
+//("analytics raw data",rawData)
 const fetchAnalytics = async () => {
   try {
     setLoading(true);
@@ -163,7 +163,7 @@ const fetchAnalytics = async () => {
         search: rawDataSearch,
         limit: 50
       });
-      console.log('📊 Raw Data API Response:', response);
+    //('📊 Raw Data API Response:', response);
       
       if (response && response.success) {
         setAnalytics(response.data);
@@ -173,7 +173,7 @@ const fetchAnalytics = async () => {
     } else if (viewMode === 'hourly-analysis') {
       // Fetch hourly distribution specifically for hourly analysis view
       response = await fetchHourlyDistribution(timeframe);
-      console.log('🕒 Hourly Distribution Response:', response);
+    //('🕒 Hourly Distribution Response:', response);
       
       if (response && response.success) {
         setAnalytics(response.data);
@@ -185,7 +185,7 @@ const fetchAnalytics = async () => {
       const includeRawData = viewMode === 'geo-analysis' || viewMode === 'device-analysis' || viewMode === 'hourly-analysis';
       response = await fetchCompleteAnalytics(timeframe, includeRawData);
       
-      console.log('📊 Complete Analytics Response:', response);
+    //('📊 Complete Analytics Response:', response);
       
       if (response && response.success) {
         setAnalytics(response.data);
@@ -475,10 +475,10 @@ const fetchHourlyData = async () => {
   try {
     setLoading(true);
     setError(null);
-    console.log('🕒 Starting hourly data fetch...');
+  //('🕒 Starting hourly data fetch...');
     
     const response = await fetchHourlyDistribution(timeframe);
-    console.log('📊 Setting hourly data:', response);
+  //('📊 Setting hourly data:', response);
     
     // Ensure we always have a valid data structure
     if (response.success && response.data) {

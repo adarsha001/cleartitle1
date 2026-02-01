@@ -44,7 +44,7 @@ const PropertyEdit = ({ propertyId, onClose, onUpdate }) => {
 
   // Debug form data changes
   useEffect(() => {
-    console.log('🔄 Form data updated:', formData);
+  //('🔄 Form data updated:', formData);
   }, [formData]);
 
   useEffect(() => {
@@ -56,19 +56,19 @@ const PropertyEdit = ({ propertyId, onClose, onUpdate }) => {
   const loadProperty = async () => {
     setLoading(true);
     try {
-      console.log('📥 Loading property with ID:', propertyId);
+    //('📥 Loading property with ID:', propertyId);
       
       const response = await getsPropertyById(propertyId);
       
       if (response.data.success) {
         const foundProperty = response.data.property;
-        console.log('✅ Property loaded successfully:', {
-          title: foundProperty.title,
-          category: foundProperty.category,
-          price: foundProperty.price,
-          hasAttributes: !!foundProperty.attributes,
-          hasNearby: !!foundProperty.nearby
-        });
+      //('✅ Property loaded successfully:', {
+        //   title: foundProperty.title,
+        //   category: foundProperty.category,
+        //   price: foundProperty.price,
+        //   hasAttributes: !!foundProperty.attributes,
+        //   hasNearby: !!foundProperty.nearby
+        // });
         setProperty(foundProperty);
         initializeFormData(foundProperty);
       } else {
@@ -126,13 +126,13 @@ const PropertyEdit = ({ propertyId, onClose, onUpdate }) => {
     
     setFormData(initialFormData);
     
-    console.log('📝 Form data initialized:', {
-      category: propertyData.category,
-      price: initialFormData.price,
-      attributes: initialFormData.attributes,
-      features: initialFormData.features,
-      nearby: initialFormData.nearby
-    });
+  //('📝 Form data initialized:', {
+    //   category: propertyData.category,
+    //   price: initialFormData.price,
+    //   attributes: initialFormData.attributes,
+    //   features: initialFormData.features,
+    //   nearby: initialFormData.nearby
+    // });
   };
 
   const handleInputChange = (e) => {
@@ -242,14 +242,14 @@ const PropertyEdit = ({ propertyId, onClose, onUpdate }) => {
       cleanedData.features = [];
     }
 
-    console.log('🧹 Final cleaned data:', {
-      category: cleanedData.category,
-      price: cleanedData.price,
-      priceType: typeof cleanedData.price,
-      attributes: cleanedData.attributes,
-      nearby: cleanedData.nearby,
-      features: cleanedData.features
-    });
+  //('🧹 Final cleaned data:', {
+    //   category: cleanedData.category,
+    //   price: cleanedData.price,
+    //   priceType: typeof cleanedData.price,
+    //   attributes: cleanedData.attributes,
+    //   nearby: cleanedData.nearby,
+    //   features: cleanedData.features
+    // });
 
     return cleanedData;
   };
@@ -260,12 +260,12 @@ const PropertyEdit = ({ propertyId, onClose, onUpdate }) => {
     
     try {
       const cleanedData = cleanFormData(formData);
-      console.log('📤 Sending update data:', cleanedData);
+    //('📤 Sending update data:', cleanedData);
       
       const response = await updateProperty(propertyId, cleanedData);
       
       if (response.data.success) {
-        console.log('✅ Property updated successfully:', response.data.property);
+      //('✅ Property updated successfully:', response.data.property);
         alert('Property updated successfully!');
         onUpdate?.();
         onClose?.();

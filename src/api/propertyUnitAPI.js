@@ -48,7 +48,7 @@ getPropertyUnits: (params = {}) => {
     }
   });
   
-  console.log('API - Sending params:', cleanParams);
+//('API - Sending params:', cleanParams);
   
   return API.get('/property-units', { 
     params: cleanParams,
@@ -56,7 +56,7 @@ getPropertyUnits: (params = {}) => {
       indexes: null
     }
   }).then(response => {
-    console.log('API - Response data:', response.data);
+  //('API - Response data:', response.data);
     return response;
   });
 },
@@ -109,7 +109,7 @@ getPropertyUnits: (params = {}) => {
   // Get featured property units
  getFeaturedPropertyUnits: async (params = {}) => {
   try {
-    console.log('getFeaturedPropertyUnits called with params:', params);
+  //('getFeaturedPropertyUnits called with params:', params);
     
     // For featured endpoint, we don't send any parameters
     // Remove all parameters or only send essential ones if backend expects them
@@ -118,14 +118,14 @@ getPropertyUnits: (params = {}) => {
     // Only include parameters that the backend actually accepts
     // If backend doesn't accept any params, leave cleanParams empty
     
-    console.log('Making request with cleaned params:', cleanParams);
+  //('Making request with cleaned params:', cleanParams);
     
     const response = await API.get('/property-units/featured', { 
       // Remove params entirely or keep empty object
       // params: cleanParams, // Comment this out if backend doesn't accept params
     });
     
-    console.log('Featured properties response:', response.data);
+  //('Featured properties response:', response.data);
     return response;
   } catch (error) {
     console.error('Error in getFeaturedPropertyUnits:', error.response?.data || error.message);

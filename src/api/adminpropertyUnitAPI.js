@@ -28,7 +28,7 @@ API.interceptors.request.use(
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response?.status, error.message);
+  //error('API Error:', error.response?.status, error.message);
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -43,12 +43,12 @@ export const propertyUnitAPI = {
   // ✅ GET ALL PROPERTY UNITS (ADMIN) - THIS WAS MISSING
   getAllPropertyUnits: async (params = {}) => {
     try {
-      console.log('Fetching property units with params:', params);
+    //log('Fetching property units with params:', params);
       const response = await API.get('/admin/property-units', { params });
-      console.log('Property units response:', response.data);
+    //log('Property units response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching property units:', error);
+    //error('Error fetching property units:', error);
       throw error;
     }
   },
@@ -56,12 +56,12 @@ export const propertyUnitAPI = {
   // ✅ GET PROPERTY UNIT STATS (ADMIN) - THIS WAS MISSING
   getPropertyUnitStats: async () => {
     try {
-      console.log('Fetching property unit stats...');
+    //log('Fetching property unit stats...');
       const response = await API.get('/admin/property-units/stats');
-      console.log('Stats response:', response.data);
+    //log('Stats response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching stats:', error);
+    //error('Error fetching stats:', error);
       throw error;
     }
   },
@@ -72,7 +72,7 @@ export const propertyUnitAPI = {
       const response = await API.get('/property-units', { params });
       return response.data;
     } catch (error) {
-      console.error('Error fetching property units:', error);
+    //error('Error fetching property units:', error);
       throw error;
     }
   },
@@ -83,7 +83,7 @@ export const propertyUnitAPI = {
       const response = await API.get(`/property-units/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching property unit:', error);
+    //error('Error fetching property unit:', error);
       throw error;
     }
   },
@@ -94,7 +94,7 @@ export const propertyUnitAPI = {
       const response = await API.get(`/admin/property-units/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching property unit:', error);
+    //error('Error fetching property unit:', error);
       throw error;
     }
   },
@@ -105,7 +105,7 @@ export const propertyUnitAPI = {
       const response = await API.put(`/admin/property-units/${id}/approval`, data);
       return response.data;
     } catch (error) {
-      console.error('Error updating approval status:', error);
+    //error('Error updating approval status:', error);
       throw error;
     }
   },
@@ -116,7 +116,7 @@ export const propertyUnitAPI = {
       const response = await API.put(`/admin/property-units/${id}/toggle-featured`, {});
       return response.data;
     } catch (error) {
-      console.error('Error toggling featured:', error);
+    //error('Error toggling featured:', error);
       throw error;
     }
   },
@@ -127,7 +127,7 @@ export const propertyUnitAPI = {
       const response = await API.put(`/admin/property-units/${id}/toggle-verified`, {});
       return response.data;
     } catch (error) {
-      console.error('Error toggling verified:', error);
+    //error('Error toggling verified:', error);
       throw error;
     }
   },
@@ -142,7 +142,7 @@ export const propertyUnitAPI = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error creating property unit:', error);
+    //error('Error creating property unit:', error);
       throw error;
     }
   },
@@ -157,7 +157,7 @@ export const propertyUnitAPI = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error creating property unit:', error);
+    //error('Error creating property unit:', error);
       throw error;
     }
   },
@@ -172,7 +172,7 @@ export const propertyUnitAPI = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error updating property unit:', error);
+    //error('Error updating property unit:', error);
       throw error;
     }
   },
@@ -187,7 +187,7 @@ export const propertyUnitAPI = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error updating property unit:', error);
+    //error('Error updating property unit:', error);
       throw error;
     }
   },
@@ -198,7 +198,7 @@ export const propertyUnitAPI = {
       const response = await API.delete(`/property-units/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error deleting property unit:', error);
+    //error('Error deleting property unit:', error);
       throw error;
     }
   },
@@ -209,7 +209,7 @@ export const propertyUnitAPI = {
       const response = await API.delete(`/admin/property-units/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error deleting property unit:', error);
+    //error('Error deleting property unit:', error);
       throw error;
     }
   },
@@ -220,7 +220,7 @@ export const propertyUnitAPI = {
       const response = await API.put('/admin/property-units/bulk/update', data);
       return response.data;
     } catch (error) {
-      console.error('Error bulk updating:', error);
+    //error('Error bulk updating:', error);
       throw error;
     }
   },
@@ -231,7 +231,7 @@ export const propertyUnitAPI = {
       const response = await API.delete('/admin/property-units/bulk/delete', { data });
       return response.data;
     } catch (error) {
-      console.error('Error bulk deleting:', error);
+    //error('Error bulk deleting:', error);
       throw error;
     }
   },
@@ -240,23 +240,23 @@ export const propertyUnitAPI = {
 // Update display orders - FIXED
 updateDisplayOrders: async (displayOrders) => {
   try {
-    console.log('Sending display orders:', displayOrders);
+  //log('Sending display orders:', displayOrders);
     const response = await API.put('/admin/property-units/display-orders/update', { 
       displayOrders 
     });
-    console.log('Display orders response:', response.data);
+  //log('Display orders response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error updating display orders:', error);
+  //error('Error updating display orders:', error);
     // More detailed error logging
     if (error.response) {
-      console.error('Response data:', error.response.data);
-      console.error('Response status:', error.response.status);
-      console.error('Response headers:', error.response.headers);
+    //error('Response data:', error.response.data);
+    //error('Response status:', error.response.status);
+    //error('Response headers:', error.response.headers);
     } else if (error.request) {
-      console.error('No response received:', error.request);
+    //error('No response received:', error.request);
     } else {
-      console.error('Error setting up request:', error.message);
+    //error('Error setting up request:', error.message);
     }
     throw error;
   }
@@ -267,7 +267,7 @@ updateDisplayOrders: async (displayOrders) => {
       const response = await API.get('/admin/property-units/pending');
       return response.data;
     } catch (error) {
-      console.error('Error fetching pending approvals:', error);
+    //error('Error fetching pending approvals:', error);
       throw error;
     }
   },
@@ -278,7 +278,7 @@ updateDisplayOrders: async (displayOrders) => {
       const response = await API.get('/property-units/my-properties');
       return response.data;
     } catch (error) {
-      console.error('Error fetching my properties:', error);
+    //error('Error fetching my properties:', error);
       throw error;
     }
   }

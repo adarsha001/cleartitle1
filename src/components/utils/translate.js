@@ -4,7 +4,7 @@ let googleTranslateInitialized = false;
 export const initializeGoogleTranslate = () => {
   if (googleTranslateInitialized) return;
   
-  console.log('Initializing Google Translate...');
+//('Initializing Google Translate...');
   
   // Remove existing script if any
   const existingScript = document.getElementById('google-translate-script');
@@ -72,7 +72,7 @@ export const initializeGoogleTranslate = () => {
   
   // Define callback function
   window.googleTranslateElementInit = () => {
-    console.log('Google Translate Element Init called');
+  //('Google Translate Element Init called');
     
     try {
       new google.translate.TranslateElement({
@@ -83,7 +83,7 @@ export const initializeGoogleTranslate = () => {
       }, 'google_translate_element');
       
       googleTranslateInitialized = true;
-      console.log('Google Translate widget initialized successfully');
+    //('Google Translate widget initialized successfully');
       
       // Apply saved language
       const savedLang = localStorage.getItem('preferredLanguage');
@@ -96,11 +96,11 @@ export const initializeGoogleTranslate = () => {
               if (select) {
                 select.value = savedLang;
                 select.dispatchEvent(new Event('change'));
-                console.log('Applied saved language:', savedLang);
+              //('Applied saved language:', savedLang);
               }
             }
           } catch (error) {
-            console.log('Could not apply saved language:', error);
+          //('Could not apply saved language:', error);
           }
         }, 1500);
       }
@@ -117,7 +117,7 @@ export const initializeGoogleTranslate = () => {
     // Try alternative CDN
     setTimeout(() => {
       if (!googleTranslateInitialized) {
-        console.log('Trying alternative method...');
+      //('Trying alternative method...');
         initializeGoogleTranslateAlternative();
       }
     }, 3000);
@@ -139,7 +139,7 @@ export const applyTranslation = (langCode) => {
   return new Promise((resolve) => {
     const tryApply = (attempts = 0) => {
       if (attempts > 20) {
-        console.log('Failed to apply translation after max attempts');
+      //('Failed to apply translation after max attempts');
         resolve(false);
         return;
       }
@@ -151,14 +151,14 @@ export const applyTranslation = (langCode) => {
             const select = iframe.contentWindow.document.querySelector('.goog-te-combo');
             if (select) {
               if (select.value === langCode) {
-                console.log('Language already set');
+              //('Language already set');
                 resolve(true);
                 return;
               }
               
               select.value = langCode;
               select.dispatchEvent(new Event('change'));
-              console.log('Language change triggered:', langCode);
+            //('Language change triggered:', langCode);
               
               // Verify after delay
               setTimeout(() => {
@@ -167,10 +167,10 @@ export const applyTranslation = (langCode) => {
                                            document.body.classList.contains('translated-rtl');
                 
                 if (bodyLang === langCode || hasGoogleTranslated) {
-                  console.log('Translation verified');
+                //('Translation verified');
                   resolve(true);
                 } else {
-                  console.log('Translation not verified, retrying...');
+                //('Translation not verified, retrying...');
                   tryApply(attempts + 1);
                 }
               }, 1000);
@@ -179,7 +179,7 @@ export const applyTranslation = (langCode) => {
             }
           }
         } catch (error) {
-          console.log('Error in tryApply:', error);
+        //('Error in tryApply:', error);
         }
       }
       

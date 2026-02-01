@@ -59,7 +59,7 @@ const AdminClickAnalytics = () => {
     try {
       setUserLoading(true);
       const response = await fetchUserAnalytics(timeframe);
-      console.log('👤 User analytics response:', response);
+    //('👤 User analytics response:', response);
       if (response.success) {
         setUserAnalytics(response.data);
       }
@@ -160,7 +160,7 @@ const AdminClickAnalytics = () => {
       setError(null);
       
       const response = await fetchClickAnalytics(timeframe, filters.itemType);
-      console.log('📊 Analytics response:', response);
+    //('📊 Analytics response:', response);
       
       if (response.data && response.data.success) {
         setAnalytics(response.data.data);
