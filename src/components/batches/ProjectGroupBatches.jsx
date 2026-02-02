@@ -64,7 +64,7 @@ const ProjectGroupBatches = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-emerald-50 via-white to-teal-50 text-slate-900">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-slate-900">
       {/* Hero Section */}
       <section className="py-8 md:py-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -73,10 +73,10 @@ const ProjectGroupBatches = () => {
             <span className="text-gray-800">Project Collections</span>
           </h1>
 
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-0.5 bg-gradient-to-r from-emerald-600 to-transparent" />
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            <div className="w-12 h-0.5 bg-gradient-to-l from-emerald-600 to-transparent" />
+               <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-0.5 bg-gradient-to-r from-blue-600 to-transparent" />
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+            <div className="w-12 h-0.5 bg-gradient-to-l from-blue-600 to-transparent" />
           </div>
 
           <p className="text-gray-600 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
