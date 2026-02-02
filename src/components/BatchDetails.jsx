@@ -79,7 +79,7 @@ const BatchDetails = () => {
       try {
         const response = await batchService.deleteBatch(id);
         if (response.success) {
-          navigate('/admin/batches');
+          navigate('/admin/');
         } else {
           setError(response.message || 'Failed to delete batch');
         }
@@ -160,7 +160,7 @@ const BatchDetails = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center">
                 <button
-                  onClick={() => navigate('/admin/batches')}
+                  onClick={() => navigate('/admin')}
                   className="mr-4 text-gray-400 hover:text-gray-600"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

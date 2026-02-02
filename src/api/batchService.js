@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://saimr-backend-1.onrender.com/api/admin/batches';
+const API_URL = 'http://localhost:5000/api/admin/batches';
 
 // Create axios instance with auth token
 const createAxiosInstance = () => {
@@ -116,11 +116,24 @@ export const batchService = {
   },
 
   // Delete batch
-  deleteBatch: async (id) => {
-    const response = await api.delete(`/${id}`);
-    return response.data;
+ deleteBatch: async (id) => {
+    try {
+      const response = await api.delete(`/${id}`);
+      return response.data;
+    } catch (error) {
+      // Handle different error types
+      if (error.response) {
+        // Server responded with error
+        throw new Error(error.response.data.message || 'Failed to delete batch');
+      } else if (error.request) {
+        // Request made but no response
+        throw new Error('No response from server');
+      } else {
+        // Something else happened
+        throw new Error('Error setting up request');
+      }
+    }
   },
-
   // Add property unit to batch
   addPropertyUnit: async (batchId, propertyUnitId) => {
     const response = await api.post(`/${batchId}/add-unit`, { propertyUnitId });
