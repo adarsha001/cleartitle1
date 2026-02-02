@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import { batchService } from '../../api/batchService';
 
 // Format number to Indian numbering system (lakhs/crores)
@@ -146,6 +147,7 @@ const ProjectGroupBatches = () => {
   const [propertyUnits, setPropertyUnits] = useState([]);
   const [unitsLoading, setUnitsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const navigate = useNavigate(); // Add this hook
 
   // Check for mobile screen
   useEffect(() => {
@@ -198,6 +200,20 @@ const ProjectGroupBatches = () => {
     setShowModal(true);
     setPropertyUnits([]);
     await fetchBatchPropertyUnits(batch._id);
+  };
+
+  // Add this function to handle unit card click
+  const handleUnitClick = (unitId) => {
+    // Navigate to property unit detail page
+    navigate(`/property-units/${unitId}`);
+    // Close the modal when navigating
+    setShowModal(false);
+  };
+
+  // Also handle the "View Unit Details" button click
+  const handleViewDetailsClick = (unitId) => {
+    navigate(`/property-units/${unitId}`);
+    setShowModal(false);
   };
 
   if (loading) {
@@ -364,7 +380,11 @@ const ProjectGroupBatches = () => {
                       const areaUnit = unit?.areaUnit || 'sq ft';
                       
                       return (
-                        <div key={unit._id} className="hover:-translate-y-1 transition-transform duration-300">
+                        <div 
+                          key={unit._id} 
+                          className="hover:-translate-y-1 transition-transform duration-300 cursor-pointer"
+                          onClick={() => handleUnitClick(unit._id)} // Add click handler to the entire card
+                        >
                           <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-slate-100">
                             {/* Compact Image */}
                             <div className="relative h-32 md:h-48 overflow-hidden">
@@ -433,7 +453,13 @@ const ProjectGroupBatches = () => {
                               </div>
                               
                               {/* Mobile: Simple CTA button */}
-                              <button className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs uppercase tracking-wider rounded transition-colors duration-300">
+                              <button 
+                                className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs uppercase tracking-wider rounded transition-colors duration-300"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent card click event
+                                  handleViewDetailsClick(unit._id);
+                                }}
+                              >
                                 View Unit Details
                               </button>
                               
