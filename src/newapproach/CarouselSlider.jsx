@@ -20,15 +20,15 @@ const ImprovedCarousel = () => {
     //   cta: 'Book Now',
     //   badge: 'New Launch'
     // },
-    // {
-    //   id: 2,
-    //   image: 'Green and White Modern Nature Presentation.png',
-    //   mobileImage: '/gemini1.png',
-    //   title: 'Premium Home Interiors',
-    //   description: 'Transform your space with stunning designs',
-    //   cta: 'Get Started',
-    //   badge: 'Featured'
-    // },
+    {
+      id: 2,
+      image: 'image1.png',
+      mobileImage: '/image2.png',
+      title: 'Premium Home Interiors',
+      description: 'Transform your space with stunning designs',
+      cta: 'Get Started',
+      badge: 'Featured'
+    },
     {
       id: 3,
       image: '/Yellow.png',
@@ -66,6 +66,20 @@ const ImprovedCarousel = () => {
     //   badge: 'Popular'
     // }
   ];
+
+
+
+
+
+
+// 7900 X  1200 for desktop 
+
+
+// 2500 X 1200 for mobile 
+
+
+
+
 
   // Check if mobile on mount and resize
   useEffect(() => {
