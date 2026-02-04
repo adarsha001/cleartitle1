@@ -31,22 +31,22 @@ const ImprovedCarousel = () => {
     // },
     {
       id: 3,
-      image: '/gemini.png',
-      mobileImage: '/gemini1.png',
+      image: '/Yellow.png',
+      mobileImage: '/yellow2.png',
       title: 'Reliable Packers & Movers',
       description: 'Safe and efficient relocation services',
       cta: 'Request Quote',
       badge: 'Limited Time'
     },
-       {
-      id: 3,
-      image: '/gemini2d.png',
-      mobileImage: '/gemini2.png',
-      title: 'Reliable Packers & Movers',
-      description: 'Safe and efficient relocation services',
-      cta: 'Request Quote',
-      badge: 'Limited Time'
-    },
+    //    {
+    //   id: 3,
+    //   image: '/gemini2d.png',
+    //   mobileImage: '/gemini2.png',
+    //   title: 'Reliable Packers & Movers',
+    //   description: 'Safe and efficient relocation services',
+    //   cta: 'Request Quote',
+    //   badge: 'Limited Time'
+    // },
     // {
     //   id: 4,
     //   image: '/test.png',
@@ -174,7 +174,7 @@ const renderDesktopCarousel = () => (
                 <img
                   src={slide.image}
                   alt={slide.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-"
                   loading={index === currentIndex ? 'eager' : 'lazy'}
                 />
                 {/* Optional: Additional overlays if needed */}
