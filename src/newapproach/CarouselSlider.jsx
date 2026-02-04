@@ -69,9 +69,10 @@ const ImprovedCarousel = () => {
 
   // Check if mobile on mount and resize
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+
+const checkMobile = () => {
+  setIsMobile(window.innerWidth < 1024); // Changed from 768 to 1024
+};
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -301,7 +302,7 @@ const renderDesktopCarousel = () => (
               <img
                 src={slide.mobileImage}
                 alt={slide.title}
-                className="w-full h-full object-fit"
+                className="w-full h-full object-center"
               />
          
               {/* <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
