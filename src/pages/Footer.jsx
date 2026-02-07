@@ -303,7 +303,7 @@ export default function EnhancedFooter() {
       </p>
       <div className="flex gap-3">
         <a 
-          href="https://www.facebook.com/cleartitle1" 
+          href="https://www.facebook.com/cleartitleone" 
           target="_blank" 
           rel="noopener noreferrer"
           className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-all"
@@ -311,7 +311,7 @@ export default function EnhancedFooter() {
           <Facebook className="w-5 h-5" />
         </a>
         <a 
-          href="https://x.com/cleartitle1" 
+          href="https://x.com/cleartitleone" 
           target="_blank" 
           rel="noopener noreferrer"
           className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-all"
@@ -319,7 +319,7 @@ export default function EnhancedFooter() {
           <Twitter className="w-5 h-5" />
         </a>
         <a 
-          href="https://www.instagram.com/cleartitle1/" 
+          href="https://www.instagram.com/cleartitleone/" 
           target="_blank" 
           rel="noopener noreferrer"
           className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition-all"
