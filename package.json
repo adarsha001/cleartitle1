@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.12.2",
     "file-saver": "^2.0.5",
+    "framer-motion": "^12.33.0",
     "gsap": "^3.13.0",
     "locomotive-scroll": "^4.1.4",
     "lucide-react": "^0.546.0",
