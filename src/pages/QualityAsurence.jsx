@@ -213,7 +213,7 @@ export default function QualityAssuranceSection() {
 </div>
       </div>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button
       <motion.button 
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.95 }}
@@ -221,7 +221,7 @@ export default function QualityAssuranceSection() {
       >
         <MessageCircle className="w-6 h-6 fill-current" />
         <span className="hidden md:inline">Expert Consultation</span>
-      </motion.button>
+      </motion.button> */}
     </section>
   );
 }
