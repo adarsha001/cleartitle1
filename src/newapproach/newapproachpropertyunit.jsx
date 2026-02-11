@@ -107,6 +107,27 @@ const [listingCategories] = useState([
   { id: "sale", name: "For Sale", icon: <Tag className="w-5 h-5" />, count: 0 },
 ]);
 
+
+const [quoteIndex, setQuoteIndex] = useState(0);
+const [placeholderText, setPlaceholderText] = useState('');
+
+const realEstateQuotes = [
+  "Search by location, price, or features...",
+  "Find your dream home today...",
+  "Location, location, location...",
+  "Your perfect property awaits...",
+  "Discover homes for sale near you...",
+  "Start your real estate journey...",
+  "Find your happy place...",
+  // "Search millions of listings...",
+  "Your next chapter starts here...",
+  "Find the perfect place to call home...",
+  "Explore properties in your area...",
+  "From cozy condos to luxury estates...",
+  "Unlock your dream property...",
+  "Your future address awaits...",
+  "Search, discover, move in...",
+];
   // Format number with commas
   const formatNumber = (num) => {
     if (num === null || num === undefined) return '0';
@@ -465,6 +486,71 @@ const [listingCategories] = useState([
     },
   ];
 
+
+// Add this with the useEffect above
+useEffect(() => {
+  let timeoutId;
+  let charIndex = 0;
+  let currentText = '';
+  let isDeleting = false;
+  let isWaiting = false;
+  
+  const typeEffect = () => {
+    // Don't start new animation if waiting
+    if (isWaiting) return;
+    
+    const currentQuote = realEstateQuotes[quoteIndex];
+    
+    // Typing speed - faster when deleting
+    const typeSpeed = isDeleting ? 30 : 60;
+    // Pause at full text
+    const pauseTime = isDeleting ? 100 : 2500;
+    
+    if (isDeleting) {
+      // Deleting text
+      currentText = currentQuote.substring(0, charIndex - 1);
+      charIndex--;
+    } else {
+      // Typing text
+      currentText = currentQuote.substring(0, charIndex + 1);
+      charIndex++;
+    }
+    
+    setPlaceholderText(currentText);
+    
+    // Check if typing complete
+    if (!isDeleting && charIndex === currentQuote.length) {
+      isWaiting = true;
+      timeoutId = setTimeout(() => {
+        isWaiting = false;
+        isDeleting = true;
+        typeEffect();
+      }, 2000);
+    }
+    // Check if deletion complete
+    else if (isDeleting && charIndex === 0) {
+      isWaiting = true;
+      timeoutId = setTimeout(() => {
+        isWaiting = false;
+        isDeleting = false;
+        setQuoteIndex((prev) => (prev + 1) % realEstateQuotes.length);
+        timeoutId = setTimeout(typeEffect, 100);
+      }, 300);
+    }
+    // Continue typing/deleting
+    else {
+      timeoutId = setTimeout(typeEffect, typeSpeed);
+    }
+  };
+  
+  // Start the animation
+  timeoutId = setTimeout(typeEffect, 500);
+  
+  // Cleanup
+  return () => {
+    clearTimeout(timeoutId);
+  };
+}, [quoteIndex]);
   // Handle quick filter click
   const handleQuickFilterClick = (filterKey, filterValue) => {
     handleFilterChange(filterKey, filterValue);
@@ -489,18 +575,18 @@ const [listingCategories] = useState([
   const renderFilterPanel = () => (
     <div className="space-y-4">
       {/* Search Input */}
-      <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search properties..."
-            value={filters.search}
-            onChange={(e) => handleFilterChange("search", e.target.value)}
-            className="w-full pl-10 pr-3 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-          />
-        </div>
-      </div>
+   <div className="mb-4">
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+      <input
+        type="text"
+        placeholder={placeholderText}
+        value={filters.search}
+        onChange={(e) => handleFilterChange("search", e.target.value)}
+        className="w-full pl-10 pr-3 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all duration-300"
+      />
+    </div>
+  </div>
 
       {/* Quick Filters */}
       <div className="mb-4">
@@ -988,7 +1074,7 @@ const renderCarouselSkeleton = () => (
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search properties..."
+              placeholder={placeholderText}
               value={filters.search}
               onChange={(e) => handleFilterChange("search", e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
@@ -1043,7 +1129,7 @@ const renderCarouselSkeleton = () => (
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                           <input
                             type="text"
-                            placeholder="Search properties by location, project, or keyword..."
+                            placeholder={placeholderText}
                             value={filters.search}
                             onChange={(e) => handleFilterChange("search", e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
