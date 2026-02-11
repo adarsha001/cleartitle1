@@ -1,7 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add this import
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { batchService } from '../../api/batchService';
 import PropertyUnitCard from '../../components/PropertyUnitCard';
+import { 
+  Crown,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Star,
+  X,
+  Home,
+  Building2,
+  Target,
+  Award
+} from 'lucide-react';
 
 const formatIndianNumber = (price) => {
   if (!price) return "Price on request";
@@ -147,7 +160,10 @@ const LocationBatches = () => {
   const [propertyUnits, setPropertyUnits] = useState([]);
   const [unitsLoading, setUnitsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const navigate = useNavigate(); // Add this hook
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const navigate = useNavigate();
+  const scrollContainerRef = useRef(null);
 
   // Check for mobile screen
   useEffect(() => {
@@ -160,6 +176,46 @@ const LocationBatches = () => {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      if (scrollContainerRef.current && isMobile) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+        setCanScrollLeft(scrollLeft > 0);
+        setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+      }
+    };
+
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [batches, isMobile]);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current && isMobile) {
+      scrollContainerRef.current.scrollBy({
+        left: -400,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current && isMobile) {
+      scrollContainerRef.current.scrollBy({
+        left: 400,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current && isMobile) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+    }
+  };
 
   useEffect(() => {
     const fetchBatches = async () => {
@@ -187,7 +243,6 @@ const LocationBatches = () => {
       const response = await batchService.getBatch(batchId);
       if (response.success && response.data) {
         setPropertyUnits(response.data.propertyUnits || []);
-        console.log(response);
       }
     } catch (error) {
       console.error('Error fetching properties:', error);
@@ -205,9 +260,7 @@ const LocationBatches = () => {
 
   // Add this function to handle unit card click
   const handleUnitClick = (unitId) => {
-    // Navigate to property unit detail page
     navigate(`/property-units/${unitId}`);
-    // Close the modal when navigating
     setShowModal(false);
   };
 
@@ -219,273 +272,387 @@ const LocationBatches = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
-        <p className="mt-4 text-slate-500 font-light tracking-widest uppercase text-xs">Elevating Experiences</p>
-      </div>
-    );
-  }
+      <div className="min-h-screen bg-white py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16 md:mb-20">
+            <div className="inline-flex items-center justify-center mb-6">
+              <div className="bg-gradient-to-r from-blue-100 to-indigo-100 w-48 h-4 rounded-full animate-pulse"></div>
+            </div>
 
-  return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-slate-900">
-      {/* Hero Section */}
-      <section className="py-8 md:py-16 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-3">
-            <span className="text-blue-600">Explore</span>{" "}
-            <span className="text-gray-800">by Location</span>
-          </h1>
-
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-0.5 bg-gradient-to-r from-blue-600 to-transparent" />
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-            <div className="w-12 h-0.5 bg-gradient-to-l from-blue-600 to-transparent" />
+            <div className="space-y-4 mb-8">
+              <div className="h-12 md:h-16 bg-gradient-to-r from-blue-200 to-blue-300 rounded-xl w-3/4 mx-auto animate-pulse"></div>
+              <div className="h-6 bg-gradient-to-r from-blue-100 to-blue-200 rounded-xl w-1/2 mx-auto animate-pulse"></div>
+            </div>
           </div>
 
-          <p className="text-gray-600 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-            Browse our premium real estate projects across key strategic locations.
-          </p>
-        </div>
-      </section>
-
-      {/* Grid Section - Updated for Mobile X-Scroll */}
-      <main className="max-w-7xl mx-auto px-6 pb-24">
-        <div className="relative">
-          <div className="flex overflow-x-auto pb-8 gap-4 md:gap-6 snap-x snap-mandatory scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 md:pb-0">
-            {batches.map((batch) => (
-              <div
-                key={batch._id}
-                className="group relative cursor-pointer overflow-hidden bg-slate-100 flex-shrink-0 w-[85vw] md:w-auto snap-center"
-                onClick={() => handleBatchClick(batch)}
-              >
-                <div className="aspect-[4/5] overflow-hidden">
-                  <img
-                    src={batch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'}
-                    alt={batch.locationName}
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                  />
+          {/* Mobile Skeleton Horizontal Scroll */}
+          <div className="md:hidden relative">
+            <div className="flex space-x-6 pb-8 overflow-x-auto scrollbar-hide">
+              {[1, 2, 3, 4].map((i) => (
+                <div 
+                  key={i}
+                  className="flex-shrink-0 w-[320px] bg-white rounded-3xl overflow-hidden animate-pulse border border-blue-100 shadow-lg"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  <div className="h-56 bg-gradient-to-r from-blue-200 to-blue-300"></div>
+                  <div className="p-5 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2 flex-1">
+                        <div className="h-4 bg-gradient-to-r from-blue-300 to-blue-400 rounded w-3/4"></div>
+                        <div className="h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-1/2"></div>
+                      </div>
+                      <div className="h-7 bg-gradient-to-r from-blue-300 to-blue-400 rounded-2xl w-14"></div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-full"></div>
+                      <div className="h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-5/6"></div>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                  <p className="text-white/70 text-[10px] uppercase tracking-[0.2em] mb-2">Explore Location</p>
-                  <h3 className="text-xl md:text-2xl font-serif text-white mb-2">{batch.locationName}</h3>
-                  <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-white/20">
-                    <span className="text-white/80 text-xs font-light tracking-wider">
-                      {batch.stats?.totalProperties?.toLocaleString('en-IN') || 0} Listings
-                    </span>
-                    <span className="text-white text-xs uppercase tracking-widest group-hover:translate-x-2 transition-transform duration-300">
-                      Discover →
-                    </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop Skeleton Grid */}
+          <div className="hidden md:grid md:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div 
+                key={i}
+                className="bg-white rounded-3xl overflow-hidden animate-pulse border border-blue-100 shadow-lg"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
+                <div className="h-64 bg-gradient-to-r from-blue-200 to-blue-300"></div>
+                <div className="p-6 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 flex-1">
+                      <div className="h-5 bg-gradient-to-r from-blue-300 to-blue-400 rounded w-3/4"></div>
+                      <div className="h-4 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-1/2"></div>
+                    </div>
+                    <div className="h-8 bg-gradient-to-r from-blue-300 to-blue-400 rounded-2xl w-16"></div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-full"></div>
+                    <div className="h-4 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-5/6"></div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          
-          {/* Scroll Indicator for Mobile */}
-          {isMobile && batches.length > 1 && (
-            <div className="flex justify-center mt-6 md:hidden">
-              <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
-                <div className="w-2 h-2 rounded-full bg-slate-300 animate-pulse"></div>
-                <span className="text-xs text-slate-600 font-medium">Scroll for more locations</span>
-                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          )}
         </div>
-      </main>
+      </div>
+    );
+  }
 
-      {/* Luxury Modal */}
-      {showModal && selectedBatch && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-8 backdrop-blur-md bg-slate-900/60 transition-all duration-500">
-          <div 
-            className="bg-white w-full max-w-7xl h-full md:max-h-[90vh] overflow-hidden flex flex-col shadow-2xl rounded-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="relative h-48 md:h-64 flex-shrink-0">
-              <img 
-                src={selectedBatch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200'} 
-                className="w-full h-full object-cover"
-                alt="Location Header"
-              />
-              <div className="absolute inset-0 bg-slate-900/40 flex flex-col justify-end p-6 md:p-12">
-                <button 
-                  onClick={() => setShowModal(false)}
-                  className="absolute top-4 right-4 md:top-6 md:right-6 text-white hover:rotate-90 transition-transform duration-300"
-                >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-                <h2 className="text-3xl md:text-5xl font-serif text-white">{selectedBatch.locationName}</h2>
-                <p className="text-white/80 mt-2 font-light max-w-2xl italic text-sm md:text-base line-clamp-2 md:line-clamp-none">{selectedBatch.description}</p>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="flex-grow overflow-y-auto bg-slate-50 px-4 md:px-8 py-6 md:py-12">
-              {unitsLoading ? (
-                <div className="flex justify-center py-20">
-                   <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-                </div>
-              ) : propertyUnits.length === 0 ? (
-                <div className="text-center py-20">
-                  <p className="font-serif italic text-slate-400 text-xl">New listings arriving soon.</p>
-                </div>
-              ) : (
-                <div className="max-w-6xl mx-auto">
-                   <div className="flex justify-between items-end mb-4 md:mb-10 pb-3 md:pb-4 border-b border-slate-200">
-                      <h4 className="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold text-slate-900">Available Residences</h4>
-                      <span className="text-slate-400 text-xs md:text-sm font-light">{propertyUnits.length.toLocaleString('en-IN')} Properties</span>
-                   </div>
-                   
-                   {/* Mobile: Compact 2-column grid */}
-                   <div className="grid grid-cols-2 gap-3 md:gap-6 lg:gap-8">
-                    {propertyUnits.map((unit) => {
-                      // Get price safely with fallback
-                      const priceAmount = unit?.price?.amount || unit?.price || unit?.startingPrice || 0;
-                      const areaValue = unit?.area || unit?.carpetArea || unit?.builtUpArea || 0;
-                      const areaUnit = unit?.areaUnit || 'sq ft';
-                      
-                      return (
-                        <div 
-                          key={unit._id} 
-                          className="hover:-translate-y-1 transition-transform duration-300 cursor-pointer"
-                          onClick={() => handleUnitClick(unit._id)} // Add click handler to the entire card
-                        >
-                          <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-slate-100">
-                            {/* Compact Image */}
-                            <div className="relative h-32 md:h-48 overflow-hidden">
-                              <img 
-                                src={unit.images?.[0]?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400'} 
-                                alt={unit.title}
-                                className="w-full h-full object-cover"
-                              />
-                              {unit.isFeatured && (
-                                <span className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] px-2 py-1 rounded uppercase tracking-wider">
-                                  Featured
-                                </span>
-                              )}
-                            </div>
-                            
-                            {/* Compact Content */}
-                            <div className="p-3 md:p-4">
-                              <h3 className="font-medium text-sm md:text-base text-slate-900 mb-1 line-clamp-1">
-                                {unit.title || unit.propertyName || 'Premium Residence'}
-                              </h3>
-                              
-                              <div className="flex items-center text-slate-600 text-xs mb-2">
-                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                </svg>
-                                <span className="line-clamp-1">{unit.location || selectedBatch.locationName}</span>
-                              </div>
-                              
-                              <div className="flex justify-between items-center mb-2">
-                                <div>
-                                  <p className="text-xs text-slate-500">Starting from</p>
-                                  <p className="font-bold text-slate-900 text-sm md:text-base">
-                                    {formatIndianNumber(priceAmount)}
-                                  </p>
-                                  {unit.price && unit.price.currency === 'USD' && (
-                                    <span className="text-[10px] text-slate-500">(Approx)</span>
-                                  )}
-                                </div>
-                                {areaValue > 0 && (
-                                  <div className="text-right">
-                                    <p className="text-xs text-slate-500">Area</p>
-                                    <p className="font-medium text-slate-900 text-sm">
-                                      {formatArea(areaValue, areaUnit)}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Mobile: Simple button */}
-                              <button 
-                                className="w-full mt-2 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs uppercase tracking-wider rounded transition-colors duration-300"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent card click event
-                                  handleViewDetailsClick(unit._id);
-                                }}
-                              >
-                                View Details
-                              </button>
-                              
-                              {/* Additional info - hide on mobile */}
-                              <div className="hidden md:flex justify-between mt-3 pt-3 border-t border-slate-100">
-                                {unit.bedrooms !== undefined && (
-                                  <div className="flex items-center text-xs text-slate-600">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                    </svg>
-                                    {unit.bedrooms} Beds
-                                  </div>
-                                )}
-                                
-                                {unit.bathrooms !== undefined && (
-                                  <div className="flex items-center text-xs text-slate-600">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    {unit.bathrooms} Baths
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Show More Indicator for Mobile */}
-                  {isMobile && propertyUnits.length > 6 && (
-                    <div className="mt-6 flex justify-center">
-                      <div className="bg-white border border-slate-200 rounded-lg px-6 py-3 shadow-sm">
-                        <div className="flex items-center space-x-2">
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 rounded-full bg-slate-300"></div>
-                            <div className="w-2 h-2 rounded-full bg-slate-300"></div>
-                            <div className="w-2 h-2 rounded-full bg-slate-300"></div>
-                          </div>
-                          <span className="text-sm text-slate-600 font-medium">
-                            {(propertyUnits.length - 6).toLocaleString('en-IN')} more properties available
-                          </span>
-                          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>  
-              )}
-            </div>
-            
-            {/* Modal Footer */}
-            <div className="px-4 md:px-8 py-4 md:py-6 bg-white border-t border-slate-100 flex flex-col md:flex-row justify-between items-center">
-               <code className="hidden md:block text-[10px] text-slate-400 uppercase tracking-widest">ID: {selectedBatch.batchCode}</code>
-               <button 
-                onClick={() => setShowModal(false)}
-                className="w-full md:w-auto px-6 py-3 bg-slate-900 text-white text-xs uppercase tracking-widest hover:bg-slate-800 transition-colors rounded-sm"
-               >
-                 Return to Gallery
-               </button>
-            </div>
-          </div>
+  const PropertyCard = ({ unit, index }) => (
+    <div className="relative group h-full">
+      {/* Featured Badge */}
+      {unit.isFeatured && (
+        <div className="absolute top-4 left-4 z-20">
+          <span className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-blue-500/20 uppercase tracking-wider">
+            <Star className="w-3 h-3 fill-white" />
+            <span>FEATURED</span>
+          </span>
         </div>
       )}
       
-      {/* Hide scrollbar for cleaner look */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
-      `}} />
+      {/* Property Card Container */}
+      <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg h-full">
+        {/* Premium border effect on hover */}
+        <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-100 rounded-3xl transition-all duration-500 pointer-events-none"></div>
+        
+        {/* Property Card */}
+        <div className="transform group-hover:-translate-y-1 transition-transform duration-500 h-full">
+          <PropertyUnitCard 
+            propertyUnit={unit}
+            viewMode="compact"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className=" bg-white -py-26 md:py-16">
+      <div className="relative max-w-7xl mx-auto px-4">
+        {/* Header Section */}
+        <div className="text-center mb-16 md:mb-20">
+          {/* Premium indicator - hidden on mobile */}
+          <div className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
+            <Crown className="w-4 h-4 text-blue-700" />
+            <span className="text-blue-800 text-sm font-medium tracking-widest uppercase font-sans">
+              Premium Locations
+            </span>
+          </div>
+
+          {/* Main title */}
+          <div className="mb-6 hidden sm:block">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-blue-700 to-indigo-800">
+                Explore by 
+                
+                <span className='text-transparent bg-clip-text bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800'> Location</span> 
+              </span>
+              <span className="text-gray-900 block md:inline md:ml-4"></span>
+            </h1>
+            <p className="hidden sm:block text-gray-500 text-lg font-light max-w-2xl mx-auto">
+              Browse our premium real estate projects across key strategic locations
+            </p>
+          </div>
+          
+          {/* Decorative separator */}
+          <div className="hidden md:flex items-center justify-center gap-4 mb-8">
+            <div className="w-16 md:w-32 h-0.5 bg-gradient-to-r from-transparent via-blue-300 to-transparent" />
+            <MapPin className="w-6 h-6 text-blue-500" />
+            <div className="w-16 md:w-32 h-0.5 bg-gradient-to-l from-transparent via-blue-300 to-transparent" />
+          </div>
+
+          {/* Mobile title */}
+          {/* <h2 className="sm:hidden text-2xl font-bold text-gray-900 mb-4 font-sans">
+            <span className="text-blue-700">Premium Locations</span>
+          </h2> */}
+        </div>
+
+        {/* Desktop Grid Layout */}
+        <div className="hidden md:grid md:grid-cols-3 gap-8">
+          {batches.map((batch) => (
+            <div
+              key={batch._id}
+              className="group relative cursor-pointer overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-lg hover:shadow-2xl hover:border-blue-200 transition-all duration-500"
+              onClick={() => handleBatchClick(batch)}
+            >
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src={batch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'}
+                  alt={batch.locationName}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              </div>
+              
+              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                <p className="text-white/80 text-xs uppercase tracking-wider mb-2">Premium Location</p>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-2 font-serif">{batch.locationName}</h3>
+                <div className="flex items-center justify-between pt-3 border-t border-white/20">
+                  <span className="text-white/80 text-sm font-light">
+                    {batch.stats?.totalProperties?.toLocaleString('en-IN') || 0} Properties
+                  </span>
+                  <span className="text-white text-sm font-medium tracking-wider group-hover:translate-x-2 transition-transform duration-300">
+                    Explore →
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile Horizontal Scroll Layout */}
+        <div className="md:hidden relative">
+          {/* Mobile Scroll Navigation Buttons */}
+          <div className="relative mb-4">
+            <div className="flex justify-between items-center">
+              <div className="text-left">
+                <h3 className="text-lg font-semibold text-gray-700 font-sans">
+                  <span className="text-blue-600">Featured Locations</span>
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  {batches.length} locations available
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={scrollLeft}
+                  disabled={!canScrollLeft}
+                  className={`p-2 rounded-full border ${
+                    canScrollLeft 
+                      ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
+                      : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                  } transition-all duration-300`}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                
+                <button
+                  onClick={scrollRight}
+                  disabled={!canScrollRight}
+                  className={`p-2 rounded-full border ${
+                    canScrollRight 
+                      ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
+                      : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                  } transition-all duration-300`}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Scroll Container */}
+          <div 
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {batches.map((batch) => (
+              <div 
+                key={batch._id} 
+                className="flex-shrink-0 w-[280px] snap-start"
+              >
+                <div
+                  className="group relative cursor-pointer overflow-hidden bg-white rounded-2xl border border-gray-100 shadow-lg"
+                  onClick={() => handleBatchClick(batch)}
+                >
+                  <div className="h-48 overflow-hidden">
+                    <img
+                      src={batch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400'}
+                      alt={batch.locationName}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </div>
+                  
+                  <div className="p-4">
+                    <h3 className="text-base font-bold text-gray-900 mb-1 font-sans">{batch.locationName}</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 text-sm">
+                        {batch.stats?.totalProperties?.toLocaleString('en-IN') || 0} Properties
+                      </span>
+                      <span className="text-blue-600 text-sm font-medium">
+                        View →
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Luxury Modal */}
+        {showModal && selectedBatch && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-8 backdrop-blur-md bg-black/60 transition-all duration-500">
+            <div 
+              className="bg-white w-full max-w-7xl h-full md:max-h-[90vh] overflow-hidden flex flex-col shadow-2xl rounded-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="relative h-48 md:h-64 flex-shrink-0">
+                <img 
+                  src={selectedBatch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200'} 
+                  className="w-full h-full object-cover"
+                  alt="Location Header"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-12">
+                  <button 
+                    onClick={() => setShowModal(false)}
+                    className="absolute top-4 right-4 md:top-6 md:right-6 p-2 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors duration-300"
+                  >
+                    <X className="w-5 h-5 md:w-6 md:h-6" />
+                  </button>
+                  <h2 className="text-2xl md:text-4xl font-serif text-white font-bold">{selectedBatch.locationName}</h2>
+                  <p className="text-white/80 mt-2 font-light max-w-2xl text-sm md:text-base">{selectedBatch.description}</p>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="flex-grow overflow-y-auto bg-white px-4 md:px-8 py-6 md:py-8">
+                {unitsLoading ? (
+                  <div className="flex justify-center py-20">
+                    <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                  </div>
+                ) : propertyUnits.length === 0 ? (
+                  <div className="text-center py-20">
+                    <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <p className="font-sans text-gray-600 text-xl">No properties available at this location yet.</p>
+                  </div>
+                ) : (
+                  <div className="max-w-6xl mx-auto">
+                    {/* Desktop Grid Layout */}
+                    <div className="hidden md:grid md:grid-cols-3 gap-8">
+                      {propertyUnits.map((unit) => (
+                        <PropertyCard key={unit._id} unit={unit} />
+                      ))}
+                    </div>
+
+                    {/* Mobile Horizontal Scroll Layout */}
+                    <div className="md:hidden relative">
+                      {/* Mobile Scroll Navigation for Properties */}
+                      <div className="relative mb-4">
+                        <div className="flex justify-between items-center">
+                          <div className="text-left">
+                            <h3 className="text-lg font-semibold text-gray-700 font-sans">
+                              <span className="text-blue-600">Properties</span>
+                            </h3>
+                            <p className="text-gray-500 text-sm">
+                              {propertyUnits.length} available
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mobile Scroll Container for Properties */}
+                      <div 
+                        className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                      >
+                        {propertyUnits.map((unit, index) => (
+                          <div 
+                            key={unit._id} 
+                            className="flex-shrink-0 w-[280px] snap-start"
+                          >
+                            <PropertyCard unit={unit} index={index} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Show More Indicator for Mobile */}
+                    {isMobile && propertyUnits.length > 6 && (
+                      <div className="mt-6 flex justify-center">
+                        <div className="bg-white border border-gray-200 rounded-lg px-6 py-3 shadow-sm">
+                          <div className="flex items-center space-x-2">
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 rounded-full bg-blue-300"></div>
+                              <div className="w-2 h-2 rounded-full bg-blue-300"></div>
+                              <div className="w-2 h-2 rounded-full bg-blue-300"></div>
+                            </div>
+                            <span className="text-sm text-gray-600 font-medium">
+                              {(propertyUnits.length - 6).toLocaleString('en-IN')} more properties
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>  
+                )}
+              </div>
+              
+              {/* Modal Footer */}
+              <div className="px-4 md:px-8 py-4 md:py-6 bg-white border-t border-gray-100 flex flex-col md:flex-row justify-between items-center">
+                <button 
+                  onClick={() => setShowModal(false)}
+                  className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 rounded-xl shadow-md hover:shadow-lg"
+                >
+                  Return to Locations
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Custom scrollbar hide styles */}
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };

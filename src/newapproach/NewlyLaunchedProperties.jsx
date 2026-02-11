@@ -352,7 +352,7 @@ export default function NewlyLaunchedProperties() {
     <div className=" bg-white  md:py-24">
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
-        <div className="text-center mb-16 md:mb-20">
+        <div className="text-center  md:mb-20">
           {/* Premium indicator - hidden on mobile */}
           <div className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
             <Crown className="w-4 h-4 text-blue-700" />
@@ -362,7 +362,7 @@ export default function NewlyLaunchedProperties() {
           </div>
 
           {/* Main title - hidden on mobile */}
-          <div className="mb-6">
+          <div className="">
             <h1 className="hidden sm:block text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-blue-700 to-indigo-800">
                 Newly Launched
@@ -409,7 +409,7 @@ export default function NewlyLaunchedProperties() {
             </div>
 
             {/* Desktop filter buttons */}
-            <div className="hidden sm:flex flex-wrap justify-center gap-3">
+            <div className="hidden pt-6 sm:flex flex-wrap justify-center gap-3">
               {[
                 { days: "7", label: "Last 7 Days", icon: Clock },
                 { days: "14", label: "Last 14 Days", icon: Calendar },
@@ -453,9 +453,9 @@ export default function NewlyLaunchedProperties() {
                 <h3 className="text-lg font-semibold text-gray-700 font-sans">
                   <span className="text-blue-600">Properties</span>
                 </h3>
-                <p className="text-gray-500 text-sm">
+                {/* <p className="text-gray-500 text-sm">
                   {propertyUnits.length} available
-                </p>
+                </p> */}
               </div>
               
               <div className="flex items-center gap-1">

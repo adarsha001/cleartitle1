@@ -151,7 +151,7 @@ export default function QualityAssuranceSection() {
         </div>
 
           <div className="bg-white/40 backdrop-blur-2xl border border-slate-200/50 rounded-[3rem] p-10 md:p-16 shadow-xl shadow-slate-200/20">
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-12">
     {[
       { 
         step: '01', 
