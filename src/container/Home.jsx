@@ -16,8 +16,8 @@ const Home = () => {
 
   const sections = [
     { name: 'All Properties', component: PropertyUnitsPage },
-    { name: 'Newly Launched', component: NewlyLaunchedProperties },
     { name: 'Featured', component: FeaturedProperties },
+    { name: 'Newly Launched', component: NewlyLaunchedProperties },
     { name: 'BengaluruEastLandPriceChart', component:  LocationBatches},
     { name: 'Possession Timeline', component: PossessionTimeline },
     { name: 'ProjectGroupBatches ', component: ProjectGroupBatches },
