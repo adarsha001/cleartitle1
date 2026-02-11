@@ -269,12 +269,12 @@ export default function FeaturedProperties() {
         {/* Header Section */}
         <div className="text-center  md:mb-20">
           {/* Premium Indicator */}
-          <div className=" items-center gap-2  hidden  sm:inline-flex  bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
+          {/* <div className=" items-center gap-2  hidden  sm:inline-flex  bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
             <Star className="w-4 h-4 text-blue-700 fill-blue-700" />
             <span className="text-blue-800  text-sm font-medium tracking-widest uppercase font-sans">
               Premium Selection
             </span>
-          </div>
+          </div> */}
 
           {/* Main Title */}
           <div className="mb-6 hidden sm:block">

@@ -354,12 +354,12 @@ export default function NewlyLaunchedProperties() {
         {/* Header Section */}
         <div className="text-center  md:mb-20">
           {/* Premium indicator - hidden on mobile */}
-          <div className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
+          {/* <div className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
             <Crown className="w-4 h-4 text-blue-700" />
             <span className="text-blue-800 text-sm font-medium tracking-widest uppercase font-sans">
               Exclusive Collection
             </span>
-          </div>
+          </div> */}
 
           {/* Main title - hidden on mobile */}
           <div className="">
