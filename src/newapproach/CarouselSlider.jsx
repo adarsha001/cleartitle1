@@ -39,7 +39,7 @@ const ImprovedCarousel = () => {
       badge: 'Limited Time'
     },
        {
-      id: 3,
+      id: 4,
       image: '/image31.png',
       mobileImage: '/image32.png',
       title: 'Reliable Packers & Movers',

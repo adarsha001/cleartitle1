@@ -675,7 +675,7 @@ const ProjectGroupBatches = () => {
       </div>
 
       {/* Custom scrollbar hide styles */}
-      <style jsx>{`
+      <style >{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }

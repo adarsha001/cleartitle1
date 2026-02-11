@@ -120,7 +120,7 @@ export default function FeaturedProperties() {
           <div className="flex flex-wrap justify-center gap-3 mb-12">
             {[1, 2, 3, 4].map((i) => (
               <div 
-                key={i}
+                key={`filter-skel-${i}`}
                 className="bg-gradient-to-r from-blue-100 to-indigo-50 w-32 h-12 rounded-xl animate-pulse border border-blue-200"
                 style={{ animationDelay: `${i * 0.1}s` }}
               ></div>
@@ -132,7 +132,7 @@ export default function FeaturedProperties() {
         <div className="hidden md:grid md:grid-cols-3 gap-8">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div 
-              key={i}
+              key={`desktop-skel-${i}`}
               className="bg-white rounded-3xl overflow-hidden animate-pulse border border-blue-100 shadow-lg"
               style={{ animationDelay: `${i * 0.1}s` }}
             >
@@ -159,7 +159,7 @@ export default function FeaturedProperties() {
         <div className="md:hidden flex space-x-8 pb-8 overflow-x-auto scrollbar-hide">
           {[1, 2, 3, 4].map((i) => (
             <div 
-              key={i}
+              key={`mobile-skel-${i}`}
               className="flex-shrink-0 w-[320px] bg-white rounded-3xl overflow-hidden animate-pulse border border-blue-100 shadow-lg"
               style={{ animationDelay: `${i * 0.1}s` }}
             >
@@ -227,26 +227,8 @@ export default function FeaturedProperties() {
     );
   }
 
-  const PropertyCard = ({ unit, index }) => (
+  const PropertyCard = ({ unit }) => (
     <div className="relative group h-full">
-      {/* Featured Badge */}
-      {/* <div className="absolute top-5 left-5 z-20">
-        <span className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-blue-500/20 uppercase tracking-wider">
-          <Star className="w-3.5 h-3.5 fill-white" />
-          <span>FEATURED</span>
-        </span>
-      </div> */}
-      
-      {/* Verification Badge */}
-      {/* {unit.isVerified && (
-        <div className="absolute top-5 right-5 z-20">
-          <span className="bg-white/95 backdrop-blur-sm text-gray-700 text-xs font-medium px-3.5 py-2 rounded-full border border-blue-200 flex items-center gap-2 shadow-md">
-            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-            <span className="font-sans">Verified</span>
-          </span>
-        </div>
-      )} */}
-      
       {/* Property Card Container */}
       <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg h-full">
         {/* Premium border effect on hover */}
@@ -264,18 +246,10 @@ export default function FeaturedProperties() {
   );
 
   return (
-    <div className=" bg-white py-6 md:24">
+    <div className="bg-white py-6 md:py-24">
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
-        <div className="text-center  md:mb-20">
-          {/* Premium Indicator */}
-          {/* <div className=" items-center gap-2  hidden  sm:inline-flex  bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
-            <Star className="w-4 h-4 text-blue-700 fill-blue-700" />
-            <span className="text-blue-800  text-sm font-medium tracking-widest uppercase font-sans">
-              Premium Selection
-            </span>
-          </div> */}
-
+        <div className="text-center md:mb-20">
           {/* Main Title */}
           <div className="mb-6 hidden sm:block">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight">
@@ -288,74 +262,12 @@ export default function FeaturedProperties() {
               Handpicked properties with verified documentation and premium quality
             </p>
           </div>
-          
-     
-          {/* <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="w-16 md:w-32 h-0.5 bg-gradient-to-r from-transparent via-blue-300 to-transparent" />
-            <Building2 className="w-6 h-6 text-blue-500" />
-            <div className="w-16 md:w-32 h-0.5 bg-gradient-to-l from-transparent via-blue-300 to-transparent" />
-          </div> */}
-
-          {/* Description */}
-          {/* <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-10 font-sans">
-            Discover our curated collection of premium properties, each verified for authenticity 
-            and selected for exceptional value and quality.
-          </p> */}
-
-          {/* Assurance Badges */}
-          {/* <div className="hidden md:grid md:grid-cols-4 gap-6 max-w-5xl mx-auto mb-12">
-            {[
-              { 
-                icon: Shield, 
-                text: "Verified Title", 
-                subtext: "Legal documentation verified",
-                color: "blue"
-              },
-              { 
-                icon: CheckCircle2, 
-                text: "Approved", 
-                subtext: "Quality assurance passed",
-                color: "indigo"
-              },
-              { 
-                icon: Star, 
-                text: "Featured", 
-                subtext: "Handpicked selection",
-                color: "blue"
-              },
-              { 
-                icon: Home, 
-                text: "Premium", 
-                subtext: "High-value properties",
-                color: "indigo"
-              }
-            ].map((feature, index) => (
-              <div 
-                key={index} 
-                className="group bg-white p-5 rounded-2xl border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-xl shadow-sm"
-              >
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className={`p-3.5 rounded-xl bg-gradient-to-br from-${feature.color}-50 to-${feature.color}-100 group-hover:from-${feature.color}-100 group-hover:to-${feature.color}-200 transition-all duration-300`}>
-                    <feature.icon className={`w-6 h-6 text-${feature.color}-700`} />
-                  </div>
-                  <div>
-                    <h3 className="text-gray-900 font-semibold text-base mb-1.5 font-sans">
-                      {feature.text}
-                    </h3>
-                    <p className="text-gray-500 text-sm font-light">
-                      {feature.subtext}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div> */}
         </div>
 
         {/* Desktop Grid Layout */}
         <div className="hidden md:grid md:grid-cols-3 gap-8">
-          {propertyUnits.map((unit, index) => (
-            <PropertyCard key={unit._id || index} unit={unit} index={index} />
+          {propertyUnits.map((unit) => (
+            <PropertyCard key={unit._id || `featured-card-${unit.slug || Math.random()}`} unit={unit} />
           ))}
         </div>
 
@@ -366,9 +278,6 @@ export default function FeaturedProperties() {
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-900 font-sans">
                 <span className="text-blue-700">Featured Properties</span> 
-                {/* <span className="text-gray-600 text-lg ml-3 font-normal">
-                  ({propertyUnits.length} available)
-                </span> */}
               </h2>
               
               <div className="flex items-center gap-2">
@@ -406,30 +315,20 @@ export default function FeaturedProperties() {
             className="flex space-x-8 pb-8 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {propertyUnits.map((unit, index) => (
+            {propertyUnits.map((unit) => (
               <div 
-                key={unit._id || index} 
+                key={unit._id || `featured-mobile-${unit.slug || Math.random()}`} 
                 className="flex-shrink-0 w-[320px] snap-start"
               >
-                <PropertyCard unit={unit} index={index} />
+                <PropertyCard unit={unit} />
               </div>
             ))}
           </div>
         </div>
-
-        {/* Results Summary
-        {propertyUnits.length > 0 && (
-          <div className="mt-12 text-center">
-            <p className="text-gray-500 text-base font-light">
-              Showing <span className="text-blue-700 font-medium">{propertyUnits.length}</span> 
-              {' '}premium featured properties
-            </p>
-          </div>
-        )} */}
       </div>
 
       {/* Custom scrollbar hide styles */}
-      <style jsx>{`
+      <style>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }

@@ -915,7 +915,7 @@ const renderCarouselSkeleton = () => (
     </div>
 
     {/* Add CSS for shimmer animation */}
-    {/* <style jsx>{`
+    {/* <style >{`
       @keyframes shimmer {
         0% {
           transform: translateX(-100%);
