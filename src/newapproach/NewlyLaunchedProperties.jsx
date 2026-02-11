@@ -336,13 +336,13 @@ export default function NewlyLaunchedProperties() {
         
         {/* Hover overlay with action button */}
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white/90 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 z-20">
-          <button 
+          {/* <button 
             onClick={() => navigate(`/property/${unit._id}`)}
             className="w-full bg-gradient-to-r from-blue-700 to-indigo-700 text-white py-3.5 rounded-xl font-medium flex items-center justify-center gap-3 hover:from-blue-800 hover:to-indigo-800 transition-all duration-300 shadow-lg hover:shadow-xl group/btn"
           >
             <span className="font-sans">View Details</span>
             <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform duration-300" />
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

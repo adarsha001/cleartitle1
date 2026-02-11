@@ -264,7 +264,7 @@ export default function FeaturedProperties() {
   );
 
   return (
-    <div className=" bg-white py-6">
+    <div className=" bg-white py-6 md:24">
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
         <div className="text-center  md:mb-20">
