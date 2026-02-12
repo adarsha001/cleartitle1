@@ -27,7 +27,7 @@ export default function NewlyLaunchedProperties() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [timePeriod, setTimePeriod] = useState("14");
+  const [timePeriod, setTimePeriod] = useState("30");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const navigate = useNavigate();
@@ -111,7 +111,7 @@ export default function NewlyLaunchedProperties() {
   };
 
   const handleViewAll = () => {
-    setTimePeriod('14');
+    setTimePeriod('30');
   };
 
   const handleTimePeriodChange = (days) => {
