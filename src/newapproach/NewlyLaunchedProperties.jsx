@@ -296,14 +296,14 @@ export default function NewlyLaunchedProperties() {
   const PropertyCard = ({ unit, index }) => (
     <div className="relative group h-full">
       {/* Premium badge for newest properties */}
-      {index < 3 && (
+      {/* {index < 3 && (
         <div className="absolute top-5 left-5 z-20">
           <span className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-blue-500/20 uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Just Launched</span>
           </span>
         </div>
-      )}
+      )} */}
       
       {/* Time indicator */}
       <div className="absolute top-5 right-5 z-20">
