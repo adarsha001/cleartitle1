@@ -994,7 +994,7 @@ const formatPrice = (price) => {
             </div>
 <div className="mt-4 sm:mt-0 lg:text-right">
   {/* Premium Pricing Card */}
-  <div className="inline-block max-w-sm w-full group">
+  <div className=" hidden md:block max-w-sm w-full group">
     {/* Pricing Header - Professional Real Estate Gradient */}
     <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-t-xl sm:rounded-t-2xl p-5 sm:p-7 relative overflow-hidden">
       {/* Subtle pattern overlay */}
@@ -1489,7 +1489,135 @@ const formatPrice = (price) => {
                 </p>
               </div>
             )}
+  <div className=" md:hidden max-w-sm w-full group">
+    {/* Pricing Header - Professional Real Estate Gradient */}
+    <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-t-xl sm:rounded-t-2xl p-5 sm:p-7 relative overflow-hidden">
+      {/* Subtle pattern overlay */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: '30px'
+        }}></div>
+      </div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-blue-300 to-cyan-300 rounded-full animate-pulse"></div>
+            <span className="text-xs font-semibold text-white/90 uppercase tracking-[0.15em]">
+              Clear Title Value
+            </span>
+          </div>
+          <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-full border border-white/30">
+            <span className="text-xs font-bold text-white tracking-wide">
+              {listingType === 'sale' ? 'FOR SALE' : listingType === 'rent' ? 'FOR RENT' : 'lease'}
+            </span>
+          </div>
+        </div>
+        
+        {/* Main Price with subtle shine effect */}
+        <div className="relative">
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
+              {formatPrice(price)}
+            </span>
+          </div>
+          {/* Subtle glow effect */}
+          <div className="absolute -bottom-2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+        </div>
+        
+        {/* Property Type Indicator */}
+        <div className="mt-4 flex items-center justify-end">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+            <Verified className="w-3 h-3 text-emerald-300" />
+            <span className="text-xs font-medium text-white/90">
+              Verified {propertyType}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
 
+    {/* Pricing Details - Clean Professional Card */}
+    <div className="bg-gradient-to-b from-white to-blue-50/30 rounded-b-xl sm:rounded-b-2xl border border-blue-100 shadow-xl shadow-blue-900/5">
+      <div className="p-5 sm:p-7 space-y-4">
+        {/* Price per sq.ft - Premium Styling */}
+        {safeSpecifications.carpetArea > 0 && price?.amount && (
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-50/70 rounded-xl border border-blue-200 hover:border-blue-300 transition-colors group/item">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
+                <Maximize className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider">Unit Rate</p>
+                <p className="text-lg font-bold text-gray-900">
+                  ₹{(price.amount / safeSpecifications.carpetArea).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  <span className="text-sm font-medium text-gray-600 ml-1">/sq.ft</span>
+                </p>
+              </div>
+            </div>
+            <div className="w-2 h-8 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full opacity-70"></div>
+          </div>
+        )}
+
+        {/* Maintenance Charges - Elegant Card */}
+        {maintenanceCharges > 0 && (
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-cyan-50/70 rounded-xl border border-cyan-200 hover:border-cyan-300 transition-colors group/item">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-105 transition-transform">
+                <Building className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-cyan-700 uppercase tracking-wider">Maintenance</p>
+                <p className="text-lg font-bold text-gray-900">
+                  ₹{maintenanceCharges.toLocaleString('en-IN')}
+                  <span className="text-sm font-medium text-gray-600 ml-1">/month</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Security Deposit - Elegant Card */}
+        {securityDeposit > 0 && (
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-emerald-50/70 rounded-xl border border-emerald-200 hover:border-emerald-300 transition-colors group/item">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-green-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-105 transition-transform">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Security Deposit</p>
+                <p className="text-lg font-bold text-gray-900">
+                  ₹{securityDeposit.toLocaleString('en-IN')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Registration Charges */}
+
+ 
+        {/* Call to Action */}
+        <div className="pt-4">
+          <button 
+            onClick={handleBookAppointment}
+            className="w-full group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="relative z-10 flex items-center justify-center gap-3">
+              <CalendarIcon className="w-5 h-5" />
+              <span className="tracking-wide">Schedule Property Tour</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+            {/* Shine effect */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          </button>
+          
+    
+        </div>
+      </div>
+    </div>
+  </div>
             {/* BOOK YOUR APPOINTMENT CARD - Desktop Version */}
             <div className="hidden sm:block bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-6 md:p-8 border-2 border-green-200">
               <div className="flex flex-col md:flex-row md:items-center gap-6">
