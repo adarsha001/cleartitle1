@@ -69,7 +69,7 @@ const PropertyCategories = () => {
         gsap.from(card, {
           y: 30,
           
-          duration: 0.1,
+          duration: 0.3,
           ease: "power2.out",
           scrollTrigger: {
             trigger: card,
