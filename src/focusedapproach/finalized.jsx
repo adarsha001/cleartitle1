@@ -11,12 +11,14 @@ import BengaluruEastLandPriceChart from '../newapproach/BengaluruEastLandPriceCh
 import LocationBatches from '../components/batches/LocationBatches';
 import ProjectGroupBatches from '../components/batches/ProjectGroupBatches';
 import CategoryGrid from '../focusedapproach/Catogarized';
+import PropertyCategories from '../focusedapproach/Catogarized';
+import ImprovedCarousel from '../newapproach/CarouselSlider';
 
-const Home = () => {
+const Finalized = () => {
   const sectionRefs = useRef([]);
 
   const sections = [
-    { name: 'All Properties', component: PropertyUnitsPage },
+    { name: 'All Properties', component: ImprovedCarousel },
     { name: 'CategoryGrid', component: CategoryGrid },
     { name: 'Featured', component: FeaturedProperties },
     { name: 'Newly Launched', component: NewlyLaunchedProperties },
@@ -52,4 +54,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Finalized;

@@ -40,6 +40,8 @@ import PropertyUnitList from "./components/PropertyUnitList";
 import BatchCreateForm from "./components/BatchCreateForm";
 import BatchUpdateForm from "./components/BatchUpdateForm";
 import BatchDetails from "./components/BatchDetails";
+import CategoryPropertiesPage from "./focusedapproach/CategoryPropertiesPage";
+import Finalized from "./focusedapproach/finalized";
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
   const { user } = useAuth();
@@ -74,7 +76,7 @@ export default function App() {
             
             <Routes>
               {/* Public Routes */}
-              <Route path="/" element={<Home/>} />
+              <Route path="/" element={<Finalized/>} />
               {/* <Route path="/properties" element={<PropertyList />} /> */}
               <Route path="/properties-unit" element={<PropertyUnitsPage />} />
               <Route path="/featured" element={<FeaturedProperties />} />
@@ -124,6 +126,7 @@ export default function App() {
                 }
               />
                  <Route path="/property-units" element={<PropertyUnitList />} />
+           
                  <Route path="batch/post/property-units" element={<BatchCreateForm />} />
      <Route path="/admin/batches/edit/:id" element={<BatchUpdateForm />} />
         <Route path="/admin/batches/:id" element={<BatchDetails />} />
@@ -141,6 +144,7 @@ export default function App() {
                 }
               />
               
+              
               <Route
                 path="/admin/properties"
                 element={
@@ -149,6 +153,7 @@ export default function App() {
                   </AdminRoute>
                 }
               />
+              
               <Route
                 path="/admin/users"
                 element={
@@ -178,6 +183,7 @@ export default function App() {
 
               {/* 404 Not Found Route - Catch all undefined routes */}
               <Route path="*" element={<NotFound />} />
+        <Route path="/properties/category/:categoryId" element={<CategoryPropertiesPage />}/>
             </Routes>
             
           </ViewModeProvider>
