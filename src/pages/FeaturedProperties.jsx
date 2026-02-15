@@ -209,7 +209,7 @@ export default function FeaturedProperties() {
 
   if (propertyUnits.length === 0) {
     return (
-      <div className="min-h-screen bg-white py-16 md:py-24">
+      <div className="min-h-screen bg-amber-800 bg-white py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <Star className="w-20 h-20 text-blue-500 mx-auto mb-6" />
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-sans">No Featured Properties Available</h2>
@@ -246,7 +246,7 @@ export default function FeaturedProperties() {
   );
 
   return (
-    <div className="bg-white py-6 md:py-24">
+    <div className="bg-white  py-6 md:py-24">
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
         <div className="text-center md:mb-20">

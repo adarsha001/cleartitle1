@@ -10,7 +10,7 @@ import ListingTypeView from '../newapproach/ListingTypeView';
 import BengaluruEastLandPriceChart from '../newapproach/BengaluruEastLandPriceChart';
 import LocationBatches from '../components/batches/LocationBatches';
 import ProjectGroupBatches from '../components/batches/ProjectGroupBatches';
-import CategoryGrid from '../focusedapproach/Catogarized';
+import CategoryGrid from '../focusedapproach/bentogridCatogarized';
 
 const Home = () => {
   const sectionRefs = useRef([]);

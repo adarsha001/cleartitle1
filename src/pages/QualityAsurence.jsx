@@ -71,7 +71,7 @@ export default function QualityAssuranceSection() {
       ref={sectionRef} 
       className="relative py-20 px-4 overflow-hidden min-h-screen flex items-center bg-white"
       style={{
-        backgroundImage: "url('/logoo.png')",
+        backgroundImage: "url('/building.png')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed'

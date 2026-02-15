@@ -1280,7 +1280,7 @@ const CategoryPropertiesPage = () => {
             </button>
             <button
               onClick={() => setShowMobileFilters(false)}
-              className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-colors"
+              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-lg shadow-blue-600/30  transition-colors"
             >
               Show {totalCount} Results
             </button>

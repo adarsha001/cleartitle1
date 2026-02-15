@@ -5,7 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import { 
   ArrowLeft, 
-  MapPin, ArrowRight,
+  MapPin, 
+  ArrowRight,
   Calendar, 
   Phone, 
   Mail, 
@@ -56,7 +57,29 @@ import {
   X,
   Maximize2,
   Minus,
-  Plus
+  Plus,
+  ChefHat,
+  DoorOpen,
+  ThermometerSnowflake,
+  Fan,
+  Lamp,
+  Cpu,
+  Snowflake,
+  Clover,
+  BookOpen,
+  Sofa,
+  User,
+  Trees,
+  Mountain,
+  Ship,
+  Waves,
+  Bell,
+  Flame,
+  Dog,
+  Accessibility,
+  Sun,
+  Eye,
+// Add this line
 } from "lucide-react";
 import Footer from "../pages/Footer";
 import PossessionTimeline from "../newapproach/PossessionTimeline";
@@ -678,11 +701,49 @@ const formatPrice = (price) => {
     // ... (keep your existing featureIcons object)
   };
 
-  // Fallback icon mapping for unknown features
-  const getFeatureIcon = (feature) => {
-    // ... (keep your existing getFeatureIcon function)
-    return <Home className="w-4 h-4 sm:w-5 sm:h-5" />;
+const getFeatureIcon = (feature) => {
+  const iconMap = {
+    // Basic Amenities
+    "Air Conditioning": <Wind className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Modular Kitchen": <ChefHat className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Wardrobes": <DoorOpen className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Geyser": <ThermometerSnowflake className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Exhaust Fan": <Fan className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Chimney": <Wind className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Lighting": <Lamp className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Ceiling Fans": <Fan className="w-4 h-4 sm:w-5 sm:h-5" />,
+    
+    // Luxury
+    "Smart Home Automation": <Cpu className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Central AC": <Snowflake className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "bore water": <Droplets className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Walk-in Closet": <DoorOpen className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Study Room": <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Pooja Room": <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Utility Area": <Sofa className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Servant Room": <User className="w-4 h-4 sm:w-5 sm:h-5" />,
+    
+    // Outdoor
+    "Private Garden": <Trees className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Terrace": <Mountain className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Balcony": <Ship className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Swimming Pool": <Waves className="w-4 h-4 sm:w-5 sm:h-5" />,
+    
+    // Safety & Security
+    "Video Door Phone": <Camera className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Security Alarm": <Bell className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Fire Safety": <Flame className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "CCTV": <Camera className="w-4 h-4 sm:w-5 sm:h-5" />,
+    
+    // Additional
+    "Pet Friendly": <Dog className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Wheelchair Access": <Accessibility className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "Natural Light": <Sun className="w-4 h-4 sm:w-5 sm:h-5" />,
+    "View": <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
   };
+
+  return iconMap[feature] || <Home className="w-4 h-4 sm:w-5 sm:h-5" />;
+};
 
   const embedUrl = getGoogleMapsEmbedUrl();
   const viewUrl = getGoogleMapsViewUrl();
@@ -1766,41 +1827,126 @@ const formatPrice = (price) => {
             )}
 
             {/* Unit Features - Mobile compact with expand/collapse */}
-            {safeUnitFeatures.length > 0 && (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
-                <button
-                  onClick={() => toggleSection('features')}
-                  className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors sm:cursor-default"
-                >
-                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                    Unit Features ({safeUnitFeatures.length})
-                  </h2>
-                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform sm:hidden ${
-                    expandedSections.features ? 'rotate-180' : ''
-                  }`} />
-                </button>
-                
-                <div className={`${expandedSections.features ? 'block' : 'hidden'} sm:block px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
-                  {/* Mobile: Compact grid with 5 items per row */}
-                  <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
-                    {safeUnitFeatures.map((feature, index) => (
-                      <div
-                        key={index}
-                        className="flex flex-col items-center p-2 sm:p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg sm:rounded-xl border border-indigo-200 hover:border-indigo-300 transition-all"
-                      >
-                        <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center mb-2">
+{safeUnitFeatures.length > 0 && (
+  <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-gray-100/80 overflow-hidden backdrop-blur-sm relative group">
+    {/* Premium gradient background effect */}
+    <div className="absolute inset-0 bg-gradient-to-br from-gray-50/30 via-stone-50/20 to-amber-50/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+    
+    {/* Decorative elements */}
+    <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-gray-200/20 to-stone-200/20 rounded-full blur-3xl"></div>
+    <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-amber-200/10 to-stone-200/20 rounded-full blur-3xl"></div>
+    
+    <div className={`${expandedSections.features ? 'block' : 'hidden'} sm:block transition-all duration-500 ease-in-out relative z-10`}>
+      <div className="px-5 sm:px-7 md:px-9 pb-7 sm:pb-8 md:pb-10">
+        {/* Feature count badge */}
+        <div className="flex items-center gap-2 mb-6 sm:mb-8">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+          <span className="text-xs font-semibold text-gray-700 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-200 shadow-sm">
+            {safeUnitFeatures.length} Premium Amenities
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+        </div>
+        
+        {/* Premium features grid */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+          {safeUnitFeatures.map((feature, index) => {
+            // Sophisticated muted color palette - premium and elegant
+            const premiumGradients = [
+              "from-amber-800/80 to-amber-700/70",      // Warm gold
+              "from-rose-800/80 to-rose-700/70",        // Dusty rose
+              "from-indigo-800/80 to-indigo-700/70",    // Deep indigo
+              "from-emerald-800/80 to-emerald-700/70",  // Forest green
+              "from-slate-800/80 to-slate-700/70",      // Charcoal
+              "from-stone-800/80 to-stone-700/70",      // Warm gray
+              "from-teal-800/80 to-teal-700/70",        // Deep teal
+              "from-purple-800/80 to-purple-700/70",    // Royal purple
+              "from-cyan-800/80 to-cyan-700/70",        // Deep cyan
+              "from-pink-800/80 to-pink-700/70",        // Mauve
+              "from-blue-800/80 to-blue-700/70",        // Navy
+              "from-orange-800/80 to-orange-700/70",    // Burnt orange
+              "from-lime-800/80 to-lime-700/70",        // Olive
+              "from-red-800/80 to-red-700/70",          // Burgundy
+              "from-violet-800/80 to-violet-700/70",    // Deep violet
+              "from-fuchsia-800/80 to-fuchsia-700/70",  // Deep fuchsia
+            ];
+            
+            // Get muted color based on index
+            const gradientColor = premiumGradients[index % premiumGradients.length];
+            
+            // Extract base color for effects
+            const baseColor = gradientColor.split(' ')[0].replace('from-', '').split('/')[0];
+            
+            return (
+              <div
+                key={index}
+                className="group/feature relative"
+                style={{
+                  animation: `fadeInUp 0.5s ease-out ${index * 0.05}s both`
+                }}
+              >
+                {/* Premium card with subtle background */}
+                <div className="relative bg-white rounded-xl sm:rounded-2xl border border-gray-200/60 hover:border-gray-300/80 shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden">
+                  
+                  {/* Subtle background gradient on hover */}
+                  <div className={`absolute inset-0 bg-gradient-to-br from-${baseColor}-50/0 via-${baseColor}-50/0 to-${baseColor}-50/0 group-hover/feature:from-${baseColor}-50/30 group-hover/feature:via-${baseColor}-50/20 group-hover/feature:to-${baseColor}-50/10 transition-all duration-700`}></div>
+                  
+                  {/* Elegant shine effect - more subtle */}
+                  <div className="absolute inset-0 opacity-0 group-hover/feature:opacity-100 transition-opacity duration-1000">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/feature:translate-x-full transition-transform duration-1500"></div>
+                  </div>
+                  
+                  <div className="relative p-3 sm:p-4 md:p-5 flex flex-col items-center">
+                    {/* Icon container with muted premium gradient */}
+                    <div className="relative mb-2 sm:mb-3">
+                      <div className={`w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br ${gradientColor} rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-${baseColor}-900/20 group-hover/feature:shadow-xl group-hover/feature:shadow-${baseColor}-900/30 transition-all duration-500 transform group-hover/feature:scale-105`}>
+                        <div className="text-white/90 [&>svg]:w-5 [&>svg]:h-5 sm:[&>svg]:w-7 sm:[&>svg]:h-7 md:[&>svg]:w-8 md:[&>svg]:h-8">
                           {featureIcons[feature] || getFeatureIcon(feature)}
                         </div>
-                        <span className="font-bold text-gray-800 tracking-wide text-xs sm:text-sm text-center line-clamp-2">
-                          {feature}
-                        </span>
                       </div>
-                    ))}
+                      
+                      {/* Subtle glow effect - very soft */}
+                      <div className={`absolute -inset-1 bg-gradient-to-br ${gradientColor} rounded-xl sm:rounded-2xl blur-md opacity-0 group-hover/feature:opacity-20 transition-opacity duration-500`}></div>
+                      
+                      {/* Premium metallic corner accent */}
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-br from-amber-300/80 to-amber-500/80 rounded-full opacity-0 group-hover/feature:opacity-100 transition-opacity duration-500 shadow-lg"></div>
+                    </div>
+                    
+                    {/* Feature name with elegant typography */}
+                    <span className="font-medium text-gray-600 tracking-wide text-[10px] sm:text-xs md:text-sm text-center line-clamp-2 group-hover/feature:text-gray-900 transition-colors duration-300">
+                      {feature}
+                    </span>
+                    
+                    {/* Subtle indicator dot */}
+                    <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-${baseColor}-400/60 rounded-full opacity-0 group-hover/feature:opacity-100 transition-all duration-300 scale-0 group-hover/feature:scale-100`}></div>
                   </div>
                 </div>
+                
+                {/* Elegant tooltip */}
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900/90 text-white/90 text-[10px] sm:text-xs rounded opacity-0 group-hover/feature:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-20 shadow-xl backdrop-blur-sm">
+                  {feature}
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900/90 rotate-45"></div>
+                </div>
               </div>
-            )}
-
+            );
+          })}
+        </div>
+        
+        {/* Optional elegant CTA */}
+        {safeUnitFeatures.length > 10 && (
+          <div className="mt-6 sm:mt-8 text-center">
+            <button className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-600 bg-gray-50/80 hover:bg-gray-100 px-5 py-2 rounded-full border border-gray-200 hover:border-gray-300 transition-all group/cta">
+              <span>View all {safeUnitFeatures.length} features</span>
+              <ArrowRight className="w-3 h-3 text-gray-400 group-hover/cta:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+    
+    {/* Elegant bottom border */}
+    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+  </div>
+)}
             {/* Building Details - Mobile compact with expand/collapse */}
             {safeBuildingDetails.name && (
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">

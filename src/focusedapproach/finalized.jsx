@@ -10,8 +10,8 @@ import ListingTypeView from '../newapproach/ListingTypeView';
 import BengaluruEastLandPriceChart from '../newapproach/BengaluruEastLandPriceChart';
 import LocationBatches from '../components/batches/LocationBatches';
 import ProjectGroupBatches from '../components/batches/ProjectGroupBatches';
-import CategoryGrid from '../focusedapproach/Catogarized';
-import PropertyCategories from '../focusedapproach/Catogarized';
+import CategoryGrid from './bentogridCatogarized';
+import PropertyCategories from '../focusedapproach/PropertyCategories';
 import ImprovedCarousel from '../newapproach/CarouselSlider';
 
 const Finalized = () => {
@@ -19,7 +19,7 @@ const Finalized = () => {
 
   const sections = [
     { name: 'All Properties', component: ImprovedCarousel },
-    { name: 'CategoryGrid', component: CategoryGrid },
+    { name: 'CategoryGrid', component: PropertyCategories },
     { name: 'Featured', component: FeaturedProperties },
     { name: 'Newly Launched', component: NewlyLaunchedProperties },
     { name: 'BengaluruEastLandPriceChart', component:  LocationBatches},
