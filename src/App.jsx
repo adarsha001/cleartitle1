@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Helmet, HelmetProvider } from 'react-helmet-async';
+// Just change the import source, everything else stays the same
+import { Helmet, HelmetProvider } from 'react-v19-helmet-async';
 import Navbar from "./components/Navbar";
 // import PropertyList from "./pages/PropertyList";
 import PropertyDetail from "./pages/PropertyDetail";
