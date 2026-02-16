@@ -498,7 +498,7 @@ const ListingTypeView = () => {
 
   return (
     <div id="listing-type-view" className="bg-white md:py-24">
-      <div className="relative max-w-7xl mx-auto px-4">
+      <div className="relative max-w-7xl pt-4 mx-auto px-4">
         {/* Header Section */}
         <div className="text-center md:mb-20">
           {/* Main title */}
