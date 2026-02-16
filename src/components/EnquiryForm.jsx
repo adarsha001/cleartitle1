@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { createEnquiry } from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { trackClickPublic } from '../api/clickTracker';
+import ReCAPTCHA from "react-google-recaptcha";
 
 const EnquiryForm = () => {
   const { user, isAuthenticated } = useAuth();
@@ -14,6 +15,9 @@ const EnquiryForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
   const [clickedItem, setClickedItem] = useState(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaError, setCaptchaError] = useState("");
+  const recaptchaRef = useRef();
 
   // Enhanced handleClick function
   const handleClick = async (itemType, itemValue, displayName = null, url = null) => {
@@ -94,34 +98,57 @@ const EnquiryForm = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+    if (captchaError) setCaptchaError("");
+  };
+
+  const onCaptchaChange = (token) => {
+    setCaptchaToken(token);
+    if (captchaError) setCaptchaError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate captcha
+    if (!captchaToken) {
+      setCaptchaError("Please complete the 'I'm not a robot' verification");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitMessage('');
 
     try {
       const enquiryData = {
         ...formData,
-        userId: isAuthenticated ? user.id : null
+        userId: isAuthenticated ? user.id : null,
+        captchaToken // Add captcha token to the enquiry data
       };
 
       const response = await createEnquiry(enquiryData);
       
       if (response.data.success) {
         setSubmitMessage('Thank you! Your enquiry has been submitted successfully. Our legal team will contact you shortly.');
-        // Reset form
+        // Reset form and captcha
         setFormData({
           name: '',
           phoneNumber: '',
           message: ''
         });
+        if (recaptchaRef.current) {
+          recaptchaRef.current.reset();
+          setCaptchaToken("");
+        }
         // Close form after successful submission
         setTimeout(() => setIsOpen(false), 2000);
       }
     } catch (error) {
       console.error('Error submitting enquiry:', error);
+      // Reset captcha on error
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+        setCaptchaToken("");
+      }
       const errorMessage = error.response?.data?.message || 'Sorry, there was an error submitting your enquiry. Please try again.';
       setSubmitMessage(errorMessage);
     } finally {
@@ -143,6 +170,14 @@ const EnquiryForm = () => {
   const toggleForm = () => {
     setIsOpen(!isOpen);
     setSubmitMessage(''); // Clear messages when toggling
+    if (!isOpen) {
+      // Reset captcha when opening form
+      setCaptchaToken("");
+      setCaptchaError("");
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+      }
+    }
   };
 
   return (
@@ -163,7 +198,7 @@ const EnquiryForm = () => {
 
       {/* Enquiry Form */}
       {isOpen && (
-        <div className="bg-white rounded-xl shadow-2xl border border-blue-200 p-4 md:p-6 w-80 max-w-[90vw]">
+        <div className="bg-white rounded-xl shadow-2xl border border-blue-200 p-4 md:p-6 w-80 max-w-[90vw] max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-lg md:text-xl font-semibold text-gray-900">
@@ -267,16 +302,52 @@ const EnquiryForm = () => {
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
-                rows="3"
+                rows="2"
                 placeholder="Tell us about the property you're interested in and any legal concerns..."
                 required
                 className="w-full px-3 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 resize-none"
               />
             </div>
 
+            {/* reCAPTCHA v2 */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs md:text-sm text-gray-700 font-medium">
+                <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>Security Verification *</span>
+              </div>
+              
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex justify-center">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey="6LfNKx8sAAAAAN1BwpjlcY5iU5iS9JmNEaYHewXs"
+                  onChange={onCaptchaChange}
+                  onExpired={() => {
+                    setCaptchaToken("");
+                    setCaptchaError("Captcha expired. Please verify again.");
+                  }}
+                  theme="light"
+                />
+              </div>
+              
+              {captchaError && (
+                <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                  <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-red-600 text-xs">{captchaError}</p>
+                </div>
+              )}
+              
+              <p className="text-gray-500 text-xs italic">
+                This security check helps prevent automated submissions and protects your information.
+              </p>
+            </div>
+
             <button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || !captchaToken}
               className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-medium py-2 px-4 rounded-lg transition duration-200 disabled:cursor-not-allowed text-sm md:text-base shadow-md"
             >
               {isSubmitting ? (
@@ -294,7 +365,7 @@ const EnquiryForm = () => {
 
             {submitMessage && (
               <div className={`p-2 md:p-3 rounded-lg text-xs md:text-sm text-center ${
-                submitMessage.includes('error') 
+                submitMessage.includes('error') || submitMessage.includes('Sorry')
                   ? 'bg-red-50 text-red-700 border border-red-200' 
                   : 'bg-green-50 text-green-700 border border-green-200'
               }`}>
