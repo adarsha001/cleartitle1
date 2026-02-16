@@ -13,6 +13,7 @@ import ProjectGroupBatches from '../components/batches/ProjectGroupBatches';
 import CategoryGrid from './bentogridCatogarized';
 import PropertyCategories from '../focusedapproach/PropertyCategories';
 import ImprovedCarousel from '../newapproach/CarouselSlider';
+import UnifiedAuthCTA from './UnifiedAuthCTA';
 
 const Finalized = () => {
   const sectionRefs = useRef([]);
@@ -25,6 +26,7 @@ const Finalized = () => {
     { name: 'BengaluruEastLandPriceChart', component:  LocationBatches},
     { name: 'Possession Timeline', component: PossessionTimeline },
     { name: 'ProjectGroupBatches ', component: ProjectGroupBatches },
+    { name: 'UnifiedAuthCTA ', component: UnifiedAuthCTA },
     { name: 'ListingTypeView', component:  ListingTypeView},
     { name: 'Quality', component: QualityAssurance },
   ];
