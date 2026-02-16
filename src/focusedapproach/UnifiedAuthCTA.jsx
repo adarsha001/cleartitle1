@@ -113,7 +113,7 @@ const LuxuryAuthCTA = () => {
                   </p>
                   
                   <Link 
-                    to="/list-property" 
+                    to="/profile" 
                     className="group inline-flex items-center gap-2 text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase hover:text-amber-800 transition-all"
                   >
                     Manage Listings <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-2" />
