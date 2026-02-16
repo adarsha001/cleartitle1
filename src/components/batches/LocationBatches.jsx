@@ -168,16 +168,16 @@ const LocationBatches = () => {
   }
 
   return (
-    <div className="bg-white py-12 md:py-24">
+    <div className="bg-white  md:py-24">
       <div className="max-w-7xl mx-auto px-6">
         
         {/* --- PREMIUM MINIMALIST HEADER --- */}
-        <div className="flex flex-col md:flex-row justify-between items-baseline mb-16 gap-6 border-b border-slate-100 pb-10">
+        <div className="flex flex-col md:flex-row justify-between items-baseline gap-6 border-b border-slate-100 pb-10">
           <div>
             <h4 className="text-[10px] font-bold tracking-[0.4em] uppercase text-blue-600 mb-2">Global Presence</h4>
             <h2 className="text-4xl md:text-5xl font-serif text-slate-900 tracking-tight">Strategic Locations</h2>
           </div>
-          <p className="text-slate-400 text-sm font-light max-w-xs italic leading-relaxed">
+          <p className="text-slate-400 text-sm hidden  sm:block font-light max-w-xs italic leading-relaxed">
             "Location is the soul of real estate." — Discover our presence in the most sought-after pin codes.
           </p>
         </div>
