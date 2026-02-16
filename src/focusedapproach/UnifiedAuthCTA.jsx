@@ -7,12 +7,38 @@ import { useAuth } from '../context/AuthContext';
 const LuxuryAuthCTA = () => {
   const { isAuthenticated, userInfo, loading } = useAuth();
 
-  const quotes = [
-    "“Real estate is the closest thing to the proverbial pot of gold.”",
-    "“The best investment on earth is earth.”",
-    "“Ownership is the foundation of legacy.”",
-    "“Buy land, they’re not making it anymore.”"
-  ];
+const quotes = [
+  "“A house is made of walls and beams; a home is built with love and dreams.”",
+  "“Home is not a place, it's a feeling.”",
+  "“Every key unlocks a new chapter in your life.”",
+  "“Find where your heart feels at home.”",
+  "“Your home should tell the story of who you are.”",
+  "“Home is the starting place of love, hope, and dreams.”",
+  "“The magic thing about home is that it feels good to leave, and it feels even better to come back.”",
+  "“Where we love is home.”",
+  "“A home is more than a roof over your head—it's where life happens.”",
+  "“Building dreams, one foundation at a time.”",
+  "“Home is the nicest word there is.”",
+  "“The strength of a nation lies in the homes of its people.”",
+  "“Happiness is finding the perfect place to call your own.”",
+  "“A place to live, a space to love, a home to grow.”",
+  "“Your journey home begins here.”",
+  "“Every home has a story. What will yours be?”",
+  "“Creating spaces where memories live forever.”",
+  "“Home is the anchor of our existence.”",
+  "“The smallest house can hold the biggest heart.”",
+  "“A home is not just a place, it's a promise of tomorrow.”",
+  "“Where your story begins and your heart belongs.”",
+  "“Four walls and a roof, filled with endless possibilities.”",
+  "“Home sweet home—the phrase that never grows old.”",
+  "“A place to come back to, a place to move forward from.”",
+  "“Building more than houses, building futures.”",
+  "“Every family deserves a place to call their own.”",
+  "“The memories you make become the soul of your home.”",
+  "“A home is love made visible.”",
+  "“Not just a location, but a destination for your heart.”",
+  "“Come home to where your heart belongs.”"
+];
   const dailyQuote = quotes[new Date().getDate() % quotes.length];
 
   if (loading) {
