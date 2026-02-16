@@ -24,7 +24,9 @@ import {
   Crown,
   MapPin,
   Target,
-  ArrowRight
+  ArrowRight,
+  LayoutGrid,
+  X
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
@@ -40,6 +42,7 @@ const ListingTypeView = () => {
   const [showViewMore, setShowViewMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showAllGrid, setShowAllGrid] = useState(false);
   const scrollContainerRef = useRef(null);
   
   // Pagination state
@@ -80,7 +83,7 @@ const ListingTypeView = () => {
 
   useEffect(() => {
     const checkScroll = () => {
-      if (scrollContainerRef.current && isMobile) {
+      if (scrollContainerRef.current && isMobile && !showAllGrid) {
         const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
         setCanScrollLeft(scrollLeft > 0);
         setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
@@ -105,7 +108,7 @@ const ListingTypeView = () => {
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [filteredUnits, isMobile, currentPage, totalPages]);
+  }, [filteredUnits, isMobile, currentPage, totalPages, showAllGrid]);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current && isMobile) {
@@ -126,7 +129,7 @@ const ListingTypeView = () => {
   };
 
   const handleScroll = () => {
-    if (scrollContainerRef.current && isMobile) {
+    if (scrollContainerRef.current && isMobile && !showAllGrid) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
@@ -162,6 +165,16 @@ const ListingTypeView = () => {
       setCurrentPage(nextPage);
       setShowViewMore(false);
     }
+  };
+
+  const handleViewAll = () => {
+    setShowAllGrid(true);
+  };
+
+  const handleCloseGrid = () => {
+    setShowAllGrid(false);
+    setCurrentPage(1);
+    setShowViewMore(false);
   };
 
   // Listing type categories
@@ -320,6 +333,7 @@ const ListingTypeView = () => {
         // Update mobile pagination
         setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE_MOBILE));
         setCurrentPage(1);
+        setShowAllGrid(false); // Exit grid view when type changes
         
         // Update cache with accurate count
         setTypeTotalsCache(prev => ({
@@ -492,7 +506,7 @@ const ListingTypeView = () => {
   );
 
   // Calculate visible items for mobile
-  const visibleItems = isMobile 
+  const visibleItems = isMobile && !showAllGrid
     ? filteredUnits.slice(0, currentPage * ITEMS_PER_PAGE_MOBILE)
     : filteredUnits;
 
@@ -609,81 +623,123 @@ const ListingTypeView = () => {
         </div>
 
         {/* Mobile Horizontal Scroll Layout */}
-        <div className="md:hidden relative">
-          {/* Mobile Scroll Navigation Buttons */}
-          <div className="relative mb-4">
-            <div className="flex justify-between items-center">
-              <div className="text-left">
-                <h3 className="text-lg font-semibold text-gray-700 font-sans">
-                  <span className="text-blue-600">
-                    {selectedType === "sale" ? "Properties for Sale" :
-                     selectedType === "rent" ? "Properties for Rent" :
-                     selectedType === "lease" ? "Properties for Lease" : "PG Buildings"}
-                  </span>
-                </h3>
+        {!showAllGrid ? (
+          <div className="md:hidden relative">
+            {/* Mobile Scroll Navigation Buttons */}
+            <div className="relative mb-4">
+              <div className="flex justify-between items-center">
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-gray-700 font-sans">
+                    <span className="text-blue-600">
+                      {selectedType === "sale" ? "Properties for Sale" :
+                       selectedType === "rent" ? "Properties for Rent" :
+                       selectedType === "lease" ? "Properties for Lease" : "PG Buildings"}
+                    </span>
+                  </h3>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={scrollLeft}
+                    disabled={!canScrollLeft}
+                    className={`p-2 rounded-full border ${
+                      canScrollLeft 
+                        ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
+                        : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                    } transition-all duration-300`}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  
+                  <button
+                    onClick={scrollRight}
+                    disabled={!canScrollRight}
+                    className={`p-2 rounded-full border ${
+                      canScrollRight 
+                        ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
+                        : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                    } transition-all duration-300`}
+                  >
+                    <RightIcon className="w-4 h-4" />
+                  </button>
+
+                  {/* View All Button */}
+                  <button
+                    onClick={handleViewAll}
+                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg ml-1"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                    <span className="text-sm">View</span>
+                  </button>
+                </div>
               </div>
-              
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={scrollLeft}
-                  disabled={!canScrollLeft}
-                  className={`p-2 rounded-full border ${
-                    canScrollLeft 
-                      ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
-                      : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                  } transition-all duration-300`}
+            </div>
+
+            {/* Mobile Scroll Container */}
+            <div 
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {visibleItems.map((unit, index) => (
+                <div 
+                  key={unit._id || index} 
+                  className="flex-shrink-0 w-[280px] snap-start"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <PropertyCard unit={unit} index={index} />
+                </div>
+              ))}
+            </div>
+
+
+            {/* View More Button */}
+            {showViewMore && currentPage < totalPages && (
+              <div className="flex justify-center mt-6 animate-fade-in">
+                <button
+                  onClick={handleViewMore}
+                  className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                >
+                  <span>View More Properties</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Mobile Grid View */
+          <div className="md:hidden py-2 relative">
+            {/* Grid Header */}
+            <div className="relative mb-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 font-sans">
+                  <span className="text-blue-700">
+                    {selectedType === "sale" ? "All Sale Properties" :
+                     selectedType === "rent" ? "All Rent Properties" :
+                     selectedType === "lease" ? "All Lease Properties" : "All PG Buildings"}
+                  </span> 
+                </h2>
                 
                 <button
-                  onClick={scrollRight}
-                  disabled={!canScrollRight}
-                  className={`p-2 rounded-full border ${
-                    canScrollRight 
-                      ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
-                      : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                  } transition-all duration-300`}
+                  onClick={handleCloseGrid}
+                  className="flex items-center gap-2 bg-white border-2 border-gray-200 text-gray-700 px-4 py-3 rounded-xl font-medium hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 shadow-sm"
                 >
-                  <RightIcon className="w-4 h-4" />
+                  <X className="w-4 h-4" />
+                  <span className="text-sm">Back</span>
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Mobile Scroll Container */}
-          <div 
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {visibleItems.map((unit, index) => (
-              <div 
-                key={unit._id || index} 
-                className="flex-shrink-0 w-[280px] snap-start"
-              >
-                <PropertyCard unit={unit} index={index} />
-              </div>
-            ))}
-          </div>
-
-          {/* Page Indicator - Simple dots without numbers */}
-    
-
-          {/* View More Button */}
-          {showViewMore && currentPage < totalPages && (
-            <div className="flex justify-center mt-6 animate-fade-in">
-              <button
-                onClick={handleViewMore}
-                className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-              >
-                <span>View More Properties</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+            {/* Grid Container */}
+            <div className="grid grid-cols-2 gap-4 pb-8">
+              {filteredUnits.map((unit, index) => (
+                <div key={unit._id || index} className="w-full">
+                  <PropertyCard unit={unit} index={index} />
+                </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Empty State */}
         {!loading && filteredUnits.length === 0 && (

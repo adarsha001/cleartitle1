@@ -16,7 +16,9 @@ import {
   Home,
   MapPin,
   ChevronLeft,
-  ChevronRight as RightChevron
+  ChevronRight as RightChevron,
+  LayoutGrid,
+  X
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
@@ -33,6 +35,7 @@ export default function NewlyLaunchedProperties() {
   const [showViewMore, setShowViewMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showAllGrid, setShowAllGrid] = useState(false);
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
 
@@ -82,6 +85,7 @@ export default function NewlyLaunchedProperties() {
         setPropertyUnits(units);
         setTotalPages(Math.ceil(units.length / ITEMS_PER_PAGE));
         setCurrentPage(1); // Reset to first page when time period changes
+        setShowAllGrid(false); // Exit grid view when time period changes
       } else {
         setPropertyUnits([]);
         setError("Failed to load newly launched properties");
@@ -101,7 +105,7 @@ export default function NewlyLaunchedProperties() {
 
   useEffect(() => {
     const checkScroll = () => {
-      if (scrollContainerRef.current && isMobile) {
+      if (scrollContainerRef.current && isMobile && !showAllGrid) {
         const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
         setCanScrollLeft(scrollLeft > 0);
         setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
@@ -126,14 +130,20 @@ export default function NewlyLaunchedProperties() {
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [propertyUnits, isMobile, currentPage, totalPages]);
+  }, [propertyUnits, isMobile, currentPage, totalPages, showAllGrid]);
 
   const handleRetry = () => {
     fetchNewlyLaunchedProperties();
   };
 
   const handleViewAll = () => {
-    setTimePeriod('30');
+    setShowAllGrid(true);
+  };
+
+  const handleCloseGrid = () => {
+    setShowAllGrid(false);
+    setCurrentPage(1);
+    setShowViewMore(false);
   };
 
   const handleTimePeriodChange = (days) => {
@@ -159,7 +169,7 @@ export default function NewlyLaunchedProperties() {
   };
 
   const handleScroll = () => {
-    if (scrollContainerRef.current && isMobile) {
+    if (scrollContainerRef.current && isMobile && !showAllGrid) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
@@ -335,7 +345,7 @@ export default function NewlyLaunchedProperties() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
-              onClick={handleViewAll}
+              onClick={() => setTimePeriod('30')}
               className="bg-white border-2 border-blue-600 text-blue-700 px-8 py-3.5 rounded-xl font-medium hover:bg-blue-50 transition-all duration-300 text-base hover:border-blue-700"
             >
               Go back
@@ -381,7 +391,7 @@ export default function NewlyLaunchedProperties() {
   );
 
   // Calculate visible items for mobile
-  const visibleItems = isMobile 
+  const visibleItems = isMobile && !showAllGrid
     ? propertyUnits.slice(0, currentPage * ITEMS_PER_PAGE)
     : propertyUnits;
 
@@ -474,67 +484,141 @@ export default function NewlyLaunchedProperties() {
         </div>
 
         {/* Mobile Horizontal Scroll Layout */}
-        <div className="md:hidden relative">
-          {/* Mobile Scroll Navigation Buttons - More compact */}
-          <div className="relative mb-4">
-            <div className="flex justify-between items-center">
-              <div className="text-left">
-                <h3 className="text-lg font-semibold text-gray-700 font-sans">
-                  <span className="text-blue-600">Properties</span>
-                </h3>
+        {!showAllGrid ? (
+          <div className="md:hidden relative">
+            {/* Mobile Scroll Navigation Buttons - More compact */}
+            <div className="relative mb-4">
+              <div className="flex justify-between items-center">
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold text-gray-700 font-sans">
+                    <span className="text-blue-600">Properties</span>
+                  </h3>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={scrollLeft}
+                    disabled={!canScrollLeft}
+                    className={`p-2 rounded-full border ${
+                      canScrollLeft 
+                        ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
+                        : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                    } transition-all duration-300`}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  
+                  <button
+                    onClick={scrollRight}
+                    disabled={!canScrollRight}
+                    className={`p-2 rounded-full border ${
+                      canScrollRight 
+                        ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
+                        : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                    } transition-all duration-300`}
+                  >
+                    <RightChevron className="w-4 h-4" />
+                  </button>
+
+                  {/* View All Button */}
+                  <button
+                    onClick={handleViewAll}
+                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg ml-1"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                    <span className="text-sm">View</span>
+                  </button>
+                </div>
               </div>
-              
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={scrollLeft}
-                  disabled={!canScrollLeft}
-                  className={`p-2 rounded-full border ${
-                    canScrollLeft 
-                      ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
-                      : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                  } transition-all duration-300`}
+            </div>
+
+            {/* Mobile Scroll Container */}
+            <div 
+              ref={scrollContainerRef}
+              onScroll={handleScroll}
+              className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {visibleItems.map((unit, index) => (
+                <div 
+                  key={unit._id || index} 
+                  className="flex-shrink-0 w-[280px] snap-start"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <PropertyCard unit={unit} index={index} />
+                </div>
+              ))}
+            </div>
+
+            {/* Page Indicator */}
+            {/* {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-4">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => {
+                      if (scrollContainerRef.current) {
+                        const scrollPosition = (page - 1) * (280 + 16);
+                        scrollContainerRef.current.scrollTo({
+                          left: scrollPosition,
+                          behavior: 'smooth'
+                        });
+                        setCurrentPage(page);
+                      }
+                    }}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      currentPage === page
+                        ? 'w-8 bg-blue-600'
+                        : 'bg-gray-300 hover:bg-blue-400'
+                    }`}
+                    aria-label={`Go to page ${page}`}
+                  />
+                ))}
+              </div>
+            )} */}
+
+            {/* View More Button */}
+            {showViewMore && currentPage < totalPages && (
+              <div className="flex justify-center mt-6 animate-fade-in">
+                <button
+                  onClick={handleViewMore}
+                  className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                >
+                  <span>View More Properties</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Mobile Grid View */
+          <div className="md:hidden py-2 relative">
+            {/* Grid Header */}
+            <div className="relative mb-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 font-sans">
+                  <span className="text-blue-700">All New Launches</span> 
+                </h2>
                 
                 <button
-                  onClick={scrollRight}
-                  disabled={!canScrollRight}
-                  className={`p-2 rounded-full border ${
-                    canScrollRight 
-                      ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
-                      : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                  } transition-all duration-300`}
+                  onClick={handleCloseGrid}
+                  className="flex items-center gap-2 bg-white border-2 border-gray-200 text-gray-700 px-4 py-3 rounded-xl font-medium hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 shadow-sm"
                 >
-                  <RightChevron className="w-4 h-4" />
+                  <X className="w-4 h-4" />
+                  <span className="text-sm">Back</span>
                 </button>
               </div>
             </div>
+
+            {/* Grid Container */}
+            <div className="grid grid-cols-2 gap-4 pb-8">
+              {propertyUnits.map((unit, index) => (
+                <div key={unit._id || index} className="w-full">
+                  <PropertyCard unit={unit} index={index} />
+                </div>
+              ))}
+            </div>
           </div>
-
-          {/* Mobile Scroll Container */}
-          <div 
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {visibleItems.map((unit, index) => (
-              <div 
-                key={unit._id || index} 
-                className="flex-shrink-0 w-[280px] snap-start"
-              >
-                <PropertyCard unit={unit} index={index} />
-              </div>
-            ))}
-          </div>
-
-          {/* Page Indicator */}
-         
-
-          {/* View More Button */}
-
-        </div>
+        )}
       </div>
 
       {/* Custom scrollbar hide styles */}
