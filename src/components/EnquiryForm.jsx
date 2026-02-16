@@ -181,7 +181,7 @@ const EnquiryForm = () => {
   };
 
   return (
-    <div className="fixed bottom-1/4  right-4 transform -translate-y-1/12 z-50">
+    <div className="fixed bottom-1/4  right-4 transform -translate-y-[-160px] z-50">
       {/* Toggle Button */}
       {!isOpen && (
         <button
@@ -198,7 +198,7 @@ const EnquiryForm = () => {
 
       {/* Enquiry Form */}
       {isOpen && (
-        <div className="bg-white rounded-xl shadow-2xl border border-blue-200 p-4 md:p-6 w-80 max-w-[90vw] max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-xl shadow-2xl border  border-blue-200 p-4 md:p-6 w-80 max-w-[90vw] max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-lg md:text-xl font-semibold text-gray-900">
