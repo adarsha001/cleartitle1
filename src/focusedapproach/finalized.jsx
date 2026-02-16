@@ -22,7 +22,7 @@ const Finalized = () => {
     { name: 'CategoryGrid', component: PropertyCategories },
     { name: 'Featured', component: FeaturedProperties },
     { name: 'Newly Launched', component: NewlyLaunchedProperties },
-    { name: 'BengaluruEastLandPriceChart', component:  LocationBatches},
+    // { name: 'BengaluruEastLandPriceChart', component:  LocationBatches},
     { name: 'Possession Timeline', component: PossessionTimeline },
     { name: 'ProjectGroupBatches ', component: ProjectGroupBatches },
     { name: 'ListingTypeView', component:  ListingTypeView},

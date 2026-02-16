@@ -39,6 +39,16 @@ const ImprovedCarousel = () => {
       cta: 'Request Quote',
       badge: 'Limited Time'
     }
+    ,
+        {
+      id: 5,
+      image: '/test.png',
+      mobileImage: '/image32.png',
+      title: 'Reliable Packers & Movers',
+      description: 'Safe and efficient relocation services',
+      cta: 'Request Quote',
+      badge: 'Limited Time'
+    }
   ];
 
 // High-Attention Skeleton Loader Component
