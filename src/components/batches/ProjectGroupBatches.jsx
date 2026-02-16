@@ -172,68 +172,67 @@ const ProjectGroupBatches = () => {
         </div>
 
         {/* --- REFINED BATCH GRID (X-Scroll on Mobile) --- */}
-        <div className="relative">
-          <div className="
-            flex overflow-x-auto pb-12 pt-4 px-2 -mx-6 snap-x snap-mandatory scrollbar-hide
-            md:grid md:grid-cols-3 md:gap-y-20 md:gap-x-10 md:overflow-visible md:px-0 md:mx-0
-          ">
-            {batches.map((batch) => (
-              <div 
-                key={batch._id}
-                onClick={() => handleBatchClick(batch)}
-                className="
-                  flex-shrink-0 w-[85vw] ml-6 snap-center first:ml-6 last:mr-6
-                  md:w-auto md:ml-0 md:snap-none md:mr-0
-                  group cursor-pointer relative
-                "
-              >
-                {/* The Image "Frame" */}
-                <div className="relative aspect-[16/10] overflow-hidden bg-[#F9F9F9] rounded-sm transition-all duration-700 ease-out group-hover:shadow-[0_40px_80px_rgba(0,0,0,0.1)]">
-                  <div className="absolute top-4 left-4 z-10 opacity-30 group-hover:opacity-100 transition-opacity">
-                     <span className="text-[9px] font-serif italic text-slate-900">Portfolio Selection</span>
-                  </div>
+<div className="relative">
+  <div className="
+    flex overflow-x-auto pb-12 pt-4 px-2 -mx-6 snap-x snap-mandatory scrollbar-hide
+    md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 md:mx-0
+  ">
+    {batches.map((batch) => (
+      <div 
+        key={batch._id}
+        onClick={() => handleBatchClick(batch)}
+        className="
+          flex-shrink-0 w-[85vw] ml-6 snap-center first:ml-6 last:mr-6
+          md:w-auto md:ml-0 md:snap-none md:mr-0
+          group cursor-pointer
+        "
+      >
+        <div className="flex items-center bg-white border border-slate-100 rounded-sm p-3 transition-all duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] hover:-translate-y-1">
+          
+          {/* COMPACT SQUARE IMAGE */}
+          <div className="relative w-24 h-24 md:w-28 md:h-28 flex-shrink-0 overflow-hidden rounded-sm bg-slate-50">
+            <img 
+              src={batch.image?.url || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'} 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              alt={batch.projectName}
+            />
+            {/* Minimal Overlay */}
+            <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors duration-500 flex items-center justify-center">
+              <Plus className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
 
-                  <img 
-                    src={batch.image?.url || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'} 
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                    alt={batch.projectName}
-                  />
-                  
-                  {/* Desktop Hover Overlay */}
-                  <div className="absolute inset-0 bg-white/10 opacity-0 md:group-hover:opacity-100 backdrop-blur-[2px] transition-all duration-500 flex items-center justify-center">
-                    <div className="bg-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 border border-slate-50">
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-slate-900">View Collection</span>
-                      <Plus className="w-3 h-3 text-blue-600" />
-                    </div>
-                  </div>
-                </div>
+          {/* REFINED CONTENT SECTION */}
+          <div className="flex-1 pl-5 pr-2">
+            <div className="flex justify-between items-start mb-1">
+              <span className="text-[8px] font-bold tracking-[0.2em] text-blue-600 uppercase">
+                {batch.projectStatus?.replace('_', ' ') || 'Exclusive'}
+              </span>
+              <ArrowUpRight className="w-3 h-3 text-slate-300 group-hover:text-blue-600 transition-colors" />
+            </div>
 
-                {/* Floating Content Block */}
-                <div className="relative -mt-8 mx-4 p-5 md:p-6 bg-white border border-slate-50 shadow-[0_15px_35px_rgba(0,0,0,0.04)] md:group-hover:shadow-[0_25px_50px_rgba(0,0,0,0.08)] md:group-hover:-translate-y-2 transition-all duration-500">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-lg md:text-xl font-serif text-slate-900 leading-tight">
-                      {batch.projectName || batch.batchName}
-                    </h3>
-                    <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 transition-colors" />
-                  </div>
-                  
-                  <div className="flex items-center gap-3 md:gap-4">
-                    <div className="flex items-center gap-1.5">
-                       <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></div>
-                       <span className="text-[9px] md:text-[10px] font-bold tracking-widest text-slate-500 uppercase">
-                         {batch.stats?.totalProperties || 0} Units
-                       </span>
-                    </div>
-                    <span className="text-slate-200">|</span>
-                    <span className="text-[9px] md:text-[10px] font-medium text-slate-400 italic">
-                      {batch.projectStatus?.replace('_', ' ') || 'Exclusive Entry'}
-                    </span>
-                  </div>
-                </div>
+            <h3 className="text-base md:text-lg font-serif text-slate-900 leading-tight mb-3 group-hover:text-blue-900 transition-colors">
+              {batch.projectName || batch.batchName}
+            </h3>
+            
+            <div className="flex items-center gap-3 border-t border-slate-50 pt-3">
+              <div className="flex items-center gap-1.5">
+                 <div className="w-1 h-1 rounded-full bg-slate-900"></div>
+                 <span className="text-[9px] font-bold text-slate-500 uppercase">
+                   {batch.stats?.totalProperties || 0} Units
+                 </span>
               </div>
-            ))}
+              <span className="text-slate-200">|</span>
+              <span className="text-[9px] font-medium text-slate-400 italic">
+                Verified
+              </span>
+            </div>
           </div>
         </div>
+      </div>
+    ))}
+  </div>
+</div>
       </div>
 
       {/* --- PREMIUM MODAL WITH GSAP ANIMATIONS --- */}

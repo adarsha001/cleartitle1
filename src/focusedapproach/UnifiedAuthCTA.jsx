@@ -113,7 +113,7 @@ const quotes = [
                 {/* User Identity Section */}
                 <div className="shrink-0 flex items-center gap-4 sm:flex-col sm:text-center">
                   <div className="relative p-1 rounded-full bg-gradient-to-tr from-amber-300 via-stone-200 to-amber-100 shadow-sm">
-                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-[#FAF9F6]">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-[#90731f]">
                       {userInfo?.avatar ? (
                         <img src={userInfo.avatar} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
