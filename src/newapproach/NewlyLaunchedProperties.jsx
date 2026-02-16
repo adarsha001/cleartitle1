@@ -30,8 +30,13 @@ export default function NewlyLaunchedProperties() {
   const [timePeriod, setTimePeriod] = useState("30");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [showViewMore, setShowViewMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
+
+  const ITEMS_PER_PAGE = 3; // Show 3 items on mobile initially
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -75,6 +80,8 @@ export default function NewlyLaunchedProperties() {
         });
         
         setPropertyUnits(units);
+        setTotalPages(Math.ceil(units.length / ITEMS_PER_PAGE));
+        setCurrentPage(1); // Reset to first page when time period changes
       } else {
         setPropertyUnits([]);
         setError("Failed to load newly launched properties");
@@ -98,13 +105,28 @@ export default function NewlyLaunchedProperties() {
         const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
         setCanScrollLeft(scrollLeft > 0);
         setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+        
+        // Calculate current page based on scroll position
+        const itemWidth = 280 + 16; // card width + gap
+        const newPage = Math.floor(scrollLeft / itemWidth) + 1;
+        if (newPage !== currentPage && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+
+        // Show view more button when near the end
+        const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
+        if (scrolledPercentage > 0.8 && currentPage < totalPages) {
+          setShowViewMore(true);
+        } else {
+          setShowViewMore(false);
+        }
       }
     };
 
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [propertyUnits, isMobile]);
+  }, [propertyUnits, isMobile, currentPage, totalPages]);
 
   const handleRetry = () => {
     fetchNewlyLaunchedProperties();
@@ -121,7 +143,7 @@ export default function NewlyLaunchedProperties() {
   const scrollLeft = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: -400,
+        left: -296, // card width + gap
         behavior: 'smooth'
       });
     }
@@ -130,7 +152,7 @@ export default function NewlyLaunchedProperties() {
   const scrollRight = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: 400,
+        left: 296, // card width + gap
         behavior: 'smooth'
       });
     }
@@ -141,6 +163,37 @@ export default function NewlyLaunchedProperties() {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+      
+      // Calculate current page based on scroll position
+      const itemWidth = 280 + 16; // card width + gap
+      const newPage = Math.floor(scrollLeft / itemWidth) + 1;
+      if (newPage !== currentPage && newPage <= totalPages) {
+        setCurrentPage(newPage);
+      }
+
+      // Show view more button when near the end
+      const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
+      if (scrolledPercentage > 0.8 && currentPage < totalPages) {
+        setShowViewMore(true);
+      } else {
+        setShowViewMore(false);
+      }
+    }
+  };
+
+  const handleViewMore = () => {
+    if (currentPage < totalPages && scrollContainerRef.current) {
+      // Scroll to the next page
+      const nextPage = currentPage + 1;
+      const scrollPosition = (nextPage - 1) * (280 + 16); // (page-1) * (card width + gap)
+      
+      scrollContainerRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+      
+      setCurrentPage(nextPage);
+      setShowViewMore(false);
     }
   };
 
@@ -273,7 +326,7 @@ export default function NewlyLaunchedProperties() {
 
   if (propertyUnits.length === 0) {
     return (
-      <div className=" bg-white  md:py-24">
+      <div className="bg-white md:py-24">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <Gem className="w-20 h-20 text-blue-500 mx-auto mb-6" />
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-sans">No Newly Launched Properties</h2>
@@ -295,16 +348,6 @@ export default function NewlyLaunchedProperties() {
 
   const PropertyCard = ({ unit, index }) => (
     <div className="relative group h-full">
-      {/* Premium badge for newest properties */}
-      {/* {index < 3 && (
-        <div className="absolute top-5 left-5 z-20">
-          <span className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg shadow-blue-500/20 uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Just Launched</span>
-          </span>
-        </div>
-      )} */}
-      
       {/* Time indicator */}
       <div className="absolute top-5 right-5 z-20">
         <span className="bg-white/95 backdrop-blur-sm text-gray-700 text-xs font-medium px-3.5 py-2 rounded-full border border-gray-200 flex items-center gap-2 shadow-md">
@@ -333,34 +376,20 @@ export default function NewlyLaunchedProperties() {
             viewMode="compact"
           />
         </div>
-        
-        {/* Hover overlay with action button */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white/90 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 z-20">
-          {/* <button 
-            onClick={() => navigate(`/property/${unit._id}`)}
-            className="w-full bg-gradient-to-r from-blue-700 to-indigo-700 text-white py-3.5 rounded-xl font-medium flex items-center justify-center gap-3 hover:from-blue-800 hover:to-indigo-800 transition-all duration-300 shadow-lg hover:shadow-xl group/btn"
-          >
-            <span className="font-sans">View Details</span>
-            <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform duration-300" />
-          </button> */}
-        </div>
       </div>
     </div>
   );
 
+  // Calculate visible items for mobile
+  const visibleItems = isMobile 
+    ? propertyUnits.slice(0, currentPage * ITEMS_PER_PAGE)
+    : propertyUnits;
+
   return (
-    <div className=" bg-white  md:py-24">
+    <div className="bg-white md:py-24">
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
-        <div className="text-center  md:mb-20">
-          {/* Premium indicator - hidden on mobile */}
-          {/* <div className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
-            <Crown className="w-4 h-4 text-blue-700" />
-            <span className="text-blue-800 text-sm font-medium tracking-widest uppercase font-sans">
-              Exclusive Collection
-            </span>
-          </div> */}
-
+        <div className="text-center md:mb-20">
           {/* Main title - hidden on mobile */}
           <div className="">
             <h1 className="hidden sm:block text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight">
@@ -453,9 +482,6 @@ export default function NewlyLaunchedProperties() {
                 <h3 className="text-lg font-semibold text-gray-700 font-sans">
                   <span className="text-blue-600">Properties</span>
                 </h3>
-                {/* <p className="text-gray-500 text-sm">
-                  {propertyUnits.length} available
-                </p> */}
               </div>
               
               <div className="flex items-center gap-1">
@@ -493,7 +519,7 @@ export default function NewlyLaunchedProperties() {
             className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {propertyUnits.map((unit, index) => (
+            {visibleItems.map((unit, index) => (
               <div 
                 key={unit._id || index} 
                 className="flex-shrink-0 w-[280px] snap-start"
@@ -502,6 +528,12 @@ export default function NewlyLaunchedProperties() {
               </div>
             ))}
           </div>
+
+          {/* Page Indicator */}
+         
+
+          {/* View More Button */}
+
         </div>
       </div>
 
@@ -513,6 +545,19 @@ export default function NewlyLaunchedProperties() {
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
         }
       `}</style>
     </div>

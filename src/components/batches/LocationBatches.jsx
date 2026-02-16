@@ -3,154 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { batchService } from '../../api/batchService';
 import PropertyUnitCard from '../../components/PropertyUnitCard';
 import { 
-  Crown,
-  Sparkles,
-  ChevronLeft,
-  ChevronRight,
   MapPin,
-  Star,
+  Plus,
+  ArrowUpRight,
+  ChevronRight,
   X,
-  Home,
   Building2,
-  Target,
-  Award
+  Shield
 } from 'lucide-react';
-
-const formatIndianNumber = (price) => {
-  if (!price) return "Price on request";
-  
-  try {
-    let amount = 0;
-    
-    // Helper function to parse numeric value from various formats
-    const parsePriceValue = (value) => {
-      if (value === null || value === undefined) return 0;
-      
-      // If it's already a number
-      if (typeof value === 'number') {
-        return value;
-      }
-      
-      // If it's a string
-      if (typeof value === 'string') {
-        // Check for special cases
-        const lowerValue = value.toLowerCase().trim();
-        if (lowerValue.includes('price on request') || 
-            lowerValue.includes('contact for price') ||
-            lowerValue.includes('negotiable') ||
-            lowerValue.includes('on request')) {
-          return 'special';
-        }
-        
-        // Remove currency symbols, spaces, and commas
-        let cleanValue = value
-          .replace(/[₹$,€£\s]/g, '')  // Remove currency symbols
-          .replace(/,/g, '');          // Remove commas
-        
-        // Parse as float
-        const parsed = parseFloat(cleanValue);
-        return isNaN(parsed) ? 0 : parsed;
-      }
-      
-      // If it's an object
-      if (typeof value === 'object') {
-        return parsePriceValue(value.amount || value.value || 0);
-      }
-      
-      return 0;
-    };
-    
-    // Parse the price
-    const parsedValue = parsePriceValue(price);
-    
-    // Handle special cases
-    if (parsedValue === 'special') {
-      if (typeof price === 'string') {
-        // Capitalize first letter of each word
-        return price.split(' ').map(word => 
-          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-        ).join(' ');
-      }
-      return "Price on request";
-    }
-    
-    // Get the numeric amount
-    amount = parsedValue;
-    
-    // Validate amount
-    if (!amount || amount <= 0) return "Price on request";
-    
-    // Function to convert number to Indian price words
-    const numberToWords = (num) => {
-      const crore = 10000000;
-      const lakh = 100000;
-      const thousand = 1000;
-      
-      // Helper to format decimal places nicely
-      const formatDecimal = (value) => {
-        const fixed = value.toFixed(2);
-        return fixed.replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
-      };
-      
-      // For crore range
-      if (num >= crore) {
-        const crores = num / crore;
-        if (num % crore === 0) {
-          return `${Math.floor(crores).toLocaleString('en-IN')} Crore${crores > 1 ? 's' : ''}`;
-        }
-        return `${formatDecimal(crores)} Crore`;
-      }
-      
-      // For lakh range
-      if (num >= lakh) {
-        const lakhs = num / lakh;
-        if (num % lakh === 0) {
-          return `${Math.floor(lakhs).toLocaleString('en-IN')} Lakh${lakhs > 1 ? 's' : ''}`;
-        }
-        return `${formatDecimal(lakhs)} Lakh`;
-      }
-      
-      // For thousand range
-      if (num >= thousand) {
-        const thousands = num / thousand;
-        if (num % thousand === 0) {
-          return `${Math.floor(thousands).toLocaleString('en-IN')} Thousand`;
-        }
-        return `${formatDecimal(thousands)} Thousand`;
-      }
-      
-      // For amounts less than thousand
-      return `${Math.floor(num).toLocaleString('en-IN')}`;
-    };
-    
-    const priceInWords = numberToWords(amount);
-    return `₹ ${priceInWords}`;
-    
-  } catch (err) {
-    console.error("Error formatting price:", err);
-    return "Price on request";
-  }
-};
-
-// Format area with proper units
-const formatArea = (area, unit) => {
-  if (!area && area !== 0) return 'N/A';
-  
-  const areaNum = typeof area === 'string' ? parseFloat(area) : area;
-  
-  if (isNaN(areaNum)) return 'N/A';
-  
-  // Format based on size
-  if (areaNum >= 10000000) {
-    const croreSqFt = areaNum / 10000000;
-    return `${croreSqFt.toFixed(1)} Cr ${unit || 'sq ft'}`;
-  } else if (areaNum >= 100000) {
-    const lakhSqFt = areaNum / 100000;
-    return `${lakhSqFt.toFixed(1)} L ${unit || 'sq ft'}`;
-  } else {
-    return `${areaNum.toLocaleString('en-IN')} ${unit || 'sq ft'}`;
-  }
-};
+import gsap from 'gsap';
 
 const LocationBatches = () => {
   const [batches, setBatches] = useState([]);
@@ -159,63 +20,13 @@ const LocationBatches = () => {
   const [showModal, setShowModal] = useState(false);
   const [propertyUnits, setPropertyUnits] = useState([]);
   const [unitsLoading, setUnitsLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  
+  const modalRef = useRef(null);
+  const modalContentRef = useRef(null);
+  const modalOverlayRef = useRef(null);
+  const timelineRef = useRef(null);
+  
   const navigate = useNavigate();
-  const scrollContainerRef = useRef(null);
-
-  // Check for mobile screen
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
-    const checkScroll = () => {
-      if (scrollContainerRef.current && isMobile) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-        setCanScrollLeft(scrollLeft > 0);
-        setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
-      }
-    };
-
-    checkScroll();
-    window.addEventListener('resize', checkScroll);
-    return () => window.removeEventListener('resize', checkScroll);
-  }, [batches, isMobile]);
-
-  const scrollLeft = () => {
-    if (scrollContainerRef.current && isMobile) {
-      scrollContainerRef.current.scrollBy({
-        left: -400,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current && isMobile) {
-      scrollContainerRef.current.scrollBy({
-        left: 400,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const handleScroll = () => {
-    if (scrollContainerRef.current && isMobile) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
-    }
-  };
 
   useEffect(() => {
     const fetchBatches = async () => {
@@ -236,6 +47,93 @@ const LocationBatches = () => {
     };
     fetchBatches();
   }, []);
+
+  // Modal animation with GSAP
+  useEffect(() => {
+    if (showModal && modalRef.current && modalContentRef.current && modalOverlayRef.current) {
+      // Kill any existing animations
+      if (timelineRef.current) {
+        timelineRef.current.kill();
+      }
+
+      // Create new timeline
+      const tl = gsap.timeline();
+      timelineRef.current = tl;
+
+      // Set initial states
+      gsap.set(modalOverlayRef.current, {
+        opacity: 0,
+        display: 'flex'
+      });
+
+      gsap.set(modalRef.current, {
+        scale: 0.9,
+        opacity: 0,
+        y: 50
+      });
+
+      gsap.set(modalContentRef.current, {
+        opacity: 0,
+        y: 30
+      });
+
+      // Animate in
+      tl.to(modalOverlayRef.current, {
+        opacity: 1,
+        duration: 0.4,
+        ease: 'power2.inOut'
+      })
+      .to(modalRef.current, {
+        scale: 1,
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'power3.out'
+      }, '-=0.2')
+      .to(modalContentRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: 'power2.out'
+      }, '-=0.3');
+    }
+  }, [showModal]);
+
+  const handleCloseModal = () => {
+    if (modalRef.current && modalOverlayRef.current) {
+      // Create closing animation
+      const tl = gsap.timeline({
+        onComplete: () => {
+          setShowModal(false);
+          setSelectedBatch(null);
+          setPropertyUnits([]);
+        }
+      });
+
+      tl.to(modalContentRef.current, {
+        opacity: 0,
+        y: 30,
+        duration: 0.3,
+        ease: 'power2.in'
+      })
+      .to(modalRef.current, {
+        scale: 0.9,
+        opacity: 0,
+        y: 50,
+        duration: 0.4,
+        ease: 'power3.in'
+      }, '-=0.1')
+      .to(modalOverlayRef.current, {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power2.in'
+      }, '-=0.2');
+    } else {
+      setShowModal(false);
+      setSelectedBatch(null);
+      setPropertyUnits([]);
+    }
+  };
 
   const fetchBatchPropertyUnits = async (batchId) => {
     try {
@@ -258,401 +156,210 @@ const LocationBatches = () => {
     await fetchBatchPropertyUnits(batch._id);
   };
 
-  // Add this function to handle unit card click
-  const handleUnitClick = (unitId) => {
-    navigate(`/property-units/${unitId}`);
-    setShowModal(false);
-  };
-
-  // Also handle the "View Details" button click
-  const handleViewDetailsClick = (unitId) => {
-    navigate(`/property-units/${unitId}`);
-    setShowModal(false);
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-white py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16 md:mb-20">
-            <div className="inline-flex items-center justify-center mb-6">
-              <div className="bg-gradient-to-r from-blue-100 to-indigo-100 w-48 h-4 rounded-full animate-pulse"></div>
-            </div>
-
-            <div className="space-y-4 mb-8">
-              <div className="h-12 md:h-16 bg-gradient-to-r from-blue-200 to-blue-300 rounded-xl w-3/4 mx-auto animate-pulse"></div>
-              <div className="h-6 bg-gradient-to-r from-blue-100 to-blue-200 rounded-xl w-1/2 mx-auto animate-pulse"></div>
-            </div>
-          </div>
-
-          {/* Mobile Skeleton Horizontal Scroll */}
-          <div className="md:hidden relative">
-            <div className="flex space-x-6 pb-8 overflow-x-auto scrollbar-hide">
-              {[1, 2, 3, 4].map((i) => (
-                <div 
-                  key={i}
-                  className="flex-shrink-0 w-[320px] bg-white rounded-3xl overflow-hidden animate-pulse border border-blue-100 shadow-lg"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                >
-                  <div className="h-56 bg-gradient-to-r from-blue-200 to-blue-300"></div>
-                  <div className="p-5 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2 flex-1">
-                        <div className="h-4 bg-gradient-to-r from-blue-300 to-blue-400 rounded w-3/4"></div>
-                        <div className="h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-1/2"></div>
-                      </div>
-                      <div className="h-7 bg-gradient-to-r from-blue-300 to-blue-400 rounded-2xl w-14"></div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-full"></div>
-                      <div className="h-3 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-5/6"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Desktop Skeleton Grid */}
-          <div className="hidden md:grid md:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div 
-                key={i}
-                className="bg-white rounded-3xl overflow-hidden animate-pulse border border-blue-100 shadow-lg"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="h-64 bg-gradient-to-r from-blue-200 to-blue-300"></div>
-                <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-2 flex-1">
-                      <div className="h-5 bg-gradient-to-r from-blue-300 to-blue-400 rounded w-3/4"></div>
-                      <div className="h-4 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-1/2"></div>
-                    </div>
-                    <div className="h-8 bg-gradient-to-r from-blue-300 to-blue-400 rounded-2xl w-16"></div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-full"></div>
-                    <div className="h-4 bg-gradient-to-r from-blue-200 to-blue-300 rounded w-5/6"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="h-96 flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-t-2 border-blue-600 rounded-full animate-spin"></div>
+          <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Locating Premium Areas</p>
         </div>
       </div>
     );
   }
 
-  const PropertyCard = ({ unit, index }) => (
-    <div className="relative group h-full">
-      {/* Featured Badge */}
-      {unit.isFeatured && (
-        <div className="absolute top-4 left-4 z-20">
-          <span className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-blue-500/20 uppercase tracking-wider">
-            <Star className="w-3 h-3 fill-white" />
-            <span>FEATURED</span>
-          </span>
-        </div>
-      )}
-      
-      {/* Property Card Container */}
-      <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg h-full">
-        {/* Premium border effect on hover */}
-        <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-100 rounded-3xl transition-all duration-500 pointer-events-none"></div>
-        
-        {/* Property Card */}
-        <div className="transform group-hover:-translate-y-1 transition-transform duration-500 h-full">
-          <PropertyUnitCard 
-            propertyUnit={unit}
-            viewMode="compact"
-          />
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className=" bg-white -py-26 md:py-16">
-      <div className="relative max-w-7xl mx-auto px-4">
-        {/* Header Section */}
-        <div className="text-center mb-16 md:mb-20">
-          {/* Premium indicator - hidden on mobile */}
-          {/* <div className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
-            <Crown className="w-4 h-4 text-blue-700" />
-            <span className="text-blue-800 text-sm font-medium tracking-widest uppercase font-sans">
-              Premium Locations
-            </span>
-          </div> */}
-
-          {/* Main title */}
-          <div className="mb-6 hidden sm:block">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-blue-700 to-indigo-800">
-                Explore by 
-                
-                <span className='text-transparent bg-clip-text bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800'> Location</span> 
-              </span>
-              <span className="text-gray-900 block md:inline md:ml-4"></span>
-            </h1>
-            <p className="hidden sm:block text-gray-500 text-lg font-light max-w-2xl mx-auto">
-              Browse our premium real estate projects across key strategic locations
-            </p>
+    <div className="bg-white py-12 md:py-24">
+      <div className="max-w-7xl mx-auto px-6">
+        
+        {/* --- PREMIUM MINIMALIST HEADER --- */}
+        <div className="flex flex-col md:flex-row justify-between items-baseline mb-16 gap-6 border-b border-slate-100 pb-10">
+          <div>
+            <h4 className="text-[10px] font-bold tracking-[0.4em] uppercase text-blue-600 mb-2">Global Presence</h4>
+            <h2 className="text-4xl md:text-5xl font-serif text-slate-900 tracking-tight">Strategic Locations</h2>
           </div>
-          
-          {/* Decorative separator */}
-          <div className="hidden md:flex items-center justify-center gap-4 mb-8">
-            <div className="w-16 md:w-32 h-0.5 bg-gradient-to-r from-transparent via-blue-300 to-transparent" />
-            <MapPin className="w-6 h-6 text-blue-500" />
-            <div className="w-16 md:w-32 h-0.5 bg-gradient-to-l from-transparent via-blue-300 to-transparent" />
-          </div>
-
-          {/* Mobile title */}
-          {/* <h2 className="sm:hidden text-2xl font-bold text-gray-900 mb-4 font-sans">
-            <span className="text-blue-700">Premium Locations</span>
-          </h2> */}
+          <p className="text-slate-400 text-sm font-light max-w-xs italic leading-relaxed">
+            "Location is the soul of real estate." — Discover our presence in the most sought-after pin codes.
+          </p>
         </div>
 
-        {/* Desktop Grid Layout */}
-        <div className="hidden md:grid md:grid-cols-3 gap-8">
-          {batches.map((batch) => (
-            <div
-              key={batch._id}
-              className="group relative cursor-pointer overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-lg hover:shadow-2xl hover:border-blue-200 transition-all duration-500"
-              onClick={() => handleBatchClick(batch)}
-            >
-              <div className="aspect-[4/3] overflow-hidden">
-                <img
-                  src={batch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'}
-                  alt={batch.locationName}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              </div>
-              
-              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                <p className="text-white/80 text-xs uppercase tracking-wider mb-2">Premium Location</p>
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-2 font-serif">{batch.locationName}</h3>
-                <div className="flex items-center justify-between pt-3 border-t border-white/20">
-                  <span className="text-white/80 text-sm font-light">
-                    {batch.stats?.totalProperties?.toLocaleString('en-IN') || 0} Properties
-                  </span>
-                  <span className="text-white text-sm font-medium tracking-wider group-hover:translate-x-2 transition-transform duration-300">
-                    Explore →
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Mobile Horizontal Scroll Layout */}
-        <div className="md:hidden relative">
-          {/* Mobile Scroll Navigation Buttons */}
-          <div className="relative mb-4">
-            <div className="flex justify-between items-center">
-              <div className="text-left">
-                <h3 className="text-lg font-semibold text-gray-700 font-sans">
-                  <span className="text-blue-600">Featured Locations</span>
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  {batches.length} locations available
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={scrollLeft}
-                  disabled={!canScrollLeft}
-                  className={`p-2 rounded-full border ${
-                    canScrollLeft 
-                      ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
-                      : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                  } transition-all duration-300`}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                
-                <button
-                  onClick={scrollRight}
-                  disabled={!canScrollRight}
-                  className={`p-2 rounded-full border ${
-                    canScrollRight 
-                      ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
-                      : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                  } transition-all duration-300`}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Scroll Container */}
-          <div 
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
+        {/* --- REFINED BATCH GRID (X-Scroll on Mobile) --- */}
+        <div className="relative">
+          <div className="
+            flex overflow-x-auto pb-12 pt-4 px-2 -mx-6 snap-x snap-mandatory scrollbar-hide
+            md:grid md:grid-cols-3 md:gap-y-20 md:gap-x-10 md:overflow-visible md:px-0 md:mx-0
+          ">
             {batches.map((batch) => (
               <div 
-                key={batch._id} 
-                className="flex-shrink-0 w-[280px] snap-start"
+                key={batch._id}
+                onClick={() => handleBatchClick(batch)}
+                className="
+                  flex-shrink-0 w-[85vw] ml-6 snap-center first:ml-6 last:mr-6
+                  md:w-auto md:ml-0 md:snap-none md:mr-0
+                  group cursor-pointer relative
+                "
               >
-                <div
-                  className="group relative cursor-pointer overflow-hidden bg-white rounded-2xl border border-gray-100 shadow-lg"
-                  onClick={() => handleBatchClick(batch)}
-                >
-                  <div className="h-48 overflow-hidden">
-                    <img
-                      src={batch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400'}
-                      alt={batch.locationName}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
+                {/* The Image "Frame" */}
+                <div className="relative aspect-[16/10] overflow-hidden bg-[#F9F9F9] rounded-sm transition-all duration-700 ease-out group-hover:shadow-[0_40px_80px_rgba(0,0,0,0.1)]">
+                  <div className="absolute top-4 left-4 z-10 opacity-30 group-hover:opacity-100 transition-opacity">
+                     <span className="text-[9px] font-serif italic text-slate-900">Premium Destination</span>
+                  </div>
+
+                  <img 
+                    src={batch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'} 
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                    alt={batch.locationName}
+                  />
+                  
+                  {/* Desktop Hover Overlay */}
+                  <div className="absolute inset-0 bg-white/10 opacity-0 md:group-hover:opacity-100 backdrop-blur-[2px] transition-all duration-500 flex items-center justify-center">
+                    <div className="bg-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 border border-slate-50">
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-slate-900">Explore Location</span>
+                      <Plus className="w-3 h-3 text-blue-600" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Content Block */}
+                <div className="relative -mt-8 mx-4 p-5 md:p-6 bg-white border border-slate-50 shadow-[0_15px_35px_rgba(0,0,0,0.04)] md:group-hover:shadow-[0_25px_50px_rgba(0,0,0,0.08)] md:group-hover:-translate-y-2 transition-all duration-500">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg md:text-xl font-serif text-slate-900 leading-tight">
+                      {batch.locationName}
+                    </h3>
+                    <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 transition-colors" />
                   </div>
                   
-                  <div className="p-4">
-                    <h3 className="text-base font-bold text-gray-900 mb-1 font-sans">{batch.locationName}</h3>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 text-sm">
-                        {batch.stats?.totalProperties?.toLocaleString('en-IN') || 0} Properties
-                      </span>
-                      <span className="text-blue-600 text-sm font-medium">
-                        View →
-                      </span>
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="flex items-center gap-1.5">
+                       <MapPin className="w-3 h-3 text-blue-600" />
+                       <span className="text-[9px] md:text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                         {batch.stats?.totalProperties || 0} Assets
+                       </span>
                     </div>
+                    <span className="text-slate-200">|</span>
+                    <span className="text-[9px] md:text-[10px] font-medium text-slate-400 italic">
+                      Strategic Zone
+                    </span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Luxury Modal */}
-        {showModal && selectedBatch && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-8 backdrop-blur-md bg-black/60 transition-all duration-500">
+      {/* --- PREMIUM MODAL WITH GSAP ANIMATIONS --- */}
+      {showModal && selectedBatch && (
+        <div 
+          ref={modalOverlayRef}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 backdrop-blur-xl"
+          style={{ opacity: 0, display: 'none' }}
+        >
+          <div 
+            ref={modalRef}
+            className="bg-white w-full h-full md:h-[95vh] md:w-[95vw] md:max-w-7xl md:rounded-xl shadow-[0_100px_150px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col border border-slate-100"
+            style={{ opacity: 0, scale: 0.9 }}
+          >
+            {/* Top Navigation */}
+            <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-white">
+              <div className="flex items-center gap-3">
+                <Shield className="w-4 h-4 text-blue-600" />
+                <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Location Masterfile</span>
+              </div>
+              <button 
+                onClick={handleCloseModal}
+                className="group flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-slate-900 p-2"
+              >
+                Close <X className="w-4 h-4 transition-transform group-hover:rotate-90" />
+              </button>
+            </div>
+
             <div 
-              className="bg-white w-full max-w-7xl h-full md:max-h-[90vh] overflow-hidden flex flex-col shadow-2xl rounded-sm"
-              onClick={(e) => e.stopPropagation()}
+              ref={modalContentRef}
+              className="flex-grow overflow-y-auto"
+              style={{ opacity: 0 }}
             >
-              {/* Modal Header */}
-              <div className="relative h-48 md:h-64 flex-shrink-0">
-                <img 
-                  src={selectedBatch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200'} 
-                  className="w-full h-full object-cover"
-                  alt="Location Header"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-12">
-                  <button 
-                    onClick={() => setShowModal(false)}
-                    className="absolute top-4 right-4 md:top-6 md:right-6 p-2 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors duration-300"
-                  >
-                    <X className="w-5 h-5 md:w-6 md:h-6" />
-                  </button>
-                  <h2 className="text-2xl md:text-4xl font-serif text-white font-bold">{selectedBatch.locationName}</h2>
-                  <p className="text-white/80 mt-2 font-light max-w-2xl text-sm md:text-base">{selectedBatch.description}</p>
+              {/* Header Section: Anti-Pixelation Frame */}
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                <div className="h-[35vh] md:h-[500px] bg-slate-50 relative overflow-hidden flex items-center justify-center">
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center blur-3xl opacity-10 scale-110"
+                    style={{ backgroundImage: `url(${selectedBatch.image?.url})` }}
+                  />
+                  <img 
+                    src={selectedBatch.image?.url} 
+                    className="relative max-h-[90%] max-w-[90%] object-contain shadow-2xl rounded-sm" 
+                    alt={selectedBatch.locationName} 
+                  />
+                </div>
+                
+                <div className="p-8 md:p-16 lg:p-24 flex flex-col justify-center">
+                  <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-slate-900 mb-6 leading-tight">
+                    {selectedBatch.locationName}
+                  </h2>
+                  <p className="text-slate-500 font-light leading-relaxed mb-10 text-sm md:text-base">
+                    {selectedBatch.description || "Explore a curated list of properties located in the most strategic and high-growth zones."}
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-8 md:gap-12">
+                    <div className="space-y-1">
+                      <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Region Status</p>
+                      <p className="text-lg font-serif italic text-blue-600">Prime Zone</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Local Listings</p>
+                      <p className="text-lg font-serif">{propertyUnits.length} Available Assets</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Modal Content */}
-              <div className="flex-grow overflow-y-auto bg-white px-4 md:px-8 py-6 md:py-8">
+              {/* Units Grid */}
+              <div className="bg-[#FCFCFC] p-6 md:p-16 lg:p-20">
+                <div className="flex items-center gap-4 mb-12">
+                  <h3 className="text-[11px] font-bold tracking-[0.4em] uppercase text-slate-900 shrink-0">Regional Inventory</h3>
+                  <div className="h-[1px] w-full bg-slate-100"></div>
+                </div>
+
                 {unitsLoading ? (
-                  <div className="flex justify-center py-20">
-                    <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                  <div className="py-20 flex flex-col items-center gap-4">
+                    <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
+                    <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Fetching Assets</span>
                   </div>
                 ) : propertyUnits.length === 0 ? (
-                  <div className="text-center py-20">
-                    <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="font-sans text-gray-600 text-xl">No properties available at this location yet.</p>
+                  <div className="py-20 text-center space-y-4">
+                    <Building2 className="w-10 h-10 text-slate-200 mx-auto" />
+                    <p className="text-slate-400 font-serif italic">No regional assets found...</p>
                   </div>
                 ) : (
-                  <div className="max-w-6xl mx-auto">
-                    {/* Desktop Grid Layout */}
-                    <div className="hidden md:grid md:grid-cols-3 gap-8">
-                      {propertyUnits.map((unit) => (
-                        <PropertyCard key={unit._id} unit={unit} />
-                      ))}
-                    </div>
-
-                    {/* Mobile Horizontal Scroll Layout */}
-                    <div className="md:hidden relative">
-                      {/* Mobile Scroll Navigation for Properties */}
-                      <div className="relative mb-4">
-                        <div className="flex justify-between items-center">
-                          <div className="text-left">
-                            <h3 className="text-lg font-semibold text-gray-700 font-sans">
-                              <span className="text-blue-600">Properties</span>
-                            </h3>
-                            <p className="text-gray-500 text-sm">
-                              {propertyUnits.length} available
-                            </p>
-                          </div>
-                        </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {propertyUnits.map(unit => (
+                      <div key={unit._id} className="bg-white p-2 rounded-xl shadow-sm border border-slate-100/50 hover:shadow-2xl hover:border-blue-100/50 transition-all duration-500 group">
+                        <PropertyUnitCard propertyUnit={unit} viewMode="compact" />
                       </div>
-
-                      {/* Mobile Scroll Container for Properties */}
-                      <div 
-                        className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                      >
-                        {propertyUnits.map((unit, index) => (
-                          <div 
-                            key={unit._id} 
-                            className="flex-shrink-0 w-[280px] snap-start"
-                          >
-                            <PropertyCard unit={unit} index={index} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Show More Indicator for Mobile */}
-                    {isMobile && propertyUnits.length > 6 && (
-                      <div className="mt-6 flex justify-center">
-                        <div className="bg-white border border-gray-200 rounded-lg px-6 py-3 shadow-sm">
-                          <div className="flex items-center space-x-2">
-                            <div className="flex space-x-1">
-                              <div className="w-2 h-2 rounded-full bg-blue-300"></div>
-                              <div className="w-2 h-2 rounded-full bg-blue-300"></div>
-                              <div className="w-2 h-2 rounded-full bg-blue-300"></div>
-                            </div>
-                            <span className="text-sm text-gray-600 font-medium">
-                              {(propertyUnits.length - 6).toLocaleString('en-IN')} more properties
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>  
+                    ))}
+                  </div>
                 )}
               </div>
-              
-              {/* Modal Footer */}
-              <div className="px-4 md:px-8 py-4 md:py-6 bg-white border-t border-gray-100 flex flex-col md:flex-row justify-between items-center">
-                <button 
-                  onClick={() => setShowModal(false)}
-                  className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 rounded-xl shadow-md hover:shadow-lg"
-                >
-                  Return to Locations
-                </button>
-              </div>
+            </div>
+
+            {/* Footer Navigation */}
+            <div className="p-6 bg-white border-t border-slate-50 flex justify-center">
+              <button 
+                onClick={handleCloseModal}
+                className="flex items-center gap-3 text-[10px] font-bold tracking-[0.5em] uppercase text-slate-400 hover:text-blue-600 transition-colors"
+              >
+                Back to locations <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Custom scrollbar hide styles */}
-      <style >{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+      {/* Utilities */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
     </div>
   );
 };

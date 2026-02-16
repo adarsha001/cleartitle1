@@ -20,7 +20,8 @@ import {
   Filter,
   Crown,
   Gem,
-  Target
+  Target,
+  ArrowRight
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
@@ -33,6 +34,9 @@ const PossessionTimeline = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [showViewMore, setShowViewMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const scrollContainerRef = useRef(null);
   
   // Pagination state
@@ -52,6 +56,8 @@ const PossessionTimeline = () => {
     total: 0
   });
 
+  const ITEMS_PER_PAGE_MOBILE = 3; // Show 3 items on mobile initially
+
   // Check if mobile
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -66,18 +72,33 @@ const PossessionTimeline = () => {
         const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
         setCanScrollLeft(scrollLeft > 0);
         setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+        
+        // Calculate current page based on scroll position
+        const itemWidth = 280 + 16; // card width + gap
+        const newPage = Math.floor(scrollLeft / itemWidth) + 1;
+        if (newPage !== currentPage && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+
+        // Show view more button when near the end
+        const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
+        if (scrolledPercentage > 0.8 && currentPage < totalPages) {
+          setShowViewMore(true);
+        } else {
+          setShowViewMore(false);
+        }
       }
     };
 
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [propertyUnits, isMobile]);
+  }, [propertyUnits, isMobile, currentPage, totalPages]);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: -400,
+        left: -296, // card width + gap
         behavior: 'smooth'
       });
     }
@@ -86,7 +107,7 @@ const PossessionTimeline = () => {
   const scrollRight = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: 400,
+        left: 296, // card width + gap
         behavior: 'smooth'
       });
     }
@@ -97,6 +118,37 @@ const PossessionTimeline = () => {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+      
+      // Calculate current page based on scroll position
+      const itemWidth = 280 + 16; // card width + gap
+      const newPage = Math.floor(scrollLeft / itemWidth) + 1;
+      if (newPage !== currentPage && newPage <= totalPages) {
+        setCurrentPage(newPage);
+      }
+
+      // Show view more button when near the end
+      const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
+      if (scrolledPercentage > 0.8 && currentPage < totalPages) {
+        setShowViewMore(true);
+      } else {
+        setShowViewMore(false);
+      }
+    }
+  };
+
+  const handleViewMore = () => {
+    if (currentPage < totalPages && scrollContainerRef.current) {
+      // Scroll to the next page
+      const nextPage = currentPage + 1;
+      const scrollPosition = (nextPage - 1) * (280 + 16); // (page-1) * (card width + gap)
+      
+      scrollContainerRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+      
+      setCurrentPage(nextPage);
+      setShowViewMore(false);
     }
   };
 
@@ -224,6 +276,11 @@ const PossessionTimeline = () => {
         }
         
         updatePagination(res, page);
+        
+        // Update mobile total pages
+        const totalItems = res.data.total || newProperties.length;
+        setTotalPages(Math.ceil(totalItems / ITEMS_PER_PAGE_MOBILE));
+        setCurrentPage(1);
       }
     } catch (error) {
       console.error("Error fetching properties:", error);
@@ -240,7 +297,7 @@ const PossessionTimeline = () => {
     fetchPropertiesForCategory(categoryId, 1);
   };
 
-  // Handle page change
+  // Handle page change for desktop
   const handlePageChange = (page) => {
     if (page < 1 || page > pagination.totalPages) return;
     fetchPropertiesForCategory(selectedTimeframe, page);
@@ -252,7 +309,7 @@ const PossessionTimeline = () => {
     }
   };
 
-  // Handle load more
+  // Handle load more for desktop
   const handleLoadMore = () => {
     const nextPage = pagination.currentPage + 1;
     fetchPropertiesForCategory(selectedTimeframe, nextPage, true);
@@ -390,29 +447,7 @@ const PossessionTimeline = () => {
 
   const PropertyCard = ({ property, index }) => (
     <div className="relative group h-full">
-      {/* Possession Badge */}
-      <div className="absolute top-4 left-4 z-20">
-        <span className={`bg-gradient-to-r from-blue-700 to-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-blue-500/20 uppercase tracking-wider`}>
-          {selectedTimeframe === "ready-to-move" ? (
-            <>
-              <CheckCircle className="w-3 h-3" />
-              <span>READY NOW</span>
-            </>
-          ) : selectedTimeframe === "under-construction" ? (
-            <>
-              <Building className="w-3 h-3" />
-              <span>UNDER CONSTR.</span>
-            </>
-          ) : (
-            <>
-              <Home className="w-3 h-3" />
-              <span>RESALE</span>
-            </>
-          )}
-        </span>
-      </div>
-      
-      {/* Property Card Container */}
+      {/* Property Card Container - Removed possession badge */}
       <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg h-full">
         {/* Premium border effect on hover */}
         <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-100 rounded-3xl transition-all duration-500 pointer-events-none"></div>
@@ -428,19 +463,16 @@ const PossessionTimeline = () => {
     </div>
   );
 
+  // Calculate visible items for mobile
+  const visibleItems = isMobile 
+    ? propertyUnits.slice(0, currentPage * ITEMS_PER_PAGE_MOBILE)
+    : propertyUnits;
+
   return (
-    <div id="possession-timeline" className=" bg-white  md:py-24">
+    <div id="possession-timeline" className="bg-white md:py-24">
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
-        <div className="text-center  md:mb-20">
-          {/* Premium indicator - hidden on mobile */}
-          {/* <div className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
-            <Crown className="w-4 h-4 text-blue-700" />
-            <span className="text-blue-800 text-sm font-medium tracking-widest uppercase font-sans">
-              Premium Selection
-            </span>
-          </div> */}
-
+        <div className="text-center md:mb-20">
           {/* Main title - hidden on mobile */}
           <div className="mb-6">
             <h1 className="hidden sm:block text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight">
@@ -456,16 +488,10 @@ const PossessionTimeline = () => {
 
           {/* Category selector - Compact for mobile */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 mb-8 sm:mb-12">
-            {/* Mobile Title */}
-            {/* <h2 className="sm:hidden text-2xl font-bold text-gray-900 mb-2 font-sans">
-              <span className="text-blue-700">Possession Status</span>
-            </h2> */}
-            
             {/* Compact filter buttons for mobile */}
             <div className="flex sm:hidden items-center justify-center gap-2 w-full max-w-xs mx-auto">
               {possessionCategories.map((category) => {
                 const isSelected = selectedTimeframe === category.id;
-                const count = stats[category.id];
                 
                 return (
                   <button
@@ -490,9 +516,6 @@ const PossessionTimeline = () => {
                       {category.id === "ready-to-move" ? "Ready" : 
                        category.id === "under-construction" ? "Under Const." : "Resale"}
                     </span>
-                    {/* <span className="text-xs opacity-80">
-                      {count > 0 ? `${count}` : '0'}
-                    </span> */}
                   </button>
                 );
               })}
@@ -502,7 +525,6 @@ const PossessionTimeline = () => {
             <div className="hidden sm:grid sm:grid-cols-3 gap-4 w-full max-w-4xl mx-auto">
               {possessionCategories.map((category) => {
                 const isSelected = selectedTimeframe === category.id;
-                const count = stats[category.id];
                 
                 return (
                   <button
@@ -535,9 +557,6 @@ const PossessionTimeline = () => {
                       <p className="text-sm text-gray-600 mb-1">
                         {category.subtitle}
                       </p>
-                      {/* <p className="text-gray-500 text-sm">
-                        {count} properties available
-                      </p> */}
                     </div>
                   </button>
                 );
@@ -565,9 +584,6 @@ const PossessionTimeline = () => {
                      selectedTimeframe === "under-construction" ? "Under Construction" : "Resale Properties"}
                   </span>
                 </h3>
-                {/* <p className="text-gray-500 text-sm">
-                  {propertyUnits.length} of {stats[selectedTimeframe]} available
-                </p> */}
               </div>
               
               <div className="flex items-center gap-1">
@@ -605,7 +621,7 @@ const PossessionTimeline = () => {
             className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {propertyUnits.map((property, index) => (
+            {visibleItems.map((property, index) => (
               <div 
                 key={property._id || index} 
                 className="flex-shrink-0 w-[280px] snap-start"
@@ -614,6 +630,20 @@ const PossessionTimeline = () => {
               </div>
             ))}
           </div>
+
+
+          {/* View More Button */}
+          {showViewMore && currentPage < totalPages && (
+            <div className="flex justify-center mt-6 animate-fade-in">
+              <button
+                onClick={handleViewMore}
+                className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                <span>View More Properties</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Empty State */}
@@ -667,6 +697,19 @@ const PossessionTimeline = () => {
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
         }
       `}</style>
     </div>

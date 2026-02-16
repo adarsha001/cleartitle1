@@ -23,7 +23,8 @@ import {
   Filter,
   Crown,
   MapPin,
-  Target
+  Target,
+  ArrowRight
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
@@ -36,6 +37,9 @@ const ListingTypeView = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [showViewMore, setShowViewMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const scrollContainerRef = useRef(null);
   
   // Pagination state
@@ -64,6 +68,8 @@ const ListingTypeView = () => {
     pg: 0
   });
 
+  const ITEMS_PER_PAGE_MOBILE = 3; // Show 3 items on mobile initially
+
   // Check if mobile
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -78,18 +84,33 @@ const ListingTypeView = () => {
         const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
         setCanScrollLeft(scrollLeft > 0);
         setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+        
+        // Calculate current page based on scroll position
+        const itemWidth = 280 + 16; // card width + gap
+        const newPage = Math.floor(scrollLeft / itemWidth) + 1;
+        if (newPage !== currentPage && newPage <= totalPages) {
+          setCurrentPage(newPage);
+        }
+
+        // Show view more button when near the end
+        const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
+        if (scrolledPercentage > 0.8 && currentPage < totalPages) {
+          setShowViewMore(true);
+        } else {
+          setShowViewMore(false);
+        }
       }
     };
 
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [filteredUnits, isMobile]);
+  }, [filteredUnits, isMobile, currentPage, totalPages]);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: -400,
+        left: -296, // card width + gap
         behavior: 'smooth'
       });
     }
@@ -98,7 +119,7 @@ const ListingTypeView = () => {
   const scrollRight = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: 400,
+        left: 296, // card width + gap
         behavior: 'smooth'
       });
     }
@@ -109,6 +130,37 @@ const ListingTypeView = () => {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+      
+      // Calculate current page based on scroll position
+      const itemWidth = 280 + 16; // card width + gap
+      const newPage = Math.floor(scrollLeft / itemWidth) + 1;
+      if (newPage !== currentPage && newPage <= totalPages) {
+        setCurrentPage(newPage);
+      }
+
+      // Show view more button when near the end
+      const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
+      if (scrolledPercentage > 0.8 && currentPage < totalPages) {
+        setShowViewMore(true);
+      } else {
+        setShowViewMore(false);
+      }
+    }
+  };
+
+  const handleViewMore = () => {
+    if (currentPage < totalPages && scrollContainerRef.current) {
+      // Scroll to the next page
+      const nextPage = currentPage + 1;
+      const scrollPosition = (nextPage - 1) * (280 + 16); // (page-1) * (card width + gap)
+      
+      scrollContainerRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+      
+      setCurrentPage(nextPage);
+      setShowViewMore(false);
     }
   };
 
@@ -265,6 +317,10 @@ const ListingTypeView = () => {
         
         updatePagination(res, page);
         
+        // Update mobile pagination
+        setTotalPages(Math.ceil(totalCount / ITEMS_PER_PAGE_MOBILE));
+        setCurrentPage(1);
+        
         // Update cache with accurate count
         setTypeTotalsCache(prev => ({
           ...prev,
@@ -419,34 +475,7 @@ const ListingTypeView = () => {
 
   const PropertyCard = ({ unit, index }) => (
     <div className="relative group h-full">
-      {/* Listing Type Badge */}
-      <div className="absolute top-4 left-4 z-20">
-        <span className="bg-gradient-to-r from-blue-700 to-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg shadow-blue-500/20 uppercase tracking-wider">
-          {selectedType === "sale" ? (
-            <>
-              <Home className="w-3 h-3" />
-              <span>FOR SALE</span>
-            </>
-          ) : selectedType === "rent" ? (
-            <>
-              <Key className="w-3 h-3" />
-              <span>FOR RENT</span>
-            </>
-          ) : selectedType === "lease" ? (
-            <>
-              <Building className="w-3 h-3" />
-              <span>FOR LEASE</span>
-            </>
-          ) : (
-            <>
-              <Hotel className="w-3 h-3" />
-              <span>PG BUILDING</span>
-            </>
-          )}
-        </span>
-      </div>
-      
-      {/* Property Card Container */}
+      {/* Property Card Container - Removed listing type badge */}
       <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg h-full">
         {/* Premium border effect on hover */}
         <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-100 rounded-3xl transition-all duration-500 pointer-events-none"></div>
@@ -462,19 +491,16 @@ const ListingTypeView = () => {
     </div>
   );
 
+  // Calculate visible items for mobile
+  const visibleItems = isMobile 
+    ? filteredUnits.slice(0, currentPage * ITEMS_PER_PAGE_MOBILE)
+    : filteredUnits;
+
   return (
-    <div id="listing-type-view" className=" bg-white  md:py-24">
+    <div id="listing-type-view" className="bg-white md:py-24">
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
-        <div className="text-center  md:mb-20">
-          {/* Premium indicator - hidden on mobile */}
-          {/* <div className="hidden sm:inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-2.5 rounded-full border border-blue-100 mb-8 shadow-sm">
-            <Crown className="w-4 h-4 text-blue-700" />
-            <span className="text-blue-800 text-sm font-medium tracking-widest uppercase font-sans">
-              Premium Selection
-            </span>
-          </div> */}
-
+        <div className="text-center md:mb-20">
           {/* Main title */}
           <div className="mb-6 hidden sm:block">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight">
@@ -494,11 +520,6 @@ const ListingTypeView = () => {
             <Key className="w-6 h-6 text-blue-500" />
             <div className="w-16 md:w-32 h-0.5 bg-gradient-to-l from-transparent via-blue-300 to-transparent" />
           </div>
-
-          {/* Mobile title */}
-          {/* <h2 className="sm:hidden text-2xl font-bold text-gray-900  font-sans">
-            <span className="text-blue-700">Listing Types</span>
-          </h2> */}
         </div>
 
         {/* Listing Type Selector - Compact for mobile */}
@@ -507,7 +528,6 @@ const ListingTypeView = () => {
           <div className="flex sm:hidden items-center justify-center gap-2 w-full max-w-xs mx-auto">
             {listingTypes.map((type) => {
               const isSelected = selectedType === type.id;
-              const count = typeTotalsCache[type.id] || stats[type.id] || 0;
               
               return (
                 <button
@@ -533,9 +553,6 @@ const ListingTypeView = () => {
                      type.id === "rent" ? "Rent" :
                      type.id === "lease" ? "Lease" : "PG"}
                   </span>
-                  {/* <span className="text-xs opacity-80">
-                    {count > 0 ? `${count}` : '0'}
-                  </span> */}
                 </button>
               );
             })}
@@ -545,7 +562,6 @@ const ListingTypeView = () => {
           <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl mx-auto">
             {listingTypes.map((type) => {
               const isSelected = selectedType === type.id;
-              const count = typeTotalsCache[type.id] || stats[type.id] || 0;
               
               return (
                 <button
@@ -578,9 +594,6 @@ const ListingTypeView = () => {
                     <p className="text-sm text-gray-600 mb-1">
                       {type.subtitle}
                     </p>
-                    {/* <p className="text-gray-500 text-xs">
-                      {count} properties available
-                    </p> */}
                   </div>
                 </button>
               );
@@ -608,9 +621,6 @@ const ListingTypeView = () => {
                      selectedType === "lease" ? "Properties for Lease" : "PG Buildings"}
                   </span>
                 </h3>
-                <p className="text-gray-500 text-sm">
-                  {filteredUnits.length} of {typeTotalsCache[selectedType] || stats[selectedType] || 0} available
-                </p>
               </div>
               
               <div className="flex items-center gap-1">
@@ -648,7 +658,7 @@ const ListingTypeView = () => {
             className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {filteredUnits.map((unit, index) => (
+            {visibleItems.map((unit, index) => (
               <div 
                 key={unit._id || index} 
                 className="flex-shrink-0 w-[280px] snap-start"
@@ -657,6 +667,22 @@ const ListingTypeView = () => {
               </div>
             ))}
           </div>
+
+          {/* Page Indicator - Simple dots without numbers */}
+    
+
+          {/* View More Button */}
+          {showViewMore && currentPage < totalPages && (
+            <div className="flex justify-center mt-6 animate-fade-in">
+              <button
+                onClick={handleViewMore}
+                className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              >
+                <span>View More Properties</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Empty State */}
@@ -698,31 +724,6 @@ const ListingTypeView = () => {
             </button>
           </div>
         )}
-
-        {/* CTA Section */}
-        {/* <div className="mt-12 md:mt-16 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 text-white overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="max-w-2xl">
-              <h3 className="text-xl font-bold mb-3">
-                Need Help Deciding?
-              </h3>
-              <p className="text-blue-100 mb-4">
-                Our experts can help you choose based on your investment goals.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {["Investment Analysis", "Legal Guidance", "Market Insights"].map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" />
-                    <span className="text-sm">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button className="bg-white text-blue-700 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors whitespace-nowrap mt-4 md:mt-0">
-              Talk to Expert
-            </button>
-          </div>
-        </div> */}
       </div>
 
       {/* Custom scrollbar hide styles */}
@@ -733,6 +734,19 @@ const ListingTypeView = () => {
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
         }
       `}</style>
     </div>

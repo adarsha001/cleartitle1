@@ -7,7 +7,8 @@ import {
   AlertCircle,
   Home,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ArrowRight
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
@@ -19,7 +20,12 @@ export default function FeaturedProperties() {
   const [isMobile, setIsMobile] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [showViewMore, setShowViewMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const scrollContainerRef = useRef(null);
+
+  const ITEMS_PER_PAGE = 4; // Show 4 items on mobile initially
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -37,6 +43,7 @@ export default function FeaturedProperties() {
       
       if (res.data && res.data.success) {
         setPropertyUnits(res.data.data || []);
+        setTotalPages(Math.ceil((res.data.data?.length || 0) / ITEMS_PER_PAGE));
       } else {
         setPropertyUnits([]);
         setError("Failed to load featured properties");
@@ -60,13 +67,21 @@ export default function FeaturedProperties() {
         const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
         setCanScrollLeft(scrollLeft > 0);
         setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+        
+        // Show view more button when user has scrolled through initial items
+        const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
+        if (scrolledPercentage > 0.7 && currentPage < totalPages) {
+          setShowViewMore(true);
+        } else {
+          setShowViewMore(false);
+        }
       }
     };
 
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [propertyUnits, isMobile]);
+  }, [propertyUnits, isMobile, currentPage, totalPages]);
 
   const handleRetry = () => {
     fetchFeaturedProperties();
@@ -75,7 +90,7 @@ export default function FeaturedProperties() {
   const scrollLeft = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: -400,
+        left: -320,
         behavior: 'smooth'
       });
     }
@@ -84,7 +99,7 @@ export default function FeaturedProperties() {
   const scrollRight = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: 400,
+        left: 320,
         behavior: 'smooth'
       });
     }
@@ -95,6 +110,37 @@ export default function FeaturedProperties() {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+      
+      // Calculate current page based on scroll position
+      const itemWidth = 320 + 32; // card width + gap
+      const newPage = Math.floor(scrollLeft / itemWidth) + 1;
+      if (newPage !== currentPage && newPage <= totalPages) {
+        setCurrentPage(newPage);
+      }
+
+      // Show view more button when near the end
+      const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
+      if (scrolledPercentage > 0.8 && currentPage < totalPages) {
+        setShowViewMore(true);
+      } else {
+        setShowViewMore(false);
+      }
+    }
+  };
+
+  const handleViewMore = () => {
+    if (currentPage < totalPages && scrollContainerRef.current) {
+      // Scroll to the next page
+      const nextPage = currentPage + 1;
+      const scrollPosition = (nextPage - 1) * (320 + 32); // (page-1) * (card width + gap)
+      
+      scrollContainerRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth'
+      });
+      
+      setCurrentPage(nextPage);
+      setShowViewMore(false);
     }
   };
 
@@ -209,7 +255,7 @@ export default function FeaturedProperties() {
 
   if (propertyUnits.length === 0) {
     return (
-      <div className="min-h-screen bg-amber-800 bg-white py-16 md:py-24">
+      <div className="min-h-screen bg-white py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <Star className="w-20 h-20 text-blue-500 mx-auto mb-6" />
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-sans">No Featured Properties Available</h2>
@@ -245,8 +291,13 @@ export default function FeaturedProperties() {
     </div>
   );
 
+  // Calculate visible items for mobile
+  const visibleItems = isMobile 
+    ? propertyUnits.slice(0, currentPage * ITEMS_PER_PAGE)
+    : propertyUnits;
+
   return (
-    <div className="bg-white  py-6 md:py-24">
+    <div className="bg-white py-6 md:py-24">
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
         <div className="text-center md:mb-20">
@@ -315,7 +366,7 @@ export default function FeaturedProperties() {
             className="flex space-x-8 pb-8 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {propertyUnits.map((unit) => (
+            {visibleItems.map((unit) => (
               <div 
                 key={unit._id || `featured-mobile-${unit.slug || Math.random()}`} 
                 className="flex-shrink-0 w-[320px] snap-start"
@@ -324,6 +375,8 @@ export default function FeaturedProperties() {
               </div>
             ))}
           </div>
+
+
         </div>
       </div>
 
@@ -335,6 +388,19 @@ export default function FeaturedProperties() {
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
         }
       `}</style>
     </div>
