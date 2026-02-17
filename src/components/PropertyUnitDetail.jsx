@@ -2008,7 +2008,7 @@ const getFeatureIcon = (feature) => {
                       <div className="col-span-2 sm:col-span-2 md:col-span-3">
                         <p className="font-bold text-gray-900 text-sm sm:text-base mb-2">Building Amenities</p>
                         <div className="flex flex-wrap gap-2">
-                          {safeBuildingDetails.amenities.slice(0, 5).map((amenity, index) => (
+                          {safeBuildingDetails.amenities.map((amenity, index) => (
                             <span
                               key={index}
                               className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium"
