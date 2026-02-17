@@ -2016,11 +2016,7 @@ const getFeatureIcon = (feature) => {
                               {amenity}
                             </span>
                           ))}
-                          {safeBuildingDetails.amenities.length > 5 && (
-                            <span className="inline-flex items-center gap-1 bg-blue-200 text-blue-800 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium">
-                              +{safeBuildingDetails.amenities.length - 5} more
-                            </span>
-                          )}
+                         
                         </div>
                       </div>
                     )}
