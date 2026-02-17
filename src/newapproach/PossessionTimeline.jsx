@@ -23,10 +23,12 @@ import {
   Target,
   ArrowRight,
   LayoutGrid,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
+import gsap from "gsap";
 
 const PossessionTimeline = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState("ready-to-move");
@@ -36,11 +38,17 @@ const PossessionTimeline = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [showViewMore, setShowViewMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showAllGrid, setShowAllGrid] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const scrollContainerRef = useRef(null);
+  const gridContainerRef = useRef(null);
+  const mobileViewRef = useRef(null);
+  const headerRef = useRef(null);
+  const observerRef = useRef(null);
+  const loadingRef = useRef(null);
   
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -69,6 +77,59 @@ const PossessionTimeline = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Setup intersection observer for infinite scroll
+  useEffect(() => {
+    if (!isMobile || showAllGrid || !hasMore || loadingMore || !scrollContainerRef.current) return;
+
+    // Clean up previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    const options = {
+      root: scrollContainerRef.current,
+      rootMargin: '100px',
+      threshold: 0.1
+    };
+
+    const callback = (entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasMore && !loadingMore && pagination.hasNextPage) {
+        loadMoreProperties();
+      }
+    };
+
+    observerRef.current = new IntersectionObserver(callback, options);
+
+    // Observe the loading element
+    if (loadingRef.current) {
+      observerRef.current.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [isMobile, showAllGrid, hasMore, loadingMore, pagination.hasNextPage, propertyUnits.length]);
+
+  // Re-observe when new items are loaded
+  useEffect(() => {
+    if (!isMobile || showAllGrid || !hasMore || loadingMore || !observerRef.current) return;
+
+    // Update observer to watch the new loading element
+    if (loadingRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [propertyUnits.length, isMobile, showAllGrid, hasMore, loadingMore]);
+
   useEffect(() => {
     const checkScroll = () => {
       if (scrollContainerRef.current && isMobile && !showAllGrid) {
@@ -76,19 +137,16 @@ const PossessionTimeline = () => {
         setCanScrollLeft(scrollLeft > 0);
         setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
         
-        // Calculate current page based on scroll position
-        const itemWidth = 280 + 16; // card width + gap
-        const newPage = Math.floor(scrollLeft / itemWidth) + 1;
-        if (newPage !== currentPage && newPage <= totalPages) {
+        // Fixed pagination calculation
+        const maxScroll = scrollWidth - clientWidth;
+        const scrollPercentage = maxScroll > 0 ? scrollLeft / maxScroll : 0;
+        const newPage = Math.min(
+          Math.ceil(scrollPercentage * totalPages),
+          totalPages
+        );
+        
+        if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
           setCurrentPage(newPage);
-        }
-
-        // Show view more button when near the end
-        const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
-        if (scrolledPercentage > 0.8 && currentPage < totalPages) {
-          setShowViewMore(true);
-        } else {
-          setShowViewMore(false);
         }
       }
     };
@@ -98,71 +156,179 @@ const PossessionTimeline = () => {
     return () => window.removeEventListener('resize', checkScroll);
   }, [propertyUnits, isMobile, currentPage, totalPages, showAllGrid]);
 
+  // GSAP Animation for view transitions
+  useEffect(() => {
+    if (!isMobile || isTransitioning) return;
+
+    if (showAllGrid && gridContainerRef.current && mobileViewRef.current) {
+      // Animate from scroll view to grid view
+      const tl = gsap.timeline({
+        onStart: () => setIsTransitioning(true),
+        onComplete: () => setIsTransitioning(false)
+      });
+
+      // Fade out scroll view
+      tl.to(mobileViewRef.current, {
+        opacity: 0,
+        y: -20,
+        duration: 0.3,
+        ease: "power2.in"
+      })
+      // Animate grid container
+      .fromTo(gridContainerRef.current,
+        {
+          opacity: 0,
+          y: 30,
+          scale: 0.95
+        },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.5,
+          ease: "back.out(1.2)"
+        },
+        "-=0.1"
+      )
+      // Animate grid items with stagger
+      .fromTo(
+        ".grid-view-item",
+        {
+          opacity: 0,
+          y: 30,
+          scale: 0.9
+        },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.4,
+          stagger: 0.05,
+          ease: "power2.out"
+        },
+        "-=0.2"
+      );
+    } else if (!showAllGrid && mobileViewRef.current && headerRef.current) {
+      // Animate from grid view back to scroll view
+      const tl = gsap.timeline({
+        onStart: () => setIsTransitioning(true),
+        onComplete: () => setIsTransitioning(false)
+      });
+
+      // Fade out grid
+      tl.to(gridContainerRef.current, {
+        opacity: 0,
+        y: -20,
+        duration: 0.3,
+        ease: "power2.in"
+      })
+      // Animate scroll view
+      .fromTo(mobileViewRef.current,
+        {
+          opacity: 0,
+          y: 30
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          ease: "back.out(1.2)"
+        },
+        "-=0.1"
+      )
+      // Animate header
+      .fromTo(headerRef.current,
+        {
+          opacity: 0,
+          y: -20
+        },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          ease: "power2.out"
+        },
+        "-=0.3"
+      );
+    }
+  }, [showAllGrid, isMobile]);
+
   const scrollLeft = () => {
-    if (scrollContainerRef.current && isMobile) {
-      scrollContainerRef.current.scrollBy({
-        left: -296, // card width + gap
-        behavior: 'smooth'
+    if (scrollContainerRef.current && isMobile && !isTransitioning) {
+      const itemWidth = 280 + 16;
+      const newScrollLeft = Math.max(0, scrollContainerRef.current.scrollLeft - itemWidth);
+      
+      gsap.to(scrollContainerRef.current, {
+        scrollLeft: newScrollLeft,
+        duration: 0.5,
+        ease: "power2.out"
       });
     }
   };
 
   const scrollRight = () => {
-    if (scrollContainerRef.current && isMobile) {
-      scrollContainerRef.current.scrollBy({
-        left: 296, // card width + gap
-        behavior: 'smooth'
+    if (scrollContainerRef.current && isMobile && !isTransitioning) {
+      const itemWidth = 280 + 16;
+      const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
+      const newScrollLeft = Math.min(maxScroll, scrollContainerRef.current.scrollLeft + itemWidth);
+      
+      gsap.to(scrollContainerRef.current, {
+        scrollLeft: newScrollLeft,
+        duration: 0.5,
+        ease: "power2.out"
       });
     }
   };
 
   const handleScroll = () => {
-    if (scrollContainerRef.current && isMobile && !showAllGrid) {
+    if (scrollContainerRef.current && isMobile && !showAllGrid && !isTransitioning) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
       
-      // Calculate current page based on scroll position
-      const itemWidth = 280 + 16; // card width + gap
-      const newPage = Math.floor(scrollLeft / itemWidth) + 1;
-      if (newPage !== currentPage && newPage <= totalPages) {
+      // Fixed pagination calculation
+      const maxScroll = scrollWidth - clientWidth;
+      const scrollPercentage = maxScroll > 0 ? scrollLeft / maxScroll : 0;
+      const newPage = Math.min(
+        Math.ceil(scrollPercentage * totalPages),
+        totalPages
+      );
+      
+      if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
         setCurrentPage(newPage);
-      }
-
-      // Show view more button when near the end
-      const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
-      if (scrolledPercentage > 0.8 && currentPage < totalPages) {
-        setShowViewMore(true);
-      } else {
-        setShowViewMore(false);
       }
     }
   };
 
-  const handleViewMore = () => {
-    if (currentPage < totalPages && scrollContainerRef.current) {
-      // Scroll to the next page
-      const nextPage = currentPage + 1;
-      const scrollPosition = (nextPage - 1) * (280 + 16); // (page-1) * (card width + gap)
+  const handlePageClick = (page) => {
+    if (scrollContainerRef.current && !isTransitioning) {
+      const itemWidth = 280 + 16;
+      const maxScroll = scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth;
+      const scrollPosition = Math.min(
+        maxScroll,
+        (page - 1) * itemWidth
+      );
       
-      scrollContainerRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth'
+      gsap.to(scrollContainerRef.current, {
+        scrollLeft: scrollPosition,
+        duration: 0.6,
+        ease: "power3.inOut",
+        onComplete: () => {
+          setCurrentPage(page);
+        }
       });
-      
-      setCurrentPage(nextPage);
-      setShowViewMore(false);
     }
   };
 
   const handleViewAll = () => {
+    if (isTransitioning) return;
     setShowAllGrid(true);
   };
 
   const handleCloseGrid = () => {
+    if (isTransitioning) return;
     setShowAllGrid(false);
     setCurrentPage(1);
-    setShowViewMore(false);
   };
 
   // Possession status categories
@@ -212,6 +378,11 @@ const PossessionTimeline = () => {
       hasNextPage: page < totalPages,
       hasPrevPage: page > 1
     }));
+
+    // Update mobile total pages
+    setTotalPages(Math.ceil(totalItems / ITEMS_PER_PAGE_MOBILE));
+    setCurrentPage(1);
+    setHasMore(page < totalPages);
   };
 
   // Fetch property counts for each category
@@ -289,11 +460,6 @@ const PossessionTimeline = () => {
         }
         
         updatePagination(res, page);
-        
-        // Update mobile total pages
-        const totalItems = res.data.total || newProperties.length;
-        setTotalPages(Math.ceil(totalItems / ITEMS_PER_PAGE_MOBILE));
-        setCurrentPage(1);
         setShowAllGrid(false); // Exit grid view when category changes
       }
     } catch (error) {
@@ -304,11 +470,21 @@ const PossessionTimeline = () => {
     }
   };
 
+  // Load more properties for infinite scroll
+  const loadMoreProperties = () => {
+    if (!pagination.hasNextPage || loadingMore) return;
+    const nextPage = pagination.currentPage + 1;
+    fetchPropertiesForCategory(selectedTimeframe, nextPage, true);
+  };
+
   // Handle category selection
   const handleCategorySelect = (categoryId) => {
     setSelectedTimeframe(categoryId);
     setPropertyUnits([]);
     fetchPropertiesForCategory(categoryId, 1);
+    setShowAllGrid(false);
+    setCurrentPage(1);
+    setHasMore(true);
   };
 
   // Handle page change for desktop
@@ -459,9 +635,12 @@ const PossessionTimeline = () => {
     return renderSkeleton();
   }
 
-  const PropertyCard = ({ property, index }) => (
-    <div className="relative group h-full">
-      {/* Property Card Container - Removed possession badge */}
+  const PropertyCard = ({ property, index, isGridView = false }) => (
+    <div 
+      className={`relative group h-full ${isGridView ? 'grid-view-item' : ''}`}
+      style={{ animationDelay: isGridView ? `${index * 0.05}s` : '0s' }}
+    >
+      {/* Property Card Container */}
       <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg h-full">
         {/* Premium border effect on hover */}
         <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-100 rounded-3xl transition-all duration-500 pointer-events-none"></div>
@@ -477,16 +656,21 @@ const PossessionTimeline = () => {
     </div>
   );
 
-  // Calculate visible items for mobile
-  const visibleItems = isMobile && !showAllGrid
-    ? propertyUnits.slice(0, currentPage * ITEMS_PER_PAGE_MOBILE)
-    : propertyUnits;
+  // Loading spinner component for infinite scroll
+  const LoadingSpinner = () => (
+    <div className="flex-shrink-0 w-[280px] flex items-center justify-center py-8">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <span className="text-sm text-gray-500 font-medium">Loading more properties...</span>
+      </div>
+    </div>
+  );
 
   return (
     <div id="possession-timeline" className="bg-white md:py-24">
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
-        <div className="text-center md:mb-20">
+        <div ref={headerRef} className="text-center md:mb-20">
           {/* Main title - hidden on mobile */}
           <div className="mb-6">
             <h1 className="hidden sm:block text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight">
@@ -511,6 +695,7 @@ const PossessionTimeline = () => {
                   <button
                     key={category.id}
                     onClick={() => handleCategorySelect(category.id)}
+                    disabled={isTransitioning}
                     className={`flex-1 min-w-[100px] flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-xl font-medium transition-all duration-300 ${
                       isSelected
                         ? "bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-lg"
@@ -586,124 +771,156 @@ const PossessionTimeline = () => {
           ))}
         </div>
 
-        {/* Mobile Horizontal Scroll Layout */}
-        {!showAllGrid ? (
-          <div className="md:hidden relative">
-            {/* Mobile Scroll Navigation Buttons - More compact */}
-            <div className="relative mb-4">
-              <div className="flex justify-between items-center">
-                <div className="text-left">
-                  <h3 className="text-lg font-semibold text-gray-700 font-sans">
-                    <span className="text-blue-600">
-                      {selectedTimeframe === "ready-to-move" ? "Ready Properties" :
-                       selectedTimeframe === "under-construction" ? "Under Construction" : "Resale Properties"}
-                    </span>
-                  </h3>
+        {/* Mobile View */}
+        <div className="md:hidden">
+          {/* Mobile Horizontal Scroll Layout */}
+          {!showAllGrid && (
+            <div ref={mobileViewRef} className="relative">
+              {/* Mobile Scroll Navigation Buttons */}
+              <div className="relative mb-4">
+                <div className="flex justify-between items-center">
+                  <div className="text-left">
+                    <h3 className="text-lg font-semibold text-gray-700 font-sans">
+                      <span className="text-blue-600">
+                        {selectedTimeframe === "ready-to-move" ? "Ready Properties" :
+                         selectedTimeframe === "under-construction" ? "Under Construction" : "Resale Properties"}
+                      </span>
+                    </h3>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={scrollLeft}
+                      disabled={!canScrollLeft || isTransitioning}
+                      className={`p-2 rounded-full border ${
+                        canScrollLeft && !isTransitioning
+                          ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
+                          : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                      } transition-all duration-300`}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    
+                    <button
+                      onClick={scrollRight}
+                      disabled={!canScrollRight || isTransitioning}
+                      className={`p-2 rounded-full border ${
+                        canScrollRight && !isTransitioning
+                          ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
+                          : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                      } transition-all duration-300`}
+                    >
+                      <ChevronRightIcon className="w-4 h-4" />
+                    </button>
+
+                    {/* View All Button */}
+                    <button
+                      onClick={handleViewAll}
+                      disabled={isTransitioning}
+                      className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg ml-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                      <span className="text-sm">View</span>
+                    </button>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={scrollLeft}
-                    disabled={!canScrollLeft}
-                    className={`p-2 rounded-full border ${
-                      canScrollLeft 
-                        ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
-                        : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                    } transition-all duration-300`}
+              </div>
+
+              {/* Mobile Scroll Container with Infinite Scroll */}
+              <div 
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {propertyUnits.map((property, index) => (
+                  <div 
+                    key={property._id || index} 
+                    className="flex-shrink-0 w-[280px] snap-start"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
+                    <PropertyCard property={property} index={index} />
+                  </div>
+                ))}
+                
+                {/* Loading indicator for infinite scroll */}
+                {hasMore && (
+                  <div 
+                    ref={loadingRef}
+                    className="flex-shrink-0 w-[280px]"
+                  >
+                    {loadingMore ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center py-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-6 h-6 rounded-full border-2 border-blue-600 border-t-transparent animate-spin"></div>
+                          <span className="text-xs text-gray-400">Scroll for more</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Page Indicator */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-4">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageClick(page)}
+                      disabled={isTransitioning}
+                      className={`transition-all duration-300 ${
+                        currentPage === page
+                          ? 'w-8 h-2 bg-blue-600 rounded-full'
+                          : 'w-2 h-2 bg-gray-300 rounded-full hover:bg-blue-400'
+                      }`}
+                      aria-label={`Go to page ${page}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mobile Grid View */}
+          {showAllGrid && (
+            <div 
+              ref={gridContainerRef}
+              className="py-2 relative"
+            >
+              {/* Grid Header */}
+              <div className="relative mb-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-gray-900 font-sans">
+                    <span className="text-blue-700">
+                      {selectedTimeframe === "ready-to-move" ? "All Ready Properties" :
+                       selectedTimeframe === "under-construction" ? "All Under Construction" : "All Resale Properties"}
+                    </span> 
+                  </h2>
                   
                   <button
-                    onClick={scrollRight}
-                    disabled={!canScrollRight}
-                    className={`p-2 rounded-full border ${
-                      canScrollRight 
-                        ? 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
-                        : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                    } transition-all duration-300`}
+                    onClick={handleCloseGrid}
+                    disabled={isTransitioning}
+                    className="flex items-center gap-2 bg-white border-2 border-gray-200 text-gray-700 px-4 py-3 rounded-xl font-medium hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <ChevronRightIcon className="w-4 h-4" />
-                  </button>
-
-                  {/* View All Button */}
-                  <button
-                    onClick={handleViewAll}
-                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg ml-1"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                    <span className="text-sm">View</span>
+                    <X className="w-4 h-4" />
+                    <span className="text-sm">Back</span>
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Mobile Scroll Container */}
-            <div 
-              ref={scrollContainerRef}
-              onScroll={handleScroll}
-              className="flex space-x-4 pb-6 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {visibleItems.map((property, index) => (
-                <div 
-                  key={property._id || index} 
-                  className="flex-shrink-0 w-[280px] snap-start"
-                >
-                  <PropertyCard property={property} index={index} />
-                </div>
-              ))}
-            </div>
-
-            {/* Page Indicator */}
-   
-
-            {/* View More Button */}
-            {showViewMore && currentPage < totalPages && (
-              <div className="flex justify-center mt-6 animate-fade-in">
-                <button
-                  onClick={handleViewMore}
-                  className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                >
-                  <span>View More Properties</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          /* Mobile Grid View */
-          <div className="md:hidden py-2 relative">
-            {/* Grid Header */}
-            <div className="relative mb-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900 font-sans">
-                  <span className="text-blue-700">
-                    {selectedTimeframe === "ready-to-move" ? "All Ready Properties" :
-                     selectedTimeframe === "under-construction" ? "All Under Construction" : "All Resale Properties"}
-                  </span> 
-                </h2>
-                
-                <button
-                  onClick={handleCloseGrid}
-                  className="flex items-center gap-2 bg-white border-2 border-gray-200 text-gray-700 px-4 py-3 rounded-xl font-medium hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 shadow-sm"
-                >
-                  <X className="w-4 h-4" />
-                  <span className="text-sm">Back</span>
-                </button>
+              {/* Grid Container */}
+              <div className="grid grid-cols-2 gap-4 pb-8">
+                {propertyUnits.map((property, index) => (
+                  <div key={property._id || index} className="w-full">
+                    <PropertyCard property={property} index={index} isGridView={true} />
+                  </div>
+                ))}
               </div>
             </div>
-
-            {/* Grid Container */}
-            <div className="grid grid-cols-2 gap-4 pb-8">
-              {propertyUnits.map((property, index) => (
-                <div key={property._id || index} className="w-full">
-                  <PropertyCard property={property} index={index} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Empty State */}
         {!loading && propertyUnits.length === 0 && (
