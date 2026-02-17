@@ -1932,14 +1932,7 @@ const getFeatureIcon = (feature) => {
         </div>
         
         {/* Optional elegant CTA */}
-        {safeUnitFeatures.length > 10 && (
-          <div className="mt-6 sm:mt-8 text-center">
-            <button className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-600 bg-gray-50/80 hover:bg-gray-100 px-5 py-2 rounded-full border border-gray-200 hover:border-gray-300 transition-all group/cta">
-              <span>View all {safeUnitFeatures.length} features</span>
-              <ArrowRight className="w-3 h-3 text-gray-400 group-hover/cta:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        )}
+    
       </div>
     </div>
     
