@@ -45,6 +45,9 @@ const ListingTypeView = () => {
   const [showAllGrid, setShowAllGrid] = useState(false);
   const scrollContainerRef = useRef(null);
   
+  // Store loaded page numbers to prevent duplicates
+  const [loadedPages, setLoadedPages] = useState(new Set());
+  
   // Pagination state
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -72,6 +75,9 @@ const ListingTypeView = () => {
   });
 
   const ITEMS_PER_PAGE_MOBILE = 3; // Show 3 items on mobile initially
+  const MOBILE_CARD_WIDTH = 280;
+  const MOBILE_GAP = 16;
+  const MOBILE_ITEM_WIDTH = MOBILE_CARD_WIDTH + MOBILE_GAP;
 
   // Check if mobile
   useEffect(() => {
@@ -81,16 +87,21 @@ const ListingTypeView = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Reset loaded pages when type changes
+  useEffect(() => {
+    setLoadedPages(new Set());
+    setCurrentPage(1);
+  }, [selectedType]);
+
   useEffect(() => {
     const checkScroll = () => {
-      if (scrollContainerRef.current && isMobile && !showAllGrid) {
+      if (scrollContainerRef.current && isMobile && !showAllGrid && filteredUnits.length > 0) {
         const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
         setCanScrollLeft(scrollLeft > 0);
         setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
         
         // Calculate current page based on scroll position
-        const itemWidth = 280 + 16; // card width + gap
-        const newPage = Math.floor(scrollLeft / itemWidth) + 1;
+        const newPage = Math.floor(scrollLeft / MOBILE_ITEM_WIDTH) + 1;
         if (newPage !== currentPage && newPage <= totalPages) {
           setCurrentPage(newPage);
         }
@@ -108,12 +119,12 @@ const ListingTypeView = () => {
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [filteredUnits, isMobile, currentPage, totalPages, showAllGrid]);
+  }, [filteredUnits, isMobile, currentPage, totalPages, showAllGrid, MOBILE_ITEM_WIDTH]);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: -296, // card width + gap
+        left: -MOBILE_ITEM_WIDTH,
         behavior: 'smooth'
       });
     }
@@ -122,21 +133,20 @@ const ListingTypeView = () => {
   const scrollRight = () => {
     if (scrollContainerRef.current && isMobile) {
       scrollContainerRef.current.scrollBy({
-        left: 296, // card width + gap
+        left: MOBILE_ITEM_WIDTH,
         behavior: 'smooth'
       });
     }
   };
 
   const handleScroll = () => {
-    if (scrollContainerRef.current && isMobile && !showAllGrid) {
+    if (scrollContainerRef.current && isMobile && !showAllGrid && filteredUnits.length > 0) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
       
       // Calculate current page based on scroll position
-      const itemWidth = 280 + 16; // card width + gap
-      const newPage = Math.floor(scrollLeft / itemWidth) + 1;
+      const newPage = Math.floor(scrollLeft / MOBILE_ITEM_WIDTH) + 1;
       if (newPage !== currentPage && newPage <= totalPages) {
         setCurrentPage(newPage);
       }
@@ -151,11 +161,18 @@ const ListingTypeView = () => {
     }
   };
 
-  const handleViewMore = () => {
+  const handleViewMore = async () => {
     if (currentPage < totalPages && scrollContainerRef.current) {
-      // Scroll to the next page
+      // Load more properties before scrolling
       const nextPage = currentPage + 1;
-      const scrollPosition = (nextPage - 1) * (280 + 16); // (page-1) * (card width + gap)
+      
+      // Check if we've already loaded this page
+      if (!loadedPages.has(nextPage)) {
+        await fetchMorePropertiesForType(selectedType, nextPage);
+      }
+      
+      // Scroll to the next page
+      const scrollPosition = (nextPage - 1) * MOBILE_ITEM_WIDTH;
       
       scrollContainerRef.current.scrollTo({
         left: scrollPosition,
@@ -175,6 +192,43 @@ const ListingTypeView = () => {
     setShowAllGrid(false);
     setCurrentPage(1);
     setShowViewMore(false);
+  };
+
+  // Fetch more properties for mobile view
+  const fetchMorePropertiesForType = async (typeId, page) => {
+    if (loadingMore || loadedPages.has(page)) return;
+    
+    try {
+      setLoadingMore(true);
+      
+      const skip = (page - 1) * pagination.itemsPerPage;
+      
+      const res = await propertyUnitAPI.getPropertyUnits({
+        listingType: typeId,
+        limit: pagination.itemsPerPage,
+        skip: skip,
+        sortBy: "createdAt",
+        sortOrder: "desc"
+      });
+      
+      if (res.data && res.data.success) {
+        const newProperties = res.data.data || [];
+        
+        // Use a Set to filter out duplicates based on _id
+        setFilteredUnits(prev => {
+          const existingIds = new Set(prev.map(p => p._id));
+          const uniqueNewProperties = newProperties.filter(p => !existingIds.has(p._id));
+          return [...prev, ...uniqueNewProperties];
+        });
+        
+        // Mark this page as loaded
+        setLoadedPages(prev => new Set([...prev, page]));
+      }
+    } catch (error) {
+      console.error("Error fetching more properties:", error);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   // Listing type categories
@@ -220,7 +274,7 @@ const ListingTypeView = () => {
 
   // Update pagination state
   const updatePagination = (response, page) => {
-    const totalItems = response.data.total || filteredUnits.length;
+    const totalItems = response.data?.total || filteredUnits.length || 0;
     const itemsPerPage = pagination.itemsPerPage;
     const totalPages = calculateTotalPages(totalItems, itemsPerPage);
     
@@ -232,6 +286,9 @@ const ListingTypeView = () => {
       hasNextPage: page < totalPages,
       hasPrevPage: page > 1
     }));
+    
+    // Update mobile total pages
+    setTotalPages(Math.ceil(totalItems / ITEMS_PER_PAGE_MOBILE));
   };
 
   // Fetch property counts for each listing type
@@ -249,10 +306,10 @@ const ListingTypeView = () => {
         // Using placeholder stats - replace with actual API data
         const placeholderStats = {
           sale: 45,
-          rent: '3+',
+          rent: 32,
           lease: 18,
-          pg: '5+',
-          total: '45+'
+          pg: 12,
+          total: 107
         };
         
         setStats(placeholderStats);
@@ -295,6 +352,8 @@ const ListingTypeView = () => {
         setLoadingMore(true);
       } else {
         setLoading(true);
+        // Reset loaded pages when fetching new type
+        setLoadedPages(new Set([1])); // Mark page 1 as loaded
       }
       
       const skip = (page - 1) * pagination.itemsPerPage;
@@ -312,9 +371,16 @@ const ListingTypeView = () => {
         const newProperties = res.data.data || [];
         
         if (append) {
-          setFilteredUnits(prev => [...prev, ...newProperties]);
+          // Use a Set to filter out duplicates based on _id
+          setFilteredUnits(prev => {
+            const existingIds = new Set(prev.map(p => p._id));
+            const uniqueNewProperties = newProperties.filter(p => !existingIds.has(p._id));
+            return [...prev, ...uniqueNewProperties];
+          });
+          setLoadedPages(prev => new Set([...prev, page]));
         } else {
           setFilteredUnits(newProperties);
+          setLoadedPages(new Set([1])); // Only page 1 is loaded
         }
         
         // Get accurate total count for this type
@@ -350,7 +416,9 @@ const ListingTypeView = () => {
       }
     } catch (error) {
       console.error("Error fetching properties:", error);
-      setFilteredUnits([]);
+      if (!append) {
+        setFilteredUnits([]);
+      }
       
       // Fallback to cached count
       const cachedCount = typeTotalsCache[typeId] || 0;
@@ -375,6 +443,7 @@ const ListingTypeView = () => {
   const handleTypeSelect = (typeId) => {
     setSelectedType(typeId);
     setFilteredUnits([]);
+    setLoadedPages(new Set()); // Reset loaded pages
     fetchPropertiesForType(typeId, 1);
   };
 
@@ -390,10 +459,22 @@ const ListingTypeView = () => {
     }
   };
 
-  // Handle load more
+  // Handle load more for desktop
   const handleLoadMore = () => {
     const nextPage = pagination.currentPage + 1;
-    fetchPropertiesForType(selectedType, nextPage, true);
+    
+    // Check if we've already loaded this page to prevent duplicates
+    if (!loadedPages.has(nextPage)) {
+      fetchPropertiesForType(selectedType, nextPage, true);
+    } else {
+      // If already loaded, just update the UI state
+      setPagination(prev => ({
+        ...prev,
+        currentPage: nextPage,
+        hasNextPage: nextPage < prev.totalPages,
+        hasPrevPage: true
+      }));
+    }
   };
 
   useEffect(() => {
@@ -489,7 +570,7 @@ const ListingTypeView = () => {
 
   const PropertyCard = ({ unit, index }) => (
     <div className="relative group h-full">
-      {/* Property Card Container - Removed listing type badge */}
+      {/* Property Card Container */}
       <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg h-full">
         {/* Premium border effect on hover */}
         <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-100 rounded-3xl transition-all duration-500 pointer-events-none"></div>
@@ -698,10 +779,22 @@ const ListingTypeView = () => {
               <div className="flex justify-center mt-6 animate-fade-in">
                 <button
                   onClick={handleViewMore}
-                  className="group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  disabled={loadingMore}
+                  className={`group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 ${
+                    loadingMore ? 'opacity-75 cursor-not-allowed' : ''
+                  }`}
                 >
-                  <span>View More Properties</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  {loadingMore ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>View More Properties</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </button>
               </div>
             )}
