@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { batchService } from '../../api/batchService';
 import PropertyUnitCard from '../../components/PropertyUnitCard';
-import { X, Shield, Building2 } from 'lucide-react';
+import { X, Shield, Building2, ChevronRight, Info, LayoutGrid, MapPin } from 'lucide-react';
 import gsap from 'gsap';
 import { Observer } from 'gsap/Observer';
 
@@ -15,12 +14,12 @@ const ProjectGroupBatches = () => {
   const [showModal, setShowModal] = useState(false);
   const [propertyUnits, setPropertyUnits] = useState([]);
   const [unitsLoading, setUnitsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   
   const marqueeContentRef = useRef(null);
   const containerRef = useRef(null);
   const modalRef = useRef(null);
   const modalOverlayRef = useRef(null);
-  const modalContentRef = useRef(null);
 
   useEffect(() => {
     const fetchBatches = async () => {
@@ -31,54 +30,44 @@ const ProjectGroupBatches = () => {
           const projectBatches = (response.data || []).filter(b => b.batchType === 'project_group');
           setBatches(projectBatches);
         }
-      } catch (error) { console.error(error); } finally { setLoading(false); }
+      } catch (error) { 
+        console.error('Fetch error:', error); 
+      } finally { 
+        setLoading(false); 
+      }
     };
     fetchBatches();
   }, []);
 
-  // --- INTERACTIVE SCROLL & DRAG ENGINE ---
+  // --- INFINITE X-AXIS SCROLL ENGINE ---
   useEffect(() => {
     if (!batches.length || !marqueeContentRef.current) return;
-
     const content = marqueeContentRef.current;
     const itemWidth = content.children[0].offsetWidth + 16;
     const totalWidth = itemWidth * batches.length;
-
-    // Helper to wrap the X position for infinite effect
     const wrap = gsap.utils.wrap(-totalWidth, 0);
-
-    // This object tracks our virtual scroll position
     let scrollPos = 0;
-    let vel = 0; // Velocity
+    let vel = 0;
 
     const updateX = () => {
       gsap.set(content, { 
         x: wrap(scrollPos),
-        modifiers: {
-          x: gsap.utils.unitize(val => parseFloat(val) % totalWidth)
-        }
+        modifiers: { x: gsap.utils.unitize(val => parseFloat(val) % totalWidth) }
       });
     };
 
-    // Observer handles Wheel, Touch, and Pointer Drags
     const obs = Observer.create({
       target: containerRef.current,
       type: "wheel,touch,pointer",
-      onPress: () => content.classList.add('cursor-grabbing'),
-      onRelease: () => content.classList.remove('cursor-grabbing'),
       onChange: (self) => {
-        // self.deltaX for wheel, self.deltaY for vertical wheel acting as horizontal
         const delta = self.deltaX || self.deltaY * -0.5; 
         scrollPos += delta;
-        vel = self.velocityX || self.velocityY; // Capture velocity for inertia
+        vel = self.velocityX || self.velocityY;
         updateX();
       },
       onStop: () => {
-        // Optional: Slow glide to stop after release
         gsap.to({ v: vel }, {
-          v: 0,
-          duration: 1.5,
-          ease: "power3.out",
+          v: 0, duration: 1.5, ease: "power3.out",
           onUpdate: function() {
             scrollPos += this.targets()[0].v * 0.01;
             updateX();
@@ -87,49 +76,48 @@ const ProjectGroupBatches = () => {
       }
     });
 
-    // Auto-drift (Gentle movement when idle)
     const drift = gsap.to({}, {
-      repeat: -1,
-      duration: 1,
-      onUpdate: () => {
-        if (!obs.isDragging && !obs.isPressed) {
-          scrollPos -= 0.5; // Constant slow crawl
-          updateX();
-        }
-      }
+      repeat: -1, duration: 1,
+      onUpdate: () => { if (!obs.isDragging && !obs.isPressed) { scrollPos -= 0.5; updateX(); } }
     });
 
-    return () => {
-      obs.kill();
-      drift.kill();
-    };
+    return () => { obs.kill(); drift.kill(); };
   }, [batches]);
 
   // --- MODAL ANIMATIONS ---
   useEffect(() => {
     if (showModal && modalRef.current) {
       const tl = gsap.timeline();
-      tl.to(modalOverlayRef.current, { display: 'flex', opacity: 1, duration: 0.4 })
-        .fromTo(modalRef.current, { y: 50, opacity: 0, scale: 0.95 }, { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" }, "-=0.2");
+      tl.to(modalOverlayRef.current, { display: 'flex', opacity: 1, duration: 0.3 })
+        .fromTo(modalRef.current, { y: 100, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "expo.out" });
     }
   }, [showModal]);
 
   const handleCloseModal = () => {
-    gsap.to(modalRef.current, { y: 30, opacity: 0, scale: 0.95, duration: 0.4, onComplete: () => { setShowModal(false); setSelectedBatch(null); }});
-    gsap.to(modalOverlayRef.current, { opacity: 0, duration: 0.4 });
+    gsap.to(modalRef.current, { y: 100, opacity: 0, duration: 0.4, onComplete: () => {
+      setShowModal(false);
+      setSelectedBatch(null);
+      setFetchError(null);
+    }});
+    gsap.to(modalOverlayRef.current, { opacity: 0, duration: 0.3 });
   };
 
   const handleBatchClick = async (batch) => {
     setSelectedBatch(batch);
     setShowModal(true);
     setUnitsLoading(true);
+    setFetchError(null);
     try {
       const response = await batchService.getBatch(batch._id);
       if (response.success) setPropertyUnits(response.data.propertyUnits || []);
-    } catch (e) { console.error(e); } finally { setUnitsLoading(false); }
+    } catch (e) {
+      setFetchError("Request timed out. The server is taking too long to respond.");
+    } finally {
+      setUnitsLoading(false);
+    }
   };
 
-  if (loading) return <div className="h-96 flex items-center justify-center bg-white"><div className="w-8 h-8 border-t-2 border-blue-600 rounded-full animate-spin" /></div>;
+  if (loading) return <div className="h-96 flex items-center justify-center bg-white"><div className="w-10 h-10 border-t-2 border-blue-600 rounded-full animate-spin" /></div>;
 
   return (
     <div className="bg-white py-2 md:py-24 overflow-hidden select-none">
@@ -141,19 +129,12 @@ const ProjectGroupBatches = () => {
             <h4 className="text-[10px] font-bold tracking-[0.4em] uppercase text-blue-600 mb-2">Signature Series</h4>
             <h2 className="text-4xl md:text-5xl font-serif text-slate-900 tracking-tight">Project Collections</h2>
           </div>
-          <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold">
-            Scroll or Drag to Explore
-          </p>
+          <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold">Scroll or Drag to Explore</p>
         </div>
 
-        {/* INTERACTIVE MARQUEE */}
-        <div ref={containerRef} className="relative touch-none group">
-          
-          {/* Edge Fades */}
-          {/* <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" /> */}
-          {/* <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" /> */}
-
-          <div className=" overflow-visible">
+        {/* --- MARQUEE SECTION --- */}
+        <div ref={containerRef} className="relative touch-none">
+          <div className="overflow-visible">
             <div 
               ref={marqueeContentRef}
               className="flex gap-4 will-change-transform py-10"
@@ -163,8 +144,9 @@ const ProjectGroupBatches = () => {
                 <div 
                   key={`${batch._id}-${index}`}
                   onClick={() => handleBatchClick(batch)}
-                  className="flex-shrink-0 w-[300px] md:w-[420px] group transition-transform duration-500"
+                  className="flex-shrink-0 w-[300px] md:w-[420px] group transition-transform duration-500 cursor-pointer"
                 >
+                  {/* YOUR EXACT CARD DESIGN PRESERVED */}
                   <div className="flex items-center bg-white border border-slate-100 rounded-2xl p-5 transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] group-hover:border-blue-100">
                     <div className="relative w-28 h-28 flex-shrink-0 overflow-hidden rounded-xl bg-slate-50">
                       <img 
@@ -194,36 +176,108 @@ const ProjectGroupBatches = () => {
         </div>
       </div>
 
-      {/* Premium Modal */}
-      {showModal && selectedBatch && (
-        <div ref={modalOverlayRef} className="fixed inset-0 z-[100] flex items-center justify-center bg-white/95 backdrop-blur-2xl" style={{ opacity: 0, display: 'none' }}>
-          <div ref={modalRef} className="bg-white w-full h-[95vh] md:max-w-6xl md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col border border-slate-100 mx-4">
-            <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <Shield className="w-4 h-4 text-blue-600" />
-                <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Inventory Index</span>
-              </div>
-              <button onClick={handleCloseModal} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors">
-                <X className="w-6 h-6" />
-              </button>
+      {/* --- PREMIUM MODAL INTERFACE --- */}
+  {showModal && selectedBatch && (
+  <div 
+    ref={modalOverlayRef} 
+    className="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/60 backdrop-blur-md p-0 md:p-10"
+  >
+    <div 
+      ref={modalRef} 
+      className="bg-white w-full h-full md:h-full max-w-7xl md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative"
+    >
+      
+      {/* Close Button - Adjusted for mobile visibility */}
+      <button 
+        onClick={handleCloseModal} 
+        className="absolute top-4 right-4 z-[110] w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:bg-slate-50 transition-colors"
+      >
+        <X className="w-5 h-5 text-slate-900" />
+      </button>
+
+      {/* Main Container - Stacks on mobile (flex-col), Side-by-side on desktop (lg:flex-row) */}
+      <div className="flex flex-col lg:flex-row h-full overflow-y-auto lg:overflow-hidden">
+        
+        {/* Sidebar Info - Full width on mobile, 1/3 on desktop */}
+        <div className="w-full lg:w-1/3 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col shrink-0">
+          <div className="h-48 sm:h-64 lg:h-80 relative shrink-0">
+              <img src={selectedBatch.image?.url} className="w-full h-full object-cover" alt="" />
+              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent lg:hidden" />
+          </div>
+          
+          <div className="p-6 md:p-8 space-y-4 md:space-y-6">
+            <div className="flex items-center gap-2 text-blue-600">
+              <Shield className="w-4 h-4" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Master Collection</span>
             </div>
-            <div className="flex-grow overflow-y-auto p-8 md:p-16">
-                <h2 className="text-5xl font-serif mb-8 text-slate-900">{selectedBatch.projectName}</h2>
-                {unitsLoading ? (
-                    <div className="py-20 text-center"><div className="w-8 h-8 border-t-2 border-blue-600 rounded-full animate-spin mx-auto" /></div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {propertyUnits.map(unit => (
-                            <div key={unit._id} className="bg-white rounded-2xl border border-slate-100 p-2 hover:shadow-xl transition-all duration-500">
-                                <PropertyUnitCard propertyUnit={unit} viewMode="compact" />
-                            </div>
-                        ))}
-                    </div>
-                )}
+            <h2 className="text-2xl md:text-4xl font-serif text-slate-900 leading-tight">
+              {selectedBatch.projectName}
+            </h2>
+            <p className="text-slate-500 text-sm leading-relaxed font-light line-clamp-3 lg:line-clamp-none">
+              {selectedBatch.description || "An architectural masterpiece offering unparalleled luxury and community-centric design."}
+            </p>
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="bg-slate-50 p-4 rounded-2xl">
+                <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Portfolio Size</p>
+                <p className="text-base md:text-lg font-serif text-slate-900">
+                  {selectedBatch.stats?.totalProperties || 0} Units
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Inventory Grid - Takes remaining space */}
+        <div className="w-full lg:w-2/3 flex flex-col bg-[#FCFCFC] min-h-[400px]">
+          {/* Sticky header inside inventory */}
+          <div className="p-4 md:p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                  <LayoutGrid className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-900">Live Inventory</h3>
+              </div>
+          </div>
+
+          {/* Scrollable Area */}
+          <div className="p-4 md:p-8 overflow-y-auto lg:flex-grow">
+            {unitsLoading ? (
+              <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fetching Assets...</p>
+              </div>
+            ) : fetchError ? (
+              <div className="py-12 md:h-full flex flex-col items-center justify-center text-center px-6">
+                  <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4"><Info className="text-red-500 w-6 h-6" /></div>
+                  <h4 className="text-lg font-serif mb-2">Network Timeout</h4>
+                  <p className="text-xs text-slate-500 max-w-xs mb-6">{fetchError}</p>
+                  <button onClick={() => handleBatchClick(selectedBatch)} className="px-8 py-3 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-blue-700 transition-all">Retry Request</button>
+              </div>
+            ) : propertyUnits.length === 0 ? (
+              <div className="py-20 flex flex-col items-center justify-center opacity-40">
+                <Building2 className="w-12 h-12 mb-4" />
+                <p className="font-serif italic text-slate-500 text-sm">No properties found.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 pb-20 lg:pb-0">
+                {propertyUnits.map((unit) => (
+                  <div key={unit._id} className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100/50">
+                    <PropertyUnitCard propertyUnit={unit} viewMode="compact" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Navigation - Hidden on mobile if preferred, or kept sticky */}
+          <div className="hidden lg:flex p-6 bg-white border-t border-slate-100 justify-center shrink-0">
+              <button onClick={handleCloseModal} className="text-slate-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2 hover:text-blue-600 transition-colors">
+                  Back to collections <ChevronRight className="w-3 h-3" />
+              </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
