@@ -399,32 +399,6 @@ export default function FeaturedProperties() {
               ))}
             </div>
 
-            {/* Page Indicator */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-4">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => {
-                      if (scrollContainerRef.current) {
-                        const scrollPosition = (page - 1) * (320 + 32);
-                        scrollContainerRef.current.scrollTo({
-                          left: scrollPosition,
-                          behavior: 'smooth'
-                        });
-                        setCurrentPage(page);
-                      }
-                    }}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      currentPage === page
-                        ? 'w-8 bg-blue-600'
-                        : 'bg-gray-300 hover:bg-blue-400'
-                    }`}
-                    aria-label={`Go to page ${page}`}
-                  />
-                ))}
-              </div>
-            )}
 
             {/* View More Button */}
             {showViewMore && currentPage < totalPages && (
