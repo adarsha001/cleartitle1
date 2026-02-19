@@ -658,13 +658,35 @@ const PossessionTimeline = () => {
                   </div>
                 ) : (
                   /* Grid View - Compact */
-                  <div ref={gridContainerRef} className="grid grid-cols-2 gap-2">
-                    {propertyUnits.map((property) => (
-                      <div key={property._id} >
-                        <PropertyUnitCard propertyUnit={property} viewMode="compact" />
-                      </div>
-                    ))}
-                  </div>
+
+             <div className="flex flex-col gap-6">
+  {/* Header with View Button */}
+  <div className="flex justify-between items-center"><div></div>
+    <div>
+      <button
+        onClick={() => {
+          setShowAllGrid(false);
+        }}
+        className="flex items-center gap-2 bg-gray-100 text-gray-700"
+      >
+         <X className="w-3.5 h-3.5" />
+              <span>Back</span>
+      </button>
+    </div>
+    
+    {/* Optional: Add a title or counter here */}
+
+  </div>
+
+  {/* Property Units Grid */}
+  <div ref={gridContainerRef} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {propertyUnits.map((property) => (
+      <div key={property._id} className="transform transition-all duration-300 hover:scale-[1.02]">
+        <PropertyUnitCard propertyUnit={property} viewMode="compact" />
+      </div>
+    ))}
+  </div>
+</div>
                 )}
               </div>
 

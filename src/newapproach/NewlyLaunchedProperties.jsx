@@ -746,6 +746,8 @@ export default function NewlyLaunchedProperties() {
                   </div>
                 ) : (
                   /* Grid View */
+                  <div>
+<div className="pb-3"><MobileViewToggle/></div>
                   <div ref={gridContainerRef} className="grid grid-cols-2 gap-2">
                     {propertyUnits.map((unit, index) => (
                       <div key={unit._id || index} className="relative">
@@ -776,9 +778,10 @@ export default function NewlyLaunchedProperties() {
                         <PropertyUnitCard propertyUnit={unit} viewMode="compact" />
                       </div>
                     ))}
-                  </div>
+                  </div></div>
                 )}
               </div>
+                    
 
               {/* Loading More Indicator */}
               {loadingMore && (
