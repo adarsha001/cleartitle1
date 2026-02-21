@@ -164,7 +164,7 @@ useEffect(() => {
                 <img 
                   src={cat.img} 
                   alt={cat.name}
-                  className="absolute inset-0 w-full h-full scale-140 sm:scale-100 object-cover grayscale-[20%] group-hover:grayscale-50 transition-all duration-700 group-hover:scale-130"
+                  className="absolute inset-0 w-full h-full scale-140 sm:scale-100 object-cover grayscale-[20%] group-hover:grayscale-50 transition-all duration-700 group-hover:scale-120"
                 />
               </div>
               
