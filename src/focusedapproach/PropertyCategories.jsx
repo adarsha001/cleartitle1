@@ -36,8 +36,8 @@ const PropertyCategories = () => {
     { id: 'Apartment', name: 'Apartments', tagline: 'CURATED URBAN', location: 'Indiranagar', img: '/testing.png', bgColor: 'bg-sky-500' },
     { id: 'Villa', name: 'Estate Villas', tagline: 'ARCHITECTURAL', location: 'Whitefield', img: 'villa.png', bgColor: 'bg-sky-500' },
     { id: 'Commercial', name: 'Commercial', tagline: 'STRATEGIC', location: 'Manyata', img: '/commercial.png', bgColor: 'bg-sky-200' },
-    { id: 'Plot', name: 'Private Acres', tagline: 'BESPOKE', location: 'Devanahalli', img: 'plot.png', bgColor: 'bg-sky-200' },
-    { id: 'House', name: 'Classic Manors', tagline: 'TIMELESS HERITAGE', location: 'Sadashivnagar • Bangalore', img: 'indepentent.png', bgColor: 'bg-sky-100' }
+    { id: 'Plot', name: 'Plot', tagline: 'BESPOKE', location: 'Devanahalli', img: 'plot.png', bgColor: 'bg-sky-200' },
+    { id: 'House', name: 'House', tagline: 'TIMELESS HERITAGE', location: 'Sadashivnagar • Bangalore', img: 'indepentent.png', bgColor: 'bg-sky-100' }
   ];
 
 useEffect(() => {
