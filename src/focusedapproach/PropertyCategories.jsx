@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Search, Loader2 } from 'lucide-react';
 import SearchBar from './SearchBar';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -26,68 +25,6 @@ const CloudSVG = ({ className, style }) => (
   </svg>
 );
 
-// Lazy Image Component with Intersection Observer
-const LazyImage = ({ src, alt, className, onLoad }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(false);
-  const imgRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsInView(true);
-            observer.disconnect();
-          }
-        });
-      },
-      {
-        rootMargin: '50px', // Start loading when within 50px of viewport
-        threshold: 0.01
-      }
-    );
-
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div ref={imgRef} className="relative w-full h-full">
-      {!isLoaded && isInView && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 animate-pulse">
-          <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
-        </div>
-      )}
-      {isInView && (
-        <img
-          src={src}
-          alt={alt}
-          className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
-          onLoad={() => {
-            setIsLoaded(true);
-            if (onLoad) onLoad();
-          }}
-        />
-      )}
-    </div>
-  );
-};
-
-// Skeleton Loader for Cards
-const CardSkeleton = () => (
-  <div className="relative h-[180px] sm:h-[300px] md:h-[450px] overflow-hidden rounded-sm bg-gray-200 animate-pulse">
-    <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-shimmer" />
-    <div className="absolute bottom-0 left-0 right-0 p-3 md:p-8">
-      <div className="h-3 w-16 bg-gray-300 rounded mb-2"></div>
-      <div className="h-6 w-24 bg-gray-300 rounded"></div>
-    </div>
-  </div>
-);
-
 const PropertyCategories = () => {
   const navigate = useNavigate();
   const sectionRef = useRef(null);
@@ -95,11 +32,6 @@ const PropertyCategories = () => {
   const cloudsRef = useRef([]);
   const imageContainersRef = useRef([]);
   const headerRef = useRef(null);
-  
-  // Lazy loading state
-  const [visibleCards, setVisibleCards] = useState(3); // Show first 3 cards initially
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
 
   const categories = [
     { id: 'Apartment', name: 'Apartments', tagline: 'CURATED URBAN', location: 'Indiranagar', img: '/testing.png', bgColor: 'bg-sky-500' },
@@ -109,49 +41,12 @@ const PropertyCategories = () => {
     { id: 'House', name: 'House', tagline: 'TIMELESS HERITAGE', location: 'Sadashivnagar • Bangalore', img: 'indepentent.png', bgColor: 'bg-sky-100' }
   ];
 
-  // Intersection Observer for infinite scroll
-  const observerRef = useRef(null);
-  const lastCardRef = useCallback(node => {
-    if (loading) return;
-    if (observerRef.current) observerRef.current.disconnect();
-    
-    observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        loadMoreCards();
-      }
-    }, {
-      rootMargin: '100px',
-      threshold: 0.1
-    });
-    
-    if (node) observerRef.current.observe(node);
-  }, [loading, hasMore]);
-
-  // Load more cards
-  const loadMoreCards = () => {
-    if (visibleCards >= categories.length) {
-      setHasMore(false);
-      return;
-    }
-    
-    setLoading(true);
-    
-    // Simulate network delay for smooth loading
-    setTimeout(() => {
-      setVisibleCards(prev => Math.min(prev + 2, categories.length));
-      setLoading(false);
-    }, 500);
-  };
-
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Only animate visible cards
-      const visibleElements = imageContainersRef.current.slice(0, visibleCards);
-      
       // 1. Header Reveal
       gsap.from(headerRef.current, {
         y: 30,
-        opacity: 0,
+        autoAlpha: 0,
         duration: 1.2,
         ease: "expo.out",
         scrollTrigger: {
@@ -160,61 +55,80 @@ const PropertyCategories = () => {
         }
       });
 
-      // 2. Staggered Card Entrance for visible cards
-      visibleElements.forEach((imgContainer, i) => {
+      // 2. Card Entrances & Continuous Animations
+      imageContainersRef.current.forEach((imgContainer, i) => {
         if (!imgContainer) return;
-        
+
+        // Entrance animation
         gsap.from(imgContainer, {
           y: 50,
           scale: 0.9,
+          autoAlpha: 0,
           duration: 1.4,
           ease: "power4.out",
           scrollTrigger: {
             trigger: cardsRef.current[i],
-            start: "top 99%",
+            start: "top 100%",
             toggleActions: "play none none none",
           },
           delay: i * 0.1,
         });
 
-        // Subtle movement for depth
+        // Floating loop for the image itself
+        const innerImg = imgContainer.querySelector('img');
+        // if (innerImg) {
+        //   gsap.to(innerImg, {
+        //     y: -5,
+        //     rotation: 0.5,
+        //     duration: 4 + i,
+        //     repeat: -1,
+        //     yoyo: true,
+        //     ease: "sine.inOut",
+        //     force3D: true // GPU acceleration for smoothness
+        //   });
+        // }
+
+        // Secondary subtle sway for the container
         gsap.to(imgContainer, {
           x: "+=5",
           duration: 3 + i,
           repeat: -1,
           yoyo: true,
           ease: "sine.inOut",
-          delay: i * 0.3
+          delay: i * 0.3,
+          force3D: true
         });
       });
 
-      // 3. Cloud animations for visible cards
-      cloudsRef.current.slice(0, visibleCards).forEach((cloudGroup, i) => {
+      // 5. Cloud Drifting
+      cloudsRef.current.forEach((cloudGroup, i) => {
         if (!cloudGroup) return;
         const c1 = cloudGroup.querySelector('.cloud-1');
         const c2 = cloudGroup.querySelector('.cloud-2');
 
         if (c1) {
           gsap.to(c1, { 
-            x: "25%", 
-            y: "-5%",
-            opacity: 0.7,
+            xPercent: 25, 
+            yPercent: -5,
+            autoAlpha: 0.7,
             duration: 10 + i, 
             repeat: -1, 
             yoyo: true, 
-            ease: "sine.inOut" 
+            ease: "sine.inOut",
+            force3D: true
           });
         }
 
         if (c2) {
           gsap.to(c2, { 
-            x: "-25%", 
-            y: "5%",
-            opacity: 0.8,
+            xPercent: -25, 
+            yPercent: 5,
+            autoAlpha: 0.8,
             duration: 14 + i, 
             repeat: -1, 
             yoyo: true, 
-            ease: "sine.inOut" 
+            ease: "sine.inOut",
+            force3D: true
           });
         }
 
@@ -224,11 +138,12 @@ const PropertyCategories = () => {
           duration: 5 + i,
           repeat: -1,
           yoyo: true,
-          ease: "sine.inOut"
+          ease: "sine.inOut",
+          force3D: true
         });
       });
 
-      // 4. Background subtle movement
+      // 6. Background Movement
       gsap.to(sectionRef.current, {
         backgroundPosition: "100px 50px",
         duration: 20,
@@ -240,17 +155,17 @@ const PropertyCategories = () => {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, [visibleCards]); // Re-run animations when visible cards change
+  }, []);
 
   return (
     <section ref={sectionRef} className="py-2 px-4 md:px-10 overflow-hidden">
       <div className="max-w-[1200px] mx-auto">
-        
-        <SearchBar />
+        <div ref={headerRef}>
+          <SearchBar />
+        </div>
 
-        {/* Compact Responsive Grid */}
         <div className="grid grid-cols-2 gap-2 md:gap-4">
-          {categories.slice(0, visibleCards).map((cat, i) => (
+          {categories.map((cat, i) => (
             <div
               key={cat.id}
               ref={el => cardsRef.current[i] = el}
@@ -264,12 +179,16 @@ const PropertyCategories = () => {
                 <CloudSVG className="cloud-2 absolute top-5 -right-5 w-20 md:w-[250px] opacity-90 scale-x-[-1]" />
               </div>
 
-              {/* MIDDLE LAYER with Lazy Loading */}
+              {/* MIDDLE LAYER - With Smooth Lazy Loading */}
               <div ref={el => imageContainersRef.current[i] = el} className='relative z-10 w-full h-full'>
-                <LazyImage
-                  src={cat.img}
+                <img 
+                  src={cat.img} 
                   alt={cat.name}
-                  className="absolute inset-0 w-full h-full scale-140 sm:scale-100 object-cover grayscale-[20%] group-hover:grayscale-50 transition-all duration-700 group-hover:scale-120"
+                  loading="lazy"
+                  onLoad={(e) => {
+                    e.currentTarget.classList.replace('opacity-0', 'opacity-100');
+                  }}
+                  className="absolute inset-0 w-full h-full scale-130 sm:scale-100 object-cover grayscale-[20%] group-hover:grayscale-50 transition-all duration-700 group-hover:scale-120 opacity-0"
                 />
               </div>
               
@@ -286,69 +205,13 @@ const PropertyCategories = () => {
                 </h4>
               </div>
 
-              {/* Corner accents */}
+              {/* Minimalist corner accent */}
               <div className="absolute top-3 left-3 w-4 h-4 border-t border-l border-white/0 group-hover:border-white/30 transition-all duration-500"></div>
               <div className="absolute bottom-3 right-3 w-4 h-4 border-b border-r border-white/0 group-hover:border-white/30 transition-all duration-500"></div>
             </div>
           ))}
-
-          {/* Loading Skeletons */}
-          {loading && (
-            <>
-              {[1, 2].map((_, index) => (
-                <div key={`skeleton-${index}`} className={`${(visibleCards + index) === 4 ? 'col-span-2' : 'col-span-1'}`}>
-                  <CardSkeleton />
-                </div>
-              ))}
-            </>
-          )}
         </div>
-
-        {/* Infinite Scroll Trigger */}
-        {hasMore && !loading && (
-          <div
-            ref={lastCardRef}
-            className="w-full h-10 flex items-center justify-center mt-4"
-          >
-            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-          </div>
-        )}
-
-        {/* Load More Button (Fallback for older browsers) */}
-        {hasMore && (
-          <div className="flex justify-center mt-6 md:hidden">
-            <button
-              onClick={loadMoreCards}
-              disabled={loading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium shadow-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Loading...' : 'Load More'}
-            </button>
-          </div>
-        )}
       </div>
-
-      {/* Add shimmer animation */}
-      <style jsx>{`
-        @keyframes shimmer {
-          0% {
-            background-position: -200% 0;
-          }
-          100% {
-            background-position: 200% 0;
-          }
-        }
-        .animate-shimmer {
-          animation: shimmer 2s infinite;
-          background: linear-gradient(
-            90deg,
-            #f0f0f0 25%,
-            #e0e0e0 50%,
-            #f0f0f0 75%
-          );
-          background-size: 200% 100%;
-        }
-      `}</style>
     </section>
   );
 };
