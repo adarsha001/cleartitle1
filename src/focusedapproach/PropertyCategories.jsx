@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Search } from 'lucide-react';
+import SearchBar from './SearchBar';
 gsap.registerPlugin(ScrollTrigger);
 
 const CloudSVG = ({ className, style }) => (
@@ -113,21 +114,11 @@ useEffect(() => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="py-2 md:py-16 px-4 md:px-10 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+    <section ref={sectionRef} className=" py-2 px-4 md:px-10 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-[1200px] mx-auto">
         
+<SearchBar/>
         {/* Redesigned Header with Changed Typography */}
-    <div className={`relative w-full py-2 max-w-md mx-auto `}>
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Search properties..."
-          className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 placeholder:text-gray-400 cursor-not-allowed opacity-75"
-          disabled
-        />
-      </div>
-    </div>
         {/* Compact Responsive Grid with Updated Typography */}
         <div className="grid grid-cols-2 gap-2 md:gap-4">
           {categories.map((cat, i) => (
