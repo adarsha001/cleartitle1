@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
+import { Search } from 'lucide-react';
 gsap.registerPlugin(ScrollTrigger);
 
 const CloudSVG = ({ className, style }) => (
@@ -72,7 +72,7 @@ useEffect(() => {
 
         // 3. Subtle Floating Effect: Makes the property feel 3D/Hovering
         gsap.to(imgContainer.querySelector('img'), {
-          y: -10,
+          y: -2,
           duration: 3 + i,
           repeat: -1,
           yoyo: true,
@@ -113,22 +113,21 @@ useEffect(() => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="py-10 md:py-16 px-4 md:px-10 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+    <section ref={sectionRef} className="py-2 md:py-16 px-4 md:px-10 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-[1200px] mx-auto">
         
         {/* Redesigned Header with Changed Typography */}
-    <div ref={headerRef} className="relative flex flex-col items-center mb-10 md:mb-16">
-  <div className="flex flex-col items-center gap-2">
-    <h2 className="text-3xl md:text-6xl font-light text-gray-900 tracking-tight">
-      Curated
-    </h2>
-    <div className="w-12 md:w-20 h-[1px] bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
-    <h2 className="text-3xl md:text-6xl font-light italic text-gray-400 tracking-wide">
-      Collections
-    </h2>
-  </div>
-</div>
-
+    <div className={`relative w-full py-2 max-w-md mx-auto `}>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <input
+          type="text"
+          placeholder="Search properties..."
+          className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 placeholder:text-gray-400 cursor-not-allowed opacity-75"
+          disabled
+        />
+      </div>
+    </div>
         {/* Compact Responsive Grid with Updated Typography */}
         <div className="grid grid-cols-2 gap-2 md:gap-4">
           {categories.map((cat, i) => (
@@ -150,7 +149,7 @@ useEffect(() => {
                 <img 
                   src={cat.img} 
                   alt={cat.name}
-                  className="absolute inset-0 w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full scale-120 sm:scale-100 object-cover grayscale-[20%] group-hover:grayscale-75 transition-all duration-700 group-hover:scale-130"
                 />
               </div>
               
@@ -168,15 +167,7 @@ useEffect(() => {
                   {cat.name}
                 </h4>
                 
-                {/* Location text - now visible with lighter styling */}
-                {/* <div className="flex items-center justify-between border-t border-white/10 pt-2 mt-1">
-                  <p className="text-white/50 font-mono text-[5px] md:text-[8px] tracking-[0.2em] uppercase truncate">
-                    {cat.location}
-                  </p>
-                  <span className="text-white/30 text-xs md:text-sm font-light translate-x-4 group-hover:translate-x-0 transition-transform duration-500 group-hover:text-amber-300">
-                    →
-                  </span>
-                </div> */}
+  
               </div>
 
               {/* Minimalist corner accent on hover */}
