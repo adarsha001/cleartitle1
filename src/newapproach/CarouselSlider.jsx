@@ -14,41 +14,31 @@ const ImprovedCarousel = () => {
   const slides = [
     {
       id: 2,
-      image: 'image1.png',
-      mobileImage: '/image2.png',
+      image: 'image1.jpeg',
+      mobileImage: '/image2.jpeg',
+      title: 'Premium Home Interiors',
+      description: 'Transform your space with stunning designs',
+      cta: 'Get Started',
+      badge: 'Featured'
+    },  {
+      id: 3,
+      image: 'image1.jpeg',
+      mobileImage: '/image2.jpeg',
       title: 'Premium Home Interiors',
       description: 'Transform your space with stunning designs',
       cta: 'Get Started',
       badge: 'Featured'
     },
     {
-      id: 3,
-      image: '/Yellow.png',
-      mobileImage: '/yellow2.png',
-      title: 'Reliable Packers & Movers',
-      description: 'Safe and efficient relocation services',
-      cta: 'Request Quote',
-      badge: 'Limited Time'
-    },
-    {
       id: 4,
-      image: '/image31.png',
-      mobileImage: '/image32.png',
-      title: 'Reliable Packers & Movers',
-      description: 'Safe and efficient relocation services',
-      cta: 'Request Quote',
-      badge: 'Limited Time'
-    }
-    ,
-    //     {
-    //   id: 5,
-    //   image: '/test.png',
-    //   mobileImage: '/image32.png',
-    //   title: 'Reliable Packers & Movers',
-    //   description: 'Safe and efficient relocation services',
-    //   cta: 'Request Quote',
-    //   badge: 'Limited Time'
-    // }
+      image: 'image1.jpeg',
+      mobileImage: '/image2.jpeg',
+      title: 'Premium Home Interiors',
+      description: 'Transform your space with stunning designs',
+      cta: 'Get Started',
+      badge: 'Featured'
+    },
+  
   ];
 
 // High-Attention Skeleton Loader Component
