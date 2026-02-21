@@ -59,7 +59,7 @@ useEffect(() => {
       imageContainersRef.current.forEach((imgContainer, i) => {
         gsap.from(imgContainer, {
           y: 50,
-          opacity: 0,
+          // opacity: 0.9,
           scale: 0.9,
           duration: 1.4,
           ease: "power4.out",
@@ -71,50 +71,74 @@ useEffect(() => {
           delay: i * 0.1, // Stagger effect for premium feel
         });
 
-        // 3. Subtle Floating Effect: Makes the property feel 3D/Hovering
-        gsap.to(imgContainer.querySelector('img'), {
-          y: -2,
+
+
+        // 4. Secondary subtle movement for more depth
+        gsap.to(imgContainer, {
+          x: "+=5",
           duration: 3 + i,
           repeat: -1,
           yoyo: true,
           ease: "sine.inOut",
-          delay: i * 0.5
+          delay: i * 0.3
         });
       });
 
-      // 4. Enhanced Cloud Drifting
+      // 5. Enhanced Cloud Drifting with more dynamic X movement
       cloudsRef.current.forEach((cloudGroup, i) => {
         if (!cloudGroup) return;
         const c1 = cloudGroup.querySelector('.cloud-1');
         const c2 = cloudGroup.querySelector('.cloud-2');
+        const c3 = cloudGroup.querySelector('.cloud-3'); // If you have a third cloud
 
-        // Drift Cloud 1
+        // Drift Cloud 1 - Horizontal drift with float
         gsap.to(c1, { 
-          x: "20%", 
-          opacity: 0.8,
-          duration: 12 + i, 
+          x: "25%", 
+          y: "-5%",
+          opacity: 0.7,
+          duration: 10 + i, 
           repeat: -1, 
           yoyo: true, 
           ease: "sine.inOut" 
         });
 
-        // Drift Cloud 2
+        // Drift Cloud 2 - Opposite direction with vertical float
         gsap.to(c2, { 
-          x: "-20%", 
-          opacity: 0.9,
-          duration: 16 + i, 
+          x: "-25%", 
+          y: "5%",
+          opacity: 0.8,
+          duration: 14 + i, 
           repeat: -1, 
           yoyo: true, 
           ease: "sine.inOut" 
+        });
+
+        // Additional subtle floating for cloud group
+        gsap.to(cloudGroup, {
+          y: "+=3",
+          x: "+=2",
+          duration: 5 + i,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
         });
       });
+
+      // 6. Background subtle movement
+      gsap.to(sectionRef.current, {
+        backgroundPosition: "100px 50px",
+        duration: 20,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+
     }, sectionRef);
 
     return () => ctx.revert();
   }, []);
-
   return (
-    <section ref={sectionRef} className=" py-2 px-4 md:px-10 overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+    <section ref={sectionRef} className=" py-2 px-4 md:px-10 overflow-hidden ">
       <div className="max-w-[1200px] mx-auto">
         
 <SearchBar/>
@@ -140,7 +164,7 @@ useEffect(() => {
                 <img 
                   src={cat.img} 
                   alt={cat.name}
-                  className="absolute inset-0 w-full h-full scale-120 sm:scale-100 object-cover grayscale-[20%] group-hover:grayscale-75 transition-all duration-700 group-hover:scale-130"
+                  className="absolute inset-0 w-full h-full scale-140 sm:scale-100 object-cover grayscale-[20%] group-hover:grayscale-50 transition-all duration-700 group-hover:scale-130"
                 />
               </div>
               

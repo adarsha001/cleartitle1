@@ -167,7 +167,7 @@ const ImprovedCarousel = () => {
   };
 
   const renderDesktopCarousel = () => (
-    <div className="w-full h-[50vh] shadow-transparent relative">
+    <div className="w-full h-[35vh] shadow-transparent relative">
       <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/80 via-black/30 via-black/10 to-transparent pointer-events-none z-30 transition-opacity duration-300"></div>
       <div className="h-full">
         <div className="relative w-full h-full overflow-hidden group">
