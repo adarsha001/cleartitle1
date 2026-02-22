@@ -29,7 +29,8 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
   const [pagination, setPagination] = useState({
     page: 1,
     total: 0,
-    pages: 1
+    pages: 1,
+    limit: 10
   });
   const [filterOptions, setFilterOptions] = useState({
     cities: [],
@@ -38,6 +39,10 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
   });
   const [showFilters, setShowFilters] = useState(false);
   const [selectedIds, setSelectedIds] = useState(selectedUnits);
+  const [viewMode, setViewMode] = useState('paginated'); // 'paginated' or 'all'
+
+  // Available page size options
+  const pageSizeOptions = [10, 25, 50, 100];
 
   // Use useRef for debounced function
   const debouncedSearchRef = useRef();
@@ -68,7 +73,7 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
       const params = {
         ...filters,
         page: currentPage,
-        limit: 10,
+        limit: filters.limit,
         excludeBatch: batchId // Exclude units already in this batch
       };
 
@@ -79,14 +84,11 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         }
       });
 
-    //('Fetching property units with params:', params);
-      
       // Try to use batchService first, fall back to propertyUnitAPI
       let response;
       try {
         response = await batchService.getAssignablePropertyUnits(params);
       } catch (error) {
-      //('batchService failed, using propertyUnitAPI:', error);
         // Fall back to propertyUnitAPI
         const apiResponse = await propertyUnitAPI.getPropertyUnits(params);
         response = {
@@ -95,7 +97,8 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
           pagination: apiResponse.data?.pagination || {
             page: currentPage,
             total: (apiResponse.data?.data || apiResponse.data || []).length,
-            pages: 1
+            pages: 1,
+            limit: params.limit
           }
         };
       }
@@ -112,7 +115,8 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         setPagination(response.pagination || {
           page: currentPage,
           total: data.length,
-          pages: 1
+          pages: 1,
+          limit: params.limit
         });
 
         // Set filter options if available
@@ -127,17 +131,86 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
     }
   };
 
+  // Fetch all property units (without pagination)
+  const fetchAllPropertyUnits = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        ...filters,
+        limit: 1000, // Large limit to get all records
+        excludeBatch: batchId
+      };
+
+      // Clean up params
+      Object.keys(params).forEach(key => {
+        if (params[key] === '' || params[key] === null || params[key] === undefined) {
+          delete params[key];
+        }
+      });
+
+      let allUnits = [];
+      let currentPage = 1;
+      let totalPages = 1;
+
+      // Fetch all pages
+      while (currentPage <= totalPages) {
+        const pageParams = { ...params, page: currentPage };
+        
+        let response;
+        try {
+          response = await batchService.getAssignablePropertyUnits(pageParams);
+        } catch (error) {
+          const apiResponse = await propertyUnitAPI.getPropertyUnits(pageParams);
+          response = {
+            success: true,
+            data: apiResponse.data?.data || apiResponse.data || [],
+            pagination: apiResponse.data?.pagination || {
+              page: currentPage,
+              total: 0,
+              pages: 1
+            }
+          };
+        }
+
+        if (response.success) {
+          allUnits = [...allUnits, ...(response.data || [])];
+          totalPages = response.pagination?.pages || 1;
+          setPagination(response.pagination || {
+            page: currentPage,
+            total: allUnits.length,
+            pages: totalPages,
+            limit: params.limit
+          });
+        }
+        
+        currentPage++;
+      }
+
+      setPropertyUnits(allUnits);
+    } catch (error) {
+      console.error('Error fetching all property units:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Initial fetch and when filters change
   useEffect(() => {
-    fetchPropertyUnits(true);
-  }, [filters.search, filters.approvalStatus, filters.availability, filters.city, filters.propertyType, filters.bedrooms]);
-
-  // Load more when scrolling
-  useEffect(() => {
-    if (filters.page > 1) {
-      fetchPropertyUnits(false);
+    if (viewMode === 'paginated') {
+      fetchPropertyUnits(true);
+    } else {
+      fetchAllPropertyUnits();
     }
-  }, [filters.page]);
+  }, [
+    filters.search, 
+    filters.approvalStatus, 
+    filters.availability, 
+    filters.city, 
+    filters.propertyType, 
+    filters.bedrooms,
+    filters.limit,
+    viewMode
+  ]);
 
   // Handle unit selection
   const handleUnitSelect = (unit) => {
@@ -177,27 +250,73 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
     }));
   };
 
-  // Load more units
-  const loadMore = () => {
-    if (pagination.page < pagination.pages) {
-      setFilters(prev => ({ ...prev, page: prev.page + 1 }));
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    const newLimit = parseInt(e.target.value);
+    setFilters(prev => ({
+      ...prev,
+      limit: newLimit,
+      page: 1
+    }));
+  };
+
+  // Pagination navigation
+  const goToPage = (page) => {
+    if (page >= 1 && page <= pagination.pages) {
+      setFilters(prev => ({ ...prev, page }));
     }
   };
 
   // Get selected units count
   const selectedCount = selectedIds.length;
 
+  // Calculate page numbers to display
+  const getPageNumbers = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= pagination.pages; i++) {
+      if (i === 1 || i === pagination.pages || (i >= pagination.page - delta && i <= pagination.page + delta)) {
+        range.push(i);
+      }
+    }
+
+    range.forEach((i) => {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    });
+
+    return rangeWithDots;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold text-gray-800">Select Property Units</h3>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
-          >
-            {showFilters ? 'Hide Filters' : 'Show Filters'}
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setViewMode(viewMode === 'paginated' ? 'all' : 'paginated')}
+              className="px-3 py-1 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md transition-colors"
+            >
+              {viewMode === 'paginated' ? 'Show All' : 'Show Paginated'}
+            </button>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+            >
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+            </button>
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -284,6 +403,9 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
             </span>
           </div>
           <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-600">
+              Total: <span className="font-semibold">{pagination.total}</span> units
+            </span>
             <button
               onClick={handleBulkSelect}
               className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors"
@@ -311,6 +433,28 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
           </div>
         ) : (
           <>
+            {/* Page Size Selector */}
+            {viewMode === 'paginated' && (
+              <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-gray-600">Show:</label>
+                  <select
+                    value={filters.limit}
+                    onChange={handlePageSizeChange}
+                    className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {pageSizeOptions.map(size => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                  <span className="text-sm text-gray-600">per page</span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Showing {(pagination.page - 1) * filters.limit + 1} - {Math.min(pagination.page * filters.limit, pagination.total)} of {pagination.total}
+                </div>
+              </div>
+            )}
+
             <div className="max-h-96 overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0">
@@ -402,8 +546,69 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
               </table>
             </div>
 
-            {/* Load More Button */}
-            {pagination.page < pagination.pages && (
+            {/* Pagination Controls */}
+            {viewMode === 'paginated' && pagination.pages > 1 && (
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => goToPage(1)}
+                      disabled={pagination.page === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                    >
+                      First
+                    </button>
+                    <button
+                      onClick={() => goToPage(pagination.page - 1)}
+                      disabled={pagination.page === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                    >
+                      Previous
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center space-x-1">
+                    {getPageNumbers().map((pageNum, index) => (
+                      pageNum === '...' ? (
+                        <span key={`dots-${index}`} className="px-3 py-1 text-sm text-gray-500">...</span>
+                      ) : (
+                        <button
+                          key={pageNum}
+                          onClick={() => goToPage(pageNum)}
+                          className={`px-3 py-1 text-sm border rounded-md ${
+                            pagination.page === pageNum
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'border-gray-300 hover:bg-gray-100'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    ))}
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => goToPage(pagination.page + 1)}
+                      disabled={pagination.page === pagination.pages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={() => goToPage(pagination.pages)}
+                      disabled={pagination.page === pagination.pages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                    >
+                      Last
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Load More Button (for backward compatibility) */}
+            {viewMode === 'paginated' && pagination.page < pagination.pages && (
               <div className="p-4 border-t border-gray-200 text-center">
                 <button
                   onClick={loadMore}

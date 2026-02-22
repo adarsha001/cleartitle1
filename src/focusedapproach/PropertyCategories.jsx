@@ -34,11 +34,11 @@ const PropertyCategories = () => {
   const headerRef = useRef(null);
 
   const categories = [
-    { id: 'Apartment', name: 'Apartments', tagline: 'CURATED URBAN', location: 'Indiranagar', img: '/testing.png', bgColor: 'bg-black-500' },
-    { id: 'Villa', name: 'Estate Villas', tagline: 'ARCHITECTURAL', location: 'Whitefield', img: 'villa.png', bgColor: 'bg-sky-500' },
-    { id: 'Commercial', name: 'Commercial', tagline: 'STRATEGIC', location: 'Manyata', img: '/commercial.png', bgColor: 'bg-sky-200' },
-    { id: 'Plot', name: 'Plot', tagline: 'BESPOKE', location: 'Devanahalli', img: 'plot.png', bgColor: 'bg-sky-200' },
-    { id: 'House', name: 'House', tagline: 'TIMELESS HERITAGE', location: 'Sadashivnagar • Bangalore', img: 'indepentent.png', bgColor: 'bg-sky-100' }
+    { id: 'Apartment', name: 'Apartments', tagline: 'CURATED URBAN', location: 'Indiranagar', img: '/testing.png', bgColor: 'bg-blue-200' },
+    { id: 'Villa', name: 'Estate Villas', tagline: 'ARCHITECTURAL', location: 'Whitefield', img: 'villa.png', bgColor: 'bg-blue-200' },
+    { id: 'Commercial', name: 'Commercial', tagline: 'STRATEGIC', location: 'Manyata', img: '/commercial.png', bgColor: 'bg-blue-200' },
+    { id: 'Plot', name: 'Plot', tagline: 'BESPOKE', location: 'Devanahalli', img: 'plot.png', bgColor: 'bg-blue-200' },
+    { id: 'House', name: 'House', tagline: 'TIMELESS HERITAGE', location: 'Sadashivnagar • Bangalore', img: 'indepentent.png', bgColor: 'bg-blue-200' }
   ];
 
   useEffect(() => {
@@ -188,7 +188,7 @@ const PropertyCategories = () => {
                   onLoad={(e) => {
                     e.currentTarget.classList.replace('opacity-0', 'opacity-100');
                   }}
-                  className="absolute inset-0 w-full h-full scale-130 sm:scale-100 object-cover grayscale-[20%] group-hover:grayscale-50 transition-all duration-700 group-hover:scale-120 opacity-0"
+                  className="absolute inset-0 w-full h-full scale-130 sm:scale-100 object-cover saturate-100 group-hover:grayscale-50 transition-all duration-700 group-hover:scale-120 opacity-0"
                 />
               </div>
               
