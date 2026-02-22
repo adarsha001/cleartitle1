@@ -222,7 +222,7 @@ const ListingTypeView = () => {
           total: allUnits.length
         };
         
-        setStats(stats);
+        // setStats(stats);
         
         // Load initial properties for selected type
         fetchPropertiesForType(selectedType, 1, false);

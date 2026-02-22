@@ -18,6 +18,7 @@ import AdminAgentPanel from "./AdminAgentPanel"; // Add this import
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BatchAdminPanel from "./BatchAdminPanel";
+import CarouselAdmin from "./CarouselAdmin";
 
 // Inline LoadingSpinner component
 const LoadingSpinner = ({ message = "Loading..." }) => {
@@ -195,6 +196,8 @@ const AdminDashboard = () => {
         );
       case "users":
         return <AdminUsers />;
+              case "carosel":
+        return <CarouselAdmin />;
             case "BatchAdminPanel":
         return <BatchAdminPanel />;
       case "analytics":
@@ -383,7 +386,22 @@ const AdminDashboard = () => {
               </svg>
               <span>Agents</span>
             </button>
-
+       <button
+              onClick={() => {
+                setActiveSection("carosel");
+                setError(null);
+              }}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+                activeSection === "carosel"
+                  ? "bg-pink-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>carosel</span>
+            </button>
             <button
               onClick={() => {
                 setActiveSection("agent-management");

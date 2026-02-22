@@ -44,6 +44,7 @@ import BatchUpdateForm from "./components/BatchUpdateForm";
 import BatchDetails from "./components/BatchDetails";
 import CategoryPropertiesPage from "./focusedapproach/CategoryPropertiesPage";
 import Finalized from "./focusedapproach/finalized";
+import CarouselAdmin from "./components/CarouselAdmin";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -238,7 +239,7 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
-                
+                 <Route path="/admin/carousel" element={<CarouselAdmin />} />
                 <Route
                   path="/add-property"
                   element={

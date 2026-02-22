@@ -172,12 +172,12 @@ const PossessionTimeline = () => {
       if (res.data && res.data.success) {
         const allUnits = res.data.data || [];
         
-        setStats({
-          "ready-to-move": allUnits.filter(unit => unit.possessionStatus === "ready-to-move").length,
-          "under-construction": allUnits.filter(unit => unit.possessionStatus === "under-construction").length,
-          "resale": allUnits.filter(unit => unit.possessionStatus === "resale").length,
-          total: allUnits.length
-        });
+        // setStats({
+        //   "ready-to-move": allUnits.filter(unit => unit.possessionStatus === "ready-to-move").length,
+        //   "under-construction": allUnits.filter(unit => unit.possessionStatus === "under-construction").length,
+        //   "resale": allUnits.filter(unit => unit.possessionStatus === "resale").length,
+        //   total: allUnits.length
+        // });
         
         // Load initial properties
         fetchPropertiesForCategory("ready-to-move", 1);

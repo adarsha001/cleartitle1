@@ -1,58 +1,89 @@
-// components/ImprovedCarousel.jsx
+// components/CategoryBanner.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Circle, Pause, Play, Menu, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Circle, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import carouselService from '../api/carouselApi';
 
-const ImprovedCarousel = () => {
+const CategoryBanner = ({ categoryId, categoryName }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [slides, setSlides] = useState([]);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  // Fetch slides from API
+  // Fetch category-specific slides from API with fallback to main banners
   useEffect(() => {
     const fetchSlides = async () => {
       try {
         setIsLoading(true);
-        const response = await carouselService.getImages({ 
-          isMainBanner: true, 
+        
+        // First try to fetch category-specific images
+        let response = await carouselService.getImages({ 
+          propertyType: categoryId,
           isActive: true,
-          limit: 10 
+          limit: 10
         });
         
-        if (response.data && response.data.data) {
-          // Transform API data to match your exact slide format
+        // If no category images found, fallback to main banners
+        if (!response.data?.data || response.data.data.length === 0) {
+          console.log(`No images found for ${categoryId}, falling back to main banners`);
+          response = await carouselService.getImages({ 
+            isMainBanner: true,
+            isActive: true,
+            limit: 10
+          });
+        }
+        
+        if (response.data && response.data.data && response.data.data.length > 0) {
+          // Transform API data to match slide format
           const formattedSlides = response.data.data.map(item => ({
             id: item._id,
             image: item.desktopImageUrl,
             mobileImage: item.mobileImageUrl || item.desktopImageUrl,
             title: item.title,
-            description: item.description || 'Transform your space with stunning designs',
-            cta: 'Get Started',
-            badge: item.isMainBanner ? 'Featured' : (item.propertyType || 'Featured'),
-            link: item.link || '#' // Add link field
+            description: item.description || `Discover premium ${categoryName}`,
+            badge: item.isMainBanner ? 'Featured' : (item.propertyType || categoryName),
+            link: item.link || '#'
           }));
           
           setSlides(formattedSlides);
-        } 
+        } else {
+          // Ultimate fallback: Create a default slide with category info
+          setSlides([{
+            id: 'default-1',
+            image: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+            mobileImage: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+            title: `Premium ${categoryName}`,
+            description: `Discover premium ${categoryName} with world-class amenities`,
+            badge: categoryName,
+            link: '#'
+          }]);
+        }
       } catch (err) {
-        console.error('Error fetching carousel images:', err);
-        setError(err.message);
-        // Fallback to default slides on error
-     
+        console.error('Error fetching slides:', err);
+        // Fallback to default on error
+        setSlides([{
+          id: 'default-2',
+          image: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+          mobileImage: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+          title: `Premium ${categoryName}`,
+          description: `Discover premium ${categoryName} with world-class amenities`,
+          badge: categoryName,
+          link: '#'
+        }]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchSlides();
-  }, []);
+    if (categoryId) {
+      fetchSlides();
+    }
+  }, [categoryId, categoryName]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -60,7 +91,10 @@ const ImprovedCarousel = () => {
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
+  useEffect(() => {
     // Image Preloading Logic
     const preloadImages = async () => {
       if (slides.length === 0) return;
@@ -70,7 +104,7 @@ const ImprovedCarousel = () => {
           const img = new Image();
           img.src = isMobile ? slide.mobileImage : slide.image;
           img.onload = resolve;
-          img.onerror = resolve; // Continue even if one fails
+          img.onerror = resolve;
         });
       });
       await Promise.all(promises);
@@ -80,8 +114,6 @@ const ImprovedCarousel = () => {
     if (slides.length > 0) {
       preloadImages();
     }
-
-    return () => window.removeEventListener('resize', checkMobile);
   }, [isMobile, slides]);
 
   const goToSlide = useCallback((index) => {
@@ -117,7 +149,6 @@ const ImprovedCarousel = () => {
     }
   };
 
-  // Handle banner click to open link
   const handleBannerClick = () => {
     if (slides.length > 0 && slides[currentIndex]?.link && slides[currentIndex].link !== '#') {
       window.open(slides[currentIndex].link, '_blank');
@@ -134,39 +165,15 @@ const ImprovedCarousel = () => {
     };
   }, [isPlaying, isHovering, goToNext, isLoading, slides.length]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') goToPrev();
-      if (e.key === 'ArrowRight') goToNext();
-      if (e.key === ' ') {
-        e.preventDefault();
-        setIsPlaying(prev => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goToPrev, goToNext]);
-
-  const togglePlayPause = () => {
-    setIsPlaying(prev => !prev);
-  };
-
-  // High-Attention Skeleton Loader Component (your exact design)
+  // Skeleton Loader
   const Skeleton = () => (
     <div className={`w-full ${isMobile ? 'h-[35vh]' : 'h-[50vh]'} bg-slate-100 relative overflow-hidden flex items-center justify-center`}>
-      {/* Primary Shimmer Layer */}
       <div className="absolute inset-0 translate-x-[-100%] animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-blue-500/10 to-transparent z-10" />
-      
-      {/* Secondary Depth Layer */}
       <div className="absolute inset-0 translate-x-[-100%] animate-[shimmer_2s_infinite_delay-200] bg-gradient-to-r from-transparent via-white/40 to-transparent z-20" />
-
-      {/* Center Decorative Branding (Attracts the eye to the center) */}
       <div className="relative z-30 flex flex-col items-center gap-3 opacity-20">
         <div className="w-12 h-12 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
         <span className="text-xs font-bold tracking-[0.3em] text-slate-900 uppercase">Loading Experience</span>
       </div>
-
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
@@ -174,12 +181,9 @@ const ImprovedCarousel = () => {
         }
         .delay-200 { animation-delay: 0.2s; }
       `}} />
-      
-      {/* Bottom Progress Indicator Placeholder */}
       <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-200">
         <div className="h-full bg-blue-600/30 animate-[progress_2s_infinite]" style={{width: '30%'}} />
       </div>
-      
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes progress {
           0% { width: 0%; left: 0%; }
@@ -190,8 +194,24 @@ const ImprovedCarousel = () => {
     </div>
   );
 
+  if (isLoading) return <Skeleton />;
+  if (slides.length === 0) return <Skeleton />;
+
+  // Desktop Carousel
   const renderDesktopCarousel = () => (
-    <div className="w-full h-[35vh] shadow-transparent relative">
+    <div className="w-full h-[30vh] shadow-transparent relative">
+      {/* Back Button - Positioned absolutely on top of the carousel */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(-1);
+        }}
+        className="absolute top-4 left-4 z-50 flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm">Back</span>
+      </button>
+
       <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/80 via-black/30 via-black/10 to-transparent pointer-events-none z-30 transition-opacity duration-300"></div>
       <div className="h-full">
         <div className="relative w-full h-full overflow-hidden group">
@@ -219,9 +239,16 @@ const ImprovedCarousel = () => {
                   <img
                     src={slide.image}
                     alt={slide.title}
-                    className="w-full h-full object-center"
+                    className="w-full h-full object-cover"
                     loading={index === currentIndex ? 'eager' : 'lazy'}
                   />
+                </div>
+                
+                {/* Category Badge - Top Right */}
+                <div className="absolute top-4 right-4 z-40">
+                  <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-sm rounded-full border border-white/30">
+                    {slide.badge}
+                  </span>
                 </div>
               </div>
             ))}
@@ -287,9 +314,23 @@ const ImprovedCarousel = () => {
     </div>
   );
 
+  // Mobile Carousel
   const renderMobileCarousel = () => (
     <div className="w-full bg-white">
       <div className="relative">
+        {/* Mobile Back Button */}
+        <div className="absolute top-4 left-4 z-50">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(-1);
+            }}
+            className="p-2 bg-black/20 backdrop-blur-sm rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </button>
+        </div>
+
         <div 
           className="relative h-[35vh] overflow-hidden cursor-pointer"
           onTouchStart={handleTouchStart}
@@ -307,22 +348,35 @@ const ImprovedCarousel = () => {
               <img
                 src={slide.mobileImage}
                 alt={slide.title}
-                className="w-full h-full object-center"
+                className="w-full h-full object-cover"
               />
+              
+              {/* Mobile Badge - Top Right */}
+              <div className="absolute top-4 right-4 z-40">
+                <span className="px-2 py-1 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full border border-white/30">
+                  {slide.badge}
+                </span>
+              </div>
             </div>
+          ))}
+        </div>
+        
+        {/* Mobile Indicators */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+          {slides.map((_, index) => (
+            <div
+              key={index}
+              className={`h-1 rounded-full transition-all ${
+                index === currentIndex ? 'w-6 bg-white' : 'w-2 bg-white/50'
+              }`}
+            />
           ))}
         </div>
       </div>
     </div>
   );
 
-  // If still loading, show skeleton
-  if (isLoading) return <Skeleton />;
-
-  // If no slides after loading, show skeleton or empty state
-  if (slides.length === 0) return <Skeleton />;
-
   return isMobile ? renderMobileCarousel() : renderDesktopCarousel();
 };
 
-export default ImprovedCarousel;
+export default CategoryBanner;

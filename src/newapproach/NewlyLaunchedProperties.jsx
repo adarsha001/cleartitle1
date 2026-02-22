@@ -194,7 +194,7 @@ export default function NewlyLaunchedProperties() {
           });
         });
 
-        setStats(stats);
+        // setStats(stats);
         
         // Load initial properties
         fetchNewlyLaunchedProperties("14", 1);

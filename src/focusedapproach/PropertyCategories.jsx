@@ -34,7 +34,7 @@ const PropertyCategories = () => {
   const headerRef = useRef(null);
 
   const categories = [
-    { id: 'Apartment', name: 'Apartments', tagline: 'CURATED URBAN', location: 'Indiranagar', img: '/testing.png', bgColor: 'bg-sky-500' },
+    { id: 'Apartment', name: 'Apartments', tagline: 'CURATED URBAN', location: 'Indiranagar', img: '/testing.png', bgColor: 'bg-black-500' },
     { id: 'Villa', name: 'Estate Villas', tagline: 'ARCHITECTURAL', location: 'Whitefield', img: 'villa.png', bgColor: 'bg-sky-500' },
     { id: 'Commercial', name: 'Commercial', tagline: 'STRATEGIC', location: 'Manyata', img: '/commercial.png', bgColor: 'bg-sky-200' },
     { id: 'Plot', name: 'Plot', tagline: 'BESPOKE', location: 'Devanahalli', img: 'plot.png', bgColor: 'bg-sky-200' },
@@ -69,7 +69,7 @@ const PropertyCategories = () => {
           scrollTrigger: {
             trigger: cardsRef.current[i],
             start: "top 100%",
-            toggleActions: "play none none none",
+            toggleActions: "play none 5 none",
           },
           delay: i * 0.1,
         });

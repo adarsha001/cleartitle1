@@ -48,6 +48,8 @@ import {
 import { propertyUnitAPI } from '../api/propertyUnitAPI';
 import PropertyUnitCard from '../components/PropertyUnitCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import ImprovedCarousel from '../newapproach/CarouselSlider';
+import CategoryBanner from './CategoryBanner';
 
 // Premium Category Icons
 const categoryIcons = {
@@ -583,80 +585,8 @@ const CategoryPropertiesPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Premium Hero Section */}
-      <div className={`relative bg-gradient-to-r ${theme.primary} overflow-hidden`}>
-        {/* Abstract Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
-        </div>
+<CategoryBanner categoryId={categoryId} categoryName={categoryName} />
 
-        {/* Geometric Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <pattern id="grid" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M10 0 L0 0 0 10" fill="none" stroke="white" strokeWidth="0.5" />
-            </pattern>
-            <rect x="0" y="0" width="100" height="100" fill="url(#grid)" />
-          </svg>
-        </div>
-
-        <div className="relative container mx-auto px-4 py-12">
-          <motion.button
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-white/80 hover:text-white mb-8 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Back</span>
-          </motion.button>
-
-          <div className="flex items-start gap-6">
-            {/* Premium Icon */}
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring" }}
-              className="relative"
-            >
-              <div className="absolute inset-0 bg-white blur-2xl opacity-30 rounded-2xl"></div>
-              <div className="relative p-5 bg-white/20 backdrop-blur-xl rounded-2xl border border-white/30">
-                {categoryIcons[categoryId] || <Building className="w-10 h-10 text-white" />}
-              </div>
-            </motion.div>
-
-            {/* Category Info */}
-            <motion.div
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              className="flex-1"
-            >
-              <div className="flex items-center gap-4 mb-2">
-                <h1 className="text-4xl font-bold text-white">{categoryName}</h1>
-                {/* <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-sm rounded-full border border-white/30">
-                  {totalCount} properties
-                </span> */}
-              </div>
-              
-              <p className="text-white/80 text-lg max-w-2xl">
-                Discover premium {categoryName} with world-class amenities
-              </p>
-
-              {/* Quick Stats */}
-              <div className="flex gap-4 mt-6">
-                {/* <div className="flex items-center gap-2 text-white/70 text-sm">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>Avg. ₹75L</span>
-                </div> */}
-                {/* <div className="flex items-center gap-2 text-white/70 text-sm">
-                  <MapPin className="w-4 h-4" />
-                  <span>Prime Locations</span>
-                </div> */}
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </div>
 
       {/* Sticky Search Bar */}
       <div className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
@@ -753,11 +683,7 @@ const CategoryPropertiesPage = () => {
                 )}
               </div>
 
-              {/* Price Range */}
-              {/* <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Price Range</h4>
-                <PriceRangeSelector />
-              </div> */}
+      
 
               {/* Listing Type */}
               <div className="mb-6">
@@ -859,26 +785,7 @@ const CategoryPropertiesPage = () => {
                 </div>
               </div>
 
-              {/* Amenities */}
-              {/* <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Amenities</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {filterOptions.amenities.map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      onClick={() => handleAmenityToggle(id)}
-                      className={`p-3 rounded-xl border-2 transition-all flex items-center gap-2 ${
-                        filters.amenities?.includes(id)
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" strokeWidth={1.5} />
-                      <span className="text-xs">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div> */}
+          
             </div>
           </div>
 
@@ -1026,68 +933,7 @@ const CategoryPropertiesPage = () => {
         </div>
         
         <div className="p-4 space-y-6 pb-24">
-          {/* Mobile Price Range - Enhanced */}
-          {/* <div>
-            <h4 className="font-medium mb-3 flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-blue-500" />
-              Price Range
-            </h4>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">Min Price (₹)</label>
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={filters.minPrice || ''}
-                  onChange={(e) => handlePriceChange('min', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none"
-                  min="0"
-                  step="100000"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">Max Price (₹)</label>
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={filters.maxPrice || ''}
-                  onChange={(e) => handlePriceChange('max', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none"
-                  min="0"
-                  step="100000"
-                />
-              </div>
-            </div>
-            
-        
-            {priceError && (
-              <p className="text-xs text-red-500 flex items-center gap-1 mb-2">
-                <X className="w-3 h-3" />
-                {priceError}
-              </p>
-            )}
-
-         
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: 'Under ₹50L', min: 0, max: 5000000 },
-                { label: '₹50L-1Cr', min: 5000000, max: 10000000 },
-                { label: '₹1Cr-2Cr', min: 10000000, max: 20000000 },
-                { label: 'Above ₹2Cr', min: 20000000, max: 100000000 }
-              ].map((preset, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    handlePriceChange('min', preset.min);
-                    handlePriceChange('max', preset.max);
-                  }}
-                  className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div> */}
+     
         <div>
             <h4 className="font-medium mb-3 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-blue-500" />
@@ -1241,29 +1087,7 @@ const CategoryPropertiesPage = () => {
             </div>
           </div>
 
-          {/* Mobile Amenities */}
-          {/* <div>
-            <h4 className="font-medium mb-3 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-blue-500" />
-              Amenities
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              {filterOptions.amenities.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => handleAmenityToggle(id)}
-                  className={`p-3 rounded-xl border-2 transition-all flex items-center gap-2 ${
-                    filters.amenities?.includes(id)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-gray-100 border-transparent text-gray-700'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" strokeWidth={1.5} />
-                  <span className="text-xs">{label}</span>
-                </button>
-              ))}
-            </div>
-          </div> */}
+       
 
           {/* Mobile Sort Options */}
   
