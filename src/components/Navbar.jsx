@@ -227,8 +227,8 @@ function MobileNav({
           className="h-full w-full bg-white flex flex-col"
         >
           {/* Menu Header */}
-          <div className="flex-shrink-0">
-            <div className="flex items-center justify-between p-4 border-b bg-white">
+          <div className="flex-shrink-0 ">
+            <div className="flex items-center justify-between p-4 border-b ">
               <Link 
                 to="/" 
                 className="flex items-center" 
@@ -398,9 +398,9 @@ export default function Navbar() {
 
   return (
     <>
-<nav className="md:absolute pb-3 md:border-0 top-0 left-0 w-full z-50 md:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex  items-center justify-between h-16">
+<nav className="md:absolute  md:border-0 top-0 left-0 w-full bg-blue-200 sm:bg-transparent z-50 md:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+          <div className="flex  items-center justify-between  h-16">
             <Link to="/" className="flex items-center" onClick={closeMobileMenu}>
               <img 
                 src="/logo.png" 
