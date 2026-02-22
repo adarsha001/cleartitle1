@@ -395,7 +395,7 @@ export default function EnhancedFooter() {
             href="tel:+9190190 67239" 
             className="text-blue-100 hover:text-white transition-colors"
           >
-            +91 77889 99022
+            +91 9019067239
           </a>
         </li>
         <li className="flex items-center gap-3">

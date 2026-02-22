@@ -130,25 +130,25 @@ const ListingTypeView = () => {
         { icon: Award, text: "Long term", color: "purple" }
       ]
     },
-    {
-      id: "pg",
-      title: "PG Buildings for Sale",
-      shortTitle: "PG",
-      subtitle: "Commercial PG properties",
-      description: "Complete buildings suitable for Paying Guest business",
-      icon: <Hotel className="w-4 h-4 md:w-5 md:h-5" />,
-      color: "amber",
-      bgColor: "from-amber-50 to-orange-50",
-      borderColor: "border-amber-200",
-      textColor: "text-amber-700",
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
-      features: [
-        { icon: Hotel, text: "PG business", color: "amber" },
-        { icon: Users, text: "High ROI", color: "amber" },
-        { icon: Target, text: "Commercial zone", color: "amber" }
-      ]
-    }
+    // {
+    //   id: "pg",
+    //   title: "PG Buildings for Sale",
+    //   shortTitle: "PG",
+    //   subtitle: "Commercial PG properties",
+    //   description: "Complete buildings suitable for Paying Guest business",
+    //   icon: <Hotel className="w-4 h-4 md:w-5 md:h-5" />,
+    //   color: "amber",
+    //   bgColor: "from-amber-50 to-orange-50",
+    //   borderColor: "border-amber-200",
+    //   textColor: "text-amber-700",
+    //   iconBg: "bg-amber-100",
+    //   iconColor: "text-amber-600",
+    //   features: [
+    //     { icon: Hotel, text: "PG business", color: "amber" },
+    //     { icon: Users, text: "High ROI", color: "amber" },
+    //     { icon: Target, text: "Commercial zone", color: "amber" }
+    //   ]
+    // }
   ];
 
   const currentCategory = listingTypes.find(c => c.id === selectedType);
@@ -652,7 +652,7 @@ const ListingTypeView = () => {
     
 
         {/* Desktop Category Selector */}
-        <div className="hidden md:grid md:grid-cols-4 gap-6 max-w-6xl mx-auto mb-12">
+        <div className="hidden md:grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-12">
           {listingTypes.map((category) => {
             const isSelected = selectedType === category.id;
             
