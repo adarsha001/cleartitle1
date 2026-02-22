@@ -161,8 +161,8 @@ const PropertyCategories = () => {
     <section ref={sectionRef} className="py-2 px-4 md:px-10 overflow-hidden">
       <div className="max-w-[1200px] mx-auto">
         <div ref={headerRef}>
-          <SearchBar />
         </div>
+          <SearchBar />
 
         <div className="grid grid-cols-2 gap-2 md:gap-4">
           {categories.map((cat, i) => (
