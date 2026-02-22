@@ -89,15 +89,15 @@ const PropertyCategories = () => {
         // }
 
         // Secondary subtle sway for the container
-        gsap.to(imgContainer, {
-          x: "+=5",
-          duration: 3 + i,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-          delay: i * 0.3,
-          force3D: true
-        });
+        // gsap.to(imgContainer, {
+        //   x: "+=5",
+        //   duration: 3 + i,
+        //   repeat: -1,
+        //   yoyo: true,
+        //   ease: "sine.inOut",
+        //   delay: i * 0.3,
+        //   force3D: true
+        // });
       });
 
       // 5. Cloud Drifting
