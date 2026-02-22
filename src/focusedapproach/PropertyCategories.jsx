@@ -38,7 +38,7 @@ const PropertyCategories = () => {
     { id: 'Villa', name: 'Estate Villas', tagline: 'ARCHITECTURAL', location: 'Whitefield', img: 'villa.png', bgColor: 'bg-blue-200' },
     { id: 'Commercial', name: 'Commercial', tagline: 'STRATEGIC', location: 'Manyata', img: '/commercial.png', bgColor: 'bg-blue-200' },
     { id: 'Plot', name: 'Plot', tagline: 'BESPOKE', location: 'Devanahalli', img: 'plot.png', bgColor: 'bg-blue-200' },
-    { id: 'House', name: 'House', tagline: 'TIMELESS HERITAGE', location: 'Sadashivnagar • Bangalore', img: 'indepentent.png', bgColor: 'bg-blue-200' }
+    { id: 'House', name: 'Independent House', tagline: 'TIMELESS HERITAGE', location: 'Sadashivnagar • Bangalore', img: 'indepentent.png', bgColor: 'bg-blue-200' }
   ];
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const PropertyCategories = () => {
 
         // Entrance animation
         gsap.from(imgContainer, {
-          y: 50,
+          y: 10,
           scale: 0.9,
           autoAlpha: 0,
           duration: 1.4,
