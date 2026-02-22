@@ -66,11 +66,11 @@ const PropertyCategories = () => {
           autoAlpha: 0,
           duration: 1.4,
           ease: "power4.out",
-          scrollTrigger: {
-            trigger: cardsRef.current[i],
-            start: "top 100%",
-            toggleActions: "play none 5 none",
-          },
+          // scrollTrigger: {
+          //   trigger: cardsRef.current[i],
+          //   start: "top 100%",
+          //   toggleActions: "play none 5 none",
+          // },
           delay: i * 0.1,
         });
 
@@ -174,7 +174,8 @@ const PropertyCategories = () => {
                 ${i === 4 ? 'col-span-2' : 'col-span-1'}`}
             >
               {/* BACK LAYER */}
-              <div ref={el => cloudsRef.current[i] = el} className={`absolute inset-0 z-0 ${cat.bgColor}`}>
+              <div ref={el => cloudsRef.current[i] = el} className={`absolute inset-0 z-0 ${cat.bgColor} group-hover:grayscale-75 `}>
+                
                 <CloudSVG className="cloud-1 absolute top-2 -left-5 w-24 md:w-[300px] opacity-80" />
                 <CloudSVG className="cloud-2 absolute top-5 -right-5 w-20 md:w-[250px] opacity-90 scale-x-[-1]" />
               </div>
@@ -188,7 +189,7 @@ const PropertyCategories = () => {
                   onLoad={(e) => {
                     e.currentTarget.classList.replace('opacity-0', 'opacity-100');
                   }}
-                  className="absolute inset-0 w-full h-full scale-130 sm:scale-100 object-cover saturate-100 group-hover:grayscale-50 transition-all duration-700 group-hover:scale-120 opacity-0"
+                  className="absolute inset-0 w-full h-full scale-130 sm:scale-100 object-cover saturate-100 transition-all duration-700 group-hover:scale-120 opacity-0"
                 />
               </div>
               
