@@ -17,7 +17,7 @@ import {
   Home,
   Star,
   Shield,
-  MoreHorizontal
+  MoreHorizontal,Building2 
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
@@ -564,13 +564,13 @@ export default function NewlyLaunchedProperties() {
                   </p>
                 </div>
 
-                <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
+                {/* <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
                   isSelected
                     ? `bg-${category.color}-200 text-${category.color}-800`
                     : 'bg-gray-100 text-gray-600'
                 }`}>
                   {stats[category.days]} Properties
-                </div>
+                </div> */}
 
                 <div className={`mt-4 flex items-center gap-1 text-sm font-medium transition-all duration-500 ${
                   isSelected ? category.textColor : 'text-gray-400 group-hover:text-gray-600'
