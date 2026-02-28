@@ -432,11 +432,11 @@ const PossessionTimeline = () => {
         {/* Desktop Skeleton */}
         <div className="hidden md:block">
           <div className="text-center mb-16">
-            <div className="h-12 bg-gray-200 rounded-xl w-96 mx-auto mb-4 animate-pulse"></div>
+            <div className="h-12 bg-gray-300 rounded-xl w-96 mx-auto mb-4 animate-pulse"></div>
           </div>
           <div className="grid grid-cols-3 gap-6">
             {[1,2,3,4,5,6].map(i => (
-              <div key={i} className="h-80 bg-gray-100 rounded-2xl animate-pulse"></div>
+              <div key={i} className="h-80 bg-gray-300 rounded-2xl animate-pulse"></div>
             ))}
           </div>
         </div>
@@ -626,7 +626,7 @@ const PossessionTimeline = () => {
                     <div 
                       ref={scrollContainerRef}
                       onScroll={handleScroll}
-                      className="flex space-x-3 pb-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+                      className="flex space-x-3 pb-3  overflow-x-auto scrollbar-hide snap-x snap-mandatory"
                       style={{ scrollbarWidth: 'none' }}
                     >
                       {propertyUnits.map((property) => (
@@ -679,7 +679,7 @@ const PossessionTimeline = () => {
   </div>
 
   {/* Property Units Grid */}
-  <div ref={gridContainerRef} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div ref={gridContainerRef} className="grid grid-cols-2 md:grid-cols-2 gap-4">
     {propertyUnits.map((property) => (
       <div key={property._id} className="transform transition-all duration-300 hover:scale-[1.02]">
         <PropertyUnitCard propertyUnit={property} viewMode="compact" />
