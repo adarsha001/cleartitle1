@@ -129,7 +129,7 @@ const PropertyCategories = () => {
   }, []);
 
   return (
-<div className="flex flex-col lg:flex-row justify-end items-start ">
+<div className="flex flex-col lg:flex-row justify-end items-start overflow-x-hidden">
   {/* Property Categories Section - Takes full width on mobile, adjusted on desktop */}
    <div className="hidden lg:block lg:w-[45%] xl:w-[50%]"></div>
   <section ref={sectionRef} className="w-full lg:w-[calc(65%)] py-4 sm:py-6 lg:py-8 overflow-hidden">
