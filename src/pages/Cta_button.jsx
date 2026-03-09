@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogIn, 
@@ -16,14 +16,26 @@ import {
   Award,
   Building2,
   TrendingUp,
-  CheckCircle2
+  CheckCircle2,
+  Phone,
+  Mail,
+  MapPin
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import API from '../api/axios.js';
 
 const LuxuryAuthCTA = () => {
-  const { isAuthenticated, userInfo, loading } = useAuth();
+  const { isAuthenticated, userInfo, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [userData, setUserData] = useState(null);
+  const [stats, setStats] = useState({
+    postedProperties: 0,
+    savedProperties: 0,
+    enquiries: 0,
+    memberSince: '2024'
+  });
+  const [loading, setLoading] = useState(false);
 
   const quotes = [
     "“A house is made of walls and beams; a home is built with love and dreams.”",
@@ -60,14 +72,56 @@ const LuxuryAuthCTA = () => {
   
   const dailyQuote = quotes[new Date().getDate() % quotes.length];
 
-  if (loading) {
+  // Fetch user data when authenticated
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (isAuthenticated) {
+        setLoading(true);
+        try {
+          // Fetch profile data
+          const profileResponse = await API.get('/users/profile');
+          setUserData(profileResponse.data.user);
+
+          // Fetch stats
+          const [postedRes, savedRes, enquiriesRes] = await Promise.all([
+            API.get('/users/posted-properties?limit=1'),
+            API.get('/users/liked-properties'),
+            API.get('/users/my-enquiries?limit=1')
+          ]);
+
+          // Calculate member since year
+          const memberYear = profileResponse.data.user.createdAt 
+            ? new Date(profileResponse.data.user.createdAt).getFullYear()
+            : 2024;
+
+          setStats({
+            postedProperties: postedRes.data.stats?.total || 0,
+            savedProperties: savedRes.data.likedProperties?.length || 0,
+            enquiries: enquiriesRes.data.enquiries?.length || 0,
+            memberSince: memberYear
+          });
+
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Fallback to userInfo from auth context
+          setUserData(userInfo);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [isAuthenticated, userInfo]);
+
+  if (authLoading || (isAuthenticated && loading)) {
     return (
       <div className="w-full max-w-[500px] mx-auto aspect-[9/16] bg-gradient-to-br from-stone-100 to-stone-200 animate-pulse rounded-[40px] shadow-2xl" />
     );
   }
 
   return (
-    <section className="w-[35vw] min-w-[400px] bg-[#F5F2EE] px-6 py-44 hidden lg:block">
+    <section className="w-[35vw] min-w-[400px] bg-[#F5F2EE] px-6 py-10 hidden lg:block">
       <div className="max-w-[500px] w-full mx-auto">
         <AnimatePresence mode="wait">
           {!isAuthenticated ? (
@@ -261,30 +315,6 @@ const LuxuryAuthCTA = () => {
                       Learn More
                     </Link>
                   </div>
-
-                  {/* Quick Login Links */}
-                  <div className="flex items-center justify-center gap-4 pt-2">
-                    <button 
-                      onClick={() => navigate('/login')}
-                      className="text-[10px] text-stone-400 hover:text-amber-700 underline underline-offset-2 transition-colors"
-                    >
-                      Agent Login
-                    </button>
-                    <span className="text-stone-300">|</span>
-                    <button 
-                      onClick={() => navigate('/login')}
-                      className="text-[10px] text-stone-400 hover:text-amber-700 underline underline-offset-2 transition-colors"
-                    >
-                      Broker Login
-                    </button>
-                    <span className="text-stone-300">|</span>
-                    <button 
-                      onClick={() => navigate('/login')}
-                      className="text-[10px] text-stone-400 hover:text-amber-700 underline underline-offset-2 transition-colors"
-                    >
-                      Client Login
-                    </button>
-                  </div>
                 </motion.div>
               </div>
 
@@ -292,7 +322,7 @@ const LuxuryAuthCTA = () => {
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
             </motion.div>
           ) : (
-            /* MEMBER STATE - Large Format */
+            /* MEMBER STATE - With Genuine User Data */
             <motion.div
               key="auth-state"
               initial={{ opacity: 0, y: 30 }}
@@ -319,7 +349,11 @@ const LuxuryAuthCTA = () => {
                     className="flex items-center gap-3 px-4 py-2 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-white/50"
                   >
                     <Key className="w-4 h-4 text-amber-700" />
-                    <span className="text-xs font-semibold text-stone-800">PREMIUM MEMBER</span>
+                    <span className="text-xs font-semibold text-stone-800">
+                      {userData?.userType === 'agent' ? 'AGENT' : 
+                       userData?.userType === 'builder' ? 'BUILDER' : 
+                       userData?.userType === 'seller' ? 'SELLER' : 'MEMBER'}
+                    </span>
                   </motion.div>
                   
                   <motion.div 
@@ -327,7 +361,9 @@ const LuxuryAuthCTA = () => {
                     animate={{ opacity: 1, x: 0 }}
                     className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full shadow-xl"
                   >
-                    <span className="text-xs font-bold text-white">ELITE STATUS</span>
+                    <span className="text-xs font-bold text-white">
+                      {userData?.isVerified ? 'VERIFIED' : 'PREMIUM'}
+                    </span>
                   </motion.div>
                 </div>
               </div>
@@ -344,25 +380,35 @@ const LuxuryAuthCTA = () => {
                   <div className="absolute inset-0 bg-gradient-to-tr from-amber-300 via-amber-200 to-amber-100 rounded-full filter blur-2xl opacity-70" />
                   <div className="relative p-1.5 rounded-full bg-gradient-to-tr from-amber-400 via-stone-300 to-amber-300">
                     <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white shadow-2xl">
-                      {userInfo?.avatar ? (
-                        <img src={userInfo.avatar} alt="Profile" className="w-full h-full object-cover" />
+                      {userData?.avatar ? (
+                        <img 
+                          src={userData.avatar} 
+                          alt={userData.name || 'Profile'} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.name || 'User')}&background=8B5A2B&color=fff&size=128`;
+                          }}
+                        />
                       ) : (
                         <span className="text-5xl font-serif text-stone-400">
-                          {userInfo?.name?.charAt(0) || 'U'}
+                          {userData?.name?.charAt(0)?.toUpperCase() || 
+                           userInfo?.name?.charAt(0)?.toUpperCase() || 'U'}
                         </span>
                       )}
                     </div>
                   </div>
                   
                   {/* Verification Badge with Animation */}
-                  <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.3, type: "spring" }}
-                    className="absolute -bottom-2 -right-2 bg-blue-600 p-2 rounded-full border-4 border-white shadow-xl"
-                  >
-                    <Shield className="w-5 h-5 text-white" />
-                  </motion.div>
+                  {userData?.isVerified && (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.3, type: "spring" }}
+                      className="absolute -bottom-2 -right-2 bg-green-600 p-2 rounded-full border-4 border-white shadow-xl"
+                    >
+                      <Shield className="w-5 h-5 text-white" />
+                    </motion.div>
+                  )}
                 </motion.div>
 
                 {/* User Info */}
@@ -372,42 +418,70 @@ const LuxuryAuthCTA = () => {
                   transition={{ delay: 0.2 }}
                   className="text-3xl font-serif text-stone-900 mb-2"
                 >
-                  {userInfo?.name || 'Welcome Back'}
+                  {userData?.name || userInfo?.name || 'Welcome Back'}
                 </motion.h3>
                 
+                {/* Contact Info - Show email/phone if available */}
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.25 }}
-                  className="flex items-center gap-2 mb-8"
+                  className="flex flex-col items-center gap-1 mb-6"
                 >
-                  <Award className="w-4 h-4 text-amber-600" />
-                  <p className="text-xs font-medium tracking-widest text-amber-600 uppercase">
-                    Verified Member Since 2024
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <Award className="w-4 h-4 text-amber-600" />
+                    <p className="text-xs font-medium tracking-widest text-amber-600 uppercase">
+                      Member Since {stats.memberSince}
+                    </p>
+                  </div>
+                  
+                  {(userData?.gmail || userInfo?.email) && (
+                    <div className="flex items-center gap-1 text-stone-600">
+                      <Mail className="w-3 h-3" />
+                      <span className="text-xs truncate max-w-[150px]">
+                        {userData?.gmail || userInfo?.email}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {userData?.phoneNumber && userData.phoneNumber !== '1234567890' && (
+                    <div className="flex items-center gap-1 text-stone-600">
+                      <Phone className="w-3 h-3" />
+                      <span className="text-xs">{userData.phoneNumber}</span>
+                    </div>
+                  )}
                 </motion.div>
 
-                {/* Enhanced Stats */}
+                {/* Enhanced Stats - With Real Data */}
                 <motion.div 
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                   className="flex justify-center gap-12 mb-10"
                 >
-                  {[
-                    { value: '12', label: 'Listings', icon: Home },
-                    { value: '8', label: 'Saved', icon: Heart },
-                    { value: '3', label: 'Views', icon: Eye },
-                    { value: '156', label: 'Days', icon: Award }
-                  ].map((stat, index) => (
-                    <div key={index} className="text-center">
-                      <div className="flex items-center justify-center gap-1 mb-2">
-                        <stat.icon className="w-4 h-4 text-amber-600" />
-                        <div className="text-2xl font-bold text-stone-900">{stat.value}</div>
-                      </div>
-                      <div className="text-[10px] text-stone-500 uppercase tracking-wider">{stat.label}</div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-2">
+                      <Home className="w-4 h-4 text-amber-600" />
+                      <div className="text-2xl font-bold text-stone-900">{stats.postedProperties}</div>
                     </div>
-                  ))}
+                    <div className="text-[10px] text-stone-500 uppercase tracking-wider">Listings</div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-2">
+                      <Heart className="w-4 h-4 text-amber-600" />
+                      <div className="text-2xl font-bold text-stone-900">{stats.savedProperties}</div>
+                    </div>
+                    <div className="text-[10px] text-stone-500 uppercase tracking-wider">Saved</div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-2">
+                      <Eye className="w-4 h-4 text-amber-600" />
+                      <div className="text-2xl font-bold text-stone-900">{stats.enquiries}</div>
+                    </div>
+                    <div className="text-[10px] text-stone-500 uppercase tracking-wider">Enquiries</div>
+                  </div>
                 </motion.div>
 
                 {/* Quote Section with Decorative Elements */}
@@ -438,11 +512,11 @@ const LuxuryAuthCTA = () => {
                       className="group w-full py-4 bg-gradient-to-r from-stone-900 to-stone-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 text-base flex items-center justify-center gap-3"
                     >
                       <Home className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                      Manage Your Listings
+                      {stats.postedProperties > 0 ? 'Manage Your Listings' : 'List Your Property'}
                     </motion.button>
                   </Link>
                   
-      
+            
                 </motion.div>
               </div>
 
