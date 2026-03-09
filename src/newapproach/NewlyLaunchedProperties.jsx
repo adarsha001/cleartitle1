@@ -29,7 +29,7 @@ export default function NewlyLaunchedProperties() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [timePeriod, setTimePeriod] = useState("14");
+  const [timePeriod, setTimePeriod] = useState("30");
   const [showAllGrid, setShowAllGrid] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -197,7 +197,7 @@ export default function NewlyLaunchedProperties() {
         // setStats(stats);
         
         // Load initial properties
-        fetchNewlyLaunchedProperties("14", 1);
+        fetchNewlyLaunchedProperties("30", 1);
       }
     } catch (error) {
       console.error("Error fetching property stats:", error);

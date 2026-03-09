@@ -821,7 +821,7 @@ const getFeatureIcon = (feature) => {
   } = propertyUnit;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 relative">
       {/* Verification Banner */}
       {isVerified && (
         <div className="bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-4 sm:py-4 sm:px-6">
@@ -842,352 +842,355 @@ const getFeatureIcon = (feature) => {
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="bg-white border-b border-blue-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 sm:gap-3 text-blue-600 hover:text-blue-800 transition-colors group"
-            >
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
-              <span className="font-bold tracking-wide text-sm sm:text-base">
-                Back to Properties
-              </span>
-            </button>
+<div className="bg-white border-b border-indigo-200">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+    <div className="flex items-center justify-between mb-4 sm:mb-6">
+      <button
+        onClick={() => navigate('/')}
+        className="flex items-center gap-2 sm:gap-3 text-indigo-600 hover:text-indigo-800 transition-colors group"
+      >
+        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+        <span className="font-bold tracking-wide text-sm sm:text-base">
+          Back to Properties
+        </span>
+      </button>
 
-            {/* Share Button */}
-            {user && (
-              <div className="relative share-button-container">
-                <button
-                  onClick={() => setShowShareOptions(!showShareOptions)}
-                  className="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base"
-                >
-                  <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">Share</span>
-                </button>
+      {/* Share Button */}
+      {user && (
+        <div className="relative share-button-container">
+          <button
+            onClick={() => setShowShareOptions(!showShareOptions)}
+            className="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base"
+          >
+            <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Share</span>
+          </button>
 
-                {/* Share Options Dropdown */}
-                {showShareOptions && (
-                  <div className="absolute right-0 top-full mt-2 w-48 sm:w-56 bg-white rounded-xl shadow-2xl border border-blue-200 z-50 overflow-hidden">
-                    <button
-                      onClick={shareOnWhatsApp}
-                      className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-6 sm:py-4 text-left hover:bg-green-50 transition-colors border-b border-blue-100"
-                    >
-                      <span className="text-2xl">💚</span>
-                      <div>
-                        <p className="font-bold text-gray-900 text-sm sm:text-base">
-                          Share on WhatsApp
-                        </p>
-                        <p className="text-xs text-gray-600 font-medium">
-                          Share with friends & family
-                        </p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={copyToClipboard}
-                      className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-6 sm:py-4 text-left hover:bg-blue-50 transition-colors"
-                    >
-                      <span className="text-2xl">🔗</span>
-                      <div>
-                        <p className="font-bold text-gray-900 text-sm sm:text-base">
-                          Copy Property Link
-                        </p>
-                        <p className="text-xs text-gray-600 font-medium">
-                          Copy property URL
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                )}
+          {/* Share Options Dropdown */}
+          {showShareOptions && (
+            <div className="absolute right-0 top-full mt-2 w-48 sm:w-56 bg-white rounded-xl shadow-2xl border border-indigo-200 z-50 overflow-hidden">
+              <button
+                onClick={shareOnWhatsApp}
+                className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-6 sm:py-4 text-left hover:bg-indigo-50 transition-colors border-b border-indigo-100"
+              >
+                <span className="text-2xl">💚</span>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm sm:text-base">
+                    Share on WhatsApp
+                  </p>
+                  <p className="text-xs text-gray-600 font-medium">
+                    Share with friends & family
+                  </p>
+                </div>
+              </button>
+              <button
+                onClick={copyToClipboard}
+                className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-6 sm:py-4 text-left hover:bg-indigo-50 transition-colors"
+              >
+                <span className="text-2xl">🔗</span>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm sm:text-base">
+                    Copy Property Link
+                  </p>
+                  <p className="text-xs text-gray-600 font-medium">
+                    Copy property URL
+                  </p>
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+      <div className="flex-1">
+        <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
+          {isFeatured && (
+            <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
+              <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
+              <span className="hidden sm:inline">Featured</span>
+            </span>
+          )}
+          
+          {isVerified && (
+            <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
+              <Verified className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Verified</span>
+            </span>
+          )}
+          
+          <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
+            {listingType === 'sale' ? '💰' : '🔑'}
+            <span className="hidden sm:inline">{listingType === 'sale' ? 'For Sale' : 'For Rent'}</span>
+          </span>
+
+          <span className={`bg-gradient-to-r ${
+            availability === 'available' ? 'from-emerald-500 to-teal-500' :
+            availability === 'sold' ? 'from-slate-600 to-slate-700' :
+            availability === 'rented' ? 'from-blue-500 to-cyan-500' :
+            'from-amber-500 to-orange-500'
+          } text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg`}>
+            {availability === 'available' ? '✨ Available Now' : 
+             availability === 'sold' ? '⭐ Sold' : 
+             availability === 'rented' ? '🔐 Rented' : 
+             '⚡ Under Negotiation'}
+          </span>
+          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
+            {getPropertyTypeIcon(propertyType)}
+            <span className="hidden sm:inline">{propertyType}</span>
+          </span>
+        </div>
+        
+        <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight leading-tight">
+          {title || "Untitled Property"}
+          {unitNumber && (
+            <span className="text-indigo-600 ml-2 text-base sm:text-xl font-medium">#{unitNumber}</span>
+          )}
+        </h1>
+        
+        <div className="flex items-center gap-2 sm:gap-3 text-indigo-600 mb-4 sm:mb-6">
+          <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-sm sm:text-lg font-medium tracking-wide">
+            {fullAddress || `${address || ''}${address && city ? ', ' : ''}${city || ''}` || "Location not specified"}
+          </span>
+        </div>
+
+        {/* Mobile: Compact unit specifications with new design */}
+        <div className="sm:hidden">
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            {safeSpecifications.bedrooms > 0 && (
+              <div className="flex flex-col items-center p-2 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200 shadow-sm">
+                <Bed className="w-6 h-6 text-indigo-600 mb-1" />
+                <span className="text-lg font-bold text-indigo-900">{safeSpecifications.bedrooms}</span>
+                <span className="text-xs text-indigo-700 font-medium">Beds</span>
+              </div>
+            )}
+            {safeSpecifications.bathrooms > 0 && (
+              <div className="flex flex-col items-center p-2 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200 shadow-sm">
+                <Bath className="w-6 h-6 text-purple-600 mb-1" />
+                <span className="text-lg font-bold text-purple-900">{safeSpecifications.bathrooms}</span>
+                <span className="text-xs text-purple-700 font-medium">Baths</span>
+              </div>
+            )}
+            {safeSpecifications.carpetArea > 0 && (
+              <div className="flex flex-col items-center p-2 bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl border border-amber-200 shadow-sm">
+                <Maximize className="w-6 h-6 text-amber-600 mb-1" />
+                <span className="text-lg font-bold text-amber-900">{safeSpecifications.carpetArea.toLocaleString()}</span>
+                <span className="text-xs text-amber-700 font-medium">Sq.ft</span>
+              </div>
+            )}
+            {safeSpecifications.floorNumber > 0 && (
+              <div className="flex flex-col items-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200 shadow-sm">
+                <Layers className="w-6 h-6 text-emerald-600 mb-1" />
+                <span className="text-lg font-bold text-emerald-900">{safeSpecifications.floorNumber}</span>
+                <span className="text-xs text-emerald-700 font-medium">Floor</span>
               </div>
             )}
           </div>
+        </div>
 
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
-            <div className="flex-1">
-              <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
-                {isFeatured && (
-                  <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
-                    <Star className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Featured</span>
-                  </span>
-                )}
-                
-                {isVerified && (
-                  <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
-                    <Verified className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Verified</span>
-                  </span>
-                )}
-                
-                <span className="bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
-                  {listingType === 'sale' ? '🏷️' : '📋'}
-                  <span className="hidden sm:inline">{listingType}</span>
-                </span>
-
-                <span className={`bg-gradient-to-r from-amber-700 to-yellow-100 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg`}>
-                  {availability === 'available' ? '🌟 Available' : 
-                   availability === 'sold' ? '🏆 Sold' : 
-                   availability === 'rented' ? '🔑 Rented' : 
-                   '🤝 Under Negotiation'}
-                </span>
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
-                  {getPropertyTypeIcon(propertyType)}
-                  <span className="hidden sm:inline">{propertyType}</span>
-                </span>
+        {/* Desktop: Redesigned unit specifications with unique styling */}
+        <div className="hidden sm:flex flex-wrap gap-3 sm:gap-4 md:gap-6">
+          {safeSpecifications.bedrooms > 0 && (
+            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              
-              <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight leading-tight">
-                {title || "Untitled Property"}
-                {unitNumber && (
-                  <span className="text-indigo-600 ml-2 text-base sm:text-xl">#{unitNumber}</span>
-                )}
-              </h1>
-              
-              <div className="flex items-center gap-2 sm:gap-3 text-indigo-600 mb-4 sm:mb-6">
-                <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="text-sm sm:text-lg font-bold tracking-wide">
-                  {fullAddress || `${address || ''}${address && city ? ', ' : ''}${city || ''}` || "Location not specified"}
-                </span>
-              </div>
-
-              {/* Mobile: Compact unit specifications */}
-              <div className="sm:hidden">
-                <div className="grid grid-cols-4 gap-2 mb-4">
-                  {safeSpecifications.bedrooms > 0 && (
-                    <div className="flex flex-col items-center p-2 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
-                      <Bed className="w-6 h-6 text-indigo-600 mb-1" />
-                      <span className="text-lg font-bold text-indigo-900">{safeSpecifications.bedrooms}</span>
-                      <span className="text-xs text-indigo-700">Beds</span>
-                    </div>
-                  )}
-                  {safeSpecifications.bathrooms > 0 && (
-                    <div className="flex flex-col items-center p-2 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg border border-teal-200">
-                      <Bath className="w-6 h-6 text-teal-600 mb-1" />
-                      <span className="text-lg font-bold text-teal-900">{safeSpecifications.bathrooms}</span>
-                      <span className="text-xs text-teal-700">Baths</span>
-                    </div>
-                  )}
-                  {safeSpecifications.carpetArea > 0 && (
-                    <div className="flex flex-col items-center p-2 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200">
-                      <Maximize className="w-6 h-6 text-amber-600 mb-1" />
-                      <span className="text-lg font-bold text-amber-900">{safeSpecifications.carpetArea.toLocaleString()}</span>
-                      <span className="text-xs text-amber-700">Sq.ft</span>
-                    </div>
-                  )}
-                  {safeSpecifications.floorNumber > 0 && (
-                    <div className="flex flex-col items-center p-2 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-200">
-                      <Layers className="w-6 h-6 text-emerald-600 mb-1" />
-                      <span className="text-lg font-bold text-emerald-900">{safeSpecifications.floorNumber}</span>
-                      <span className="text-xs text-emerald-700">Floor</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Desktop: Original unit specifications */}
-              <div className="hidden sm:flex flex-wrap gap-3 sm:gap-4 md:gap-6">
-                {safeSpecifications.bedrooms > 0 && (
-                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg sm:rounded-xl border border-indigo-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-indigo-900">
-                        {safeSpecifications.bedrooms}
-                      </p>
-                      <p className="text-xs sm:text-sm text-indigo-700 font-medium">
-                        Bedrooms
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {safeSpecifications.bathrooms > 0 && (
-                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg sm:rounded-xl border border-teal-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Bath className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-teal-900">
-                        {safeSpecifications.bathrooms}
-                      </p>
-                      <p className="text-xs sm:text-sm text-teal-700 font-medium">
-                        Bathrooms
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {safeSpecifications.carpetArea > 0 && (
-                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg sm:rounded-xl border border-amber-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Maximize className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-amber-900">
-                        {safeSpecifications.carpetArea.toLocaleString()} sq.ft.
-                      </p>
-                      <p className="text-xs sm:text-sm text-amber-700 font-medium">
-                        Carpet Area
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {safeSpecifications.floorNumber > 0 && (
-                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg sm:rounded-xl border border-emerald-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-emerald-900">
-                        {safeSpecifications.floorNumber}
-                      </p>
-                      <p className="text-xs sm:text-sm text-emerald-700 font-medium">
-                        Floor
-                      </p>
-                    </div>
-                  </div>
-                )}
+              <div>
+                <p className="text-xl sm:text-2xl font-bold text-indigo-900">
+                  {safeSpecifications.bedrooms}
+                </p>
+                <p className="text-xs sm:text-sm text-indigo-700 font-semibold">
+                  Bedrooms
+                </p>
               </div>
             </div>
-<div className="mt-4 sm:mt-0 lg:text-right">
-  {/* Premium Pricing Card */}
-  <div className=" hidden md:block max-w-sm w-full group">
-    {/* Pricing Header - Professional Real Estate Gradient */}
-    <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-t-xl sm:rounded-t-2xl p-5 sm:p-7 relative overflow-hidden">
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: '30px'
-        }}></div>
+          )}
+
+          {safeSpecifications.bathrooms > 0 && (
+            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                <Bath className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-xl sm:text-2xl font-bold text-purple-900">
+                  {safeSpecifications.bathrooms}
+                </p>
+                <p className="text-xs sm:text-sm text-purple-700 font-semibold">
+                  Bathrooms
+                </p>
+              </div>
+            </div>
+          )}
+
+          {safeSpecifications.carpetArea > 0 && (
+            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl border border-amber-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-600 to-amber-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                <Maximize className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-xl sm:text-2xl font-bold text-amber-900">
+                  {safeSpecifications.carpetArea.toLocaleString()} <span className="text-sm">sq.ft</span>
+                </p>
+                <p className="text-xs sm:text-sm text-amber-700 font-semibold">
+                  Carpet Area
+                </p>
+              </div>
+            </div>
+          )}
+
+          {safeSpecifications.floorNumber > 0 && (
+            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-xl sm:text-2xl font-bold text-emerald-900">
+                  {safeSpecifications.floorNumber}
+                </p>
+                <p className="text-xs sm:text-sm text-emerald-700 font-semibold">
+                  Floor
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-gradient-to-r from-blue-300 to-cyan-300 rounded-full animate-pulse"></div>
-            <span className="text-xs font-semibold text-white/90 uppercase tracking-[0.15em]">
-              Clear Title Value
-            </span>
-          </div>
-          <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-full border border-white/30">
-            <span className="text-xs font-bold text-white tracking-wide">
-              {listingType === 'sale' ? 'FOR SALE' : listingType === 'rent' ? 'FOR RENT' : 'lease'}
-            </span>
-          </div>
-        </div>
-        
-        {/* Main Price with subtle shine effect */}
-        <div className="relative">
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
-              {formatPrice(price)}
-            </span>
-          </div>
-          {/* Subtle glow effect */}
-          <div className="absolute -bottom-2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-        </div>
-        
-        {/* Property Type Indicator */}
-        <div className="mt-4 flex items-center justify-end">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-            <Verified className="w-3 h-3 text-emerald-300" />
-            <span className="text-xs font-medium text-white/90">
-              Verified {propertyType}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Pricing Details - Clean Professional Card */}
-    <div className="bg-gradient-to-b from-white to-blue-50/30 rounded-b-xl sm:rounded-b-2xl border border-blue-100 shadow-xl shadow-blue-900/5">
-      <div className="p-5 sm:p-7 space-y-4">
-        {/* Price per sq.ft - Premium Styling */}
-        {safeSpecifications.carpetArea > 0 && price?.amount && (
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-50/70 rounded-xl border border-blue-200 hover:border-blue-300 transition-colors group/item">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
-                <Maximize className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider">Unit Rate</p>
-                <p className="text-lg font-bold text-gray-900">
-                  ₹{(price.amount / safeSpecifications.carpetArea).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                  <span className="text-sm font-medium text-gray-600 ml-1">/sq.ft</span>
-                </p>
-              </div>
+      <div className="mt-4 sm:mt-0 lg:text-right">
+        {/* Premium Pricing Card - Unique variation */}
+        <div className="hidden md:block max-w-sm w-full group perspective">
+          {/* Pricing Header - Unique gradient with pattern */}
+          <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 rounded-t-xl sm:rounded-t-2xl p-5 sm:p-7 relative overflow-hidden">
+            {/* Unique pattern overlay - different from original */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0" style={{
+                backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+                backgroundSize: '20px 20px'
+              }}></div>
             </div>
-            <div className="w-2 h-8 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full opacity-70"></div>
-          </div>
-        )}
-
-        {/* Maintenance Charges - Elegant Card */}
-        {maintenanceCharges > 0 && (
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-cyan-50/70 rounded-xl border border-cyan-200 hover:border-cyan-300 transition-colors group/item">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-105 transition-transform">
-                <Building className="w-5 h-5 text-white" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gradient-to-r from-indigo-300 to-purple-300 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">
+                    Premium Listing
+                  </span>
+                </div>
+                <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-full border border-white/30">
+                  <span className="text-xs font-bold text-white tracking-wide">
+                    {listingType === 'sale' ? 'EXCLUSIVE' : listingType === 'rent' ? 'AVAILABLE' : 'LEASE'}
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-cyan-700 uppercase tracking-wider">Maintenance</p>
-                <p className="text-lg font-bold text-gray-900">
-                  ₹{maintenanceCharges.toLocaleString('en-IN')}
-                  <span className="text-sm font-medium text-gray-600 ml-1">/month</span>
-                </p>
+              
+              {/* Main Price with unique gradient */}
+              <div className="relative">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-indigo-100 to-purple-100 bg-clip-text text-transparent">
+                    {formatPrice(price)}
+                  </span>
+                </div>
+                {/* Unique decorative element */}
+                <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-400/50 to-transparent"></div>
+              </div>
+              
+              {/* Property Type Indicator - Unique styling */}
+              <div className="mt-4 flex items-center justify-end">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                  <Verified className="w-3 h-3 text-indigo-300" />
+                  <span className="text-xs font-medium text-white/90">
+                    {propertyType} • Premium
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Security Deposit - Elegant Card */}
-        {securityDeposit > 0 && (
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-emerald-50/70 rounded-xl border border-emerald-200 hover:border-emerald-300 transition-colors group/item">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-green-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-105 transition-transform">
-                <Shield className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Security Deposit</p>
-                <p className="text-lg font-bold text-gray-900">
-                  ₹{securityDeposit.toLocaleString('en-IN')}
-                </p>
+          {/* Pricing Details - Unique card design */}
+          <div className="bg-gradient-to-b from-white to-indigo-50/30 rounded-b-xl sm:rounded-b-2xl border border-indigo-100 shadow-xl shadow-indigo-900/5">
+            <div className="p-5 sm:p-7 space-y-4">
+              {/* Price per sq.ft - Unique styling */}
+              {safeSpecifications.carpetArea > 0 && price?.amount && (
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-indigo-50/70 rounded-xl border border-indigo-200 hover:border-indigo-300 transition-all hover:shadow-md group/item">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform">
+                      <Maximize className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">Price Breakdown</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        ₹{(price.amount / safeSpecifications.carpetArea).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                        <span className="text-sm font-medium text-gray-600 ml-1">/sq.ft</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-1 h-10 bg-gradient-to-b from-indigo-400 to-purple-600 rounded-full"></div>
+                </div>
+              )}
+
+              {/* Maintenance Charges - Unique styling */}
+              {maintenanceCharges > 0 && (
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-50/70 rounded-xl border border-purple-200 hover:border-purple-300 transition-all hover:shadow-md group/item">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform">
+                      <Building className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-purple-700 uppercase tracking-wider">Maintenance</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        ₹{maintenanceCharges.toLocaleString('en-IN')}
+                        <span className="text-sm font-medium text-gray-600 ml-1">/month</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-1 h-10 bg-gradient-to-b from-purple-400 to-pink-600 rounded-full"></div>
+                </div>
+              )}
+
+              {/* Security Deposit - Unique styling */}
+              {securityDeposit > 0 && (
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-indigo-50/70 rounded-xl border border-indigo-200 hover:border-indigo-300 transition-all hover:shadow-md group/item">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform">
+                      <Shield className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">Security Deposit</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        ₹{securityDeposit.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-1 h-10 bg-gradient-to-b from-indigo-400 to-blue-600 rounded-full"></div>
+                </div>
+              )}
+
+              {/* Call to Action - Unique design */}
+              <div className="pt-4">
+                <button 
+                  onClick={handleBookAppointment}
+                  className="w-full group relative overflow-hidden bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-700 hover:via-indigo-700 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <div className="relative z-10 flex items-center justify-center gap-3">
+                    <CalendarIcon className="w-5 h-5" />
+                    <span className="tracking-wide">Schedule Viewing</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  {/* Unique shine effect with double gradient */}
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                  <div className="absolute inset-0 translate-x-full group-hover:-translate-x-full transition-transform duration-1000 bg-gradient-to-l from-transparent via-white/10 to-transparent"></div>
+                </button>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Registration Charges */}
-
- 
-        {/* Call to Action */}
-        <div className="pt-4">
-          <button 
-            onClick={handleBookAppointment}
-            className="w-full group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <div className="relative z-10 flex items-center justify-center gap-3">
-              <CalendarIcon className="w-5 h-5" />
-              <span className="tracking-wide">Schedule Property Tour</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-            {/* Shine effect */}
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-          </button>
-          
-    
         </div>
       </div>
     </div>
   </div>
 </div>
-          </div>
-        </div>
-      </div>
 
       {/* BOOK YOUR APPOINTMENT BUTTON - Fixed at bottom for mobile */}
       <div className="fixed bottom-0 left-0 right-0 z-40 sm:hidden bg-white border-t border-blue-200 shadow-2xl p-4">
@@ -2071,183 +2074,168 @@ const getFeatureIcon = (feature) => {
           </div>
 
           {/* Right Column - Contact & Info - Mobile optimized */}
-          <div className="space-y-4 sm:space-y-6">
-            {/* Contact Information */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-blue-200">
-              <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
-                Contact Information
-              </h3>
-              
-              {/* Property Listing Date */}
-              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                  <span className="font-bold text-gray-900 tracking-wide text-sm sm:text-base">
-                    Listed on
-                  </span>
-                </div>
-                <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base pl-6 sm:pl-8">
-                  {formatDate(createdAt)}
-                </p>
-                {updatedAt && createdAt !== updatedAt && (
-                  <>
-                    <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4 mb-2 sm:mb-3">
-                      <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                      <span className="font-bold text-gray-900 tracking-wide text-sm sm:text-base">
-                        Last updated
-                      </span>
-                    </div>
-                    <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base pl-6 sm:pl-8">
-                      {formatDate(updatedAt)}
-                    </p>
-                  </>
-                )}
+
+
+
+
+  {/* Fixed Sidebar */}
+  <div className="lg:w-[380px] xl:w-[420px] flex-shrink-0">
+    <div className="lg:sticky lg:top-24 space-y-4 sm:space-y-6">
+      {/* Contact Information */}
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-blue-200">
+        <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
+          Contact Information
+        </h3>
+        
+        {/* Property Listing Date */}
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+            <span className="font-bold text-gray-900 tracking-wide text-sm sm:text-base">
+              Listed on
+            </span>
+          </div>
+          <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base pl-6 sm:pl-8">
+            {formatDate(createdAt)}
+          </p>
+          {updatedAt && createdAt !== updatedAt && (
+            <>
+              <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4 mb-2 sm:mb-3">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                <span className="font-bold text-gray-900 tracking-wide text-sm sm:text-base">
+                  Last updated
+                </span>
               </div>
-              
-              {user ? (
-                <div className="bg-white p-4 sm:p-6 rounded-lg sm:rounded-xl border-2 border-blue-300 shadow-sm">
-                  <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                    <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-2xl">
-                      {createdBy?.name?.charAt(0)?.toUpperCase() || "A"}
-                    </div>
-                    <div>
-                      <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1">
-                        Property Contact
-                      </p>
-                      <p className="font-bold text-base sm:text-xl text-gray-900 tracking-tight">
-                        {createdBy?.name || "Property Agent"}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3 sm:space-y-4">
-                    {createdBy?.email && (
-                      <div className="p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1 sm:mb-2">
-                          EMAIL
-                        </p>
-                        <a 
-                          href={`mailto:${createdBy.email}`}
-                          className="flex items-center gap-2 sm:gap-3 text-blue-700 hover:text-blue-900 group transition-colors"
-                        >
-                          <Mail className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                          <span className="font-bold tracking-wide text-sm sm:text-base group-hover:underline break-all">
-                            {createdBy.email}
-                          </span>
-                        </a>
-                      </div>
-                    )}
-                    
-                    {createdBy?.phoneNumber && (
-                      <div className="p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1 sm:mb-2">
-                          PHONE
-                        </p>
-                        <a 
-                          href={`tel:${createdBy.phoneNumber}`}
-                          className="flex items-center gap-2 sm:gap-3 text-blue-700 hover:text-blue-900 group transition-colors"
-                        >
-                          <Phone className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                          <span className="font-bold tracking-wide text-sm sm:text-base group-hover:underline">
-                            {createdBy.phoneNumber}
-                          </span>
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {createdBy?.phoneNumber && (
-                    <a
-                      href={`https://wa.me/${createdBy.phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello, I'm interested in your property: ${title} (${address}, ${city})`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <button className="w-full mt-4 sm:mt-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base flex items-center justify-center gap-2 sm:gap-3">
-                        <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="hidden sm:inline">Message on WhatsApp</span>
-                        <span className="sm:hidden">WhatsApp</span>
-                      </button>
-                    </a>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl border-2 border-blue-300 text-center">
-                  <div className="w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                    <Lock className="w-6 h-6 sm:w-9 sm:h-9 md:w-10 md:h-10 text-blue-600" />
-                  </div>
-                  <h4 className="text-base sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">
-                    Sign In Required
-                  </h4>
-                  <p className="text-gray-600 mb-4 sm:mb-6 font-medium tracking-wide leading-relaxed text-sm sm:text-base">
-                    Sign in to access contact details
+              <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base pl-6 sm:pl-8">
+                {formatDate(updatedAt)}
+              </p>
+            </>
+          )}
+        </div>
+        
+        {user ? (
+          <div className="bg-white p-4 sm:p-6 rounded-lg sm:rounded-xl border-2 border-blue-300 shadow-sm">
+            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-2xl">
+                {createdBy?.name?.charAt(0)?.toUpperCase() || "A"}
+              </div>
+              <div>
+                <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1">
+                  Property Contact
+                </p>
+                <p className="font-bold text-base sm:text-xl text-gray-900 tracking-tight">
+                  {createdBy?.name || "Property Agent"}
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-3 sm:space-y-4">
+              {createdBy?.email && (
+                <div className="p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
+                  <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1 sm:mb-2">
+                    EMAIL
                   </p>
-                  
-                  <div className="space-y-2 sm:space-y-3">
-                    <button 
-                      onClick={() => navigate('/login', { state: { from: `/property-units/${id}` } })}
-                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base"
-                    >
-                      Sign In
-                    </button>
-                    <button 
-                      onClick={() => navigate('/register', { state: { from: `/property-units/${id}` } })}
-                      className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-yellow-500 hover:to-yellow-600 transition-all border-2 border-yellow-400 font-bold tracking-wide text-sm sm:text-base"
-                    >
-                      Create Account
-                    </button>
-                  </div>
+                  <a 
+                    href={`mailto:${createdBy.email}`}
+                    className="flex items-center gap-2 sm:gap-3 text-blue-700 hover:text-blue-900 group transition-colors"
+                  >
+                    <Mail className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                    <span className="font-bold tracking-wide text-sm sm:text-base group-hover:underline break-all">
+                      {createdBy.email}
+                    </span>
+                  </a>
+                </div>
+              )}
+              
+              {createdBy?.phoneNumber && (
+                <div className="p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
+                  <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1 sm:mb-2">
+                    PHONE
+                  </p>
+                  <a 
+                    href={`tel:${createdBy.phoneNumber}`}
+                    className="flex items-center gap-2 sm:gap-3 text-blue-700 hover:text-blue-900 group transition-colors"
+                  >
+                    <Phone className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                    <span className="font-bold tracking-wide text-sm sm:text-base group-hover:underline">
+                      {createdBy.phoneNumber}
+                    </span>
+                  </a>
                 </div>
               )}
             </div>
-
-            {/* Property Stats - Mobile compact */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-blue-200">
-              <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
-                Property Stats
-              </h3>
-              <div className="grid grid-cols-2 gap-3 sm:space-y-4">
-                <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
-                  <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
-                    Property ID
-                  </span>
-                  <span className="font-bold text-blue-600 text-sm sm:text-base">
-                    #{id?.slice(-6).toUpperCase()}
-                    {/* <div>
-                    {id}  
-                      </div> */}
-                  </span>
-                </div>
-                <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
-                  <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
-                    Views
-                  </span>
-                  <span className="font-bold text-blue-600 text-sm sm:text-base">
-                    {viewCount || 0}
-                  </span>
-                </div>
-                {/* <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
-                  <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
-                    Favorites
-                  </span>
-                  <span className="font-bold text-blue-600 text-sm sm:text-base">
-                    {favoriteCount || 0}
-                  </span>
-                </div>
-                <div className="flex flex-col p-3 sm:p-4 bg-green-50 rounded-lg sm:rounded-xl border border-green-200">
-                  <span className="font-bold text-green-700 tracking-wide text-sm sm:text-base mb-1">
-                    Status
-                  </span>
-                  <span className={`font-bold text-sm sm:text-base ${getAvailabilityColor(availability)} bg-clip-text text-transparent`}>
-                    {availability === 'available' ? '✅ Available' : 
-                     availability === 'sold' ? '❌ Sold' : 
-                     availability === 'rented' ? '🏠 Rented' : 
-                     '🤝 Under Negotiation'}
-                  </span>
-                </div> */}
-              </div>
+            
+            {createdBy?.phoneNumber && (
+              <a
+                href={`https://wa.me/${createdBy.phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello, I'm interested in your property: ${title} (${address}, ${city})`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <button className="w-full mt-4 sm:mt-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base flex items-center justify-center gap-2 sm:gap-3">
+                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">Message on WhatsApp</span>
+                  <span className="sm:hidden">WhatsApp</span>
+                </button>
+              </a>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl border-2 border-blue-300 text-center">
+            <div className="w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <Lock className="w-6 h-6 sm:w-9 sm:h-9 md:w-10 md:h-10 text-blue-600" />
+            </div>
+            <h4 className="text-base sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">
+              Sign In Required
+            </h4>
+            <p className="text-gray-600 mb-4 sm:mb-6 font-medium tracking-wide leading-relaxed text-sm sm:text-base">
+              Sign in to access contact details
+            </p>
+            
+            <div className="space-y-2 sm:space-y-3">
+              <button 
+                onClick={() => navigate('/login', { state: { from: `/property-units/${id}` } })}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base"
+              >
+                Sign In
+              </button>
+              <button 
+                onClick={() => navigate('/register', { state: { from: `/property-units/${id}` } })}
+                className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-yellow-500 hover:to-yellow-600 transition-all border-2 border-yellow-400 font-bold tracking-wide text-sm sm:text-base"
+              >
+                Create Account
+              </button>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Property Stats - Mobile compact */}
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-blue-200">
+        <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
+          Property Stats
+        </h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
+            <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
+              Property ID
+            </span>
+            <span className="font-bold text-blue-600 text-sm sm:text-base">
+              #{id?.slice(-6).toUpperCase()}
+            </span>
+          </div>
+          <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
+            <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
+              Views
+            </span>
+            <span className="font-bold text-blue-600 text-sm sm:text-base">
+              {viewCount || 0}
+            </span>
+          </div>
         </div>
+      </div>
+    </div>
+  </div>
+ </div>
       </div>
 <FeaturedProperties/>
       <PossessionTimeline/>

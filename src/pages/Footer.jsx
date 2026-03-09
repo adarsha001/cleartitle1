@@ -17,8 +17,8 @@ export default function EnhancedFooter() {
       <div className="absolute bottom-4 sm:bottom-8 md:bottom-10 right-2 sm:right-4 md:right-6 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-purple-400 rounded-full filter blur-3xl opacity-25 sm:opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
 
       {/* Animated Clouds */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Cloud 1 */}
+      {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    
         <svg className="absolute top-8 sm:top-10 md:top-12 w-40 sm:w-48 md:w-56 opacity-35 sm:opacity-40" 
              viewBox="0 0 250 80" 
              style={{ left: '-15%' }}>
@@ -38,7 +38,7 @@ export default function EnhancedFooter() {
           <animateTransform attributeName="transform" type="translate" from="0 0" to="2000 0" dur="50s" repeatCount="indefinite"/>
         </svg>
 
-        {/* Cloud 2 */}
+ 
         <svg className="absolute top-20 sm:top-24 md:top-28 w-48 sm:w-56 md:w-64 opacity-30 sm:opacity-35" 
              viewBox="0 0 280 90" 
              style={{ right: '-20%' }}>
@@ -59,7 +59,7 @@ export default function EnhancedFooter() {
           <animateTransform attributeName="transform" type="translate" from="0 0" to="-2200 0" dur="60s" repeatCount="indefinite"/>
         </svg>
 
-        {/* Cloud 3 */}
+ 
         <svg className="absolute top-36 sm:top-40 md:top-44 w-44 sm:w-52 md:w-60 opacity-32 sm:opacity-38" 
              viewBox="0 0 260 85" 
              style={{ left: '-18%' }}>
@@ -78,11 +78,11 @@ export default function EnhancedFooter() {
           </g>
           <animateTransform attributeName="transform" type="translate" from="0 0" to="2100 0" dur="70s" repeatCount="indefinite"/>
         </svg>
-      </div>
+      </div> */}
 
       {/* Flying Birds */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Bird 1 */}
+      {/* <div className="absolute inset-0 overflow-hidden pointer-events-none">
+ 
         <svg className="absolute top-12 sm:top-16 md:top-20 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" 
              viewBox="0 0 24 24" fill="none" style={{ left: '-5%' }}>
           <path d="M2 12 Q8 8 12 12 Q16 8 22 12" 
@@ -95,7 +95,7 @@ export default function EnhancedFooter() {
           <animateTransform attributeName="transform" type="translate" from="0 0" to="1800 -30" dur="40s" repeatCount="indefinite"/>
         </svg>
 
-        {/* Bird 2 */}
+
         <svg className="absolute top-28 sm:top-32 md:top-36 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" 
              viewBox="0 0 24 24" fill="none" style={{ right: '-5%' }}>
           <path d="M2 12 Q8 8 12 12 Q16 8 22 12" 
@@ -108,7 +108,7 @@ export default function EnhancedFooter() {
           <animateTransform attributeName="transform" type="translate" from="0 0" to="-1900 -20" dur="45s" repeatCount="indefinite"/>
         </svg>
 
-        {/* Bird 3 */}
+ 
         <svg className="absolute top-16 sm:top-20 md:top-24 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" 
              viewBox="0 0 24 24" fill="none" style={{ left: '-5%' }}>
           <path d="M2 12 Q8 8 12 12 Q16 8 22 12" 
@@ -121,7 +121,7 @@ export default function EnhancedFooter() {
           <animateTransform attributeName="transform" type="translate" from="0 0" to="2000 -40" dur="52s" repeatCount="indefinite"/>
         </svg>
 
-        {/* Bird 4 */}
+
         <svg className="absolute top-24 sm:top-28 md:top-32 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" 
              viewBox="0 0 24 24" fill="none" style={{ right: '-5%' }}>
           <path d="M2 12 Q8 8 12 12 Q16 8 22 12" 
@@ -133,7 +133,7 @@ export default function EnhancedFooter() {
           </path>
           <animateTransform attributeName="transform" type="translate" from="0 0" to="-1850 -25" dur="42s" repeatCount="indefinite"/>
         </svg>
-      </div>
+      </div> */}
 
       {/* City Skyline Silhouette */}
       <div className="absolute bottom-0 left-0 right-0 w-full opacity-15">
