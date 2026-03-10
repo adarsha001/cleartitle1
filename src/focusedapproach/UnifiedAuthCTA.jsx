@@ -46,7 +46,7 @@ const quotes = [
   }
 
   return (
-    <section className="w-full bg-[#F5F2EE] py-3 px-4 md:px-6">
+    <section className="w-full py-3 px-4 md:px-6">
       <div className="max-w-6xl mx-auto">
         <AnimatePresence mode="wait">
           {!isAuthenticated ? (
@@ -56,7 +56,7 @@ const quotes = [
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
-              className="relative overflow-hidden rounded-2xl lg:rounded-[2rem] bg-[#FAF9F6] border border-stone-200/60 shadow-lg shadow-stone-200/30"
+              className="relative overflow-hidden rounded-2xl lg:rounded-[2rem] bg-[#FAF9F6]"
             >
               <div className="flex flex-col md:flex-row items-stretch">
                 {/* Text Content */}
@@ -107,7 +107,7 @@ const quotes = [
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="relative overflow-hidden rounded-2xl lg:rounded-[2rem] bg-[#FAF9F6] border border-stone-200/60 p-6 md:p-8 lg:p-10 shadow-lg shadow-stone-200/30"
+              className="relative overflow-hidden rounded-2xl lg:rounded-[2rem] bg-[#FAF9F6]  p-6 md:p-8 lg:p-10 shadow-lg shadow-stone-200/30"
             >
               <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 md:gap-10">
                 {/* User Identity Section */}

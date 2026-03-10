@@ -132,7 +132,7 @@ const LuxuryAuthCTA = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -30 }}
               transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-              className="relative aspect-[9/16] w-full overflow-hidden rounded-[40px] bg-white shadow-2xl hover:shadow-3xl transition-shadow duration-500 group"
+              className="relative aspect-[9/16] w-full overflow-hidden rounded-[40px] bg-white group"
             >
               {/* Premium Gradient Background */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-50/90 via-white to-stone-50/90" />
@@ -329,7 +329,7 @@ const LuxuryAuthCTA = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -30 }}
               transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-              className="relative aspect-[9/16] w-full overflow-hidden rounded-[40px] bg-white shadow-2xl hover:shadow-3xl transition-shadow duration-500"
+              className="relative aspect-[9/16] w-full overflow-hidden rounded-[40px] bg-white "
             >
               {/* Premium Background */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-50/60 via-white to-stone-50/60" />
