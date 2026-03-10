@@ -202,6 +202,7 @@ const PropertyCategories = () => {
   <div className="hidden lg:block lg:w-[35%] xl:w-[30%]  -ml-1">
     <LuxuryAuthCTA />
   </div>
+     <div className="hidden lg:block lg:w-[20%] xl:w-[20%]"></div>
 </div>
   );
 };
