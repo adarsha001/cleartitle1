@@ -23,7 +23,7 @@ export default defineConfig({
 //   server: {
 //     proxy: {
 //       '/api': {
-//         target: 'http://localhost:5000',
+//         target: 'https://saimr-backend-1.onrender.com',
 //         changeOrigin: true,
 //         secure: false,
 //         rewrite: (path) => path.replace(/^\/api/, '/api')

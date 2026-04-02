@@ -38,9 +38,9 @@ const PropertyCategories = () => {
   const categories = [
     { id: 'Apartment', name: 'Apartments', tagline: 'CURATED URBAN', location: 'Indiranagar', img: '/appartment1.png', bgColor: 'bg-blue-200' },
     { id: 'Villa', name: 'Estate Villas', tagline: 'ARCHITECTURAL', location: 'Whitefield', img: '/villa1.png', bgColor: 'bg-blue-200' },
-    { id: 'Commercial', name: 'Commercial', tagline: 'STRATEGIC', location: 'Manyata', img: '/commercial1.png', bgColor: 'bg-blue-200' },
+    // { id: 'Commercial', name: 'Commercial', tagline: 'STRATEGIC', location: 'Manyata', img: '/commercial1.png', bgColor: 'bg-blue-200' },
     { id: 'Plot', name: 'Plot', tagline: 'BESPOKE', location: 'Devanahalli', img: 'plot1.png', bgColor: 'bg-blue-200' },
-    { id: 'House', name: 'Independent House', tagline: 'TIMELESS HERITAGE', location: 'Sadashivnagar • Bangalore', img: '/independent1.png', bgColor: 'bg-blue-200' }
+    // { id: 'House', name: 'Independent House', tagline: 'TIMELESS HERITAGE', location: 'Sadashivnagar • Bangalore', img: '/independent1.png', bgColor: 'bg-blue-200' }
   ]; 
 
   useEffect(() => {
@@ -147,7 +147,7 @@ const PropertyCategories = () => {
             ref={el => cardsRef.current[i] = el}
             onClick={() => navigate(`/properties/category/${cat.id}`)}
             className={`group relative overflow-hidden cursor-pointer rounded-lg sm:rounded-xl shadow-md transition-all duration-700 hover:shadow-xl
-              ${i === 4 ? 'col-span-2' : 'col-span-1'}
+              ${i === 2 ? 'col-span-2' : 'col-span-1'}
               h-[120px] xs:h-[150px] sm:h-[200px] md:h-[250px] lg:h-[280px] xl:h-[300px]`}
           >
             {/* BACK LAYER */}

@@ -29,6 +29,9 @@ const BulkEditPanel = ({
     approvalStatus: '',
     availability: '',
     listingType: '',
+    propertyType: '',
+    furnishing: '',
+    possessionStatus: '',
     rejectionReason: ''
   });
   const [bulkLoading, setBulkLoading] = useState(false);
@@ -65,6 +68,9 @@ const BulkEditPanel = ({
         approvalStatus: '',
         availability: '',
         listingType: '',
+        propertyType: '',
+        furnishing: '',
+        possessionStatus: '',
         rejectionReason: ''
       });
     } catch (error) {
@@ -277,7 +283,8 @@ const BulkEditPanel = ({
                     <option value="available">Available</option>
                     <option value="sold">Sold</option>
                     <option value="rented">Rented</option>
-                    <option value="under-negotiation">Under Negotiation</option>
+                    <option value="under-agreement">Under Agreement</option>
+                    <option value="hold">On Hold</option>
                   </select>
                 </div>
 
@@ -298,8 +305,62 @@ const BulkEditPanel = ({
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Property Type
+                  </label>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={bulkData.propertyType}
+                    onChange={(e) => setBulkData({...bulkData, propertyType: e.target.value})}
+                  >
+                    <option value="">No Change</option>
+                    <option value="Apartment">Apartment</option>
+                    <option value="Villa">Villa</option>
+                    <option value="Independent House">Independent House</option>
+                    <option value="Studio">Studio</option>
+                    <option value="Penthouse">Penthouse</option>
+                    <option value="Duplex">Duplex</option>
+                    <option value="Pg house">PG House</option>
+                    <option value="Plot">Plot</option>
+                    <option value="Commercial Space">Commercial Space</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Furnishing
+                  </label>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={bulkData.furnishing}
+                    onChange={(e) => setBulkData({...bulkData, furnishing: e.target.value})}
+                  >
+                    <option value="">No Change</option>
+                    <option value="unfurnished">Unfurnished</option>
+                    <option value="semi-furnished">Semi-Furnished</option>
+                    <option value="fully-furnished">Fully Furnished</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Possession Status
+                  </label>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={bulkData.possessionStatus}
+                    onChange={(e) => setBulkData({...bulkData, possessionStatus: e.target.value})}
+                  >
+                    <option value="">No Change</option>
+                    <option value="ready-to-move">Ready to Move</option>
+                    <option value="under-construction">Under Construction</option>
+                    <option value="resale">Resale</option>
+                  </select>
+                </div>
+
                 {bulkData.approvalStatus === 'rejected' && (
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 lg:col-span-3">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Rejection Reason
                     </label>

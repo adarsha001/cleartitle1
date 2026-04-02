@@ -66,9 +66,41 @@ const DraggablePropertyRow = ({
       rejected: 'bg-red-100 text-red-800',
       available: 'bg-blue-100 text-blue-800',
       sold: 'bg-red-100 text-red-800',
-      rented: 'bg-purple-100 text-purple-800'
+      rented: 'bg-purple-100 text-purple-800',
+      'under-agreement': 'bg-orange-100 text-orange-800',
+      hold: 'bg-gray-100 text-gray-800'
     };
     return statusColors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  // Get the lowest price from unitTypes
+  const getMinPrice = () => {
+    if (property.unitTypes && property.unitTypes.length > 0) {
+      const prices = property.unitTypes.map(unit => unit.price?.amount || 0);
+      const minPrice = Math.min(...prices);
+      return formatPrice({ amount: minPrice });
+    }
+    return formatPrice(property.price);
+  };
+
+  // Get unit types summary
+  const getUnitTypesSummary = () => {
+    if (property.unitTypes && property.unitTypes.length > 0) {
+      const types = property.unitTypes.map(unit => unit.type).join(', ');
+      return types.length > 30 ? types.substring(0, 30) + '...' : types;
+    }
+    return property.propertyType || 'N/A';
+  };
+
+  // Get area info
+  const getAreaInfo = () => {
+    if (property.unitTypes && property.unitTypes.length > 0) {
+      const firstUnit = property.unitTypes[0];
+      if (firstUnit.carpetArea) return `${firstUnit.carpetArea} sq.ft`;
+      if (firstUnit.builtUpArea) return `${firstUnit.builtUpArea} sq.ft`;
+      if (firstUnit.plotDetails?.area?.sqft) return `${firstUnit.plotDetails.area.sqft} sq.ft`;
+    }
+    return property.specifications?.carpetArea ? `${property.specifications.carpetArea} sq.ft` : 'N/A';
   };
 
   return (
@@ -120,15 +152,15 @@ const DraggablePropertyRow = ({
             <div className="text-xs text-gray-400 mt-1">
               {formatDate(property.createdAt)}
             </div>
-            {property.unitNumber && (
-              <div className="text-xs text-gray-500">Unit: {property.unitNumber}</div>
+            {property.slug && (
+              <div className="text-xs text-gray-500">Slug: {property.slug}</div>
             )}
           </div>
         </div>
       </td>
       <td className="px-6 py-4">
         <div className="space-y-1">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap">
             <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
               {property.propertyType || 'Unknown'}
             </span>
@@ -137,23 +169,28 @@ const DraggablePropertyRow = ({
             </span>
           </div>
           <div className="text-sm text-gray-600">
-            {property.specifications?.bedrooms || 0} Beds • {property.specifications?.bathrooms || 0} Baths
+            <div>Units: {getUnitTypesSummary()}</div>
+            <div>Area: {getAreaInfo()}</div>
           </div>
-          <div className="text-sm text-gray-600">
-            Area: {property.specifications?.carpetArea || property.specifications?.plotArea || 0} sq.ft
-          </div>
+          {property.commonSpecifications?.furnishing && (
+            <div className="text-xs text-gray-500">
+              Furnishing: {property.commonSpecifications.furnishing}
+            </div>
+          )}
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="font-medium text-gray-900">
-          {formatPrice(property.price)}
+          {getMinPrice()}
         </div>
-        <div className="text-sm text-gray-500">
-          {property.price?.perUnit || 'total'}
-        </div>
-        {property.maintenanceCharges > 0 && (
+        {property.unitTypes && property.unitTypes.length > 1 && (
           <div className="text-xs text-gray-500">
-            Maintenance: ₹{property.maintenanceCharges}/month
+            From {property.unitTypes.length} types
+          </div>
+        )}
+        {property.price?.perUnit && (
+          <div className="text-sm text-gray-500">
+            {property.price.perUnit}
           </div>
         )}
       </td>
@@ -169,6 +206,9 @@ const DraggablePropertyRow = ({
               {property.availability || 'available'}
             </span>
           </div>
+          {property.legalDetails?.reraRegistered && (
+            <div className="text-xs text-green-600">RERA Registered</div>
+          )}
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
@@ -190,7 +230,7 @@ const DraggablePropertyRow = ({
               }`}
               disabled={isReordering}
             >
-              {property.isFeatured ? '⭐' : '☆'}
+              {property.isFeatured ? '⭐ Featured' : '☆ Not Featured'}
             </button>
             <button
               onClick={() => handleToggleVerified(property._id)}
@@ -201,7 +241,7 @@ const DraggablePropertyRow = ({
               }`}
               disabled={isReordering}
             >
-              {property.isVerified ? '✓' : '○'}
+              {property.isVerified ? '✓ Verified' : '○ Not Verified'}
             </button>
           </div>
           <div className="flex space-x-2">
@@ -247,6 +287,9 @@ const DraggablePropertyRow = ({
               </button>
             )}
           </div>
+          <div className="text-xs text-gray-500 mt-1">
+            Views: {property.viewCount || 0} | Inquiries: {property.inquiryCount || 0}
+          </div>
         </div>
       </td>
     </tr>
@@ -266,6 +309,11 @@ const AdminPropertyUnits = () => {
     availability: '',
     isFeatured: '',
     isVerified: '',
+    unitType: '',
+    furnishing: '',
+    possessionStatus: '',
+    minPrice: '',
+    maxPrice: '',
     sortBy: 'displayOrder',
     sortOrder: 'asc',
     page: 1,
@@ -282,7 +330,20 @@ const AdminPropertyUnits = () => {
     approved: 0,
     rejected: 0,
     featured: 0,
-    verified: 0
+    verified: 0,
+    reraRegistered: 0,
+    propertyTypeStats: [],
+    cityStats: [],
+    unitTypeStats: [],
+    furnishingStats: [],
+    possessionStats: [],
+    listingTypeStats: [],
+    totalStats: {
+      totalViews: 0,
+      totalInquiries: 0,
+      totalFavorites: 0,
+      totalLikes: 0
+    }
   });
 
   // CRUD operation states
@@ -303,48 +364,26 @@ const AdminPropertyUnits = () => {
   const [filterOptions, setFilterOptions] = useState({
     cities: [],
     propertyTypes: [],
+    unitTypes: [],
+    furnishingOptions: ['unfurnished', 'semi-furnished', 'fully-furnished'],
+    possessionStatuses: ['ready-to-move', 'under-construction', 'resale'],
     listingTypes: ['sale', 'rent', 'lease', 'pg']
   });
-
-  // Debug API functions
-  useEffect(() => {
-  //('propertyUnitAPI available?', propertyUnitAPI);
-  //('Methods available:', Object.keys(propertyUnitAPI));
-  //('getAllPropertyUnits exists?', typeof propertyUnitAPI.getAllPropertyUnits);
-  }, []);
 
   // Fetch property units (admin endpoint)
   const fetchPropertyUnits = async (params = {}) => {
     try {
       setLoading(true);
-    //('Fetching properties with filters:', { ...filters, ...params });
       
       const response = await propertyUnitAPI.getAllPropertyUnits({
         ...filters,
         ...params
       });
       
-    //('API Response:', response);
-      
       if (response.success) {
-        const processedData = (response.data || []).map(property => ({
-          ...property,
-          price: property.price ? {
-            ...property.price,
-            amount: property.price.amount ? property.price.amount.toString() : '0'
-          } : { amount: '0', currency: 'INR', perUnit: 'total' }
-        }));
-        
-        // Sort by displayOrder (ascending)
-        processedData.sort((a, b) => {
-          const orderA = a.displayOrder || 9999;
-          const orderB = b.displayOrder || 9999;
-          return orderA - orderB;
-        });
-        
-        setPropertyUnits(processedData);
+        setPropertyUnits(response.data || []);
         setPagination({
-          total: response.total || response.data?.length || 0,
+          total: response.total || 0,
           totalPages: response.totalPages || 1,
           currentPage: response.currentPage || 1
         });
@@ -353,8 +392,11 @@ const AdminPropertyUnits = () => {
         if (response.filters) {
           setFilterOptions(prev => ({
             ...prev,
-            cities: response.filters.availableCities || [],
-            propertyTypes: response.filters.availablePropertyTypes || []
+            cities: response.filters.cities || [],
+            propertyTypes: response.filters.propertyTypes || [],
+            unitTypes: response.filters.unitTypes || [],
+            furnishingOptions: response.filters.furnishingOptions || prev.furnishingOptions,
+            possessionStatuses: response.filters.possessionStatuses || prev.possessionStatuses
           }));
         }
       } else {
@@ -371,11 +413,9 @@ const AdminPropertyUnits = () => {
   // Fetch stats (admin endpoint)
   const fetchStats = async () => {
     try {
-    //('Fetching stats...');
       const response = await propertyUnitAPI.getPropertyUnitStats();
-    //('Stats response:', response);
       if (response.success) {
-        setStats(response.data || response.stats || response);
+        setStats(response.data);
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -403,40 +443,33 @@ const AdminPropertyUnits = () => {
   };
 
   // Save reordered properties
-const savePropertyOrder = async () => {
-  try {
-    setIsSavingOrder(true);
-    
-    // Create array of orders to update
-    const displayOrders = propertyUnits.map((property, index) => ({
-      id: property._id,
-      displayOrder: index + 1
-    }));
-
-  //('Saving display orders:', displayOrders);
-    
-    const response = await propertyUnitAPI.updateDisplayOrders(displayOrders);
-    
-    if (response.success) {
-      setIsReordering(false);
-      setIsSavingOrder(false);
-      toast.success(`Property order saved for ${response.modifiedCount || displayOrders.length} properties`);
+  const savePropertyOrder = async () => {
+    try {
+      setIsSavingOrder(true);
       
-      // Refresh to get updated data
-      fetchPropertyUnits();
-    } else {
-      throw new Error(response.message);
-    }
-  } catch (error) {
-    console.error('Error saving property order:', error);
-    setIsSavingOrder(false);
-    if (error.response?.data?.message) {
-      toast.error(`Backend error: ${error.response.data.message}`);
-    } else {
+      // Create array of orders to update
+      const displayOrders = propertyUnits.map((property, index) => ({
+        id: property._id,
+        displayOrder: index + 1
+      }));
+      
+      const response = await propertyUnitAPI.updateDisplayOrders(displayOrders);
+      
+      if (response.success) {
+        setIsReordering(false);
+        toast.success(`Property order saved for ${response.modifiedCount || displayOrders.length} properties`);
+        fetchPropertyUnits();
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      console.error('Error saving property order:', error);
       toast.error(error.message || 'Failed to save property order');
+    } finally {
+      setIsSavingOrder(false);
     }
-  }
-};
+  };
+
   // Cancel reordering
   const cancelReordering = () => {
     setIsReordering(false);
@@ -528,14 +561,7 @@ const savePropertyOrder = async () => {
     try {
       const response = await propertyUnitAPI.getPropertyUnitByIdAdmin(id);
       if (response.success) {
-        const propertyWithStringPrice = {
-          ...response.data,
-          price: response.data.price ? {
-            ...response.data.price,
-            amount: response.data.price.amount ? response.data.price.amount.toString() : '0'
-          } : { amount: '0', currency: 'INR', perUnit: 'total' }
-        };
-        setViewingProperty(propertyWithStringPrice);
+        setViewingProperty(response.data);
       } else {
         throw new Error(response.message);
       }
@@ -548,14 +574,7 @@ const savePropertyOrder = async () => {
     try {
       const response = await propertyUnitAPI.getPropertyUnitByIdAdmin(id);
       if (response.success) {
-        const propertyWithStringPrice = {
-          ...response.data,
-          price: response.data.price ? {
-            ...response.data.price,
-            amount: response.data.price.amount ? response.data.price.amount.toString() : '0'
-          } : { amount: '0', currency: 'INR', perUnit: 'total' }
-        };
-        setEditingProperty(propertyWithStringPrice);
+        setEditingProperty(response.data);
       } else {
         throw new Error(response.message);
       }
@@ -570,15 +589,16 @@ const savePropertyOrder = async () => {
 
   const handlePropertyUpdate = async (formData) => {
     try {
+      let response;
       if (editingProperty) {
-        const response = await propertyUnitAPI.updatePropertyUnitAdmin(editingProperty._id, formData);
+        response = await propertyUnitAPI.updatePropertyUnitAdmin(editingProperty._id, formData);
         if (response.success) {
           toast.success(response.message || 'Property updated successfully');
         } else {
           throw new Error(response.message);
         }
       } else {
-        const response = await propertyUnitAPI.createPropertyUnitAdmin(formData);
+        response = await propertyUnitAPI.createPropertyUnitAdmin(formData);
         if (response.success) {
           toast.success(response.message || 'Property created successfully');
         } else {
@@ -638,7 +658,7 @@ const savePropertyOrder = async () => {
       });
       
       if (response.success) {
-        toast.success(`Deleted ${response.deletedCount || response.data?.deletedCount || selectedProperties.length} properties`);
+        toast.success(`Deleted ${response.deletedCount || selectedProperties.length} properties`);
         handleBulkActionComplete();
       } else {
         throw new Error(response.message);
@@ -664,7 +684,7 @@ const savePropertyOrder = async () => {
       });
       
       if (response.success) {
-        toast.success(`Approved ${response.modifiedCount || response.data?.modifiedCount || selectedProperties.length} properties`);
+        toast.success(`Approved ${response.modifiedCount || selectedProperties.length} properties`);
         handleBulkActionComplete();
       } else {
         throw new Error(response.message);
@@ -694,7 +714,7 @@ const savePropertyOrder = async () => {
       });
       
       if (response.success) {
-        toast.success(`Rejected ${response.modifiedCount || response.data?.modifiedCount || selectedProperties.length} properties`);
+        toast.success(`Rejected ${response.modifiedCount || selectedProperties.length} properties`);
         handleBulkActionComplete();
       } else {
         throw new Error(response.message);
@@ -720,7 +740,7 @@ const savePropertyOrder = async () => {
       });
       
       if (response.success) {
-        toast.success(`Updated ${response.modifiedCount || response.data?.modifiedCount || selectedProperties.length} properties`);
+        toast.success(`Updated ${response.modifiedCount || selectedProperties.length} properties`);
         handleBulkActionComplete();
       } else {
         throw new Error(response.message);
@@ -732,20 +752,15 @@ const savePropertyOrder = async () => {
     }
   };
 
-const formatPrice = (price) => {
-  if (!price) return 'N/A';
-  
-  // If price is already a string, return it
-  if (typeof price === 'string') return price;
-  
-  // If price is an object with amount
-  if (price.amount !== undefined) {
-    return `₹${price.amount}`;
-  }
-  
-  // Fallback
-  return JSON.stringify(price);
-};
+  const formatPrice = (price) => {
+    if (!price) return 'N/A';
+    if (typeof price === 'number') return `₹${price.toLocaleString()}`;
+    if (typeof price === 'string') return price;
+    if (price.amount !== undefined) {
+      return `₹${Number(price.amount).toLocaleString()}`;
+    }
+    return 'N/A';
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -766,6 +781,11 @@ const formatPrice = (price) => {
       availability: '',
       isFeatured: '',
       isVerified: '',
+      unitType: '',
+      furnishing: '',
+      possessionStatus: '',
+      minPrice: '',
+      maxPrice: '',
       sortBy: 'displayOrder',
       sortOrder: 'asc',
       page: 1,
@@ -833,11 +853,11 @@ const formatPrice = (price) => {
         )}
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{stats.total || 0}</div>
-              <div className="text-sm text-gray-600">Total</div>
+              <div className="text-sm text-gray-600">Total Properties</div>
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-4">
@@ -868,6 +888,18 @@ const formatPrice = (price) => {
             <div className="text-center">
               <div className="text-2xl font-bold text-teal-600">{stats.verified || 0}</div>
               <div className="text-sm text-gray-600">Verified</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">{stats.reraRegistered || 0}</div>
+              <div className="text-sm text-gray-600">RERA Registered</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-indigo-600">{stats.totalStats?.totalViews || 0}</div>
+              <div className="text-sm text-gray-600">Total Views</div>
             </div>
           </div>
         </div>
@@ -923,7 +955,9 @@ const formatPrice = (price) => {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
             <div className="flex space-x-3">
-              {(filters.search || filters.approvalStatus || filters.propertyType || filters.listingType || filters.city || filters.availability || filters.isFeatured || filters.isVerified) && (
+              {(filters.search || filters.approvalStatus || filters.propertyType || filters.listingType || 
+                filters.city || filters.availability || filters.isFeatured || filters.isVerified || 
+                filters.unitType || filters.furnishing || filters.possessionStatus || filters.minPrice || filters.maxPrice) && (
                 <button
                   onClick={clearFilters}
                   className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
@@ -971,6 +1005,17 @@ const formatPrice = (price) => {
               ))}
             </select>
             <select
+              value={filters.unitType}
+              onChange={(e) => handleFilterChange('unitType', e.target.value)}
+              disabled={isReordering}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            >
+              <option value="">All Unit Types</option>
+              {filterOptions.unitTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+            <select
               value={filters.listingType}
               onChange={(e) => handleFilterChange('listingType', e.target.value)}
               disabled={isReordering}
@@ -1004,7 +1049,34 @@ const formatPrice = (price) => {
               <option value="available">Available</option>
               <option value="sold">Sold</option>
               <option value="rented">Rented</option>
-              <option value="under-negotiation">Under Negotiation</option>
+              <option value="under-agreement">Under Agreement</option>
+              <option value="hold">On Hold</option>
+            </select>
+            <select
+              value={filters.furnishing}
+              onChange={(e) => handleFilterChange('furnishing', e.target.value)}
+              disabled={isReordering}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            >
+              <option value="">All Furnishing</option>
+              {filterOptions.furnishingOptions.map(option => (
+                <option key={option} value={option}>
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.possessionStatus}
+              onChange={(e) => handleFilterChange('possessionStatus', e.target.value)}
+              disabled={isReordering}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            >
+              <option value="">All Possession Status</option>
+              {filterOptions.possessionStatuses.map(status => (
+                <option key={status} value={status}>
+                  {status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                </option>
+              ))}
             </select>
             <select
               value={filters.isFeatured}
@@ -1026,10 +1098,28 @@ const formatPrice = (price) => {
               <option value="true">Verified Only</option>
               <option value="false">Not Verified</option>
             </select>
+            <div className="flex space-x-2">
+              <input
+                type="number"
+                placeholder="Min Price"
+                value={filters.minPrice}
+                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                disabled={isReordering}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              />
+              <input
+                type="number"
+                placeholder="Max Price"
+                value={filters.maxPrice}
+                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                disabled={isReordering}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              />
+            </div>
           </div>
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-gray-600">
-              Showing {((filters.page - 1) * filters.limit) + 1} to {Math.min(filters.page * filters.limit, pagination.total)} of {pagination.total} properties
+              Showing {propertyUnits.length > 0 ? ((filters.page - 1) * filters.limit) + 1 : 0} to {Math.min(filters.page * filters.limit, pagination.total)} of {pagination.total} properties
             </div>
             <div className="flex space-x-2">
               <select
@@ -1064,7 +1154,7 @@ const formatPrice = (price) => {
                         <div className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={selectedProperties.length === propertyUnits.length}
+                            checked={selectedProperties.length === propertyUnits.length && propertyUnits.length > 0}
                             onChange={handleSelectAll}
                             className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                           />
@@ -1273,4 +1363,4 @@ const formatPrice = (price) => {
   );
 };
 
-export default AdminPropertyUnits;
+export default AdminPropertyUnits;  

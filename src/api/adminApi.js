@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Use relative paths in production, full URL in development
 const isDevelopment = import.meta.env.DEV;
-const baseURL = "https://saimr-backend-1.onrender.com/api/admin" 
+const baseURL = " https://saimr-backend-1.onrender.com/api/admin" 
 
 const API = axios.create({
   baseURL,

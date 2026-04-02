@@ -121,7 +121,7 @@ const LuxuryAuthCTA = () => {
   }
 
   return (
-    <section className="w-[35vw] min-w-[400px] flex items-center justify-center px-6 pt-52 hidden lg:block">
+    <section className="w-[35vw] min-w-[400px] flex items-center justify-center px-6 pt-4 hidden lg:block">
       <div className="max-w-[500px] w-full mx-auto">
         <AnimatePresence mode="wait">
           {!isAuthenticated ? (

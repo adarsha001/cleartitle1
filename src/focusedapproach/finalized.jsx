@@ -14,6 +14,7 @@ import CategoryGrid from './bentogridCatogarized';
 import PropertyCategories from '../focusedapproach/PropertyCategories';
 import ImprovedCarousel from '../newapproach/CarouselSlider';
 import UnifiedAuthCTA from './UnifiedAuthCTA';
+import BuildingMarquee from '../pages/Building';
 
 const Finalized = () => {
   const sectionRefs = useRef([]);
@@ -22,6 +23,7 @@ const Finalized = () => {
     { name: 'All Properties', component: ImprovedCarousel },
     { name: 'CategoryGrid', component: PropertyCategories },
     { name: 'Featured', component: FeaturedProperties },
+    // { name: 'BuildingMarquee', component: BuildingMarquee },
     { name: 'ProjectGroupBatches ', component: ProjectGroupBatches },
     { name: 'Newly Launched', component: NewlyLaunchedProperties },
     { name: 'Possession Timeline', component: PossessionTimeline },

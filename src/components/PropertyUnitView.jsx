@@ -1,3 +1,4 @@
+// components/PropertyUnitView.jsx (Updated)
 import React from 'react';
 
 const PropertyUnitView = ({ property }) => {
@@ -12,9 +13,7 @@ const PropertyUnitView = ({ property }) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     });
   };
 
@@ -32,8 +31,29 @@ const PropertyUnitView = ({ property }) => {
     return statusColors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  // Helper to check if array has items
   const hasItems = (array) => array && Array.isArray(array) && array.length > 0;
+
+  // Get price range from unitTypes
+  const getPriceRange = () => {
+    if (property.unitTypes && property.unitTypes.length > 0) {
+      const prices = property.unitTypes.map(unit => unit.price?.amount || 0);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      if (minPrice === maxPrice) {
+        return formatPrice({ amount: minPrice, currency: 'INR' });
+      }
+      return `${formatPrice({ amount: minPrice })} - ${formatPrice({ amount: maxPrice })}`;
+    }
+    return formatPrice(property.price);
+  };
+
+  // Get unit types summary
+  const getUnitTypesSummary = () => {
+    if (property.unitTypes && property.unitTypes.length > 0) {
+      return property.unitTypes.map(unit => `${unit.type}: ${formatPrice(unit.price)}`).join(' | ');
+    }
+    return 'N/A';
+  };
 
   return (
     <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
@@ -41,7 +61,7 @@ const PropertyUnitView = ({ property }) => {
       <div className="border-b pb-4">
         <h2 className="text-xl font-bold text-gray-900">{property.title}</h2>
         <p className="text-sm text-gray-600 mt-1">{property.description}</p>
-        <div className="flex items-center space-x-4 mt-2">
+        <div className="flex flex-wrap items-center gap-2 mt-2">
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(property.approvalStatus)}`}>
             {property.approvalStatus?.toUpperCase() || 'PENDING'}
           </span>
@@ -56,6 +76,11 @@ const PropertyUnitView = ({ property }) => {
           {property.isVerified && (
             <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
               ✓ VERIFIED
+            </span>
+          )}
+          {property.listingType && (
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              {property.listingType.toUpperCase()}
             </span>
           )}
         </div>
@@ -95,16 +120,18 @@ const PropertyUnitView = ({ property }) => {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Listing Type</p>
-              <p className="text-gray-900">{property.listingType || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Unit Number</p>
-              <p className="text-gray-900">{property.unitNumber || 'N/A'}</p>
+              <p className="text-gray-900 capitalize">{property.listingType || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Display Order</p>
               <p className="text-gray-900">{property.displayOrder || 0}</p>
             </div>
+            {property.slug && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Slug</p>
+                <p className="text-gray-900 text-sm">{property.slug}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -114,10 +141,6 @@ const PropertyUnitView = ({ property }) => {
             <div>
               <p className="text-sm font-medium text-gray-500">City</p>
               <p className="text-gray-900">{property.city || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Area/Locality</p>
-              <p className="text-gray-900">{property.area || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Full Address</p>
@@ -131,146 +154,150 @@ const PropertyUnitView = ({ property }) => {
                 </a>
               </div>
             )}
-            {property.coordinates?.latitude && property.coordinates?.longitude && (
-              <div>
-                <p className="text-sm font-medium text-gray-500">Coordinates</p>
-                <p className="text-gray-900 text-sm">
-                  {property.coordinates.latitude}, {property.coordinates.longitude}
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Price Details */}
+      {/* Price & Unit Types */}
       <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Price Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Price</p>
-            <p className="text-xl font-bold text-gray-900 mt-1">{formatPrice(property.price)}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {property.price?.perUnit ? `Per ${property.price.perUnit}` : 'Total Price'}
-            </p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Maintenance Charges</p>
-            <p className="text-lg font-semibold text-gray-900 mt-1">
-              ₹{property.maintenanceCharges?.toLocaleString('en-IN') || 0}/month
-            </p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Security Deposit</p>
-            <p className="text-lg font-semibold text-gray-900 mt-1">
-              ₹{property.securityDeposit?.toLocaleString('en-IN') || 0}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Specifications */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Specifications</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Bedrooms</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.bedrooms || 0}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Bathrooms</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.bathrooms || 0}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Balconies</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.balconies || 0}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Floors in Unit</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.floors || 0}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Floor Number</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.floorNumber || 'N/A'}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Carpet Area</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.carpetArea?.toLocaleString('en-IN') || 0} sq.ft</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Built-up Area</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.builtUpArea?.toLocaleString('en-IN') || 0} sq.ft</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Super Built-up Area</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.superBuiltUpArea?.toLocaleString('en-IN') || 'N/A'} sq.ft</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Plot Area</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.plotArea?.toLocaleString('en-IN') || 'N/A'} sq.ft</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Furnishing</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.furnishing || 'N/A'}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Possession Status</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.possessionStatus || 'N/A'}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Age of Property</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.ageOfProperty || 'N/A'} years</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Covered Parking</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.parking?.covered || 0}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Open Parking</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.parking?.open || 0}</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg border">
-            <p className="text-sm font-medium text-gray-500">Kitchen Type</p>
-            <p className="text-gray-900 font-semibold">{property.specifications?.kitchenType || 'N/A'}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Building Details */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Building Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Building Name</p>
-            <p className="text-gray-900">{property.buildingDetails?.name || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Total Floors</p>
-            <p className="text-gray-900">{property.buildingDetails?.totalFloors || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Total Units</p>
-            <p className="text-gray-900">{property.buildingDetails?.totalUnits || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Year Built</p>
-            <p className="text-gray-900">{property.buildingDetails?.yearBuilt || 'N/A'}</p>
-          </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Price & Unit Types</h3>
+        <div className="mb-4">
+          <p className="text-sm font-medium text-gray-500 mb-2">Price Range</p>
+          <p className="text-2xl font-bold text-gray-900">{getPriceRange()}</p>
         </div>
         
-        {hasItems(property.buildingDetails?.amenities) && (
-          <div className="mt-4">
-            <p className="text-sm font-medium text-gray-500 mb-2">Building Amenities</p>
-            <div className="flex flex-wrap gap-2">
-              {property.buildingDetails.amenities.map((amenity, index) => (
-                <span key={index} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
-                  {amenity}
-                </span>
+        {hasItems(property.unitTypes) && (
+          <div>
+            <p className="text-sm font-medium text-gray-500 mb-2">Unit Types ({property.unitTypes.length})</p>
+            <div className="space-y-3">
+              {property.unitTypes.map((unit, index) => (
+                <div key={index} className="bg-white p-3 rounded-lg border">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                      <p className="text-xs text-gray-500">Type</p>
+                      <p className="font-medium">{unit.type}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Price</p>
+                      <p className="font-medium">{formatPrice(unit.price)}</p>
+                      <p className="text-xs text-gray-500">{unit.price?.perUnit}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Area</p>
+                      <p className="text-sm">
+                        {unit.carpetArea ? `${unit.carpetArea} sq.ft` : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Availability</p>
+                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusBadge(unit.availability)}`}>
+                        {unit.availability}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {/* Common Specifications */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Specifications</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-500">Furnishing</p>
+            <p className="text-gray-900 capitalize">{property.commonSpecifications?.furnishing || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Possession Status</p>
+            <p className="text-gray-900 capitalize">{property.commonSpecifications?.possessionStatus || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Age of Property</p>
+            <p className="text-gray-900">{property.commonSpecifications?.ageOfProperty || 'N/A'} years</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Kitchen Type</p>
+            <p className="text-gray-900 capitalize">{property.commonSpecifications?.kitchenType || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Covered Parking</p>
+            <p className="text-gray-900">{property.commonSpecifications?.parking?.covered || 0}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Open Parking</p>
+            <p className="text-gray-900">{property.commonSpecifications?.parking?.open || 0}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Building Details */}
+      {property.buildingDetails && (property.buildingDetails.name || hasItems(property.buildingDetails.amenities)) && (
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-900 mb-3">Building Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {property.buildingDetails.name && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Building Name</p>
+                <p className="text-gray-900">{property.buildingDetails.name}</p>
+              </div>
+            )}
+            {property.buildingDetails.totalFloors && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Floors</p>
+                <p className="text-gray-900">{property.buildingDetails.totalFloors}</p>
+              </div>
+            )}
+            {property.buildingDetails.totalUnits && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Units</p>
+                <p className="text-gray-900">{property.buildingDetails.totalUnits}</p>
+              </div>
+            )}
+            {property.buildingDetails.yearBuilt && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Year Built</p>
+                <p className="text-gray-900">{property.buildingDetails.yearBuilt}</p>
+              </div>
+            )}
+          </div>
+          
+          {hasItems(property.buildingDetails.amenities) && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-500 mb-2">Building Amenities</p>
+              <div className="flex flex-wrap gap-2">
+                {property.buildingDetails.amenities.map((amenity, index) => (
+                  <span key={index} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
+                    {amenity}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Location Nearby */}
+      {hasItems(property.locationNearby) && (
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-900 mb-3">Nearby Amenities</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {property.locationNearby.map((item, index) => (
+              <div key={index} className="bg-white p-3 rounded-lg border">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-gray-900">{item.name}</p>
+                    <p className="text-sm text-gray-500">{item.distance}</p>
+                    <p className="text-xs text-gray-400 capitalize">{item.type}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Unit Features */}
       {hasItems(property.unitFeatures) && (
@@ -287,132 +314,92 @@ const PropertyUnitView = ({ property }) => {
         </div>
       )}
 
-      {/* Rental Details (if applicable) */}
-      {(property.listingType === 'rent' || property.listingType === 'lease' || property.rentalDetails?.availableForRent) && (
+      {/* Owner Details */}
+      {property.ownerDetails && (property.ownerDetails.name || property.ownerDetails.phoneNumber) && (
         <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-900 mb-3">Rental Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Available for Rent</p>
-              <p className="text-gray-900">{property.rentalDetails?.availableForRent ? 'Yes' : 'No'}</p>
-            </div>
-            {property.rentalDetails?.availableForRent && (
-              <>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Lease Duration</p>
-                  <p className="text-gray-900">
-                    {property.rentalDetails?.leaseDuration?.value || 11} {property.rentalDetails?.leaseDuration?.unit || 'months'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Rent Negotiable</p>
-                  <p className="text-gray-900">{property.rentalDetails?.rentNegotiable ? 'Yes' : 'No'}</p>
-                </div>
-                {hasItems(property.rentalDetails?.preferredTenants) && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Preferred Tenants</p>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {property.rentalDetails.preferredTenants.map((tenant, index) => (
-                        <span key={index} className="bg-purple-50 text-purple-700 px-2 py-1 rounded text-sm">
-                          {tenant}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {hasItems(property.rentalDetails?.includedInRent) && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Included in Rent</p>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {property.rentalDetails.includedInRent.map((item, index) => (
-                        <span key={index} className="bg-green-50 text-green-700 px-2 py-1 rounded text-sm">
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
+          <h3 className="text-lg font-medium text-gray-900 mb-3">Owner Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {property.ownerDetails.name && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Name</p>
+                <p className="text-gray-900">{property.ownerDetails.name}</p>
+              </div>
+            )}
+            {property.ownerDetails.phoneNumber && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Phone</p>
+                <p className="text-gray-900">{property.ownerDetails.phoneNumber}</p>
+              </div>
+            )}
+            {property.ownerDetails.email && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Email</p>
+                <p className="text-gray-900">{property.ownerDetails.email}</p>
+              </div>
+            )}
+            {property.ownerDetails.reasonForSelling && (
+              <div>
+                <p className="text-sm font-medium text-gray-500">Reason for Selling</p>
+                <p className="text-gray-900">{property.ownerDetails.reasonForSelling}</p>
+              </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Virtual Tour & Floor Plan */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {property.virtualTour && (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Virtual Tour</h3>
-            <a href={property.virtualTour} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-              View Virtual Tour →
-            </a>
-          </div>
-        )}
-        
-        {property.floorPlan?.image && (
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Floor Plan</h3>
-            <img src={property.floorPlan.image} alt="Floor plan" className="w-full h-auto rounded-lg mb-2" />
-            {property.floorPlan.description && (
-              <p className="text-sm text-gray-600">{property.floorPlan.description}</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Owner Details */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Owner Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Name</p>
-            <p className="text-gray-900">{property.ownerDetails?.name || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Phone</p>
-            <p className="text-gray-900">{property.ownerDetails?.phoneNumber || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Email</p>
-            <p className="text-gray-900">{property.ownerDetails?.email || 'N/A'}</p>
-          </div>
-          <div className="md:col-span-2 lg:col-span-1">
-            <p className="text-sm font-medium text-gray-500">Reason for Selling</p>
-            <p className="text-gray-900">{property.ownerDetails?.reasonForSelling || 'N/A'}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Legal Details */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Legal Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Ownership Type</p>
-            <p className="text-gray-900">{property.legalDetails?.ownershipType || 'N/A'}</p>
+      {property.legalDetails && (
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-900 mb-3">Legal Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Ownership Type</p>
+              <p className="text-gray-900 capitalize">{property.legalDetails.ownershipType || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Khata Status</p>
+              <p className="text-gray-900">{property.legalDetails.khataStatus || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">RERA Registered</p>
+              <p className="text-gray-900">{property.legalDetails.reraRegistered ? 'Yes' : 'No'}</p>
+              {property.legalDetails.reraNumber && (
+                <p className="text-xs text-gray-500">RERA: {property.legalDetails.reraNumber}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Clear Title</p>
+              <p className="text-gray-900">{property.legalDetails.clearTitle ? 'Yes' : 'No'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Encumbrance Certificate</p>
+              <p className="text-gray-900">{property.legalDetails.encumbranceCertificate ? 'Yes' : 'No'}</p>
+              {property.legalDetails.encumbranceYears && (
+                <p className="text-xs text-gray-500">{property.legalDetails.encumbranceYears} years</p>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Occupancy Certificate</p>
+              <p className="text-gray-900">{property.legalDetails.occupancyCertificate ? 'Yes' : 'No'}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">RERA Registered</p>
-            <p className="text-gray-900">{property.legalDetails?.reraRegistered ? 'Yes' : 'No'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">RERA Number</p>
-            <p className="text-gray-900">{property.legalDetails?.reraNumber || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Khata Certificate</p>
-            <p className="text-gray-900">{property.legalDetails?.khataCertificate ? 'Yes' : 'No'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Encumbrance Certificate</p>
-            <p className="text-gray-900">{property.legalDetails?.encumbranceCertificate ? 'Yes' : 'No'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Occupancy Certificate</p>
-            <p className="text-gray-900">{property.legalDetails?.occupancyCertificate ? 'Yes' : 'No'}</p>
-          </div>
+
+          {hasItems(property.legalDetails.bankApprovals) && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-500 mb-2">Bank Approvals</p>
+              <div className="space-y-2">
+                {property.legalDetails.bankApprovals.map((approval, index) => (
+                  <div key={index} className="bg-white p-2 rounded border">
+                    <p className="font-medium">{approval.bankName}</p>
+                    <p className="text-sm text-gray-500">Approved: {approval.approved ? 'Yes' : 'No'}</p>
+                    {approval.approvalDate && <p className="text-xs text-gray-400">{approval.approvalDate}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Contact & Viewing */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -451,31 +438,25 @@ const PropertyUnitView = ({ property }) => {
         </div>
       </div>
 
-      {/* Website & SEO */}
+      {/* Statistics */}
       <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Website & SEO</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-500">Website Assignment</p>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {hasItems(property.websiteAssignment) ? (
-                property.websiteAssignment.map((website, index) => (
-                  <span key={index} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                    {website}
-                  </span>
-                ))
-              ) : (
-                <p className="text-gray-600">No websites assigned</p>
-              )}
-            </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Statistics</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-600">{property.viewCount || 0}</p>
+            <p className="text-sm text-gray-600">Views</p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Meta Title</p>
-            <p className="text-gray-900">{property.metaTitle || 'N/A'}</p>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-600">{property.inquiryCount || 0}</p>
+            <p className="text-sm text-gray-600">Inquiries</p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Meta Description</p>
-            <p className="text-gray-900 line-clamp-2">{property.metaDescription || 'N/A'}</p>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-purple-600">{property.favoriteCount || 0}</p>
+            <p className="text-sm text-gray-600">Favorites</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-red-600">{property.likes || 0}</p>
+            <p className="text-sm text-gray-600">Likes</p>
           </div>
         </div>
       </div>
@@ -483,7 +464,7 @@ const PropertyUnitView = ({ property }) => {
       {/* Metadata */}
       <div className="bg-gray-50 p-4 rounded-lg">
         <h3 className="text-lg font-medium text-gray-900 mb-3">Metadata</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-500">Created</p>
             <p className="text-gray-900">{formatDate(property.createdAt)}</p>
@@ -491,10 +472,6 @@ const PropertyUnitView = ({ property }) => {
           <div>
             <p className="text-sm font-medium text-gray-500">Updated</p>
             <p className="text-gray-900">{formatDate(property.updatedAt)}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">View Count</p>
-            <p className="text-gray-900">{property.viewCount || 0}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Created By</p>
@@ -505,7 +482,7 @@ const PropertyUnitView = ({ property }) => {
         </div>
       </div>
 
-      {/* Rejection Reason (if rejected) */}
+      {/* Rejection Reason */}
       {property.approvalStatus === 'rejected' && property.rejectionReason && (
         <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
           <h3 className="text-lg font-medium text-red-900 mb-2">Rejection Reason</h3>

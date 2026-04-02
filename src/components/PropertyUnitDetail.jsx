@@ -1,4 +1,4 @@
-// PropertyUnitDetail.jsx - Updated with all requested changes
+// PropertyUnitDetail.jsx - Updated with complete backend integration
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -79,7 +79,48 @@ import {
   Accessibility,
   Sun,
   Eye,
-// Add this line
+  Info,
+  Scale,
+  Gavel,
+  FileSignature,
+  Banknote,
+  BuildingIcon,
+  Map,
+  Train,
+  School,
+  Hospital,
+  ShoppingBag,
+  Music,
+  Coffee,
+  Church,
+  UtensilsCrossed,
+  Briefcase,
+  Heart,
+  Eye as EyeIcon,
+  ThumbsUp,
+  ThumbsDown,
+  AlertCircle,
+  CheckSquare,
+  FileText as FileTextIcon,
+  Library,
+  ScrollText,
+  Landmark,
+  HomeIcon,
+  HelpCircle,
+  Grid,
+  List,
+  RotateCcw,
+  Search,
+  Filter,
+  SlidersHorizontal,
+  ArrowUpDown,
+  Zap,
+  Sparkles,
+  Gem,
+  Crown,
+  Trophy,
+  Medal,
+  ThumbsUp as LikeIcon
 } from "lucide-react";
 import Footer from "../pages/Footer";
 import PossessionTimeline from "../newapproach/PossessionTimeline";
@@ -100,6 +141,12 @@ export default function PropertyUnitDetail() {
   const [showFullscreenImage, setShowFullscreenImage] = useState(false);
   const [fullscreenImageIndex, setFullscreenImageIndex] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [selectedUnitType, setSelectedUnitType] = useState(null);
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [inquiryMessage, setInquiryMessage] = useState("");
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [showAllFeatures, setShowAllFeatures] = useState(false);
   const fullscreenRef = useRef(null);
   
   const { user } = useAuth();
@@ -110,7 +157,13 @@ export default function PropertyUnitDetail() {
     features: true,
     specifications: true,
     amenities: true,
-    buildingDetails: true
+    buildingDetails: true,
+    unitTypes: true,
+    legalDetails: true,
+    locationNearby: true,
+    ownerDetails: true,
+    plotDetails: true,
+    rentalDetails: true
   });
 
   // Available time slots
@@ -143,7 +196,6 @@ export default function PropertyUnitDetail() {
     setFullscreenImageIndex(index);
     setShowFullscreenImage(true);
     setZoomLevel(1);
-    // Prevent scrolling on body when fullscreen is open
     document.body.style.overflow = 'hidden';
   };
 
@@ -236,23 +288,26 @@ export default function PropertyUnitDetail() {
         setLoading(true);
         setError(null);
         
-      //("Fetching property unit with ID:", id);
         const response = await propertyUnitAPI.getPropertyUnit(id);
         
-      //("API Response:", response);
-        
         if (response.data.success) {
-        //("Property unit data:", response.data.data);
           setPropertyUnit(response.data.data);
+          setLikeCount(response.data.data.likes || 0);
+          // Check if user has liked this property (if logged in)
+          if (user && response.data.data.likedByUser) {
+            setIsLiked(true);
+          }
+          // Select first unit type by default if available
+          if (response.data.data.unitTypes && response.data.data.unitTypes.length > 0) {
+            setSelectedUnitType(response.data.data.unitTypes[0]);
+          }
         } else {
           console.error("Failed to fetch property unit:", response.data.message);
           setError(response.data.message || "Failed to fetch property details");
         }
       } catch (error) {
         console.error("Error fetching property unit:", error);
-        console.error("Error response:", error.response);
         
-        // Handle different error scenarios
         if (error.response) {
           switch (error.response.status) {
             case 400:
@@ -289,18 +344,66 @@ export default function PropertyUnitDetail() {
       setError("Invalid property ID");
       setLoading(false);
     }
-  }, [id]);
+  }, [id, user]);
+
+  // Handle like/unlike
+  const handleLike = async () => {
+    if (!user) {
+      navigate('/login', { state: { from: `/property-units/${id}` } });
+      return;
+    }
+    
+    try {
+      const response = await propertyUnitAPI.toggleLike(id);
+      if (response.data.success) {
+        setIsLiked(!isLiked);
+        setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
+
+  // Handle inquiry
+  const handleInquiry = async () => {
+    if (!user) {
+      navigate('/login', { state: { from: `/property-units/${id}` } });
+      return;
+    }
+    
+    if (!inquiryMessage.trim()) {
+      alert("Please enter your inquiry message");
+      return;
+    }
+    
+    try {
+      const response = await propertyUnitAPI.sendInquiry(id, { message: inquiryMessage });
+      if (response.data.success) {
+        alert("Inquiry sent successfully! The owner will contact you soon.");
+        setShowInquiryModal(false);
+        setInquiryMessage("");
+      } else {
+        alert("Failed to send inquiry. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error sending inquiry:", error);
+      alert("Failed to send inquiry. Please try again.");
+    }
+  };
 
   // Add null check functions
   const safeImages = propertyUnit?.images || [];
-  const safeSpecifications = propertyUnit?.specifications || {};
+  const safeUnitTypes = propertyUnit?.unitTypes || [];
   const safeBuildingDetails = propertyUnit?.buildingDetails || {};
   const safeUnitFeatures = propertyUnit?.unitFeatures || [];
-  const safeRentalDetails = propertyUnit?.rentalDetails || {};
   const safeLegalDetails = propertyUnit?.legalDetails || {};
-  const safeViewingSchedule = propertyUnit?.viewingSchedule || {};
-  const safeContactPreference = propertyUnit?.contactPreference || {};
-  const safeParentProperty = propertyUnit?.parentProperty || {};
+  const safeLocationNearby = propertyUnit?.locationNearby || [];
+  const safeOwnerDetails = propertyUnit?.ownerDetails || {};
+  const safeCommonSpecifications = propertyUnit?.commonSpecifications || {};
+  const safeViewingSchedule = propertyUnit?.viewingSchedule || [];
+  const safeContactPreference = propertyUnit?.contactPreference || [];
+  const safePlotDetails = propertyUnit?.plotArea || null;
+  const safeRentalDetails = propertyUnit?.rentalDetails || null;
 
   // WhatsApp share function
   const shareOnWhatsApp = () => {
@@ -326,7 +429,6 @@ export default function PropertyUnitDetail() {
       setShowShareOptions(false);
     } catch (err) {
       console.error('Failed to copy: ', err);
-      // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = window.location.href;
       document.body.appendChild(textArea);
@@ -357,7 +459,6 @@ export default function PropertyUnitDetail() {
 
   const handleTimeSelect = (time) => {
     setSelectedTime(time);
-    // Auto-proceed to WhatsApp after time selection
     setTimeout(() => {
       sendBookingToWhatsApp();
     }, 500);
@@ -381,46 +482,35 @@ export default function PropertyUnitDetail() {
       title,
       address,
       city,
-      price,
       description,
-      unitNumber,
       propertyType,
-      specifications
     } = propertyUnit;
 
-    // Format selected date
     const appointmentDate = formatDateForDisplay(selectedDate);
     
-    // Create the WhatsApp message
     let message = `*📅 PROPERTY VIEWING APPOINTMENT REQUEST*\n\n`;
     message += `*Property Details:*\n`;
-    message += `🏢 *${title}*${unitNumber ? ` #${unitNumber}` : ''}\n`;
+    message += `🏢 *${title}*\n`;
     message += `📍 ${address}, ${city}\n`;
-    message += `💰 ${formatPrice(price)}\n`;
     message += `📐 ${propertyType}\n`;
     
-    if (specifications?.bedrooms > 0) {
-      message += `🛏️ ${specifications.bedrooms} BHK\n`;
+    if (selectedUnitType) {
+      message += `\n*Selected Unit:*\n`;
+      message += `🏠 Type: ${selectedUnitType.type}\n`;
+      message += `💰 Price: ${formatUnitPrice(selectedUnitType.price)}\n`;
+      message += `📏 Area: ${selectedUnitType.carpetArea.toLocaleString()} sq.ft.\n`;
     }
     
-    if (specifications?.carpetArea > 0) {
-      message += `📏 ${specifications.carpetArea.toLocaleString()} sq.ft.\n`;
-    }
-    
-    message += `\n`;
-    message += `*Appointment Details:*\n`;
+    message += `\n*Appointment Details:*\n`;
     message += `📅 Date: ${appointmentDate}\n`;
     message += `⏰ Time: ${selectedTime}\n`;
-    message += `\n`;
-    message += `*Client Information:*\n`;
+    message += `\n*Client Information:*\n`;
     message += `👤 Name: ${user?.name || 'Not specified'}\n`;
     message += `📧 Email: ${user?.email || 'Not specified'}\n`;
     message += `📱 Phone: ${user?.phoneNumber || 'Not specified'}\n`;
-    message += `\n`;
-    message += `_This appointment request was sent via Property Portal_\n`;
+    message += `\n_This appointment request was sent via Property Portal_\n`;
     message += `Property URL: ${window.location.href}`;
 
-    // Clean phone number (remove non-numeric characters)
     const agentPhoneNumber = propertyUnit?.createdBy?.phoneNumber || "";
     const cleanPhoneNumber = agentPhoneNumber.replace(/\D/g, '');
     
@@ -429,164 +519,158 @@ export default function PropertyUnitDetail() {
       return;
     }
 
-    // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`;
     
-    // Create WhatsApp URL
-    const whatsappUrl = `https://wa.me/9019067239?text=${encodedMessage}`;
-    
-    // Open WhatsApp in new tab
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     
-    // Close modal
     setShowBookingModal(false);
     setSelectedDate("");
     setSelectedTime("");
     setBookingStep(1);
     
-    // Show confirmation message
     alert(`Appointment request sent to WhatsApp!\n\nDate: ${appointmentDate}\nTime: ${selectedTime}`);
   };
 
   // Format price with null checks
-const formatPrice = (price) => {
-  if (!price) return "Price on request";
-  
-  try {
-    let amount = 0;
-    let currency = '₹';
+  const formatPrice = (price) => {
+    if (!price) return "Price on request";
     
-    // Helper function to extract numeric value from string with commas
-    const extractNumericValue = (str) => {
-      if (!str) return 0;
+    try {
+      let amount = 0;
+      let currency = '₹';
       
-      // Check for special cases
-      const lowerStr = str.toString().toLowerCase().trim();
-      if (lowerStr.includes('price on request') || 
-          lowerStr.includes('contact for price') ||
-          lowerStr.includes('negotiable') ||
-          lowerStr === 'on request') {
-        return null; // Special marker
-      }
-      
-      // Remove currency symbols, spaces, and other non-numeric characters except commas, dots, and minus
-      let cleanStr = str.toString()
-        .replace(/[₹$,€£\s]/g, '')  // Remove currency symbols
-        .replace(/[^\d,.-]/g, '');  // Keep only digits, commas, dots, and minus
-      
-      // If string contains commas, remove them for parsing
-      cleanStr = cleanStr.replace(/,/g, '');
-      
-      // Parse as float
-      const parsed = parseFloat(cleanStr);
-      return isNaN(parsed) ? 0 : parsed;
-    };
-    
-    // Extract amount from different price formats
-    if (typeof price === 'object' && price !== null) {
-      const priceValue = price.amount || price.value || 0;
-      if (typeof priceValue === 'string' && priceValue.includes(',')) {
-        amount = extractNumericValue(priceValue);
-      } else {
-        amount = typeof priceValue === 'string' ? parseFloat(priceValue) : priceValue;
-      }
-    } else if (typeof price === 'number') {
-      amount = price;
-    } else if (typeof price === 'string') {
-      // Handle comma-separated values
-      if (price.includes(',')) {
-        amount = extractNumericValue(price);
-        if (amount === null) return "Price on request";
-      } else {
-        // Try to parse normally
-        const parsed = parseFloat(price.replace(/[^0-9.-]+/g, ""));
-        amount = isNaN(parsed) ? 0 : parsed;
-      }
-    }
-    
-    // If amount is 0, NaN, or invalid
-    if (!amount || isNaN(amount) || amount <= 0) return "Price on request";
-    
-    // Format number to words with proper Indian numbering system
-    const formatToIndianWords = (num) => {
-      const crore = 10000000;
-      const lakh = 100000;
-      const thousand = 1000;
-      
-      // Format function to remove trailing zeros
-      const cleanNumber = (n) => {
-        const str = n.toFixed(2);
-        return str.replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+      const extractNumericValue = (str) => {
+        if (!str) return 0;
+        const lowerStr = str.toString().toLowerCase().trim();
+        if (lowerStr.includes('price on request') || 
+            lowerStr.includes('contact for price') ||
+            lowerStr.includes('negotiable') ||
+            lowerStr === 'on request') {
+          return null;
+        }
+        
+        let cleanStr = str.toString()
+          .replace(/[₹$,€£\s]/g, '')
+          .replace(/[^\d,.-]/g, '');
+        
+        cleanStr = cleanStr.replace(/,/g, '');
+        const parsed = parseFloat(cleanStr);
+        return isNaN(parsed) ? 0 : parsed;
       };
       
-      // For crores with lakhs
-      if (num >= crore) {
-        const crores = num / crore;
-        const croresInt = Math.floor(crores);
-        const croresDecimal = crores - croresInt;
+      if (typeof price === 'object' && price !== null) {
+        const priceValue = price.amount || price.value || 0;
+        if (typeof priceValue === 'string' && priceValue.includes(',')) {
+          amount = extractNumericValue(priceValue);
+        } else {
+          amount = typeof priceValue === 'string' ? parseFloat(priceValue) : priceValue;
+        }
+      } else if (typeof price === 'number') {
+        amount = price;
+      } else if (typeof price === 'string') {
+        if (price.includes(',')) {
+          amount = extractNumericValue(price);
+          if (amount === null) return "Price on request";
+        } else {
+          const parsed = parseFloat(price.replace(/[^0-9.-]+/g, ""));
+          amount = isNaN(parsed) ? 0 : parsed;
+        }
+      }
+      
+      if (!amount || isNaN(amount) || amount <= 0) return "Price on request";
+      
+      const formatToIndianWords = (num) => {
+        const crore = 10000000;
+        const lakh = 100000;
+        const thousand = 1000;
         
-        if (croresDecimal === 0) {
-          // Whole crores
-          return `${croresInt.toLocaleString('en-IN')} Crore${croresInt > 1 ? 's' : ''}`;
-        } else {
-          // Crores with decimal
-          return `${cleanNumber(crores)} Crore`;
-        }
-      }
-      
-      // For lakhs
-      if (num >= lakh) {
-        const lakhs = num / lakh;
-        const lakhsInt = Math.floor(lakhs);
-        const lakhsDecimal = lakhs - lakhsInt;
+        const cleanNumber = (n) => {
+          const str = n.toFixed(2);
+          return str.replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+        };
         
-        if (lakhsDecimal === 0) {
-          // Whole lakhs
-          return `${lakhsInt.toLocaleString('en-IN')} Lakh${lakhsInt > 1 ? 's' : ''}`;
-        } else {
-          // Lakhs with decimal (like 1.50 Lakh)
-          return `${cleanNumber(lakhs)} Lakh`;
+        if (num >= crore) {
+          const crores = num / crore;
+          const croresInt = Math.floor(crores);
+          const croresDecimal = crores - croresInt;
+          
+          if (croresDecimal === 0) {
+            return `${croresInt.toLocaleString('en-IN')} Crore${croresInt > 1 ? 's' : ''}`;
+          } else {
+            return `${cleanNumber(crores)} Crore`;
+          }
         }
-      }
-      
-      // For thousands
-      if (num >= thousand) {
-        const thousands = num / thousand;
-        if (thousands % 1 === 0) {
-          return `${thousands.toLocaleString('en-IN')} Thousand`;
-        } else {
-          return `${cleanNumber(thousands)} Thousand`;
+        
+        if (num >= lakh) {
+          const lakhs = num / lakh;
+          const lakhsInt = Math.floor(lakhs);
+          const lakhsDecimal = lakhs - lakhsInt;
+          
+          if (lakhsDecimal === 0) {
+            return `${lakhsInt.toLocaleString('en-IN')} Lakh${lakhsInt > 1 ? 's' : ''}`;
+          } else {
+            return `${cleanNumber(lakhs)} Lakh`;
+          }
         }
-      }
+        
+        if (num >= thousand) {
+          const thousands = num / thousand;
+          if (thousands % 1 === 0) {
+            return `${thousands.toLocaleString('en-IN')} Thousand`;
+          } else {
+            return `${cleanNumber(thousands)} Thousand`;
+          }
+        }
+        
+        return `${num.toLocaleString('en-IN')}`;
+      };
       
-      // For amounts less than 1000
-      return `${num.toLocaleString('en-IN')}`;
-    };
+      const formatted = formatToIndianWords(amount);
+      return `${currency} ${formatted}`;
+      
+    } catch (err) {
+      console.error("Error formatting price:", err);
+      return "Price on request";
+    }
+  };
+
+  // Format unit price
+  const formatUnitPrice = (price) => {
+    if (!price) return "Price on request";
     
-    const formatted = formatToIndianWords(amount);
-    return `${currency} ${formatted}`;
+    let amount = price.amount || price;
+    let perUnit = price.perUnit || "total";
     
-  } catch (err) {
-    console.error("Error formatting price:", err);
-    return "Price on request";
-  }
-};
+    const formattedAmount = formatPrice(amount);
+    
+    if (perUnit === "sqft") {
+      return `${formattedAmount} per sq.ft.`;
+    } else if (perUnit === "sqm") {
+      return `${formattedAmount} per sq.m.`;
+    } else if (perUnit === "month") {
+      return `${formattedAmount} per month`;
+    } else if (perUnit === "perSqYard") {
+      return `${formattedAmount} per sq.yd.`;
+    } else if (perUnit === "perGround") {
+      return `${formattedAmount} per ground`;
+    }
+    
+    return formattedAmount;
+  };
 
   // Get property type icon
   const getPropertyTypeIcon = (type) => {
     const icons = {
       'Apartment': <Building className="w-4 h-4 sm:w-5 sm:h-5" />,
       'Villa': <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
-      'Commercial': <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />,
-      'Office': <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />,
-      'Shop': <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
-      'Warehouse': <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />,
-      'Industrial': <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />,
-      'Hotel': <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
-      'Farmhouse': <TreePine className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'Independent House': <HomeIcon className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'Studio': <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'Penthouse': <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'Duplex': <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'Pg house': <Users className="w-4 h-4 sm:w-5 sm:h-5" />,
       'Plot': <LandPlot className="w-4 h-4 sm:w-5 sm:h-5" />,
-      'Commercial Space': <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />,
-      'Office Space': <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+      'Commercial Space': <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
     };
     
     return icons[type] || <Building className="w-4 h-4 sm:w-5 sm:h-5" />;
@@ -595,24 +679,51 @@ const formatPrice = (price) => {
   // Get listing type color
   const getListingTypeColor = (type) => {
     const colors = {
-      'Sale': 'from-green-600 to-green-700',
-      'Rent': 'from-blue-600 to-blue-700',
-      'Lease': 'from-purple-600 to-purple-700'
+      'sale': 'from-green-600 to-green-700',
+      'rent': 'from-blue-600 to-blue-700',
+      'lease': 'from-purple-600 to-purple-700',
+      'pg': 'from-orange-600 to-orange-700'
     };
     
     return colors[type] || 'from-gray-600 to-gray-700';
   };
 
+  // Get listing type display text
+  const getListingTypeText = (type) => {
+    const texts = {
+      'sale': 'For Sale',
+      'rent': 'For Rent',
+      'lease': 'For Lease',
+      'pg': 'PG/Hostel'
+    };
+    
+    return texts[type] || 'For Sale';
+  };
+
   // Get availability color
   const getAvailabilityColor = (status) => {
     const colors = {
-      'available': 'from-green-500 to-green-600',
-      'sold': 'from-red-500 to-red-600',
+      'available': 'from-emerald-500 to-emerald-600',
+      'sold': 'from-slate-600 to-slate-700',
       'rented': 'from-blue-500 to-blue-600',
-      'under-negotiation': 'from-yellow-500 to-yellow-600'
+      'under-agreement': 'from-yellow-500 to-yellow-600',
+      'hold': 'from-amber-500 to-amber-600'
     };
     
     return colors[status] || 'from-gray-500 to-gray-600';
+  };
+
+  // Get availability display text
+  const getAvailabilityText = (status) => {
+    const texts = {
+      'available': '✨ Available Now',
+      'sold': '⭐ Sold',
+      'rented': '🔐 Rented',
+      'under-agreement': '📝 Under Agreement',
+      'hold': '⏸️ On Hold'
+    };
+    
+    return texts[status] || status;
   };
 
   // Format date
@@ -629,13 +740,31 @@ const formatPrice = (price) => {
     }
   };
 
+  // Get location nearby icon
+  const getLocationNearbyIcon = (type) => {
+    const icons = {
+      'transport': <Train className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'education': <School className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'healthcare': <Hospital className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'shopping': <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'entertainment': <Music className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'banking': <Banknote className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'religious': <Church className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'park': <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'restaurant': <UtensilsCrossed className="w-4 h-4 sm:w-5 sm:h-5" />,
+      'other': <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
+    };
+    
+    return icons[type] || <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />;
+  };
+
   // Get Google Maps embed URL
   const getGoogleMapsEmbedUrl = () => {
     if (!propertyUnit) return null;
     
     try {
       const { coordinates, mapUrl, address, city } = propertyUnit;
-        if (address && city) {
+      if (address && city) {
         const query = encodeURIComponent(`${address}, ${city}`);
         return `https://maps.google.com/maps?q=${query}&z=15&output=embed`;
       }
@@ -658,9 +787,6 @@ const formatPrice = (price) => {
           return mapUrl.replace('/?', '/embed?');
         }
       }
-      
-    
-  
     } catch (err) {
       console.error("Error generating Google Maps URL:", err);
     }
@@ -674,10 +800,10 @@ const formatPrice = (price) => {
     
     try {
       const { mapUrl, coordinates, address, city } = propertyUnit;
-         if (address && city) {
+      if (address && city) {
         return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address + ', ' + city)}`;
       }
-       if (city) {
+      if (city) {
         return `https://www.google.com/maps/place/${encodeURIComponent(city)}`;
       }
       if (mapUrl) return mapUrl;
@@ -685,10 +811,6 @@ const formatPrice = (price) => {
       if (coordinates?.latitude && coordinates?.longitude) {
         return `https://www.google.com/maps?q=${coordinates.latitude},${coordinates.longitude}`;
       }
-      
-   
-      
-     
     } catch (err) {
       console.error("Error generating Google Maps view URL:", err);
     }
@@ -697,53 +819,49 @@ const formatPrice = (price) => {
   };
 
   // Feature icons mapping
-  const featureIcons = {
-    // ... (keep your existing featureIcons object)
-  };
-
-const getFeatureIcon = (feature) => {
-  const iconMap = {
-    // Basic Amenities
-    "Air Conditioning": <Wind className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Modular Kitchen": <ChefHat className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Wardrobes": <DoorOpen className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Geyser": <ThermometerSnowflake className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Exhaust Fan": <Fan className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Chimney": <Wind className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Lighting": <Lamp className="w-4 h-4 sm:w-5 sm:h-5" />,
+  const getFeatureIcon = (feature) => {
+    const iconMap = {
+      // Basic Amenities
+      "Air Conditioning": <Wind className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Modular Kitchen": <ChefHat className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Wardrobes": <DoorOpen className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Geyser": <ThermometerSnowflake className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Exhaust Fan": <Fan className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Chimney": <Wind className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Lighting": <Lamp className="w-4 h-4 sm:w-5 sm:h-5" />,
       "Ceiling Fans": <Fan className="w-4 h-4 sm:w-5 sm:h-5" />,
-    
-    // Luxury
-    "Smart Home Automation": <Cpu className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Central AC": <Snowflake className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "bore water": <Droplets className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Walk-in Closet": <DoorOpen className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Study Room": <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Pooja Room": <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Utility Area": <Sofa className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Servant Room": <User className="w-4 h-4 sm:w-5 sm:h-5" />,
-    
-    // Outdoor
-    "Private Garden": <Trees className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Terrace": <Mountain className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Balcony": <Ship className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Swimming Pool": <Waves className="w-4 h-4 sm:w-5 sm:h-5" />,
-    
-    // Safety & Security
-    "Video Door Phone": <Camera className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Security Alarm": <Bell className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Fire Safety": <Flame className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "CCTV": <Camera className="w-4 h-4 sm:w-5 sm:h-5" />,
-    
-    // Additional
-    "Pet Friendly": <Dog className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Wheelchair Access": <Accessibility className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "Natural Light": <Sun className="w-4 h-4 sm:w-5 sm:h-5" />,
-    "View": <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
-  };
+      
+      // Luxury
+      "Smart Home Automation": <Cpu className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Central AC": <Snowflake className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "bore water": <Droplets className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Walk-in Closet": <DoorOpen className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Study Room": <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Pooja Room": <Home className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Utility Area": <Sofa className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Servant Room": <User className="w-4 h-4 sm:w-5 sm:h-5" />,
+      
+      // Outdoor
+      "Private Garden": <Trees className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Terrace": <Mountain className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Balcony": <Ship className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Swimming Pool": <Waves className="w-4 h-4 sm:w-5 sm:h-5" />,
+      
+      // Safety & Security
+      "Video Door Phone": <Camera className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Security Alarm": <Bell className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Fire Safety": <Flame className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "CCTV": <Camera className="w-4 h-4 sm:w-5 sm:h-5" />,
+      
+      // Additional
+      "Pet Friendly": <Dog className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Wheelchair Access": <Accessibility className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "Natural Light": <Sun className="w-4 h-4 sm:w-5 sm:h-5" />,
+      "View": <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+    };
 
-  return iconMap[feature] || <Home className="w-4 h-4 sm:w-5 sm:h-5" />;
-};
+    return iconMap[feature] || <Home className="w-4 h-4 sm:w-5 sm:h-5" />;
+  };
 
   const embedUrl = getGoogleMapsEmbedUrl();
   const viewUrl = getGoogleMapsViewUrl();
@@ -796,28 +914,28 @@ const getFeatureIcon = (feature) => {
   const {
     title,
     description,
-    unitNumber,
     city,
     address,
-    coordinates,
-    mapUrl,
-    price,
-    maintenanceCharges,
-    securityDeposit,
     propertyType,
     availability,
     isFeatured,
     isVerified,
     listingType,
-    virtualTour,
-    floorPlan,
     viewCount,
-    favoriteCount,
-    slug,
     createdAt,
     updatedAt,
     createdBy,
-    fullAddress
+    fullAddress,
+    commonSpecifications,
+    buildingDetails,
+    specifications,
+    priceRange,
+    hasMultipleUnitTypes,
+    totalUnitTypes,
+    availableUnitTypesCount,
+    virtualTour,
+    floorPlan,
+    slug
   } = propertyUnit;
 
   return (
@@ -842,355 +960,291 @@ const getFeatureIcon = (feature) => {
         </div>
       )}
 
-<div className="bg-white border-b border-indigo-200">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-    <div className="flex items-center justify-between mb-4 sm:mb-6">
-      <button
-        onClick={() => navigate('/')}
-        className="flex items-center gap-2 sm:gap-3 text-indigo-600 hover:text-indigo-800 transition-colors group"
-      >
-        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
-        <span className="font-bold tracking-wide text-sm sm:text-base">
-          Back to Properties
-        </span>
-      </button>
+      <div className="bg-white border-b border-indigo-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 sm:gap-3 text-indigo-600 hover:text-indigo-800 transition-colors group"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-bold tracking-wide text-sm sm:text-base">
+                Back to Properties
+              </span>
+            </button>
 
-      {/* Share Button */}
-      {user && (
-        <div className="relative share-button-container">
-          <button
-            onClick={() => setShowShareOptions(!showShareOptions)}
-            className="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base"
-          >
-            <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Share</span>
-          </button>
+            <div className="flex items-center gap-3">
+              {/* Like Button */}
+              {/* <button
+                onClick={handleLike}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  isLiked 
+                    ? 'bg-red-50 text-red-600 border border-red-200' 
+                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-red-50 hover:text-red-600'
+                }`}
+              >
+                <LikeIcon className={`w-5 h-5 ${isLiked ? 'fill-red-600' : ''}`} />
+                <span>{likeCount}</span>
+              </button> */}
 
-          {/* Share Options Dropdown */}
-          {showShareOptions && (
-            <div className="absolute right-0 top-full mt-2 w-48 sm:w-56 bg-white rounded-xl shadow-2xl border border-indigo-200 z-50 overflow-hidden">
-              <button
-                onClick={shareOnWhatsApp}
-                className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-6 sm:py-4 text-left hover:bg-indigo-50 transition-colors border-b border-indigo-100"
-              >
-                <span className="text-2xl">💚</span>
-                <div>
-                  <p className="font-bold text-gray-900 text-sm sm:text-base">
-                    Share on WhatsApp
-                  </p>
-                  <p className="text-xs text-gray-600 font-medium">
-                    Share with friends & family
-                  </p>
+              {/* Share Button */}
+              {user && (
+                <div className="relative share-button-container">
+                  <button
+                    onClick={() => setShowShareOptions(!showShareOptions)}
+                    className="flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base"
+                  >
+                    <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">Share</span>
+                  </button>
+
+                  {/* Share Options Dropdown */}
+                  {showShareOptions && (
+                    <div className="absolute right-0 top-full mt-2 w-48 sm:w-56 bg-white rounded-xl shadow-2xl border border-indigo-200 z-50 overflow-hidden">
+                      <button
+                        onClick={shareOnWhatsApp}
+                        className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-6 sm:py-4 text-left hover:bg-indigo-50 transition-colors border-b border-indigo-100"
+                      >
+                        <span className="text-2xl">💚</span>
+                        <div>
+                          <p className="font-bold text-gray-900 text-sm sm:text-base">
+                            Share on WhatsApp
+                          </p>
+                          <p className="text-xs text-gray-600 font-medium">
+                            Share with friends & family
+                          </p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={copyToClipboard}
+                        className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-6 sm:py-4 text-left hover:bg-indigo-50 transition-colors"
+                      >
+                        <span className="text-2xl">🔗</span>
+                        <div>
+                          <p className="font-bold text-gray-900 text-sm sm:text-base">
+                            Copy Property Link
+                          </p>
+                          <p className="text-xs text-gray-600 font-medium">
+                            Copy property URL
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </button>
-              <button
-                onClick={copyToClipboard}
-                className="w-full flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-6 sm:py-4 text-left hover:bg-indigo-50 transition-colors"
+              )}
+
+              {/* Inquiry Button */}
+              {/* <button
+                onClick={() => setShowInquiryModal(true)}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-medium"
               >
-                <span className="text-2xl">🔗</span>
-                <div>
-                  <p className="font-bold text-gray-900 text-sm sm:text-base">
-                    Copy Property Link
-                  </p>
-                  <p className="text-xs text-gray-600 font-medium">
-                    Copy property URL
-                  </p>
-                </div>
-              </button>
+                <MessageCircle className="w-4 h-4" />
+                <span className="hidden sm:inline">Inquire</span>
+              </button> */}
             </div>
-          )}
-        </div>
-      )}
-    </div>
+          </div>
 
-    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
-      <div className="flex-1">
-        <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
-          {isFeatured && (
-            <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
-              <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
-              <span className="hidden sm:inline">Featured</span>
-            </span>
-          )}
-          
-          {isVerified && (
-            <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
-              <Verified className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Verified</span>
-            </span>
-          )}
-          
-          <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
-            {listingType === 'sale' ? '💰' : '🔑'}
-            <span className="hidden sm:inline">{listingType === 'sale' ? 'For Sale' : 'For Rent'}</span>
-          </span>
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+            <div className="flex-1">
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4">
+                {isFeatured && (
+                  <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
+                    <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
+                    <span className="hidden sm:inline">Featured</span>
+                  </span>
+                )}
+                
+                {isVerified && (
+                  <span className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg">
+                    <Verified className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Verified</span>
+                  </span>
+                )}
+                
+                <span className={`bg-gradient-to-r ${getListingTypeColor(listingType)} text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2`}>
+                  {listingType === 'sale' ? '💰' : listingType === 'rent' ? '🔑' : listingType === 'lease' ? '📄' : '🏠'}
+                  <span className="hidden sm:inline">{getListingTypeText(listingType)}</span>
+                </span>
 
-          <span className={`bg-gradient-to-r ${
-            availability === 'available' ? 'from-emerald-500 to-teal-500' :
-            availability === 'sold' ? 'from-slate-600 to-slate-700' :
-            availability === 'rented' ? 'from-blue-500 to-cyan-500' :
-            'from-amber-500 to-orange-500'
-          } text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg`}>
-            {availability === 'available' ? '✨ Available Now' : 
-             availability === 'sold' ? '⭐ Sold' : 
-             availability === 'rented' ? '🔐 Rented' : 
-             '⚡ Under Negotiation'}
-          </span>
-          <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
-            {getPropertyTypeIcon(propertyType)}
-            <span className="hidden sm:inline">{propertyType}</span>
-          </span>
-        </div>
-        
-        <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight leading-tight">
-          {title || "Untitled Property"}
-          {unitNumber && (
-            <span className="text-indigo-600 ml-2 text-base sm:text-xl font-medium">#{unitNumber}</span>
-          )}
-        </h1>
-        
-        <div className="flex items-center gap-2 sm:gap-3 text-indigo-600 mb-4 sm:mb-6">
-          <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="text-sm sm:text-lg font-medium tracking-wide">
-            {fullAddress || `${address || ''}${address && city ? ', ' : ''}${city || ''}` || "Location not specified"}
-          </span>
-        </div>
+                <span className={`bg-gradient-to-r ${getAvailabilityColor(availability)} text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg`}>
+                  {getAvailabilityText(availability)}
+                </span>
+                
+                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
+                  {getPropertyTypeIcon(propertyType)}
+                  <span className="hidden sm:inline">{propertyType}</span>
+                </span>
 
-        {/* Mobile: Compact unit specifications with new design */}
-        <div className="sm:hidden">
-          <div className="grid grid-cols-4 gap-2 mb-4">
-            {safeSpecifications.bedrooms > 0 && (
-              <div className="flex flex-col items-center p-2 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200 shadow-sm">
-                <Bed className="w-6 h-6 text-indigo-600 mb-1" />
-                <span className="text-lg font-bold text-indigo-900">{safeSpecifications.bedrooms}</span>
-                <span className="text-xs text-indigo-700 font-medium">Beds</span>
+                {hasMultipleUnitTypes && (
+                  <span className="bg-gradient-to-r from-cyan-600 to-cyan-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-lg flex items-center gap-1 sm:gap-2">
+                    <Grid className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{totalUnitTypes} Unit Types</span>
+                  </span>
+                )}
               </div>
-            )}
-            {safeSpecifications.bathrooms > 0 && (
-              <div className="flex flex-col items-center p-2 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200 shadow-sm">
-                <Bath className="w-6 h-6 text-purple-600 mb-1" />
-                <span className="text-lg font-bold text-purple-900">{safeSpecifications.bathrooms}</span>
-                <span className="text-xs text-purple-700 font-medium">Baths</span>
+              
+              <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight leading-tight">
+                {title || "Untitled Property"}
+              </h1>
+              
+              <div className="flex items-center gap-2 sm:gap-3 text-indigo-600 mb-4 sm:mb-6">
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-sm sm:text-lg font-medium tracking-wide">
+                  {fullAddress || `${address || ''}${address && city ? ', ' : ''}${city || ''}` || "Location not specified"}
+                </span>
               </div>
-            )}
-            {safeSpecifications.carpetArea > 0 && (
-              <div className="flex flex-col items-center p-2 bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl border border-amber-200 shadow-sm">
-                <Maximize className="w-6 h-6 text-amber-600 mb-1" />
-                <span className="text-lg font-bold text-amber-900">{safeSpecifications.carpetArea.toLocaleString()}</span>
-                <span className="text-xs text-amber-700 font-medium">Sq.ft</span>
+
+              {/* Price Range Display */}
+              {/* {priceRange && (
+                <div className="mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2 text-2xl sm:text-3xl font-bold text-green-600">
+    
+                    <span>
+                      {formatPrice(priceRange.min)} - {formatPrice(priceRange.max)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">*Price varies by unit type</p>
+                </div>
+              )} */}
+
+              {/* Mobile: Compact unit specifications */}
+              <div className="sm:hidden">
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {commonSpecifications?.furnishing && commonSpecifications.furnishing !== 'unfurnished' && (
+                    <div className="flex flex-col items-center p-2 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200 shadow-sm">
+                      <Home className="w-6 h-6 text-indigo-600 mb-1" />
+                      <span className="text-xs text-indigo-700 font-medium capitalize">{commonSpecifications.furnishing}</span>
+                    </div>
+                  )}
+                  {commonSpecifications?.possessionStatus && (
+                    <div className="flex flex-col items-center p-2 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200 shadow-sm">
+                      <Key className="w-6 h-6 text-purple-600 mb-1" />
+                      <span className="text-xs text-purple-700 font-medium capitalize">{commonSpecifications.possessionStatus.replace('-', ' ')}</span>
+                    </div>
+                  )}
+                  {commonSpecifications?.parking?.covered > 0 && (
+                    <div className="flex flex-col items-center p-2 bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl border border-amber-200 shadow-sm">
+                      <Car className="w-6 h-6 text-amber-600 mb-1" />
+                      <span className="text-xs text-amber-700 font-medium">{commonSpecifications.parking.covered} Parking</span>
+                    </div>
+                  )}
+                  {viewCount > 0 && (
+                    <div className="flex flex-col items-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200 shadow-sm">
+                      <EyeIcon className="w-6 h-6 text-emerald-600 mb-1" />
+                      <span className="text-xs text-emerald-700 font-medium">{viewCount} Views</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-            {safeSpecifications.floorNumber > 0 && (
-              <div className="flex flex-col items-center p-2 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200 shadow-sm">
-                <Layers className="w-6 h-6 text-emerald-600 mb-1" />
-                <span className="text-lg font-bold text-emerald-900">{safeSpecifications.floorNumber}</span>
-                <span className="text-xs text-emerald-700 font-medium">Floor</span>
+
+              {/* Desktop: Redesigned unit specifications */}
+              <div className="hidden sm:flex flex-wrap gap-3 sm:gap-4 md:gap-6">
+                {specifications?.bedrooms > 0 && (
+                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                      <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xl sm:text-2xl font-bold text-indigo-900">
+                        {specifications.bedrooms}
+                      </p>
+                      <p className="text-xs sm:text-sm text-indigo-700 font-semibold">
+                        Bedrooms
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {specifications?.carpetArea > 0 && (
+                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                      <Ruler className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xl sm:text-2xl font-bold text-blue-900">
+                        {specifications.carpetArea.toLocaleString()}
+                      </p>
+                      <p className="text-xs sm:text-sm text-blue-700 font-semibold">
+                        Carpet Area (sq.ft.)
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {commonSpecifications?.furnishing && commonSpecifications.furnishing !== 'unfurnished' && (
+                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                      <Home className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xl sm:text-2xl font-bold text-indigo-900 capitalize">
+                        {commonSpecifications.furnishing}
+                      </p>
+                      <p className="text-xs sm:text-sm text-indigo-700 font-semibold">
+                        Furnishing
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {commonSpecifications?.possessionStatus && (
+                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                      <Key className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xl sm:text-2xl font-bold text-purple-900 capitalize">
+                        {commonSpecifications.possessionStatus.replace('-', ' ')}
+                      </p>
+                      <p className="text-xs sm:text-sm text-purple-700 font-semibold">
+                        Possession
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {commonSpecifications?.parking?.covered > 0 && (
+                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl border border-amber-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-600 to-amber-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                      <Car className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xl sm:text-2xl font-bold text-amber-900">
+                        {commonSpecifications.parking.covered}
+                      </p>
+                      <p className="text-xs sm:text-sm text-amber-700 font-semibold">
+                        Covered Parking
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {commonSpecifications?.parking?.open > 0 && (
+                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                      <Car className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xl sm:text-2xl font-bold text-emerald-900">
+                        {commonSpecifications.parking.open}
+                      </p>
+                      <p className="text-xs sm:text-sm text-emerald-700 font-semibold">
+                        Open Parking
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
-
-        {/* Desktop: Redesigned unit specifications with unique styling */}
-        <div className="hidden sm:flex flex-wrap gap-3 sm:gap-4 md:gap-6">
-          {safeSpecifications.bedrooms > 0 && (
-            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xl sm:text-2xl font-bold text-indigo-900">
-                  {safeSpecifications.bedrooms}
-                </p>
-                <p className="text-xs sm:text-sm text-indigo-700 font-semibold">
-                  Bedrooms
-                </p>
-              </div>
-            </div>
-          )}
-
-          {safeSpecifications.bathrooms > 0 && (
-            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                <Bath className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xl sm:text-2xl font-bold text-purple-900">
-                  {safeSpecifications.bathrooms}
-                </p>
-                <p className="text-xs sm:text-sm text-purple-700 font-semibold">
-                  Bathrooms
-                </p>
-              </div>
-            </div>
-          )}
-
-          {safeSpecifications.carpetArea > 0 && (
-            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl border border-amber-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-600 to-amber-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                <Maximize className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xl sm:text-2xl font-bold text-amber-900">
-                  {safeSpecifications.carpetArea.toLocaleString()} <span className="text-sm">sq.ft</span>
-                </p>
-                <p className="text-xs sm:text-sm text-amber-700 font-semibold">
-                  Carpet Area
-                </p>
-              </div>
-            </div>
-          )}
-
-          {safeSpecifications.floorNumber > 0 && (
-            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200 shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xl sm:text-2xl font-bold text-emerald-900">
-                  {safeSpecifications.floorNumber}
-                </p>
-                <p className="text-xs sm:text-sm text-emerald-700 font-semibold">
-                  Floor
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* UNIT TYPES TABLE - New Section */}
+   
+
       
-      <div className="mt-4 sm:mt-0 lg:text-right">
-        {/* Premium Pricing Card - Unique variation */}
-        <div className="hidden md:block max-w-sm w-full group perspective">
-          {/* Pricing Header - Unique gradient with pattern */}
-          <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 rounded-t-xl sm:rounded-t-2xl p-5 sm:p-7 relative overflow-hidden">
-            {/* Unique pattern overlay - different from original */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0" style={{
-                backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-                backgroundSize: '20px 20px'
-              }}></div>
-            </div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gradient-to-r from-indigo-300 to-purple-300 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">
-                    Premium Listing
-                  </span>
-                </div>
-                <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-full border border-white/30">
-                  <span className="text-xs font-bold text-white tracking-wide">
-                    {listingType === 'sale' ? 'EXCLUSIVE' : listingType === 'rent' ? 'AVAILABLE' : 'LEASE'}
-                  </span>
-                </div>
-              </div>
-              
-              {/* Main Price with unique gradient */}
-              <div className="relative">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-indigo-100 to-purple-100 bg-clip-text text-transparent">
-                    {formatPrice(price)}
-                  </span>
-                </div>
-                {/* Unique decorative element */}
-                <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-400/50 to-transparent"></div>
-              </div>
-              
-              {/* Property Type Indicator - Unique styling */}
-              <div className="mt-4 flex items-center justify-end">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-                  <Verified className="w-3 h-3 text-indigo-300" />
-                  <span className="text-xs font-medium text-white/90">
-                    {propertyType} • Premium
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Pricing Details - Unique card design */}
-          <div className="bg-gradient-to-b from-white to-indigo-50/30 rounded-b-xl sm:rounded-b-2xl border border-indigo-100 shadow-xl shadow-indigo-900/5">
-            <div className="p-5 sm:p-7 space-y-4">
-              {/* Price per sq.ft - Unique styling */}
-              {safeSpecifications.carpetArea > 0 && price?.amount && (
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-indigo-50/70 rounded-xl border border-indigo-200 hover:border-indigo-300 transition-all hover:shadow-md group/item">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform">
-                      <Maximize className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">Price Breakdown</p>
-                      <p className="text-lg font-bold text-gray-900">
-                        ₹{(price.amount / safeSpecifications.carpetArea).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                        <span className="text-sm font-medium text-gray-600 ml-1">/sq.ft</span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="w-1 h-10 bg-gradient-to-b from-indigo-400 to-purple-600 rounded-full"></div>
-                </div>
-              )}
-
-              {/* Maintenance Charges - Unique styling */}
-              {maintenanceCharges > 0 && (
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-50/70 rounded-xl border border-purple-200 hover:border-purple-300 transition-all hover:shadow-md group/item">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform">
-                      <Building className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-purple-700 uppercase tracking-wider">Maintenance</p>
-                      <p className="text-lg font-bold text-gray-900">
-                        ₹{maintenanceCharges.toLocaleString('en-IN')}
-                        <span className="text-sm font-medium text-gray-600 ml-1">/month</span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="w-1 h-10 bg-gradient-to-b from-purple-400 to-pink-600 rounded-full"></div>
-                </div>
-              )}
-
-              {/* Security Deposit - Unique styling */}
-              {securityDeposit > 0 && (
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-indigo-50/70 rounded-xl border border-indigo-200 hover:border-indigo-300 transition-all hover:shadow-md group/item">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform">
-                      <Shield className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">Security Deposit</p>
-                      <p className="text-lg font-bold text-gray-900">
-                        ₹{securityDeposit.toLocaleString('en-IN')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="w-1 h-10 bg-gradient-to-b from-indigo-400 to-blue-600 rounded-full"></div>
-                </div>
-              )}
-
-              {/* Call to Action - Unique design */}
-              <div className="pt-4">
-                <button 
-                  onClick={handleBookAppointment}
-                  className="w-full group relative overflow-hidden bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 hover:from-indigo-700 hover:via-indigo-700 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <div className="relative z-10 flex items-center justify-center gap-3">
-                    <CalendarIcon className="w-5 h-5" />
-                    <span className="tracking-wide">Schedule Viewing</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                  {/* Unique shine effect with double gradient */}
-                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-                  <div className="absolute inset-0 translate-x-full group-hover:-translate-x-full transition-transform duration-1000 bg-gradient-to-l from-transparent via-white/10 to-transparent"></div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
       {/* BOOK YOUR APPOINTMENT BUTTON - Fixed at bottom for mobile */}
       <div className="fixed bottom-0 left-0 right-0 z-40 sm:hidden bg-white border-t border-blue-200 shadow-2xl p-4">
@@ -1207,7 +1261,6 @@ const getFeatureIcon = (feature) => {
       {showBookingModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
             <div className="sticky top-0 bg-white p-6 border-b border-blue-200 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -1220,16 +1273,19 @@ const getFeatureIcon = (feature) => {
                   ✕
                 </button>
               </div>
+              {selectedUnitType && (
+                <p className="text-sm text-blue-600 mt-2">
+                  Selected Unit: {selectedUnitType.type}
+                </p>
+              )}
               <div className="flex items-center gap-2 mt-2">
                 <div className={`w-3 h-3 rounded-full ${bookingStep === 1 ? 'bg-green-600' : 'bg-green-300'}`}></div>
                 <div className={`w-3 h-3 rounded-full ${bookingStep === 2 ? 'bg-green-600' : 'bg-gray-300'}`}></div>
               </div>
             </div>
 
-            {/* Modal Body */}
             <div className="p-6">
               {bookingStep === 1 ? (
-                // Date Selection
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl">
                     <CalendarIcon className="w-6 h-6 text-blue-600" />
@@ -1270,7 +1326,6 @@ const getFeatureIcon = (feature) => {
                   )}
                 </div>
               ) : (
-                // Time Selection
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl">
                     <ClockIcon className="w-6 h-6 text-blue-600" />
@@ -1322,7 +1377,6 @@ const getFeatureIcon = (feature) => {
               )}
             </div>
 
-            {/* Modal Footer */}
             <div className="sticky bottom-0 bg-white p-6 border-t border-blue-200 rounded-b-2xl">
               <div className="flex gap-3">
                 {bookingStep === 2 && (
@@ -1356,11 +1410,62 @@ const getFeatureIcon = (feature) => {
         </div>
       )}
 
+      {/* INQUIRY MODAL */}
+      {showInquiryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="p-6 border-b border-blue-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Send Inquiry</h2>
+                <button
+                  onClick={() => setShowInquiryModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Ask any questions about this property
+              </p>
+            </div>
+
+            <div className="p-6">
+              <textarea
+                value={inquiryMessage}
+                onChange={(e) => setInquiryMessage(e.target.value)}
+                placeholder="I'm interested in this property. Could you provide more details about..."
+                rows={5}
+                className="w-full p-4 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                The property owner will receive your inquiry and contact you shortly.
+              </p>
+            </div>
+
+            <div className="p-6 border-t border-blue-200">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowInquiryModal(false)}
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleInquiry}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-bold"
+                >
+                  Send Inquiry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FULLSCREEN IMAGE VIEWER */}
       {showFullscreenImage && (
         <div className="fixed inset-0 z-[60] bg-black flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
-            {/* Close button */}
             <button
               onClick={closeFullscreenImage}
               className="absolute top-4 right-4 z-10 w-12 h-12 bg-black/70 hover:bg-black/90 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:scale-110 transition-all"
@@ -1368,7 +1473,6 @@ const getFeatureIcon = (feature) => {
               <X className="w-6 h-6" />
             </button>
 
-            {/* Navigation buttons */}
             {safeImages.length > 1 && (
               <>
                 <button
@@ -1386,7 +1490,6 @@ const getFeatureIcon = (feature) => {
               </>
             )}
 
-            {/* Zoom controls */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm rounded-full px-4 py-2">
               <button
                 onClick={zoomOut}
@@ -1410,17 +1513,10 @@ const getFeatureIcon = (feature) => {
               </button>
             </div>
 
-            {/* Image counter */}
             <div className="absolute top-4 left-4 z-10 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
               {fullscreenImageIndex + 1} / {safeImages.length}
             </div>
 
-       {/* Watermark */}
-<div className="absolute bottom-70 left-1/2 -translate-x-1/2 z-10 text-white/50 text-4xl font-bold tracking-wider pointer-events-none">
-  cleartitle1
-</div>
-
-            {/* Image container */}
             <div 
               ref={fullscreenRef}
               className="relative w-full h-full flex items-center justify-center overflow-hidden"
@@ -1444,25 +1540,14 @@ const getFeatureIcon = (feature) => {
             {/* Images Gallery */}
             {safeImages.length > 0 ? (
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl overflow-hidden">
-                {/* Main Image Container - Maintain aspect ratio */}
-        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer"
-     onClick={() => openFullscreenImage(selectedImage)}>
-  {/* REMOVED forced aspect ratio - Images display in original size */}
-  <div className="relative w-full max-h-[600px] overflow-hidden">
-    <img
-      src={safeImages[selectedImage]?.url || "https://via.placeholder.com/600x400"}
-      alt={title}
-      className="w-full h-auto max-h-[600px] object-contain bg-gray-100"
-    />
-                    {/* Watermark overlay */}
-             {/* Watermark overlay */}
-{/* Watermark overlay - DARKER for better download protection */}
-<div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-  <div className="text-black/60 text-7xl font-bold tracking-wider rotate-[-30deg] opacity-70">
-    cleartitle1
-  </div>
-</div>         
-                    {/* Fullscreen button */}
+                <div className="relative rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer"
+                  onClick={() => openFullscreenImage(selectedImage)}>
+                  <div className="relative w-full max-h-[600px] overflow-hidden">
+                    <img
+                      src={safeImages[selectedImage]?.url || "https://via.placeholder.com/600x400"}
+                      alt={title}
+                      className="w-full h-auto max-h-[600px] object-contain bg-gray-100"
+                    />
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1501,7 +1586,6 @@ const getFeatureIcon = (feature) => {
                   </div>
                 </div>
                 
-                {/* Thumbnail Grid - Mobile compact */}
                 {safeImages.length > 1 && (
                   <div className="p-3 sm:p-6">
                     <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-4">
@@ -1520,12 +1604,6 @@ const getFeatureIcon = (feature) => {
                             alt={`${title} ${i + 1}`}
                             className="w-full h-full object-cover"
                           />
-                          {/* Watermark on thumbnails */}
-                          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                            <div className="text-white/20 text-xs font-bold tracking-wider opacity-50">
-                              ct1
-                            </div>
-                          </div>
                         </button>
                       ))}
                     </div>
@@ -1542,6 +1620,575 @@ const getFeatureIcon = (feature) => {
               </div>
             )}
 
+
+       {/* Unit Types Section - Only show if there are residential unit types (not plots) */}
+{safeUnitTypes.length > 0 && safeUnitTypes.some(unit => unit.type !== 'Plot') && (
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+      <button
+        onClick={() => toggleSection('unitTypes')}
+        className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors"
+      >
+        <div>
+          <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+            Available Unit Types
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {safeUnitTypes.filter(unit => unit.type !== 'Plot').length} different configurations available
+          </p>
+        </div>
+        <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
+          expandedSections.unitTypes ? 'rotate-180' : ''
+        }`} />
+      </button>
+      
+      <div className={`${expandedSections.unitTypes ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b-2 border-blue-200 bg-blue-50">
+                <th className="px-4 py-3 text-left font-bold text-gray-900">Unit Type</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-900">Price</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-900">Carpet Area</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-900">Built-up Area</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-900">Super Built-up</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-900">Floors</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-900">Availability</th>
+              </tr>
+            </thead>
+            <tbody>
+              {safeUnitTypes.filter(unit => unit.type !== 'Plot').map((unit, index) => (
+                <tr 
+                  key={index} 
+                  className={`border-b border-blue-100 hover:bg-blue-50 transition-colors ${
+                    selectedUnitType === unit ? 'bg-blue-100' : ''
+                  }`}
+                >
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-2">
+                      <Home className="w-5 h-5 text-blue-600" />
+                      <span className="font-bold text-gray-900">{unit.type}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-bold text-green-600">{formatUnitPrice(unit.price)}</span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-medium text-gray-700">{unit.carpetArea?.toLocaleString()} sq.ft.</span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-medium text-gray-700">{unit.builtUpArea?.toLocaleString()} sq.ft.</span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-medium text-gray-700">{unit.superBuiltUpArea?.toLocaleString() || 'N/A'} sq.ft.</span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className="font-medium text-gray-700">{unit.floors || 1}</span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${
+                      unit.availability === 'available' ? 'bg-green-100 text-green-700' :
+                      unit.availability === 'sold' ? 'bg-gray-100 text-gray-700' :
+                      unit.availability === 'limited' ? 'bg-amber-100 text-amber-700' :
+                      unit.availability === 'booked' ? 'bg-orange-100 text-orange-700' :
+                      unit.availability === 'reserved' ? 'bg-purple-100 text-purple-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                      {unit.availability === 'available' ? '✓ Available' :
+                       unit.availability === 'sold' ? 'Sold Out' :
+                       unit.availability === 'limited' ? 'Limited Stock' :
+                       unit.availability === 'booked' ? 'Booked' :
+                       unit.availability === 'reserved' ? 'Reserved' :
+                       'Coming Soon'}
+                    </span>
+                    {unit.availableUnits > 0 && (
+                      <span className="text-xs text-gray-500 ml-2">
+                        ({unit.availableUnits} left)
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-4">
+          {safeUnitTypes.filter(unit => unit.type !== 'Plot').map((unit, index) => (
+            <div 
+              key={index}
+              className={`border rounded-xl p-4 transition-all ${
+                selectedUnitType === unit 
+                  ? 'border-blue-500 bg-blue-50 shadow-md' 
+                  : 'border-blue-200 hover:border-blue-300'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-2">
+                  <Home className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-bold text-lg text-gray-900">{unit.type}</h3>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                  unit.availability === 'available' ? 'bg-green-100 text-green-700' :
+                  unit.availability === 'sold' ? 'bg-gray-100 text-gray-700' :
+                  unit.availability === 'limited' ? 'bg-amber-100 text-amber-700' :
+                  unit.availability === 'booked' ? 'bg-orange-100 text-orange-700' :
+                  unit.availability === 'reserved' ? 'bg-purple-100 text-purple-700' :
+                  'bg-blue-100 text-blue-700'
+                }`}>
+                  {unit.availability === 'available' ? 'Available' :
+                   unit.availability === 'sold' ? 'Sold' :
+                   unit.availability === 'limited' ? 'Limited' :
+                   unit.availability === 'booked' ? 'Booked' :
+                   unit.availability === 'reserved' ? 'Reserved' :
+                   'Coming Soon'}
+                </span>
+              </div>
+              
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 text-sm">Price:</span>
+                  <span className="font-bold text-green-600">{formatUnitPrice(unit.price)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 text-sm">Carpet Area:</span>
+                  <span className="font-medium text-gray-700">{unit.carpetArea?.toLocaleString()} sq.ft.</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 text-sm">Built-up Area:</span>
+                  <span className="font-medium text-gray-700">{unit.builtUpArea?.toLocaleString()} sq.ft.</span>
+                </div>
+                {unit.superBuiltUpArea > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-sm">Super Built-up:</span>
+                    <span className="font-medium text-gray-700">{unit.superBuiltUpArea.toLocaleString()} sq.ft.</span>
+                  </div>
+                )}
+                {unit.floorNumber > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-sm">Floor:</span>
+                    <span className="font-medium text-gray-700">{unit.floorNumber}</span>
+                  </div>
+                )}
+                {unit.availableUnits > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-sm">Available:</span>
+                    <span className="font-medium text-green-600">{unit.availableUnits} units</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* Plot Details Section (if property is a plot) */}
+{propertyType === 'Plot' && safePlotDetails && (
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+      <button
+        onClick={() => toggleSection('plotDetails')}
+        className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors"
+      >
+        <div>
+          <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+            Plot Details
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Land specifications and dimensions
+          </p>
+        </div>
+        <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
+          expandedSections.plotDetails ? 'rotate-180' : ''
+        }`} />
+      </button>
+      
+      <div className={`${expandedSections.plotDetails ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
+        {/* Plot Pricing Information */}
+        {safePlotDetails.prices && safePlotDetails.prices.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-600" />
+              Pricing Information
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {safePlotDetails.prices.map((priceItem, idx) => (
+                <div key={idx} className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                  <p className="text-sm text-green-600 font-semibold mb-1">Price</p>
+                  <p className="text-2xl font-bold text-green-900">
+                    {formatCurrency(priceItem.amount, priceItem.currency)}
+                  </p>
+                  {priceItem.perUnit !== 'total' && (
+                    <p className="text-xs text-green-600 mt-1">
+                      per {priceItem.perUnit === 'sqft' ? 'sq.ft.' : 
+                             priceItem.perUnit === 'sqm' ? 'sq.m.' :
+                             priceItem.perUnit === 'perSqYard' ? 'sq.yard' :
+                             priceItem.perUnit === 'perGround' ? 'ground' : 
+                             priceItem.perUnit}
+                    </p>
+                  )}
+                  {priceItem.unitType && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      Unit Type: {priceItem.unitType}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Area Information */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Area Details</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {safePlotDetails.sqft && (
+              <div className="p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border border-amber-200">
+                <p className="text-sm text-amber-600 font-semibold mb-1">Area (sq.ft.)</p>
+                <p className="text-2xl font-bold text-amber-900">{safePlotDetails.sqft.toLocaleString()}</p>
+              </div>
+            )}
+            {safePlotDetails.sqYards && (
+              <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                <p className="text-sm text-green-600 font-semibold mb-1">Area (sq.yards)</p>
+                <p className="text-2xl font-bold text-green-900">{safePlotDetails.sqYards.toLocaleString()}</p>
+              </div>
+            )}
+            {safePlotDetails.grounds && (
+              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                <p className="text-sm text-purple-600 font-semibold mb-1">Area (grounds)</p>
+                <p className="text-2xl font-bold text-purple-900">{safePlotDetails.grounds}</p>
+              </div>
+            )}
+            {safePlotDetails.acres && (
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                <p className="text-sm text-blue-600 font-semibold mb-1">Area (acres)</p>
+                <p className="text-2xl font-bold text-blue-900">{safePlotDetails.acres}</p>
+              </div>
+            )}
+            {safePlotDetails.cents && (
+              <div className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl border border-indigo-200">
+                <p className="text-sm text-indigo-600 font-semibold mb-1">Area (cents)</p>
+                <p className="text-2xl font-bold text-indigo-900">{safePlotDetails.cents}</p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Dimensions */}
+        {safePlotDetails.dimensions && (safePlotDetails.dimensions.length || safePlotDetails.dimensions.breadth || safePlotDetails.dimensions.frontage) && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="font-bold text-gray-900 mb-2">Dimensions</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {safePlotDetails.dimensions.length && (
+                <div>
+                  <p className="text-sm text-gray-600">Length</p>
+                  <p className="font-semibold text-gray-900">{safePlotDetails.dimensions.length} ft</p>
+                </div>
+              )}
+              {safePlotDetails.dimensions.breadth && (
+                <div>
+                  <p className="text-sm text-gray-600">Breadth</p>
+                  <p className="font-semibold text-gray-900">{safePlotDetails.dimensions.breadth} ft</p>
+                </div>
+              )}
+              {safePlotDetails.dimensions.frontage && (
+                <div>
+                  <p className="text-sm text-gray-600">Frontage</p>
+                  <p className="font-semibold text-gray-900">{safePlotDetails.dimensions.frontage} ft</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Plot Characteristics */}
+        {(safePlotDetails.shape || safePlotDetails.facing || safePlotDetails.isCornerPlot !== undefined || 
+          safePlotDetails.roadWidth || safePlotDetails.roadType || safePlotDetails.landUse || 
+          safePlotDetails.developmentStatus || safePlotDetails.soilType) && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Plot Characteristics</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {safePlotDetails.shape && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Shape</p>
+                  <p className="font-bold text-gray-900 capitalize">{safePlotDetails.shape}</p>
+                </div>
+              )}
+              {safePlotDetails.facing && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Facing</p>
+                  <p className="font-bold text-gray-900 capitalize">{safePlotDetails.facing}</p>
+                </div>
+              )}
+              {safePlotDetails.isCornerPlot !== undefined && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Corner Plot</p>
+                  <p className="font-bold text-gray-900">{safePlotDetails.isCornerPlot ? 'Yes' : 'No'}</p>
+                </div>
+              )}
+              {safePlotDetails.roadWidth && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Road Width</p>
+                  <p className="font-bold text-gray-900">{safePlotDetails.roadWidth} ft</p>
+                </div>
+              )}
+              {safePlotDetails.roadType && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Road Type</p>
+                  <p className="font-bold text-gray-900 capitalize">{safePlotDetails.roadType}</p>
+                </div>
+              )}
+              {safePlotDetails.landUse && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Land Use</p>
+                  <p className="font-bold text-gray-900 capitalize">{safePlotDetails.landUse}</p>
+                </div>
+              )}
+              {safePlotDetails.developmentStatus && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Development Status</p>
+                  <p className="font-bold text-gray-900 capitalize">{safePlotDetails.developmentStatus}</p>
+                </div>
+              )}
+              {safePlotDetails.soilType && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Soil Type</p>
+                  <p className="font-bold text-gray-900 capitalize">{safePlotDetails.soilType}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Boundary Details */}
+        {(safePlotDetails.boundaryWalls !== undefined || safePlotDetails.fencing !== undefined || 
+          safePlotDetails.gate !== undefined || safePlotDetails.elevationAvailable !== undefined) && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Boundary & Structure</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {safePlotDetails.boundaryWalls !== undefined && (
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-sm text-gray-600 mb-1">Boundary Walls</p>
+                  <p className="font-semibold text-gray-900">{safePlotDetails.boundaryWalls ? '✓ Available' : '✗ Not Available'}</p>
+                </div>
+              )}
+              {safePlotDetails.fencing !== undefined && (
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-sm text-gray-600 mb-1">Fencing</p>
+                  <p className="font-semibold text-gray-900">{safePlotDetails.fencing ? '✓ Available' : '✗ Not Available'}</p>
+                </div>
+              )}
+              {safePlotDetails.gate !== undefined && (
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-sm text-gray-600 mb-1">Gate</p>
+                  <p className="font-semibold text-gray-900">{safePlotDetails.gate ? '✓ Available' : '✗ Not Available'}</p>
+                </div>
+              )}
+              {safePlotDetails.elevationAvailable !== undefined && (
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-sm text-gray-600 mb-1">Elevation Available</p>
+                  <p className="font-semibold text-gray-900">{safePlotDetails.elevationAvailable ? '✓ Yes' : '✗ No'}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Amenities */}
+        {safePlotDetails.amenities && safePlotDetails.amenities.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Plot Amenities</h3>
+            <div className="flex flex-wrap gap-2">
+              {safePlotDetails.amenities.map((amenity, idx) => (
+                <span key={idx} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  {amenity}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Utilities */}
+        {safePlotDetails.utilities && Object.values(safePlotDetails.utilities).some(v => v === true) && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Utilities</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {safePlotDetails.utilities.electricity && (
+                <span className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                  <Zap className="w-3 h-3" /> Electricity
+                </span>
+              )}
+              {safePlotDetails.utilities.waterConnection && (
+                <span className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                  <Droplets className="w-3 h-3" /> Water Connection
+                </span>
+              )}
+              {safePlotDetails.utilities.sewageConnection && (
+                <span className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                  <Waves className="w-3 h-3" /> Sewage Connection
+                </span>
+              )}
+              {safePlotDetails.utilities.gasConnection && (
+                <span className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                  <Flame className="w-3 h-3" /> Gas Connection
+                </span>
+              )}
+              {safePlotDetails.utilities.internetFiber && (
+                <span className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                  <Wifi className="w-3 h-3" /> Internet Fiber
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Approval Details */}
+        {safePlotDetails.approvalDetails && Object.values(safePlotDetails.approvalDetails).some(v => v === true || v) && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <p className="font-bold text-gray-900 mb-2">Approval Details</p>
+            <div className="space-y-2">
+              {safePlotDetails.approvalDetails.dtcpApproved && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-gray-700">DTCP Approved</span>
+                  {safePlotDetails.approvalDetails.dtcpNumber && (
+                    <span className="text-xs text-gray-500">({safePlotDetails.approvalDetails.dtcpNumber})</span>
+                  )}
+                </div>
+              )}
+              {safePlotDetails.approvalDetails.layoutApproved && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-gray-700">Layout Approved</span>
+                  {safePlotDetails.approvalDetails.layoutNumber && (
+                    <span className="text-xs text-gray-500">({safePlotDetails.approvalDetails.layoutNumber})</span>
+                  )}
+                </div>
+              )}
+              {safePlotDetails.approvalDetails.subdivisionApproved && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-gray-700">Subdivision Approved</span>
+                </div>
+              )}
+              {safePlotDetails.approvalDetails.surveyNumber && (
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm text-gray-700">Survey Number: {safePlotDetails.approvalDetails.surveyNumber}</span>
+                </div>
+              )}
+              {safePlotDetails.approvalDetails.pattaNumber && (
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm text-gray-700">Patta Number: {safePlotDetails.approvalDetails.pattaNumber}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+      {/* Rental Details Section (if property is for rent/lease) */}
+      {(listingType === 'rent' || listingType === 'lease') && safeRentalDetails && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+            <button
+              onClick={() => toggleSection('rentalDetails')}
+              className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors"
+            >
+              <div>
+                <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                  Rental Details
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Lease terms and payment information
+                </p>
+              </div>
+              <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
+                expandedSections.rentalDetails ? 'rotate-180' : ''
+              }`} />
+            </button>
+            
+            <div className={`${expandedSections.rentalDetails ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {safeRentalDetails.monthlyRent && (
+                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                    <p className="text-sm text-blue-600 font-semibold mb-1">Monthly Rent</p>
+                    <p className="text-2xl font-bold text-blue-900">{formatPrice(safeRentalDetails.monthlyRent)}</p>
+                  </div>
+                )}
+                {safeRentalDetails.securityDeposit && (
+                  <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                    <p className="text-sm text-purple-600 font-semibold mb-1">Security Deposit</p>
+                    <p className="text-2xl font-bold text-purple-900">{formatPrice(safeRentalDetails.securityDeposit)}</p>
+                  </div>
+                )}
+                {safeRentalDetails.maintenanceCharges && (
+                  <div className="p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border border-amber-200">
+                    <p className="text-sm text-amber-600 font-semibold mb-1">Maintenance Charges</p>
+                    <p className="text-2xl font-bold text-amber-900">{formatPrice(safeRentalDetails.maintenanceCharges)}</p>
+                  </div>
+                )}
+                {safeRentalDetails.leaseTerms && (
+                  <div className="col-span-full p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <p className="text-sm text-gray-600 font-semibold mb-1">Lease Terms</p>
+                    <p className="text-gray-800">{safeRentalDetails.leaseTerms}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Virtual Tour Section */}
+      {virtualTour && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+            <div className="p-4 sm:p-6 md:p-8">
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+                Virtual Tour
+              </h2>
+              <div className="aspect-video rounded-xl overflow-hidden">
+                <iframe
+                  src={virtualTour}
+                  className="w-full h-full"
+                  allowFullScreen
+                  title="Virtual Tour"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floor Plan Section */}
+      {floorPlan && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+            <div className="p-4 sm:p-6 md:p-8">
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+                Floor Plan
+              </h2>
+              <img
+                src={floorPlan}
+                alt="Floor Plan"
+                className="w-full rounded-xl shadow-md"
+              />
+            </div>
+          </div>
+        </div>
+      )}
             {/* Description */}
             {description && (
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 md:p-8 border border-blue-200">
@@ -1553,135 +2200,610 @@ const getFeatureIcon = (feature) => {
                 </p>
               </div>
             )}
-  <div className=" md:hidden max-w-sm w-full group">
-    {/* Pricing Header - Professional Real Estate Gradient */}
-    <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-t-xl sm:rounded-t-2xl p-5 sm:p-7 relative overflow-hidden">
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: '30px'
-        }}></div>
-      </div>
-      
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-gradient-to-r from-blue-300 to-cyan-300 rounded-full animate-pulse"></div>
-            <span className="text-xs font-semibold text-white/90 uppercase tracking-[0.15em]">
-              Clear Title Value
-            </span>
-          </div>
-          <div className="px-3 py-1.5 bg-white/15 backdrop-blur-md rounded-full border border-white/30">
-            <span className="text-xs font-bold text-white tracking-wide">
-              {listingType === 'sale' ? 'FOR SALE' : listingType === 'rent' ? 'FOR RENT' : 'lease'}
-            </span>
-          </div>
-        </div>
-        
-        {/* Main Price with subtle shine effect */}
-        <div className="relative">
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
-              {formatPrice(price)}
-            </span>
-          </div>
-          {/* Subtle glow effect */}
-          <div className="absolute -bottom-2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-        </div>
-        
-        {/* Property Type Indicator */}
-        <div className="mt-4 flex items-center justify-end">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-            <Verified className="w-3 h-3 text-emerald-300" />
-            <span className="text-xs font-medium text-white/90">
-              Verified {propertyType}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    {/* Pricing Details - Clean Professional Card */}
-    <div className="bg-gradient-to-b from-white to-blue-50/30 rounded-b-xl sm:rounded-b-2xl border border-blue-100 shadow-xl shadow-blue-900/5">
-      <div className="p-5 sm:p-7 space-y-4">
-        {/* Price per sq.ft - Premium Styling */}
-        {safeSpecifications.carpetArea > 0 && price?.amount && (
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-50/70 rounded-xl border border-blue-200 hover:border-blue-300 transition-colors group/item">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
-                <Maximize className="w-5 h-5 text-white" />
+            {/* Building Details */}
+            {safeBuildingDetails && Object.keys(safeBuildingDetails).length > 0 && (
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+                <button
+                  onClick={() => toggleSection('buildingDetails')}
+                  className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors"
+                >
+                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                    Building Details
+                  </h2>
+                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
+                    expandedSections.buildingDetails ? 'rotate-180' : ''
+                  }`} />
+                </button>
+                
+                <div className={`${expandedSections.buildingDetails ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    {safeBuildingDetails.name && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <Building className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Building Name</p>
+                          <p className="text-gray-700">{safeBuildingDetails.name}</p>
+                        </div>
+                      </div>
+                    )}
+                    {safeBuildingDetails.totalFloors > 0 && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Total Floors</p>
+                          <p className="text-gray-700">{safeBuildingDetails.totalFloors}</p>
+                        </div>
+                      </div>
+                    )}
+                    {safeBuildingDetails.totalUnits > 0 && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Total Units</p>
+                          <p className="text-gray-700">{safeBuildingDetails.totalUnits}</p>
+                        </div>
+                      </div>
+                    )}
+                    {safeBuildingDetails.yearBuilt > 0 && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Year Built</p>
+                          <p className="text-gray-700">{safeBuildingDetails.yearBuilt}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {safeBuildingDetails.amenities?.length > 0 && (
+                    <div className="mt-4">
+                      <p className="font-bold text-gray-900 mb-3">Building Amenities</p>
+                      <div className="flex flex-wrap gap-2">
+                        {safeBuildingDetails.amenities.map((amenity, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full text-sm font-medium"
+                          >
+                            {amenity}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider">Unit Rate</p>
-                <p className="text-lg font-bold text-gray-900">
-                  ₹{(price.amount / safeSpecifications.carpetArea).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                  <span className="text-sm font-medium text-gray-600 ml-1">/sq.ft</span>
-                </p>
-              </div>
-            </div>
-            <div className="w-2 h-8 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full opacity-70"></div>
-          </div>
-        )}
+            )}
 
-        {/* Maintenance Charges - Elegant Card */}
-        {maintenanceCharges > 0 && (
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-cyan-50/70 rounded-xl border border-cyan-200 hover:border-cyan-300 transition-colors group/item">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-600 to-teal-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-105 transition-transform">
-                <Building className="w-5 h-5 text-white" />
+            {/* Unit Features */}
+            {safeUnitFeatures.length > 0 && (
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-gray-100/80 overflow-hidden backdrop-blur-sm relative group">
+                <button
+                  onClick={() => toggleSection('features')}
+                  className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-gray-50 transition-colors lg:hidden"
+                >
+                  <div>
+                    <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                      Features & Amenities
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {safeUnitFeatures.length} premium features
+                    </p>
+                  </div>
+                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
+                    expandedSections.features ? 'rotate-180' : ''
+                  }`} />
+                </button>
+                
+                <div className="hidden lg:block">
+                  <div className="px-5 sm:px-7 md:px-9 pt-6 sm:pt-8">
+                    <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                      Features & Amenities
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {safeUnitFeatures.length} premium features
+                    </p>
+                  </div>
+                </div>
+                
+                <div className={`${expandedSections.features ? 'block' : 'hidden'} lg:block transition-all duration-500 ease-in-out relative z-10`}>
+                  <div className="px-5 sm:px-7 md:px-9 pb-7 sm:pb-8 md:pb-10">
+                    <div className="flex items-center gap-2 mb-6 sm:mb-8">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                      <span className="text-xs font-semibold text-gray-700 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-200 shadow-sm">
+                        {safeUnitFeatures.length} Premium Amenities
+                      </span>
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+                      {(showAllFeatures ? safeUnitFeatures : safeUnitFeatures.slice(0, 10)).map((feature, index) => {
+                        const premiumGradients = [
+                          "from-amber-800/80 to-amber-700/70",
+                          "from-rose-800/80 to-rose-700/70",
+                          "from-indigo-800/80 to-indigo-700/70",
+                          "from-emerald-800/80 to-emerald-700/70",
+                          "from-slate-800/80 to-slate-700/70",
+                          "from-stone-800/80 to-stone-700/70",
+                          "from-teal-800/80 to-teal-700/70",
+                          "from-purple-800/80 to-purple-700/70",
+                          "from-cyan-800/80 to-cyan-700/70",
+                          "from-pink-800/80 to-pink-700/70",
+                          "from-blue-800/80 to-blue-700/70",
+                          "from-orange-800/80 to-orange-700/70",
+                        ];
+                        
+                        const gradientColor = premiumGradients[index % premiumGradients.length];
+                        const baseColor = gradientColor.split(' ')[0].replace('from-', '').split('/')[0];
+                        
+                        return (
+                          <div
+                            key={index}
+                            className="group/feature relative"
+                            style={{
+                              animation: `fadeInUp 0.5s ease-out ${index * 0.05}s both`
+                            }}
+                          >
+                            <div className="relative bg-white rounded-xl sm:rounded-2xl border border-gray-200/60 hover:border-gray-300/80 shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden">
+                              <div className={`absolute inset-0 bg-gradient-to-br from-${baseColor}-50/0 via-${baseColor}-50/0 to-${baseColor}-50/0 group-hover/feature:from-${baseColor}-50/30 group-hover/feature:via-${baseColor}-50/20 group-hover/feature:to-${baseColor}-50/10 transition-all duration-700`}></div>
+                              <div className="absolute inset-0 opacity-0 group-hover/feature:opacity-100 transition-opacity duration-1000">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/feature:translate-x-full transition-transform duration-1500"></div>
+                              </div>
+                              <div className="relative p-3 sm:p-4 md:p-5 flex flex-col items-center">
+                                <div className="relative mb-2 sm:mb-3">
+                                  <div className={`w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br ${gradientColor} rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-${baseColor}-900/20 group-hover/feature:shadow-xl group-hover/feature:shadow-${baseColor}-900/30 transition-all duration-500 transform group-hover/feature:scale-105`}>
+                                    <div className="text-white/90 [&>svg]:w-5 [&>svg]:h-5 sm:[&>svg]:w-7 sm:[&>svg]:h-7 md:[&>svg]:w-8 md:[&>svg]:h-8">
+                                      {getFeatureIcon(feature)}
+                                    </div>
+                                  </div>
+                                  <div className={`absolute -inset-1 bg-gradient-to-br ${gradientColor} rounded-xl sm:rounded-2xl blur-md opacity-0 group-hover/feature:opacity-20 transition-opacity duration-500`}></div>
+                                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-br from-amber-300/80 to-amber-500/80 rounded-full opacity-0 group-hover/feature:opacity-100 transition-opacity duration-500 shadow-lg"></div>
+                                </div>
+                                <span className="font-medium text-gray-600 tracking-wide text-[10px] sm:text-xs md:text-sm text-center line-clamp-2 group-hover/feature:text-gray-900 transition-colors duration-300">
+                                  {feature}
+                                </span>
+                                <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-${baseColor}-400/60 rounded-full opacity-0 group-hover/feature:opacity-100 transition-all duration-300 scale-0 group-hover/feature:scale-100`}></div>
+                              </div>
+                            </div>
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900/90 text-white/90 text-[10px] sm:text-xs rounded opacity-0 group-hover/feature:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-20 shadow-xl backdrop-blur-sm">
+                              {feature}
+                              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900/90 rotate-45"></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {safeUnitFeatures.length > 10 && (
+                      <div className="mt-6 text-center">
+                        <button
+                          onClick={() => setShowAllFeatures(!showAllFeatures)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg font-medium"
+                        >
+                          {showAllFeatures ? (
+                            <>
+                              <ChevronUp className="w-4 h-4" />
+                              Show Less
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-4 h-4" />
+                              Show All {safeUnitFeatures.length} Features
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-cyan-700 uppercase tracking-wider">Maintenance</p>
-                <p className="text-lg font-bold text-gray-900">
-                  ₹{maintenanceCharges.toLocaleString('en-IN')}
-                  <span className="text-sm font-medium text-gray-600 ml-1">/month</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* Security Deposit - Elegant Card */}
-        {securityDeposit > 0 && (
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-emerald-50/70 rounded-xl border border-emerald-200 hover:border-emerald-300 transition-colors group/item">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-green-600 rounded-xl flex items-center justify-center shadow-md group-hover/item:scale-105 transition-transform">
-                <Shield className="w-5 h-5 text-white" />
+            {/* Common Specifications */}
+            {safeCommonSpecifications && Object.keys(safeCommonSpecifications).length > 0 && (
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 md:p-8 border border-blue-200">
+                <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
+                  Specifications
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  {safeCommonSpecifications.furnishing && (
+                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <Home className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                      <div>
+                        <p className="font-bold text-gray-900">Furnishing</p>
+                        <p className="text-gray-700 capitalize">{safeCommonSpecifications.furnishing}</p>
+                      </div>
+                    </div>
+                  )}
+                  {safeCommonSpecifications.possessionStatus && (
+                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <Key className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                      <div>
+                        <p className="font-bold text-gray-900">Possession Status</p>
+                        <p className="text-gray-700 capitalize">{safeCommonSpecifications.possessionStatus.replace('-', ' ')}</p>
+                      </div>
+                    </div>
+                  )}
+                  {safeCommonSpecifications.ageOfProperty > 0 && (
+                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                      <div>
+                        <p className="font-bold text-gray-900">Age of Property</p>
+                        <p className="text-gray-700">{safeCommonSpecifications.ageOfProperty} years</p>
+                      </div>
+                    </div>
+                  )}
+                  {safeCommonSpecifications.parking && (
+                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <Car className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                      <div>
+                        <p className="font-bold text-gray-900">Parking</p>
+                        <p className="text-gray-700">
+                          {safeCommonSpecifications.parking.covered > 0 && `${safeCommonSpecifications.parking.covered} Covered`}
+                          {safeCommonSpecifications.parking.covered > 0 && safeCommonSpecifications.parking.open > 0 && ' + '}
+                          {safeCommonSpecifications.parking.open > 0 && `${safeCommonSpecifications.parking.open} Open`}
+                          {safeCommonSpecifications.parking.covered === 0 && safeCommonSpecifications.parking.open === 0 && 'None'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {safeCommonSpecifications.kitchenType && safeCommonSpecifications.kitchenType !== 'regular' && (
+                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <ChefHat className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                      <div>
+                        <p className="font-bold text-gray-900">Kitchen Type</p>
+                        <p className="text-gray-700 capitalize">{safeCommonSpecifications.kitchenType}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Security Deposit</p>
-                <p className="text-lg font-bold text-gray-900">
-                  ₹{securityDeposit.toLocaleString('en-IN')}
-                </p>
+            )}
+
+            {/* Location Nearby */}
+            {safeLocationNearby.length > 0 && (
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+                <button
+                  onClick={() => toggleSection('locationNearby')}
+                  className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors"
+                >
+                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                    Nearby Locations
+                  </h2>
+                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
+                    expandedSections.locationNearby ? 'rotate-180' : ''
+                  }`} />
+                </button>
+                
+                <div className={`${expandedSections.locationNearby ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {safeLocationNearby.map((location, index) => (
+                      <div key={index} className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center flex-shrink-0">
+                          {getLocationNearbyIcon(location.type)}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900">{location.name}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <MapPin className="w-3 h-3 text-blue-600" />
+                            <span className="text-sm text-gray-600">{location.distance}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* Registration Charges */}
+            {/* Legal Details */}
+            {safeLegalDetails && Object.keys(safeLegalDetails).length > 0 && (
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+                <button
+                  onClick={() => toggleSection('legalDetails')}
+                  className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors"
+                >
+                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                    Legal Details
+                  </h2>
+                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
+                    expandedSections.legalDetails ? 'rotate-180' : ''
+                  }`} />
+                </button>
+                
+                <div className={`${expandedSections.legalDetails ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {safeLegalDetails.reraRegistered !== undefined && (
+                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+                        {safeLegalDetails.reraRegistered ? (
+                          <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                        ) : (
+                          <X className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+                        )}
+                        <div>
+                          <p className="font-bold text-gray-900">RERA Registered</p>
+                          <p className="text-gray-700">{safeLegalDetails.reraRegistered ? 'Yes' : 'No'}</p>
+                          {safeLegalDetails.reraNumber && (
+                            <p className="text-xs text-gray-500 mt-1">RERA: {safeLegalDetails.reraNumber}</p>
+                          )}
+                          {safeLegalDetails.reraWebsiteLink && (
+                            <a 
+                              href={safeLegalDetails.reraWebsiteLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline mt-1 inline-block"
+                            >
+                              View RERA Details
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.sanctioningAuthority && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Sanctioning Authority</p>
+                          <p className="text-gray-700">{safeLegalDetails.sanctioningAuthority}</p>
+                          {safeLegalDetails.sanctionNumber && (
+                            <p className="text-xs text-gray-500 mt-1">Sanction No: {safeLegalDetails.sanctionNumber}</p>
+                          )}
+                          {safeLegalDetails.sanctionDate && (
+                            <p className="text-xs text-gray-500">Date: {formatDate(safeLegalDetails.sanctionDate)}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.khataStatus && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Khata Status</p>
+                          <p className="text-gray-700">{safeLegalDetails.khataStatus}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.clearTitle !== undefined && (
+                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+                        {safeLegalDetails.clearTitle ? (
+                          <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                        ) : (
+                          <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+                        )}
+                        <div>
+                          <p className="font-bold text-gray-900">Clear Title</p>
+                          <p className="text-gray-700">{safeLegalDetails.clearTitle ? 'Yes' : 'Verification Required'}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.ownershipType && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Ownership Type</p>
+                          <p className="text-gray-700 capitalize">{safeLegalDetails.ownershipType.replace('-', ' ')}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.motherDeedAvailable !== undefined && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Mother Deed</p>
+                          <p className="text-gray-700">{safeLegalDetails.motherDeedAvailable ? 'Available' : 'Not Available'}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.conversionCertificate !== undefined && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <FileCheck className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Conversion Certificate</p>
+                          <p className="text-gray-700">{safeLegalDetails.conversionCertificate ? 'Available' : 'Not Available'}</p>
+                          {safeLegalDetails.conversionType && (
+                            <p className="text-xs text-gray-500 mt-1">Type: {safeLegalDetails.conversionType}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.encumbranceCertificate && (
+                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Encumbrance Certificate</p>
+                          <p className="text-gray-700">
+                            Available {safeLegalDetails.encumbranceYears && `(Last ${safeLegalDetails.encumbranceYears} years)`}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.occupancyCertificate && (
+                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Occupancy Certificate</p>
+                          <p className="text-gray-700">
+                            Available
+                            {safeLegalDetails.occupancyCertificateNumber && ` (${safeLegalDetails.occupancyCertificateNumber})`}
+                          </p>
+                          {safeLegalDetails.occupancyCertificateDate && (
+                            <p className="text-xs text-gray-500 mt-1">Date: {formatDate(safeLegalDetails.occupancyCertificateDate)}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.commencementCertificate && (
+                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Commencement Certificate</p>
+                          <p className="text-gray-700">
+                            Available
+                            {safeLegalDetails.commencementCertificateNumber && ` (${safeLegalDetails.commencementCertificateNumber})`}
+                          </p>
+                          {safeLegalDetails.commencementCertificateDate && (
+                            <p className="text-xs text-gray-500 mt-1">Date: {formatDate(safeLegalDetails.commencementCertificateDate)}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.bankApprovals && safeLegalDetails.bankApprovals.length > 0 && (
+                      <div className="col-span-1 sm:col-span-2">
+                        <p className="font-bold text-gray-900 mb-3">Bank Approvals</p>
+                        <div className="flex flex-wrap gap-2">
+                          {safeLegalDetails.bankApprovals.map((bank, index) => (
+                            <div key={index} className="inline-flex flex-col items-start gap-1 bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm font-medium">
+                              <span className="flex items-center gap-1">
+                                <Banknote className="w-3 h-3" />
+                                {bank.bankName}
+                              </span>
+                              {bank.approvalDate && (
+                                <span className="text-xs text-green-600">Approved: {formatDate(bank.approvalDate)}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {safeLegalDetails.legalStatusSummary && (
+                      <div className="col-span-1 sm:col-span-2">
+                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                          <p className="font-bold text-gray-900 mb-2">Legal Summary</p>
+                          <p className="text-gray-700 text-sm">{safeLegalDetails.legalStatusSummary}</p>
+                          {safeLegalDetails.legalVerified && (
+                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
+                              <BadgeCheck className="w-4 h-4 text-green-600" />
+                              <span className="text-sm text-green-700 font-medium">
+                                Legally Verified on {formatDate(safeLegalDetails.legalVerificationDate)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
- 
-        {/* Call to Action */}
-        <div className="pt-4">
-          <button 
-            onClick={handleBookAppointment}
-            className="w-full group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <div className="relative z-10 flex items-center justify-center gap-3">
-              <CalendarIcon className="w-5 h-5" />
-              <span className="tracking-wide">Schedule Property Tour</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-            {/* Shine effect */}
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-          </button>
-          
-    
-        </div>
-      </div>
-    </div>
-  </div>
+            {/* Owner Details */}
+            {/* {safeOwnerDetails && Object.keys(safeOwnerDetails).length > 0 && (
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+                <button
+                  onClick={() => toggleSection('ownerDetails')}
+                  className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors"
+                >
+                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                    Owner Details
+                  </h2>
+                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
+                    expandedSections.ownerDetails ? 'rotate-180' : ''
+                  }`} />
+                </button>
+                
+                <div className={`${expandedSections.ownerDetails ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {safeOwnerDetails.name && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <User className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Owner Name</p>
+                          <p className="text-gray-700">{safeOwnerDetails.name}</p>
+                        </div>
+                      </div>
+                    )}
+                    {safeOwnerDetails.phoneNumber && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Contact Number</p>
+                          <p className="text-gray-700">{safeOwnerDetails.phoneNumber}</p>
+                        </div>
+                      </div>
+                    )}
+                    {safeOwnerDetails.email && (
+                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <div>
+                          <p className="font-bold text-gray-900">Email</p>
+                          <p className="text-gray-700">{safeOwnerDetails.email}</p>
+                        </div>
+                      </div>
+                    )}
+                    {safeOwnerDetails.reasonForSelling && (
+                      <div className="col-span-1 sm:col-span-2">
+                        <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                          <Info className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 mt-0.5" />
+                          <div>
+                            <p className="font-bold text-gray-900">Reason for Selling</p>
+                            <p className="text-gray-700">{safeOwnerDetails.reasonForSelling}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )} */}
+
+            {/* Location & Map */}
+            {embedUrl && (
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 md:p-8 border border-blue-200">
+                <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
+                  Location
+                </h2>
+                
+                <div className="rounded-xl overflow-hidden shadow-lg mb-4 sm:mb-6 border border-blue-200">
+                  <iframe
+                    width="100%"
+                    height="250"
+                    className="sm:h-[250px] md:h-[300px]"
+                    frameBorder="0"
+                    style={{ border: 0 }}
+                    src={embedUrl}
+                    allowFullScreen
+                    title="Property Location"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
+                </div>
+
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-900 mb-1 sm:mb-2 tracking-wide text-sm sm:text-base">
+                      Property Address
+                    </p>
+                    <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base md:text-lg">
+                      {fullAddress || `${address || ''}${address && city ? ', ' : ''}${city || ''}`}
+                    </p>
+                  </div>
+                  
+                  <a
+                    href={viewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-4 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base w-full lg:w-auto"
+                  >
+                    <Navigation className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">Open in Maps</span>
+                    <span className="sm:hidden">Maps</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
             {/* BOOK YOUR APPOINTMENT CARD - Desktop Version */}
             <div className="hidden sm:block bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-6 md:p-8 border-2 border-green-200">
               <div className="flex flex-col md:flex-row md:items-center gap-6">
@@ -1716,531 +2838,211 @@ const getFeatureIcon = (feature) => {
                 </button>
               </div>
             </div>
+          </div>
 
-            {/* Specifications - Mobile compact with expand/collapse */}
-            {(safeSpecifications.bedrooms > 0 || safeSpecifications.bathrooms > 0 || safeSpecifications.carpetArea > 0) && (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
-                <button
-                  onClick={() => toggleSection('specifications')}
-                  className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors sm:cursor-default"
-                >
-                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                    Specifications
-                  </h2>
-                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform sm:hidden ${
-                    expandedSections.specifications ? 'rotate-180' : ''
-                  }`} />
-                </button>
+          {/* Right Column - Contact & Info */}
+          <div className="lg:w-[380px] xl:w-[420px] flex-shrink-0">
+            <div className="lg:sticky lg:top-24 space-y-4 sm:space-y-6">
+              {/* Contact Information */}
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-blue-200">
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
+                  Contact Information
+                </h3>
                 
-                <div className={`${expandedSections.specifications ? 'block' : 'hidden'} sm:block px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
-                    {/* Mobile: Compact specification cards */}
-                    {safeSpecifications.bedrooms > 0 && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Bed className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Bedrooms</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeSpecifications.bedrooms}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeSpecifications.bathrooms > 0 && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Bath className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Bathrooms</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeSpecifications.bathrooms}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeSpecifications.balconies > 0 && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Balconies</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeSpecifications.balconies}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeSpecifications.floorNumber > 0 && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Floor</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeSpecifications.floorNumber}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeSpecifications.carpetArea > 0 && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Maximize className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Carpet Area</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeSpecifications.carpetArea.toLocaleString()} sq.ft.</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeSpecifications.builtUpArea > 0 && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Built-up Area</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeSpecifications.builtUpArea.toLocaleString()} sq.ft.</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeSpecifications.superBuiltUpArea > 0 && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Building className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Super Built-up</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeSpecifications.superBuiltUpArea.toLocaleString()} sq.ft.</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeSpecifications.furnishing && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Furnishing</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeSpecifications.furnishing}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeSpecifications.possessionStatus && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Key className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Possession</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeSpecifications.possessionStatus}</p>
-                        </div>
-                      </div>
-                    )}
+                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                    <span className="font-bold text-gray-900 tracking-wide text-sm sm:text-base">
+                      Listed on
+                    </span>
                   </div>
+                  <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base pl-6 sm:pl-8">
+                    {formatDate(createdAt)}
+                  </p>
+                  {updatedAt && createdAt !== updatedAt && (
+                    <>
+                      <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4 mb-2 sm:mb-3">
+                        <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                        <span className="font-bold text-gray-900 tracking-wide text-sm sm:text-base">
+                          Last updated
+                        </span>
+                      </div>
+                      <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base pl-6 sm:pl-8">
+                        {formatDate(updatedAt)}
+                      </p>
+                    </>
+                  )}
                 </div>
-              </div>
-            )}
-
-            {/* Unit Features - Mobile compact with expand/collapse */}
-{safeUnitFeatures.length > 0 && (
-  <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-gray-100/80 overflow-hidden backdrop-blur-sm relative group">
-    {/* Premium gradient background effect */}
-    <div className="absolute inset-0 bg-gradient-to-br from-gray-50/30 via-stone-50/20 to-amber-50/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-    
-    {/* Decorative elements */}
-    <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-gray-200/20 to-stone-200/20 rounded-full blur-3xl"></div>
-    <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-amber-200/10 to-stone-200/20 rounded-full blur-3xl"></div>
-    
-    <div className={`${expandedSections.features ? 'block' : 'hidden'} sm:block transition-all duration-500 ease-in-out relative z-10`}>
-      <div className="px-5 sm:px-7 md:px-9 pb-7 sm:pb-8 md:pb-10">
-        {/* Feature count badge */}
-        <div className="flex items-center gap-2 mb-6 sm:mb-8">
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-          <span className="text-xs font-semibold text-gray-700 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-200 shadow-sm">
-            {safeUnitFeatures.length} Premium Amenities
-          </span>
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-        </div>
-        
-        {/* Premium features grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
-          {safeUnitFeatures.map((feature, index) => {
-            // Sophisticated muted color palette - premium and elegant
-            const premiumGradients = [
-              "from-amber-800/80 to-amber-700/70",      // Warm gold
-              "from-rose-800/80 to-rose-700/70",        // Dusty rose
-              "from-indigo-800/80 to-indigo-700/70",    // Deep indigo
-              "from-emerald-800/80 to-emerald-700/70",  // Forest green
-              "from-slate-800/80 to-slate-700/70",      // Charcoal
-              "from-stone-800/80 to-stone-700/70",      // Warm gray
-              "from-teal-800/80 to-teal-700/70",        // Deep teal
-              "from-purple-800/80 to-purple-700/70",    // Royal purple
-              "from-cyan-800/80 to-cyan-700/70",        // Deep cyan
-              "from-pink-800/80 to-pink-700/70",        // Mauve
-              "from-blue-800/80 to-blue-700/70",        // Navy
-              "from-orange-800/80 to-orange-700/70",    // Burnt orange
-              "from-lime-800/80 to-lime-700/70",        // Olive
-              "from-red-800/80 to-red-700/70",          // Burgundy
-              "from-violet-800/80 to-violet-700/70",    // Deep violet
-              "from-fuchsia-800/80 to-fuchsia-700/70",  // Deep fuchsia
-            ];
-            
-            // Get muted color based on index
-            const gradientColor = premiumGradients[index % premiumGradients.length];
-            
-            // Extract base color for effects
-            const baseColor = gradientColor.split(' ')[0].replace('from-', '').split('/')[0];
-            
-            return (
-              <div
-                key={index}
-                className="group/feature relative"
-                style={{
-                  animation: `fadeInUp 0.5s ease-out ${index * 0.05}s both`
-                }}
-              >
-                {/* Premium card with subtle background */}
-                <div className="relative bg-white rounded-xl sm:rounded-2xl border border-gray-200/60 hover:border-gray-300/80 shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden">
-                  
-                  {/* Subtle background gradient on hover */}
-                  <div className={`absolute inset-0 bg-gradient-to-br from-${baseColor}-50/0 via-${baseColor}-50/0 to-${baseColor}-50/0 group-hover/feature:from-${baseColor}-50/30 group-hover/feature:via-${baseColor}-50/20 group-hover/feature:to-${baseColor}-50/10 transition-all duration-700`}></div>
-                  
-                  {/* Elegant shine effect - more subtle */}
-                  <div className="absolute inset-0 opacity-0 group-hover/feature:opacity-100 transition-opacity duration-1000">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/feature:translate-x-full transition-transform duration-1500"></div>
-                  </div>
-                  
-                  <div className="relative p-3 sm:p-4 md:p-5 flex flex-col items-center">
-                    {/* Icon container with muted premium gradient */}
-                    <div className="relative mb-2 sm:mb-3">
-                      <div className={`w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br ${gradientColor} rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-${baseColor}-900/20 group-hover/feature:shadow-xl group-hover/feature:shadow-${baseColor}-900/30 transition-all duration-500 transform group-hover/feature:scale-105`}>
-                        <div className="text-white/90 [&>svg]:w-5 [&>svg]:h-5 sm:[&>svg]:w-7 sm:[&>svg]:h-7 md:[&>svg]:w-8 md:[&>svg]:h-8">
-                          {featureIcons[feature] || getFeatureIcon(feature)}
-                        </div>
+                
+                {user ? (
+                  <div className="bg-white p-4 sm:p-6 rounded-lg sm:rounded-xl border-2 border-blue-300 shadow-sm">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                      <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-2xl">
+                        {createdBy?.name?.charAt(0)?.toUpperCase() || "A"}
                       </div>
-                      
-                      {/* Subtle glow effect - very soft */}
-                      <div className={`absolute -inset-1 bg-gradient-to-br ${gradientColor} rounded-xl sm:rounded-2xl blur-md opacity-0 group-hover/feature:opacity-20 transition-opacity duration-500`}></div>
-                      
-                      {/* Premium metallic corner accent */}
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-br from-amber-300/80 to-amber-500/80 rounded-full opacity-0 group-hover/feature:opacity-100 transition-opacity duration-500 shadow-lg"></div>
+                      <div>
+                        <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1">
+                          Property Contact
+                        </p>
+                        <p className="font-bold text-base sm:text-xl text-gray-900 tracking-tight">
+                          {createdBy?.name || "Property Agent"}
+                        </p>
+                      </div>
                     </div>
                     
-                    {/* Feature name with elegant typography */}
-                    <span className="font-medium text-gray-600 tracking-wide text-[10px] sm:text-xs md:text-sm text-center line-clamp-2 group-hover/feature:text-gray-900 transition-colors duration-300">
-                      {feature}
-                    </span>
-                    
-                    {/* Subtle indicator dot */}
-                    <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-${baseColor}-400/60 rounded-full opacity-0 group-hover/feature:opacity-100 transition-all duration-300 scale-0 group-hover/feature:scale-100`}></div>
-                  </div>
-                </div>
-                
-                {/* Elegant tooltip */}
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900/90 text-white/90 text-[10px] sm:text-xs rounded opacity-0 group-hover/feature:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-20 shadow-xl backdrop-blur-sm">
-                  {feature}
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900/90 rotate-45"></div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        
-        {/* Optional elegant CTA */}
-    
-      </div>
-    </div>
-    
-    {/* Elegant bottom border */}
-    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-  </div>
-)}
-            {/* Building Details - Mobile compact with expand/collapse */}
-            {safeBuildingDetails.name && (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
-                <button
-                  onClick={() => toggleSection('buildingDetails')}
-                  className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors sm:cursor-default"
-                >
-                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                    Building Details
-                  </h2>
-                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform sm:hidden ${
-                    expandedSections.buildingDetails ? 'rotate-180' : ''
-                  }`} />
-                </button>
-                
-                <div className={`${expandedSections.buildingDetails ? 'block' : 'hidden'} sm:block px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
-                    {safeBuildingDetails.name && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Building className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Building Name</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeBuildingDetails.name}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeBuildingDetails.totalFloors > 0 && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Total Floors</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeBuildingDetails.totalFloors}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeBuildingDetails.totalUnits > 0 && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Total Units</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeBuildingDetails.totalUnits}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeBuildingDetails.yearBuilt && (
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                        <div>
-                          <p className="font-bold text-gray-900 text-sm sm:text-base">Year Built</p>
-                          <p className="text-gray-700 text-sm sm:text-base">{safeBuildingDetails.yearBuilt}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {safeBuildingDetails.amenities?.length > 0 && (
-                      <div className="col-span-2 sm:col-span-2 md:col-span-3">
-                        <p className="font-bold text-gray-900 text-sm sm:text-base mb-2">Building Amenities</p>
-                        <div className="flex flex-wrap gap-2">
-                          {safeBuildingDetails.amenities.map((amenity, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium"
-                            >
-                              {amenity}
+                    <div className="space-y-3 sm:space-y-4">
+                      {createdBy?.email && (
+                        <div className="p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
+                          <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1 sm:mb-2">
+                            EMAIL
+                          </p>
+                          <a 
+                            href={`mailto:${createdBy.email}`}
+                            className="flex items-center gap-2 sm:gap-3 text-blue-700 hover:text-blue-900 group transition-colors"
+                          >
+                            <Mail className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                            <span className="font-bold tracking-wide text-sm sm:text-base group-hover:underline break-all">
+                              {createdBy.email}
                             </span>
-                          ))}
-                         
+                          </a>
                         </div>
+                      )}
+                      
+                      {createdBy?.phoneNumber && (
+                        <div className="p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
+                          <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1 sm:mb-2">
+                            PHONE
+                          </p>
+                          <a 
+                            href={`tel:${createdBy.phoneNumber}`}
+                            className="flex items-center gap-2 sm:gap-3 text-blue-700 hover:text-blue-900 group transition-colors"
+                          >
+                            <Phone className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                            <span className="font-bold tracking-wide text-sm sm:text-base group-hover:underline">
+                              {createdBy.phoneNumber}
+                            </span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {createdBy?.phoneNumber && (
+                      <a
+                        href={`https://wa.me/${createdBy.phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello, I'm interested in your property: ${title} (${address}, ${city})`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <button className="w-full mt-4 sm:mt-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base flex items-center justify-center gap-2 sm:gap-3">
+                          <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span className="hidden sm:inline">Message on WhatsApp</span>
+                          <span className="sm:hidden">WhatsApp</span>
+                        </button>
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl border-2 border-blue-300 text-center">
+                    <div className="w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                      <Lock className="w-6 h-6 sm:w-9 sm:h-9 md:w-10 md:h-10 text-blue-600" />
+                    </div>
+                    <h4 className="text-base sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">
+                      Sign In Required
+                    </h4>
+                    <p className="text-gray-600 mb-4 sm:mb-6 font-medium tracking-wide leading-relaxed text-sm sm:text-base">
+                      Sign in to access contact details
+                    </p>
+                    
+                    <div className="space-y-2 sm:space-y-3">
+                      <button 
+                        onClick={() => navigate('/login', { state: { from: `/property-units/${id}` } })}
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base"
+                      >
+                        Sign In
+                      </button>
+                      <button 
+                        onClick={() => navigate('/register', { state: { from: `/property-units/${id}` } })}
+                        className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-yellow-500 hover:to-yellow-600 transition-all border-2 border-yellow-400 font-bold tracking-wide text-sm sm:text-base"
+                      >
+                        Create Account
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Property Stats */}
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-blue-200">
+                <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
+                  Property Stats
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
+                    <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
+                      Property ID
+                    </span>
+                    <span className="font-bold text-blue-600 text-sm sm:text-base">
+                      #{id?.slice(-6).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
+                    <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
+                      Views
+                    </span>
+                    <span className="font-bold text-blue-600 text-sm sm:text-base">
+                      {viewCount || 0}
+                    </span>
+                  </div>
+                  <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
+                    <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
+                      Total Units
+                    </span>
+                    <span className="font-bold text-blue-600 text-sm sm:text-base">
+                      {totalUnitTypes || 0}
+                    </span>
+                  </div>
+                  <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
+                    <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
+                      Available Units
+                    </span>
+                    <span className="font-bold text-blue-600 text-sm sm:text-base">
+                      {availableUnitTypesCount || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Viewing Schedule */}
+              {safeViewingSchedule && safeViewingSchedule.length > 0 && (
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-blue-200">
+                  <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
+                    Viewing Schedule
+                  </h3>
+                  <div className="space-y-3">
+                    {safeViewingSchedule.map((slot, index) => (
+                      <div key={index} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CalendarIcon className="w-4 h-4 text-blue-600" />
+                          <span className="font-bold text-gray-900">{formatDate(slot.date)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <ClockIcon className="w-4 h-4 text-blue-600" />
+                          <span className="text-gray-700">{slot.startTime} - {slot.endTime}</span>
+                        </div>
+                        {slot.slotsAvailable > 0 && (
+                          <p className="text-xs text-green-600 mt-1">{slot.slotsAvailable} slots available</p>
+                        )}
                       </div>
-                    )}
+                    ))}
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Location & Map - Reduced height for desktop */}
-            {embedUrl && (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 md:p-8 border border-blue-200">
-                <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
-                  Location
-                </h2>
-                
-                <div className="rounded-xl overflow-hidden shadow-lg mb-4 sm:mb-6 border border-blue-200">
-                  <iframe
-                    width="100%"
-                    height="250" // Reduced from 300/400
-                    className="sm:h-[250px] md:h-[300px]" // Reduced height for desktop
-                    frameBorder="0"
-                    style={{ border: 0 }}
-                    src={embedUrl}
-                    allowFullScreen
-                    title="Property Location"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  ></iframe>
-                </div>
-
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 p-4 sm:p-6 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-900 mb-1 sm:mb-2 tracking-wide text-sm sm:text-base">
-                      Property Address
-                    </p>
-                    <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base md:text-lg">
-                      {fullAddress || `${address || ''}${address && city ? ', ' : ''}${city || ''}`}
-                    </p>
-                    {coordinates && (
-                      <p className="text-xs sm:text-sm text-blue-600 mt-2 font-medium tracking-wide">
-                        📍 Coordinates: {coordinates.latitude}, {coordinates.longitude}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <a
-                    href={viewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-4 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base w-full lg:w-auto"
-                  >
-                    <Navigation className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="hidden sm:inline">Open in Maps</span>
-                    <span className="sm:hidden">Maps</span>
-                  </a>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column - Contact & Info - Mobile optimized */}
-
-
-
-
-  {/* Fixed Sidebar */}
-  <div className="lg:w-[380px] xl:w-[420px] flex-shrink-0">
-    <div className="lg:sticky lg:top-24 space-y-4 sm:space-y-6">
-      {/* Contact Information */}
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-blue-200">
-        <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
-          Contact Information
-        </h3>
-        
-        {/* Property Listing Date */}
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-            <span className="font-bold text-gray-900 tracking-wide text-sm sm:text-base">
-              Listed on
-            </span>
-          </div>
-          <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base pl-6 sm:pl-8">
-            {formatDate(createdAt)}
-          </p>
-          {updatedAt && createdAt !== updatedAt && (
-            <>
-              <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4 mb-2 sm:mb-3">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                <span className="font-bold text-gray-900 tracking-wide text-sm sm:text-base">
-                  Last updated
-                </span>
-              </div>
-              <p className="text-gray-700 font-medium tracking-wide text-sm sm:text-base pl-6 sm:pl-8">
-                {formatDate(updatedAt)}
-              </p>
-            </>
-          )}
-        </div>
-        
-        {user ? (
-          <div className="bg-white p-4 sm:p-6 rounded-lg sm:rounded-xl border-2 border-blue-300 shadow-sm">
-            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-2xl">
-                {createdBy?.name?.charAt(0)?.toUpperCase() || "A"}
-              </div>
-              <div>
-                <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1">
-                  Property Contact
-                </p>
-                <p className="font-bold text-base sm:text-xl text-gray-900 tracking-tight">
-                  {createdBy?.name || "Property Agent"}
-                </p>
-              </div>
-            </div>
-            
-            <div className="space-y-3 sm:space-y-4">
-              {createdBy?.email && (
-                <div className="p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                  <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1 sm:mb-2">
-                    EMAIL
-                  </p>
-                  <a 
-                    href={`mailto:${createdBy.email}`}
-                    className="flex items-center gap-2 sm:gap-3 text-blue-700 hover:text-blue-900 group transition-colors"
-                  >
-                    <Mail className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                    <span className="font-bold tracking-wide text-sm sm:text-base group-hover:underline break-all">
-                      {createdBy.email}
-                    </span>
-                  </a>
-                </div>
-              )}
-              
-              {createdBy?.phoneNumber && (
-                <div className="p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-                  <p className="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1 sm:mb-2">
-                    PHONE
-                  </p>
-                  <a 
-                    href={`tel:${createdBy.phoneNumber}`}
-                    className="flex items-center gap-2 sm:gap-3 text-blue-700 hover:text-blue-900 group transition-colors"
-                  >
-                    <Phone className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                    <span className="font-bold tracking-wide text-sm sm:text-base group-hover:underline">
-                      {createdBy.phoneNumber}
-                    </span>
-                  </a>
                 </div>
               )}
             </div>
-            
-            {createdBy?.phoneNumber && (
-              <a
-                href={`https://wa.me/${createdBy.phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello, I'm interested in your property: ${title} (${address}, ${city})`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <button className="w-full mt-4 sm:mt-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-green-600 hover:to-green-700 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base flex items-center justify-center gap-2 sm:gap-3">
-                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">Message on WhatsApp</span>
-                  <span className="sm:hidden">WhatsApp</span>
-                </button>
-              </a>
-            )}
-          </div>
-        ) : (
-          <div className="bg-white p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl border-2 border-blue-300 text-center">
-            <div className="w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-              <Lock className="w-6 h-6 sm:w-9 sm:h-9 md:w-10 md:h-10 text-blue-600" />
-            </div>
-            <h4 className="text-base sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">
-              Sign In Required
-            </h4>
-            <p className="text-gray-600 mb-4 sm:mb-6 font-medium tracking-wide leading-relaxed text-sm sm:text-base">
-              Sign in to access contact details
-            </p>
-            
-            <div className="space-y-2 sm:space-y-3">
-              <button 
-                onClick={() => navigate('/login', { state: { from: `/property-units/${id}` } })}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl font-bold tracking-wide text-sm sm:text-base"
-              >
-                Sign In
-              </button>
-              <button 
-                onClick={() => navigate('/register', { state: { from: `/property-units/${id}` } })}
-                className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl hover:from-yellow-500 hover:to-yellow-600 transition-all border-2 border-yellow-400 font-bold tracking-wide text-sm sm:text-base"
-              >
-                Create Account
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Property Stats - Mobile compact */}
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-blue-200">
-        <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
-          Property Stats
-        </h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
-            <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
-              Property ID
-            </span>
-            <span className="font-bold text-blue-600 text-sm sm:text-base">
-              #{id?.slice(-6).toUpperCase()}
-            </span>
-          </div>
-          <div className="flex flex-col p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl">
-            <span className="font-bold text-gray-700 tracking-wide text-sm sm:text-base mb-1">
-              Views
-            </span>
-            <span className="font-bold text-blue-600 text-sm sm:text-base">
-              {viewCount || 0}
-            </span>
           </div>
         </div>
       </div>
-    </div>
-  </div>
- </div>
-      </div>
-<FeaturedProperties/>
+      
+      <FeaturedProperties/>
       <PossessionTimeline/>
-
-      {/* Footer */}
       <Footer />
     </div>
   );

@@ -42,11 +42,24 @@ export default function FeaturedProperties() {
       setLoading(true);
       setError(null);
       
-      const res = await propertyUnitAPI.getFeaturedPropertyUnits();
+      // Fetch all property units
+      const res = await propertyUnitAPI.getPropertyUnits({
+              limit: 1000,
+              sortBy: "createdAt",
+              sortOrder: "desc"
+            });
+            
+      console.log("All properties response:", res);
       
       if (res.data && res.data.success) {
-        setPropertyUnits(res.data.data || []);
-        setTotalPages(Math.ceil((res.data.data?.length || 0) / ITEMS_PER_PAGE));
+        // Filter featured properties in frontend (isFeatured = true)
+        const allProperties = res.data.data || [];
+        const featuredOnly = allProperties.filter(unit => unit.isFeatured === true);
+        
+        console.log(`Found ${featuredOnly.length} featured properties out of ${allProperties.length} total`);
+        
+        setPropertyUnits(featuredOnly);
+        setTotalPages(Math.ceil(featuredOnly.length / ITEMS_PER_PAGE));
       } else {
         setPropertyUnits([]);
         setError("Failed to load featured properties");
@@ -253,7 +266,7 @@ export default function FeaturedProperties() {
           <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-100">
             <AlertCircle className="w-10 h-10 text-blue-600" />
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-sans">Unable to Load Properties</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-sans">Unable to Load Featured Properties</h2>
           <p className="text-gray-600 text-base mb-8">{error}</p>
           <button 
             onClick={handleRetry}
@@ -371,13 +384,15 @@ export default function FeaturedProperties() {
                   </button>
 
                   {/* View All Button */}
-                  <button
-                    onClick={handleViewAll}
-                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                    <span className="text-sm">View</span>
-                  </button>
+                  {propertyUnits.length > ITEMS_PER_PAGE && (
+                    <button
+                      onClick={handleViewAll}
+                      className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                      <span className="text-sm">View All</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -399,9 +414,8 @@ export default function FeaturedProperties() {
               ))}
             </div>
 
-
             {/* View More Button */}
-            {showViewMore && currentPage < totalPages && (
+            {showViewMore && currentPage < totalPages && propertyUnits.length > currentPage * ITEMS_PER_PAGE && (
               <div className="flex justify-center mt-6 animate-fade-in">
                 <button
                   onClick={handleViewMore}
@@ -421,6 +435,7 @@ export default function FeaturedProperties() {
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900 font-sans">
                   <span className="text-blue-700">All Featured Properties</span> 
+                  <span className="text-sm text-gray-500 ml-2">({propertyUnits.length})</span>
                 </h2>
                 
                 <button

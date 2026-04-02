@@ -1,4 +1,3 @@
-// pages/CategoryPropertiesPage.jsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import {
@@ -26,7 +25,22 @@ import {
   Gem,
   RefreshCw,
   Droplet,
-  FileText
+  FileText,
+  Layers,
+  Key,
+  Sofa,
+  MapPin,
+  LandPlot,
+  Square,
+  CornerDownRight,
+  // Road,
+  Trees,
+  Droplets,
+  Zap,
+  Wifi,
+  Flame,
+  Gauge,
+  Compass
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
@@ -39,7 +53,7 @@ const categoryIcons = {
   'Commercial Space': <Building2 className="w-8 h-8" strokeWidth={1.5} />,
   'Villa': <Home className="w-8 h-8" strokeWidth={1.5} />,
   'Independent House': <Warehouse className="w-8 h-8" strokeWidth={1.5} />,
-  'Plot': <Ruler className="w-8 h-8" strokeWidth={1.5} />,
+  'Plot': <LandPlot className="w-8 h-8" strokeWidth={1.5} />,
   'Pg house': <BedDouble className="w-8 h-8" strokeWidth={1.5} />
 };
 
@@ -95,24 +109,73 @@ const categoryThemes = {
   }
 };
 
-// Filter Options
+// Updated Filter Options based on new model
 const filterOptions = {
   furnishing: [
     { value: 'unfurnished', label: 'Unfurnished', icon: Home },
-    { value: 'semi-furnished', label: 'Semi-Furnished', icon: Coffee },
+    { value: 'semi-furnished', label: 'Semi-Furnished', icon: Sofa },
     { value: 'fully-furnished', label: 'Fully Furnished', icon: Sparkles }
   ],
   possessionStatus: [
-    { value: 'ready-to-move', label: 'Ready to Move', icon: CheckCircle },
+    { value: 'ready-to-move', label: 'Ready to Move', icon: Key },
     { value: 'under-construction', label: 'Under Construction', icon: RefreshCw },
     { value: 'resale', label: 'Resale', icon: RefreshCw }
   ],
-  bedrooms: [1, 2, 3, 4, '5+'],
+  unitTypes: [
+    { value: '1BHK', label: '1 BHK', bedrooms: 1 },
+    { value: '2BHK', label: '2 BHK', bedrooms: 2 },
+    { value: '3BHK', label: '3 BHK', bedrooms: 3 },
+    { value: '4BHK', label: '4 BHK', bedrooms: 4 },
+    { value: '5BHK', label: '5 BHK', bedrooms: 5 },
+    { value: 'Studio', label: 'Studio', bedrooms: 1 },
+    { value: 'Penthouse', label: 'Penthouse', bedrooms: 3 },
+    { value: 'Duplex', label: 'Duplex', bedrooms: 3 }
+  ],
+  // Plot-specific filters
+  plotFilters: {
+    landUse: [
+      { value: 'residential', label: 'Residential', icon: Home },
+      { value: 'commercial', label: 'Commercial', icon: Building2 },
+      { value: 'agricultural', label: 'Agricultural', icon: Trees },
+      { value: 'industrial', label: 'Industrial', icon: Building },
+      { value: 'mixed-use', label: 'Mixed Use', icon: Layers }
+    ],
+    developmentStatus: [
+      { value: 'developed', label: 'Developed', icon: CheckCircle },
+      { value: 'semi-developed', label: 'Semi-Developed', icon: Gauge },
+      { value: 'undeveloped', label: 'Undeveloped', icon: LandPlot }
+    ],
+    facing: [
+      { value: 'north', label: 'North', icon: Compass },
+      { value: 'south', label: 'South', icon: Compass },
+      { value: 'east', label: 'East', icon: Compass },
+      { value: 'west', label: 'West', icon: Compass },
+      { value: 'north-east', label: 'North-East', icon: Compass },
+      { value: 'north-west', label: 'North-West', icon: Compass },
+      { value: 'south-east', label: 'South-East', icon: Compass },
+      { value: 'south-west', label: 'South-West', icon: Compass }
+    ],
+    roadType: [
+      { value: 'main', label: 'Main Road', icon: Compass },
+      { value: 'secondary', label: 'Secondary Road', icon: Compass },
+      { value: 'internal', label: 'Internal Road', icon: Compass },
+      { value: 'service', label: 'Service Road', icon: Compass },
+      { value: 'highway', label: 'Highway', icon: Compass }
+    ],
+    utilities: [
+      { value: 'electricity', label: 'Electricity', icon: Zap },
+      { value: 'waterConnection', label: 'Water', icon: Droplets },
+      { value: 'sewageConnection', label: 'Sewage', icon: Droplet },
+      { value: 'gasConnection', label: 'Gas', icon: Flame },
+      { value: 'internetFiber', label: 'Internet', icon: Wifi }
+    ]
+  },
   bathrooms: [1, 2, 3, '4+'],
   listingType: [
     { value: 'sale', label: 'Buy', icon: Gem },
     { value: 'rent', label: 'Rent', icon: Calendar },
-    { value: 'lease', label: 'Lease', icon: FileText }
+    { value: 'lease', label: 'Lease', icon: FileText },
+    { value: 'pg', label: 'PG', icon: HomeIcon }
   ]
 };
 
@@ -208,20 +271,32 @@ const CategoryPropertiesPage = () => {
     search: "",
     minPrice: "",
     maxPrice: "",
+    minArea: "",
+    maxArea: "",
+    unitType: "",
     bedrooms: "",
     bathrooms: "",
     furnishing: "",
     possessionStatus: "",
     listingType: "",
+    // Plot-specific filters
+    landUse: "",
+    developmentStatus: "",
+    facing: "",
+    roadType: "",
+    utilities: [],
+    shape: "",
+    isCornerPlot: false,
     sortBy: "displayOrder",
     sortOrder: "asc"
   });
 
   const [priceError, setPriceError] = useState("");
+  const [areaError, setAreaError] = useState("");
 
-  const categoryName =
-    location.state?.categoryName || decodeURIComponent(categoryId);
+  const categoryName = location.state?.categoryName || decodeURIComponent(categoryId);
   const theme = categoryThemes[categoryId] || categoryThemes['Apartment'];
+  const isPlotCategory = categoryId === 'Plot';
 
   // Save view mode to localStorage when it changes
   useEffect(() => {
@@ -242,85 +317,290 @@ const CategoryPropertiesPage = () => {
       key !== 'sortBy' && 
       key !== 'sortOrder' && 
       key !== 'search' && 
+      key !== 'utilities' &&
       value && 
-      value !== ''
+      value !== '' &&
+      value !== false &&
+      (Array.isArray(value) ? value.length > 0 : true)
     ).length;
     setActiveFilterCount(count);
   }, [filters]);
 
-  // ---------------------------
-  // API CALL
-  // ---------------------------
+  // Helper function to get min price from unit types
+  const getMinPriceFromUnitTypes = (unitTypes) => {
+    if (!unitTypes || unitTypes.length === 0) return Infinity;
+    const prices = unitTypes.map(unit => unit.price?.amount || Infinity);
+    return Math.min(...prices);
+  };
 
+  // Helper function to get min area from unit types
+  const getMinAreaFromUnitTypes = (unitTypes) => {
+    if (!unitTypes || unitTypes.length === 0) return Infinity;
+    const areas = unitTypes.map(unit => {
+      if (unit.type === 'Plot') {
+        return unit.plotDetails?.area?.sqft || unit.carpetArea || Infinity;
+      }
+      return unit.carpetArea || Infinity;
+    });
+    return Math.min(...areas);
+  };
+
+  // Helper function to filter properties by unit type and bedrooms
+  const filterPropertiesByUnitType = (properties, unitType, bedrooms) => {
+    if (!unitType && !bedrooms) return properties;
+    
+    return properties.filter(property => {
+      if (!property.unitTypes || property.unitTypes.length === 0) return false;
+      
+      let matchesUnitType = true;
+      let matchesBedrooms = true;
+      
+      if (unitType) {
+        matchesUnitType = property.unitTypes.some(unit => unit.type === unitType);
+      }
+      
+      if (bedrooms && !isPlotCategory) {
+        const bedroomNum = bedrooms === "5+" ? 5 : Number(bedrooms);
+        matchesBedrooms = property.unitTypes.some(unit => {
+          const match = unit.type.match(/(\d+)BHK/);
+          if (match) {
+            return parseInt(match[1]) === bedroomNum;
+          }
+          return false;
+        });
+      }
+      
+      return matchesUnitType && matchesBedrooms;
+    });
+  };
+
+  // Helper function to filter properties by price range
+  const filterPropertiesByPrice = (properties, minPrice, maxPrice) => {
+    if (!minPrice && !maxPrice) return properties;
+    
+    return properties.filter(property => {
+      const minUnitPrice = getMinPriceFromUnitTypes(property.unitTypes);
+      if (minUnitPrice === Infinity) return false;
+      
+      if (minPrice && maxPrice) {
+        return minUnitPrice >= Number(minPrice) && minUnitPrice <= Number(maxPrice);
+      } else if (minPrice) {
+        return minUnitPrice >= Number(minPrice);
+      } else if (maxPrice) {
+        return minUnitPrice <= Number(maxPrice);
+      }
+      return true;
+    });
+  };
+
+  // Helper function to filter properties by area range
+  const filterPropertiesByArea = (properties, minArea, maxArea) => {
+    if (!minArea && !maxArea) return properties;
+    
+    return properties.filter(property => {
+      const minUnitArea = getMinAreaFromUnitTypes(property.unitTypes);
+      if (minUnitArea === Infinity) return false;
+      
+      if (minArea && maxArea) {
+        return minUnitArea >= Number(minArea) && minUnitArea <= Number(maxArea);
+      } else if (minArea) {
+        return minUnitArea >= Number(minArea);
+      } else if (maxArea) {
+        return minUnitArea <= Number(maxArea);
+      }
+      return true;
+    });
+  };
+
+  // Helper function to filter plot properties by plot-specific filters
+  const filterPlotProperties = (properties) => {
+    if (!isPlotCategory) return properties;
+    
+    return properties.filter(property => {
+      if (!property.unitTypes || property.unitTypes.length === 0) return false;
+      
+      // Get the first plot unit (assuming property has at least one plot)
+      const plotUnit = property.unitTypes.find(unit => unit.type === 'Plot');
+      if (!plotUnit || !plotUnit.plotDetails) return false;
+      
+      const plot = plotUnit.plotDetails;
+      
+      // Filter by land use
+      if (filters.landUse && plot.landUse !== filters.landUse) return false;
+      
+      // Filter by development status
+      if (filters.developmentStatus && plot.developmentStatus !== filters.developmentStatus) return false;
+      
+      // Filter by facing
+      if (filters.facing && plot.facing !== filters.facing) return false;
+      
+      // Filter by road type
+      if (filters.roadType && plot.roadType !== filters.roadType) return false;
+      
+      // Filter by shape
+      if (filters.shape && plot.shape !== filters.shape) return false;
+      
+      // Filter by corner plot
+      if (filters.isCornerPlot && !plot.isCornerPlot) return false;
+      
+      // Filter by utilities
+      if (filters.utilities.length > 0) {
+        const hasAllUtilities = filters.utilities.every(utility => plot.utilities?.[utility] === true);
+        if (!hasAllUtilities) return false;
+      }
+      
+      return true;
+    });
+  };
+
+  // Helper function to filter properties by furnishing
+  const filterPropertiesByFurnishing = (properties, furnishing) => {
+    if (!furnishing) return properties;
+    return properties.filter(property => 
+      property.commonSpecifications?.furnishing === furnishing
+    );
+  };
+
+  // Helper function to filter properties by possession status
+  const filterPropertiesByPossession = (properties, possessionStatus) => {
+    if (!possessionStatus) return properties;
+    return properties.filter(property => 
+      property.commonSpecifications?.possessionStatus === possessionStatus
+    );
+  };
+
+  // Helper function to filter properties by listing type
+  const filterPropertiesByListingType = (properties, listingType) => {
+    if (!listingType) return properties;
+    return properties.filter(property => property.listingType === listingType);
+  };
+
+  // Helper function to sort properties
+  const sortProperties = (properties, sortBy, sortOrder) => {
+    const sorted = [...properties];
+    
+    if (sortBy === 'displayOrder') {
+      sorted.sort((a, b) => {
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        return 0;
+      });
+    } else if (sortBy === 'createdAt') {
+      sorted.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+      });
+    } else if (sortBy === 'price') {
+      sorted.sort((a, b) => {
+        const priceA = getMinPriceFromUnitTypes(a.unitTypes);
+        const priceB = getMinPriceFromUnitTypes(b.unitTypes);
+        return sortOrder === 'asc' ? priceA - priceB : priceB - priceA;
+      });
+    } else if (sortBy === 'area') {
+      sorted.sort((a, b) => {
+        const areaA = getMinAreaFromUnitTypes(a.unitTypes);
+        const areaB = getMinAreaFromUnitTypes(b.unitTypes);
+        return sortOrder === 'asc' ? areaA - areaB : areaB - areaA;
+      });
+    }
+    
+    return sorted;
+  };
+
+  // Updated fetchProperties with frontend filtering
   const fetchProperties = useCallback(
     async (currentPage, currentFilters) => {
       try {
         setLoading(true);
 
+        // First fetch all properties for the category
         const params = {
           propertyType: categoryId,
-          page: currentPage,
-          limit: isMobile ? 10 : 12,
-          sortBy: currentFilters.sortBy,
-          sortOrder: currentFilters.sortOrder
+          limit: 100, // Fetch more to allow frontend filtering
+          sortBy: "displayOrder",
+          sortOrder: "asc"
         };
 
-        if (currentFilters.search?.trim()) {
-          params.search = currentFilters.search.trim();
-        }
-
-        if (currentFilters.listingType) {
-          params.listingType = currentFilters.listingType;
-        }
-
-        if (currentFilters.bedrooms) {
-          params.bedrooms = currentFilters.bedrooms === "5+" ? 5 : Number(currentFilters.bedrooms);
-        }
-
-        if (currentFilters.bathrooms) {
-          params.bathrooms = currentFilters.bathrooms === "4+" ? 4 : Number(currentFilters.bathrooms);
-        }
-
-        if (currentFilters.furnishing) {
-          params.furnishing = currentFilters.furnishing;
-        }
-
-        if (currentFilters.possessionStatus) {
-          params.possessionStatus = currentFilters.possessionStatus;
-        }
-
-        // FIXED: Price filter handling - ensure numbers are sent correctly
-        if (currentFilters.minPrice && currentFilters.minPrice !== '') {
-          const minPriceNum = Number(currentFilters.minPrice);
-          if (!isNaN(minPriceNum) && minPriceNum > 0) {
-            params.minPrice = minPriceNum;
-            console.log('Setting minPrice:', minPriceNum);
-          }
-        }
-
-        if (currentFilters.maxPrice && currentFilters.maxPrice !== '') {
-          const maxPriceNum = Number(currentFilters.maxPrice);
-          if (!isNaN(maxPriceNum) && maxPriceNum > 0) {
-            params.maxPrice = maxPriceNum;
-            console.log('Setting maxPrice:', maxPriceNum);
-          }
-        }
-
-        console.log('Fetching with params:', params);
+        console.log('Fetching properties with params:', params);
 
         const response = await propertyUnitAPI.getPropertyUnits(params);
 
         if (response.data.success) {
-          setProperties(response.data.data || []);
-          setTotalCount(response.data.total || 0);
-          setTotalPages(response.data.totalPages || 1);
+          let filteredProperties = response.data.data || [];
           
-          // Log the first few properties to check prices
-          console.log('First property prices:', response.data.data.slice(0, 3).map(p => ({
-            title: p.title,
-            price: p.price,
-            priceType: typeof p.price
-          })));
+          console.log(`Fetched ${filteredProperties.length} total properties`);
+          
+          // Apply search filter
+          if (currentFilters.search?.trim()) {
+            const searchTerm = currentFilters.search.trim().toLowerCase();
+            filteredProperties = filteredProperties.filter(property => 
+              property.title?.toLowerCase().includes(searchTerm) ||
+              property.address?.toLowerCase().includes(searchTerm) ||
+              property.city?.toLowerCase().includes(searchTerm)
+            );
+          }
+          
+          // Apply listing type filter
+          filteredProperties = filterPropertiesByListingType(filteredProperties, currentFilters.listingType);
+          
+          // Apply unit type filter
+          filteredProperties = filterPropertiesByUnitType(
+            filteredProperties, 
+            currentFilters.unitType, 
+            currentFilters.bedrooms
+          );
+          
+          // Apply price filter
+          filteredProperties = filterPropertiesByPrice(
+            filteredProperties,
+            currentFilters.minPrice,
+            currentFilters.maxPrice
+          );
+          
+          // Apply area filter (especially for plots)
+          filteredProperties = filterPropertiesByArea(
+            filteredProperties,
+            currentFilters.minArea,
+            currentFilters.maxArea
+          );
+          
+          // Apply furnishing filter
+          filteredProperties = filterPropertiesByFurnishing(
+            filteredProperties,
+            currentFilters.furnishing
+          );
+          
+          // Apply possession status filter
+          filteredProperties = filterPropertiesByPossession(
+            filteredProperties,
+            currentFilters.possessionStatus
+          );
+          
+          // Apply plot-specific filters
+          if (isPlotCategory) {
+            filteredProperties = filterPlotProperties(filteredProperties);
+          }
+          
+          // Apply sorting
+          filteredProperties = sortProperties(
+            filteredProperties,
+            currentFilters.sortBy,
+            currentFilters.sortOrder
+          );
+          
+          // Calculate pagination
+          const limit = isMobile ? 10 : 12;
+          const startIndex = (currentPage - 1) * limit;
+          const endIndex = startIndex + limit;
+          const paginatedProperties = filteredProperties.slice(startIndex, endIndex);
+          
+          setProperties(paginatedProperties);
+          setTotalCount(filteredProperties.length);
+          setTotalPages(Math.ceil(filteredProperties.length / limit));
+          
+          console.log(`After filtering: ${filteredProperties.length} properties`);
+          console.log(`Showing page ${currentPage} with ${paginatedProperties.length} properties`);
         }
       } catch (err) {
         console.error("Error fetching properties", err);
@@ -331,7 +611,7 @@ const CategoryPropertiesPage = () => {
         setLoading(false);
       }
     },
-    [categoryId, isMobile]
+    [categoryId, isMobile, isPlotCategory, filters.landUse, filters.developmentStatus, filters.facing, filters.roadType, filters.shape, filters.isCornerPlot, filters.utilities]
   );
 
   // ---------------------------
@@ -363,6 +643,9 @@ const CategoryPropertiesPage = () => {
   }, [
     filters.minPrice,
     filters.maxPrice,
+    filters.minArea,
+    filters.maxArea,
+    filters.unitType,
     filters.bedrooms,
     filters.bathrooms,
     filters.furnishing,
@@ -370,7 +653,14 @@ const CategoryPropertiesPage = () => {
     filters.listingType,
     filters.search,
     filters.sortBy,
-    filters.sortOrder
+    filters.sortOrder,
+    filters.landUse,
+    filters.developmentStatus,
+    filters.facing,
+    filters.roadType,
+    filters.shape,
+    filters.isCornerPlot,
+    filters.utilities
   ]);
 
   // ---------------------------
@@ -381,6 +671,15 @@ const CategoryPropertiesPage = () => {
     setFilters((prev) => ({
       ...prev,
       [key]: value === prev[key] ? '' : value
+    }));
+  };
+
+  const handleArrayFilterChange = (key, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: prev[key].includes(value) 
+        ? prev[key].filter(item => item !== value)
+        : [...prev[key], value]
     }));
   };
 
@@ -405,22 +704,52 @@ const CategoryPropertiesPage = () => {
     }
   };
 
+  const handleAreaChange = (type, value) => {
+    setAreaError('');
+    
+    const numericValue = value.replace(/[^\d]/g, '');
+    
+    setFilters(prev => ({
+      ...prev,
+      [type === 'min' ? 'minArea' : 'maxArea']: numericValue
+    }));
+
+    if (type === 'min' && prev.maxArea && numericValue && Number(numericValue) > Number(prev.maxArea)) {
+      setAreaError('Min area cannot exceed max area');
+    } else if (type === 'max' && prev.minArea && numericValue && Number(numericValue) < Number(prev.minArea)) {
+      setAreaError('Max area cannot be less than min area');
+    } else {
+      setAreaError('');
+    }
+  };
+
   const clearFilters = () => {
     const reset = {
       search: "",
       minPrice: "",
       maxPrice: "",
+      minArea: "",
+      maxArea: "",
+      unitType: "",
       bedrooms: "",
       bathrooms: "",
       furnishing: "",
       possessionStatus: "",
       listingType: "",
+      landUse: "",
+      developmentStatus: "",
+      facing: "",
+      roadType: "",
+      utilities: [],
+      shape: "",
+      isCornerPlot: false,
       sortBy: "displayOrder",
       sortOrder: "asc"
     };
 
     setFilters(reset);
     setPriceError('');
+    setAreaError('');
     setPage(1);
     fetchProperties(1, reset);
   };
@@ -442,6 +771,17 @@ const CategoryPropertiesPage = () => {
     if (numPrice >= 100000) return `₹${(numPrice / 100000).toFixed(2)} L`;
     if (numPrice >= 1000) return `₹${(numPrice / 1000).toFixed(2)} K`;
     return `₹${numPrice.toLocaleString()}`;
+  };
+
+  const formatArea = (area) => {
+    if (!area || area === '') return '';
+    const numArea = Number(area);
+    if (isNaN(numArea)) return '';
+    
+    if (numArea >= 43560) return `${(numArea / 43560).toFixed(2)} acres`;
+    if (numArea >= 10890) return `${(numArea / 10890).toFixed(2)} grounds`;
+    if (numArea >= 9) return `${(numArea / 9).toFixed(2)} sq.yds`;
+    return `${numArea.toLocaleString()} sq.ft`;
   };
 
   // ---------------------------
@@ -519,8 +859,14 @@ const CategoryPropertiesPage = () => {
             >
               <option value="displayOrder:asc">Featured First</option>
               <option value="createdAt:desc">Newest First</option>
-              {/* <option value="price:asc">Price: Low to High</option>
-              <option value="price:desc">Price: High to Low</option> */}
+              <option value="price:asc">Price: Low to High</option>
+              <option value="price:desc">Price: High to Low</option>
+              {isPlotCategory && (
+                <>
+                  <option value="area:asc">Area: Low to High</option>
+                  <option value="area:desc">Area: High to Low</option>
+                </>
+              )}
             </select>
 
             {/* View Toggle */}
@@ -567,16 +913,15 @@ const CategoryPropertiesPage = () => {
               </div>
 
               {/* Price Range */}
-              {/* <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Price Range</h4>
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-900 mb-3">Price Range (₹)</h4>
                 <div className="space-y-3">
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <input
                       type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="Min Price (in ₹)"
+                      placeholder="Min Price"
                       value={filters.minPrice}
                       onChange={(e) => handlePriceChange('min', e.target.value)}
                       className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
@@ -587,8 +932,7 @@ const CategoryPropertiesPage = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="Max Price (in ₹)"
+                      placeholder="Max Price"
                       value={filters.maxPrice}
                       onChange={(e) => handlePriceChange('max', e.target.value)}
                       className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
@@ -600,18 +944,50 @@ const CategoryPropertiesPage = () => {
                       {priceError}
                     </p>
                   )}
-                  {(filters.minPrice || filters.maxPrice) && (
-                    <p className="text-xs text-gray-500">
-                      Range: {formatPrice(filters.minPrice || 0)} - {filters.maxPrice ? formatPrice(filters.maxPrice) : 'Any'}
-                    </p>
-                  )}
                 </div>
-              </div> */}
+              </div>
+
+              {/* Area Range - Only for Plot Category */}
+              {isPlotCategory && (
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-900 mb-3">Area Range (sq.ft.)</h4>
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Min Area"
+                        value={filters.minArea}
+                        onChange={(e) => handleAreaChange('min', e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Max Area"
+                        value={filters.maxArea}
+                        onChange={(e) => handleAreaChange('max', e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                      />
+                    </div>
+                    {areaError && (
+                      <p className="text-xs text-red-500 flex items-center gap-1">
+                        <X className="w-3 h-3" />
+                        {areaError}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Listing Type */}
               <div className="mb-6">
                 <h4 className="font-medium text-gray-900 mb-3">I want to</h4>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {filterOptions.listingType.map(({ value, label, icon: Icon }) => (
                     <button
                       key={value}
@@ -629,78 +1005,189 @@ const CategoryPropertiesPage = () => {
                 </div>
               </div>
 
-              {/* Bedrooms */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Bedrooms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {filterOptions.bedrooms.map((num) => (
-                    <FilterChip
-                      key={num}
-                      label={`${num}${num === '5+' ? '+' : ' BHK'}`}
-                      active={filters.bedrooms === num}
-                      onClick={() => handleFilterChange('bedrooms', num)}
-                    />
-                  ))}
-                </div>
-              </div>
+              {/* Unit Type / Bedrooms - Only for non-plot categories */}
+              {!isPlotCategory && (
+                <>
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-blue-500" />
+                      Unit Type
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {filterOptions.unitTypes.map((unit) => (
+                        <FilterChip
+                          key={unit.value}
+                          label={unit.label}
+                          active={filters.unitType === unit.value}
+                          onClick={() => handleFilterChange('unitType', unit.value)}
+                        />
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Bathrooms */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Bathrooms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {filterOptions.bathrooms.map((num) => (
-                    <FilterChip
-                      key={num}
-                      label={`${num}`}
-                      active={filters.bathrooms === num}
-                      onClick={() => handleFilterChange('bathrooms', num)}
-                      icon={Droplet}
-                    />
-                  ))}
-                </div>
-              </div>
+                  {/* Furnishing */}
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-3">Furnishing</h4>
+                    <div className="space-y-2">
+                      {filterOptions.furnishing.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          onClick={() => handleFilterChange('furnishing', value)}
+                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                            filters.furnishing === value
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" strokeWidth={1.5} />
+                          <span className="text-sm font-medium">{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Furnishing */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Furnishing</h4>
-                <div className="space-y-2">
-                  {filterOptions.furnishing.map(({ value, label, icon: Icon }) => (
-                    <button
-                      key={value}
-                      onClick={() => handleFilterChange('furnishing', value)}
-                      className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
-                        filters.furnishing === value
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" strokeWidth={1.5} />
-                      <span className="text-sm font-medium">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                  {/* Possession Status */}
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-3">Possession</h4>
+                    <div className="space-y-2">
+                      {filterOptions.possessionStatus.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          onClick={() => handleFilterChange('possessionStatus', value)}
+                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                            filters.possessionStatus === value
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" strokeWidth={1.5} />
+                          <span className="text-sm font-medium">{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
-              {/* Possession Status */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Possession</h4>
-                <div className="space-y-2">
-                  {filterOptions.possessionStatus.map(({ value, label, icon: Icon }) => (
-                    <button
-                      key={value}
-                      onClick={() => handleFilterChange('possessionStatus', value)}
-                      className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
-                        filters.possessionStatus === value
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" strokeWidth={1.5} />
-                      <span className="text-sm font-medium">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Plot-Specific Filters */}
+              {isPlotCategory && (
+                <>
+                  {/* Land Use */}
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <LandPlot className="w-4 h-4 text-blue-500" />
+                      Land Use
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {filterOptions.plotFilters.landUse.map(({ value, label, icon: Icon }) => (
+                        <FilterChip
+                          key={value}
+                          label={label}
+                          icon={Icon}
+                          active={filters.landUse === value}
+                          onClick={() => handleFilterChange('landUse', value)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Development Status */}
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-3">Development Status</h4>
+                    <div className="space-y-2">
+                      {filterOptions.plotFilters.developmentStatus.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          onClick={() => handleFilterChange('developmentStatus', value)}
+                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                            filters.developmentStatus === value
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" strokeWidth={1.5} />
+                          <span className="text-sm font-medium">{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Facing */}
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <Compass className="w-4 h-4 text-blue-500" />
+                      Facing
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {filterOptions.plotFilters.facing.map(({ value, label, icon: Icon }) => (
+                        <FilterChip
+                          key={value}
+                          label={label}
+                          icon={Icon}
+                          active={filters.facing === value}
+                          onClick={() => handleFilterChange('facing', value)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Road Type */}
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      {/* <Road className="w-4 h-4 text-blue-500" /> */}
+                      Road Type
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {filterOptions.plotFilters.roadType.map(({ value, label, icon: Icon }) => (
+                        <FilterChip
+                          key={value}
+                          label={label}
+                          icon={Icon}
+                          active={filters.roadType === value}
+                          onClick={() => handleFilterChange('roadType', value)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Utilities */}
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 mb-3">Utilities Available</h4>
+                    <div className="space-y-2">
+                      {filterOptions.plotFilters.utilities.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          onClick={() => handleArrayFilterChange('utilities', value)}
+                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                            filters.utilities.includes(value)
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" strokeWidth={1.5} />
+                          <span className="text-sm font-medium">{label}</span>
+                          {filters.utilities.includes(value) && (
+                            <CheckCircle className="w-4 h-4 ml-auto" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Corner Plot */}
+                  <div className="mb-6">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filters.isCornerPlot}
+                        onChange={(e) => setFilters(prev => ({ ...prev, isCornerPlot: e.target.checked }))}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="text-sm font-medium text-gray-700">Corner Plot Only</span>
+                    </label>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -710,7 +1197,7 @@ const CategoryPropertiesPage = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {totalCount} Properties Found
+                  {totalCount} {isPlotCategory ? 'Plots' : 'Properties'} Found
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
                   Page {page} of {totalPages}
@@ -741,10 +1228,12 @@ const CategoryPropertiesPage = () => {
               )
             ) : properties.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl shadow-xl">
-                <Home size={60} className="mx-auto text-gray-300 mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">No properties found</h3>
+                <LandPlot size={60} className="mx-auto text-gray-300 mb-4" />
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  No {isPlotCategory ? 'plots' : 'properties'} found
+                </h3>
                 <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                  Try adjusting your filters
+                  Try adjusting your filters to find what you're looking for
                 </p>
                 <button
                   onClick={clearFilters}
@@ -772,7 +1261,7 @@ const CategoryPropertiesPage = () => {
                   >
                     <PropertyUnitCard 
                       propertyUnit={property} 
-                      viewMode={viewMode === "grid" ? "compact" : "detailed"} 
+                      viewMode={viewMode === "grid" ? "compact" : "list"} 
                     />
                   </motion.div>
                 ))}
@@ -888,13 +1377,19 @@ const CategoryPropertiesPage = () => {
                   >
                     <option value="displayOrder:asc">Featured First</option>
                     <option value="createdAt:desc">Newest First</option>
-                    {/* <option value="price:asc">Price: Low to High</option>
-                    <option value="price:desc">Price: High to Low</option> */}
+                    <option value="price:asc">Price: Low to High</option>
+                    <option value="price:desc">Price: High to Low</option>
+                    {isPlotCategory && (
+                      <>
+                        <option value="area:asc">Area: Low to High</option>
+                        <option value="area:desc">Area: High to Low</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
                 {/* Price Range */}
-                {/* <div>
+                <div>
                   <h4 className="font-medium mb-3">Price Range</h4>
                   <div className="space-y-3">
                     <div className="relative">
@@ -902,7 +1397,6 @@ const CategoryPropertiesPage = () => {
                       <input
                         type="text"
                         inputMode="numeric"
-                        pattern="[0-9]*"
                         placeholder="Min Price"
                         value={filters.minPrice}
                         onChange={(e) => handlePriceChange('min', e.target.value)}
@@ -914,7 +1408,6 @@ const CategoryPropertiesPage = () => {
                       <input
                         type="text"
                         inputMode="numeric"
-                        pattern="[0-9]*"
                         placeholder="Max Price"
                         value={filters.maxPrice}
                         onChange={(e) => handlePriceChange('max', e.target.value)}
@@ -922,7 +1415,38 @@ const CategoryPropertiesPage = () => {
                       />
                     </div>
                   </div>
-                </div> */}
+                </div>
+
+                {/* Area Range - Only for Plot Category */}
+                {isPlotCategory && (
+                  <div>
+                    <h4 className="font-medium mb-3">Area Range (sq.ft.)</h4>
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Min Area"
+                          value={filters.minArea}
+                          onChange={(e) => handleAreaChange('min', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                        />
+                      </div>
+                      <div className="relative">
+                        <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Max Area"
+                          value={filters.maxArea}
+                          onChange={(e) => handleAreaChange('max', e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Listing Type */}
                 <div>
@@ -930,7 +1454,7 @@ const CategoryPropertiesPage = () => {
                     <Calendar className="w-4 h-4 text-blue-500" />
                     I want to
                   </h4>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {filterOptions.listingType.map(({ value, label, icon: Icon }) => (
                       <button
                         key={value}
@@ -951,121 +1475,191 @@ const CategoryPropertiesPage = () => {
                   </div>
                 </div>
 
-                {/* Bedrooms */}
-                <div>
-                  <h4 className="font-medium mb-3 flex items-center gap-2">
-                    <HomeIcon className="w-4 h-4 text-blue-500" />
-                    Bedrooms
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {filterOptions.bedrooms.map((num) => (
-                      <button
-                        key={num}
-                        onClick={() => {
-                          handleFilterChange('bedrooms', num);
-                          setShowMobileFilters(false);
-                        }}
-                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                          filters.bedrooms === num
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {num} {num === '5+' ? '+' : 'BHK'}
-                      </button>
-                    ))}
+                {/* Unit Type - Only for non-plot */}
+                {!isPlotCategory && (
+                  <div>
+                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-blue-500" />
+                      Unit Type
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {filterOptions.unitTypes.map((unit) => (
+                        <button
+                          key={unit.value}
+                          onClick={() => {
+                            handleFilterChange('unitType', unit.value);
+                            setShowMobileFilters(false);
+                          }}
+                          className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                            filters.unitType === unit.value
+                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {unit.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Bathrooms */}
-                <div>
-                  <h4 className="font-medium mb-3 flex items-center gap-2">
-                    <Bath className="w-4 h-4 text-blue-500" />
-                    Bathrooms
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {filterOptions.bathrooms.map((num) => (
-                      <button
-                        key={num}
-                        onClick={() => {
-                          handleFilterChange('bathrooms', num);
-                          setShowMobileFilters(false);
-                        }}
-                        className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                          filters.bathrooms === num
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {/* Plot-Specific Mobile Filters */}
+                {isPlotCategory && (
+                  <>
+                    <div>
+                      <h4 className="font-medium mb-3">Land Use</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {filterOptions.plotFilters.landUse.map(({ value, label }) => (
+                          <button
+                            key={value}
+                            onClick={() => {
+                              handleFilterChange('landUse', value);
+                              setShowMobileFilters(false);
+                            }}
+                            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                              filters.landUse === value
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-                {/* Furnishing */}
-                <div>
-                  <h4 className="font-medium mb-3 flex items-center gap-2">
-                    <Coffee className="w-4 h-4 text-blue-500" />
-                    Furnishing
-                  </h4>
-                  <div className="space-y-2">
-                    {filterOptions.furnishing.map(({ value, label, icon: Icon }) => (
-                      <button
-                        key={value}
-                        onClick={() => {
-                          handleFilterChange('furnishing', value);
-                          setShowMobileFilters(false);
-                        }}
-                        className={`w-full p-3 rounded-xl border-2 transition-all flex items-center justify-between ${
-                          filters.furnishing === value
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-gray-100 border-transparent text-gray-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className="w-4 h-4" strokeWidth={1.5} />
-                          <span className="text-sm font-medium">{label}</span>
-                        </div>
-                        {filters.furnishing === value && (
-                          <CheckCircle className="w-4 h-4" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                    <div>
+                      <h4 className="font-medium mb-3">Development Status</h4>
+                      <div className="space-y-2">
+                        {filterOptions.plotFilters.developmentStatus.map(({ value, label }) => (
+                          <button
+                            key={value}
+                            onClick={() => {
+                              handleFilterChange('developmentStatus', value);
+                              setShowMobileFilters(false);
+                            }}
+                            className={`w-full p-3 rounded-xl transition-all flex items-center justify-between ${
+                              filters.developmentStatus === value
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            <span>{label}</span>
+                            {filters.developmentStatus === value && (
+                              <CheckCircle className="w-4 h-4" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-                {/* Possession Status */}
-                <div>
-                  <h4 className="font-medium mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-blue-500" />
-                    Possession Status
-                  </h4>
-                  <div className="space-y-2">
-                    {filterOptions.possessionStatus.map(({ value, label, icon: Icon }) => (
-                      <button
-                        key={value}
-                        onClick={() => {
-                          handleFilterChange('possessionStatus', value);
-                          setShowMobileFilters(false);
-                        }}
-                        className={`w-full p-3 rounded-xl border-2 transition-all flex items-center justify-between ${
-                          filters.possessionStatus === value
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-gray-100 border-transparent text-gray-700'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className="w-4 h-4" strokeWidth={1.5} />
-                          <span className="text-sm font-medium">{label}</span>
-                        </div>
-                        {filters.possessionStatus === value && (
-                          <CheckCircle className="w-4 h-4" />
-                        )}
-                      </button>
-                    ))}
+                    <div>
+                      <h4 className="font-medium mb-3">Facing</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        {filterOptions.plotFilters.facing.map(({ value, label }) => (
+                          <button
+                            key={value}
+                            onClick={() => {
+                              handleFilterChange('facing', value);
+                              setShowMobileFilters(false);
+                            }}
+                            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                              filters.facing === value
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium mb-3">Corner Plot</h4>
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filters.isCornerPlot}
+                          onChange={(e) => {
+                            setFilters(prev => ({ ...prev, isCornerPlot: e.target.checked }));
+                            setShowMobileFilters(false);
+                          }}
+                          className="w-5 h-5 text-blue-600 rounded"
+                        />
+                        <span className="text-sm text-gray-700">Show only corner plots</span>
+                      </label>
+                    </div>
+                  </>
+                )}
+
+                {/* Furnishing - Only for non-plot */}
+                {!isPlotCategory && (
+                  <div>
+                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                      <Sofa className="w-4 h-4 text-blue-500" />
+                      Furnishing
+                    </h4>
+                    <div className="space-y-2">
+                      {filterOptions.furnishing.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          onClick={() => {
+                            handleFilterChange('furnishing', value);
+                            setShowMobileFilters(false);
+                          }}
+                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center justify-between ${
+                            filters.furnishing === value
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-gray-100 border-transparent text-gray-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-4 h-4" strokeWidth={1.5} />
+                            <span className="text-sm font-medium">{label}</span>
+                          </div>
+                          {filters.furnishing === value && (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Possession Status - Only for non-plot */}
+                {!isPlotCategory && (
+                  <div>
+                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                      <Key className="w-4 h-4 text-blue-500" />
+                      Possession Status
+                    </h4>
+                    <div className="space-y-2">
+                      {filterOptions.possessionStatus.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          onClick={() => {
+                            handleFilterChange('possessionStatus', value);
+                            setShowMobileFilters(false);
+                          }}
+                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center justify-between ${
+                            filters.possessionStatus === value
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-gray-100 border-transparent text-gray-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon className="w-4 h-4" strokeWidth={1.5} />
+                            <span className="text-sm font-medium">{label}</span>
+                          </div>
+                          {filters.possessionStatus === value && (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Apply Button */}
@@ -1085,4 +1679,5 @@ const CategoryPropertiesPage = () => {
   );
 };
 
-export default CategoryPropertiesPage;
+export default CategoryPropertiesPage; 
+

@@ -1,142 +1,235 @@
+// components/PropertyUnitEdit.jsx (Complete Fixed Version)
 import React, { useState, useEffect } from 'react';
 
 const PropertyUnitEdit = ({ property, onSubmit, onCancel }) => {
   const isEditing = !!property;
   
-const [formData, setFormData] = useState({
-  // Basic Information
-  title: '',
-  description: '',
-  unitNumber: '',
-  
-  // Property Type
-  propertyType: 'Apartment',
-  listingType: 'sale',
-  
-  // Location
-  city: '',
-  address: '',
-  area: '',
-  mapUrl: '',
-  coordinates: {
-    latitude: '',
-    longitude: ''
-  },
-  
-  // Price - BACKEND EXPECTS STRING AMOUNT
-  price: {
-    amount: '', // String as per backend
-    currency: 'INR',
-    perUnit: 'total'
-  },
-  maintenanceCharges: 0, // Changed from '' to 0 for number
-  securityDeposit: 0, // Changed from '' to 0 for number
-  
-  // Specifications - match backend defaults
-  specifications: {
-    bedrooms: 0, // Changed from '' to 0
-    bathrooms: 0, // Changed from '' to 0
-    balconies: 0, // Changed from '' to 0
-    floors: 1, // Changed from '' to 1
-    floorNumber: '',
-    carpetArea: 0, // Changed from '' to 0
-    builtUpArea: 0, // Changed from '' to 0
-    superBuiltUpArea: '',
-    plotArea: '',
-    furnishing: 'unfurnished',
-    possessionStatus: 'ready-to-move',
-    ageOfProperty: '',
-    parking: {
-      covered: 0, // Changed from '' to 0
-      open: 0 // Changed from '' to 0
+  const [formData, setFormData] = useState({
+    // Basic Information
+    title: '',
+    description: '',
+    
+    // Images
+    images: [],
+    
+    // Location
+    city: '',
+    address: '',
+    mapUrl: '',
+    locationNearby: [],
+    
+    // Property Type
+    propertyType: 'Apartment',
+    
+    // Unit Types (Multiple units per property)
+    unitTypes: [
+      {
+        type: '2BHK',
+        price: {
+          amount: '',
+          currency: 'INR',
+          perUnit: 'total'
+        },
+        carpetArea: '',
+        builtUpArea: '',
+        superBuiltUpArea: '',
+        availability: 'available',
+        totalUnits: '',
+        availableUnits: '',
+        plotDetails: {
+          dimensions: { length: '', breadth: '', frontage: '' },
+          area: { sqft: '', sqYards: '', grounds: '', acres: '', cents: '' },
+          shape: 'rectangle',
+          facing: '',
+          isCornerPlot: false,
+          cornerRoads: [],
+          roadWidth: '',
+          roadType: 'secondary',
+          boundaryWalls: false,
+          fencing: false,
+          gate: false,
+          elevationAvailable: false,
+          soilType: '',
+          landUse: 'residential',
+          developmentStatus: 'developed',
+          amenities: [],
+          utilities: {
+            electricity: false,
+            waterConnection: false,
+            sewageConnection: false,
+            gasConnection: false,
+            internetFiber: false
+          },
+          approvalDetails: {
+            dtcpApproved: false,
+            dtcpNumber: '',
+            layoutApproved: false,
+            layoutNumber: '',
+            surveyNumber: '',
+            pattaNumber: '',
+            subdivisionApproved: false
+          }
+        }
+      }
+    ],
+    
+    // Building/Project Details
+    buildingDetails: {
+      name: '',
+      totalFloors: '',
+      totalUnits: '',
+      yearBuilt: '',
+      amenities: []
     },
-    kitchenType: 'regular'
-  },
-  
-  // Building Details
-  buildingDetails: {
-    name: '',
-    totalFloors: '',
-    totalUnits: '',
-    yearBuilt: '',
-    amenities: []
-  },
-  
-  // Unit Features
-  unitFeatures: [],
-  
-  // Rental Details - match backend structure
-  rentalDetails: {
-    availableForRent: false,
-    leaseDuration: { value: 11, unit: 'months' },
-    rentNegotiable: true,
-    preferredTenants: ['any'],
-    includedInRent: []
-  },
-  
-  // Status
-  availability: 'available',
-  isFeatured: false,
-  isVerified: false,
-  approvalStatus: 'pending',
-  rejectionReason: '',
-  
-  // Virtual Tour
-  virtualTour: '',
-  
-  // Floor Plan
-  floorPlan: {
-    image: '',
-    description: ''
-  },
-  
-  // Owner Details
-  ownerDetails: {
-    name: '',
-    phoneNumber: '',
-    email: '',
-    reasonForSelling: ''
-  },
-  
-  // Legal Details
-  legalDetails: {
-    ownershipType: 'freehold',
-    reraRegistered: false,
-    reraNumber: '',
-    khataCertificate: false,
-    encumbranceCertificate: false,
-    occupancyCertificate: false
-  },
-  
-  // Contact Preference
-  contactPreference: ['call', 'whatsapp'],
-  
-  // Viewing Schedule
-  viewingSchedule: [],
-  
-  // Website Assignment
-  websiteAssignment: ['cleartitle'],
-  
-  // SEO
-  metaTitle: '',
-  metaDescription: '',
-  displayOrder: 0,
-  
-  // Images
-  images: []
-});
+    
+    // Unit Features
+    unitFeatures: [],
+    
+    // Common Specifications
+    commonSpecifications: {
+      furnishing: 'unfurnished',
+      possessionStatus: 'ready-to-move',
+      ageOfProperty: '',
+      parking: {
+        covered: 0,
+        open: 0
+      },
+      kitchenType: 'regular'
+    },
+    
+    // Availability & Status
+    availability: 'available',
+    isFeatured: false,
+    isVerified: false,
+    approvalStatus: 'pending',
+    listingType: 'sale',
+    
+    // Rejection Reason
+    rejectionReason: '',
+    
+    // Owner Details
+    ownerDetails: {
+      name: '',
+      phoneNumber: '',
+      email: '',
+      reasonForSelling: ''
+    },
+    
+    // Legal Details
+    legalDetails: {
+      reraRegistered: false,
+      reraNumber: '',
+      reraWebsiteLink: '',
+      sanctioningAuthority: '',
+      sanctionNumber: '',
+      sanctionDate: '',
+      occupancyCertificate: false,
+      occupancyCertificateNumber: '',
+      occupancyCertificateDate: '',
+      commencementCertificate: false,
+      commencementCertificateNumber: '',
+      commencementCertificateDate: '',
+      khataStatus: 'Not Applicable',
+      clearTitle: false,
+      motherDeedAvailable: false,
+      conversionCertificate: false,
+      conversionType: '',
+      encumbranceCertificate: false,
+      encumbranceYears: '',
+      ownershipType: 'freehold',
+      bankApprovals: [],
+      legalStatusSummary: '',
+      legalVerified: false,
+      legalVerificationDate: '',
+      legalVerifier: ''
+    },
+    
+    // Contact Preference
+    contactPreference: ['call', 'whatsapp'],
+    
+    // Viewing Schedule
+    viewingSchedule: [],
+    
+    // Statistics
+    viewCount: 0,
+    inquiryCount: 0,
+    favoriteCount: 0,
+    likes: 0,
+    
+    // Display
+    displayOrder: 0
+  });
 
   const [newImages, setNewImages] = useState([]);
-  const [newFloorPlan, setNewFloorPlan] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [unitFeatureInput, setUnitFeatureInput] = useState('');
   const [buildingAmenityInput, setBuildingAmenityInput] = useState('');
-  const [includedInRentInput, setIncludedInRentInput] = useState('');
   const [viewingSlot, setViewingSlot] = useState({
     date: '',
     startTime: '',
     endTime: '',
     slotsAvailable: 1
+  });
+
+  // Unit Types Management
+  const [currentUnitType, setCurrentUnitType] = useState({
+    type: '2BHK',
+    price: { amount: '', currency: 'INR', perUnit: 'total' },
+    carpetArea: '',
+    builtUpArea: '',
+    superBuiltUpArea: '',
+    availability: 'available',
+    totalUnits: '',
+    availableUnits: '',
+    plotDetails: {
+      dimensions: { length: '', breadth: '', frontage: '' },
+      area: { sqft: '', sqYards: '', grounds: '', acres: '', cents: '' },
+      shape: 'rectangle',
+      facing: '',
+      isCornerPlot: false,
+      cornerRoads: [],
+      roadWidth: '',
+      roadType: 'secondary',
+      boundaryWalls: false,
+      fencing: false,
+      gate: false,
+      elevationAvailable: false,
+      soilType: '',
+      landUse: 'residential',
+      developmentStatus: 'developed',
+      amenities: [],
+      utilities: {
+        electricity: false,
+        waterConnection: false,
+        sewageConnection: false,
+        gasConnection: false,
+        internetFiber: false
+      },
+      approvalDetails: {
+        dtcpApproved: false,
+        dtcpNumber: '',
+        layoutApproved: false,
+        layoutNumber: '',
+        surveyNumber: '',
+        pattaNumber: '',
+        subdivisionApproved: false
+      }
+    }
+  });
+
+  // Location Nearby Management
+  const [currentLocationNearby, setCurrentLocationNearby] = useState({
+    name: '',
+    distance: '',
+    type: 'other',
+    icon: ''
+  });
+
+  // Bank Approval Management
+  const [currentBankApproval, setCurrentBankApproval] = useState({
+    bankName: '',
+    approved: true,
+    approvalDate: '',
+    referenceNumber: ''
   });
 
   // Available options
@@ -145,6 +238,10 @@ const [formData, setFormData] = useState({
     'Penthouse', 'Duplex', 'Pg house', 'Plot', 'Commercial Space'
   ];
 
+  const unitTypeOptions = ['1BHK', '2BHK', '3BHK', '4BHK', '5BHK', 'Studio', 'Penthouse', 'Duplex', 'Plot'];
+  const pricePerUnitOptions = ['total', 'sqft', 'sqm', 'month', 'perSqYard', 'perGround'];
+  const unitAvailabilityOptions = ['available', 'sold', 'limited', 'coming-soon', 'booked', 'reserved'];
+  
   const listingTypes = [
     { value: 'sale', label: 'For Sale' },
     { value: 'rent', label: 'For Rent' },
@@ -180,32 +277,27 @@ const [formData, setFormData] = useState({
     { value: 'hold', label: 'Hold' }
   ];
 
-  const ownershipTypes = [
-    { value: 'freehold', label: 'Freehold' },
-    { value: 'leasehold', label: 'Leasehold' },
-    { value: 'cooperative', label: 'Cooperative' },
-    { value: 'power-of-attorney', label: 'Power of Attorney' }
+  const locationNearbyTypes = [
+    { value: 'transport', label: 'Transport' },
+    { value: 'education', label: 'Education' },
+    { value: 'healthcare', label: 'Healthcare' },
+    { value: 'shopping', label: 'Shopping' },
+    { value: 'entertainment', label: 'Entertainment' },
+    { value: 'banking', label: 'Banking' },
+    { value: 'religious', label: 'Religious' },
+    { value: 'park', label: 'Park' },
+    { value: 'restaurant', label: 'Restaurant' },
+    { value: 'other', label: 'Other' }
   ];
 
-  const tenantTypes = [
-    { value: 'family', label: 'Family' },
-    { value: 'bachelors', label: 'Bachelors' },
-    { value: 'corporate', label: 'Corporate' },
-    { value: 'students', label: 'Students' },
-    { value: 'any', label: 'Any' }
-  ];
+  const khataStatusOptions = ['A-Khata', 'B-Khata', 'E-Khata', 'Not Applicable'];
+  const ownershipTypeOptions = ['freehold', 'leasehold', 'cooperative', 'power-of-attorney'];
 
   const contactOptions = [
     { value: 'call', label: 'Phone Call' },
     { value: 'whatsapp', label: 'WhatsApp' },
     { value: 'email', label: 'Email' },
     { value: 'message', label: 'Message' }
-  ];
-
-  const websiteOptions = [
-    { value: 'cleartitle', label: 'ClearTitle' },
-    { value: 'partner1', label: 'Partner Site 1' },
-    { value: 'partner2', label: 'Partner Site 2' }
   ];
 
   const unitFeatureOptions = [
@@ -224,218 +316,306 @@ const [formData, setFormData] = useState({
     { value: 'rejected', label: 'Rejected' }
   ];
 
- useEffect(() => {
-  if (property) {
-    // Convert number fields to ensure proper types
-    const propertyData = { ...property };
-    
-    // Ensure price.amount is string
-    if (propertyData.price && typeof propertyData.price.amount !== 'string') {
-      propertyData.price.amount = propertyData.price.amount.toString();
-    }
-    
-    // Ensure number fields are numbers, not strings
-    const ensureNumber = (value) => {
-      if (value === '' || value === null || value === undefined) return 0;
-      return Number(value);
-    };
-
-    setFormData({
-      // Basic Information
-      title: propertyData.title || '',
-      description: propertyData.description || '',
-      unitNumber: propertyData.unitNumber || '',
-      propertyType: propertyData.propertyType || 'Apartment',
-      listingType: propertyData.listingType || 'sale',
-      city: propertyData.city || '',
-      address: propertyData.address || '',
-      area: propertyData.area || '',
-      mapUrl: propertyData.mapUrl || '',
-      coordinates: propertyData.coordinates || { latitude: '', longitude: '' },
-      
-      // Price
-      price: propertyData.price || { amount: '', currency: 'INR', perUnit: 'total' },
-      maintenanceCharges: ensureNumber(propertyData.maintenanceCharges),
-      securityDeposit: ensureNumber(propertyData.securityDeposit),
-      
-      // Specifications
-      specifications: {
-        bedrooms: ensureNumber(propertyData.specifications?.bedrooms),
-        bathrooms: ensureNumber(propertyData.specifications?.bathrooms),
-        balconies: ensureNumber(propertyData.specifications?.balconies),
-        floors: ensureNumber(propertyData.specifications?.floors) || 1,
-        floorNumber: propertyData.specifications?.floorNumber || '',
-        carpetArea: ensureNumber(propertyData.specifications?.carpetArea),
-        builtUpArea: ensureNumber(propertyData.specifications?.builtUpArea),
-        superBuiltUpArea: propertyData.specifications?.superBuiltUpArea || '',
-        plotArea: propertyData.specifications?.plotArea || '',
-        furnishing: propertyData.specifications?.furnishing || 'unfurnished',
-        possessionStatus: propertyData.specifications?.possessionStatus || 'ready-to-move',
-        ageOfProperty: propertyData.specifications?.ageOfProperty || '',
-        parking: {
-          covered: ensureNumber(propertyData.specifications?.parking?.covered),
-          open: ensureNumber(propertyData.specifications?.parking?.open)
+  useEffect(() => {
+    if (property) {
+      setFormData({
+        title: property.title || '',
+        description: property.description || '',
+        images: property.images || [],
+        city: property.city || '',
+        address: property.address || '',
+        mapUrl: property.mapUrl || '',
+        locationNearby: property.locationNearby || [],
+        propertyType: property.propertyType || 'Apartment',
+        unitTypes: property.unitTypes || [{
+          type: '2BHK',
+          price: { amount: '', currency: 'INR', perUnit: 'total' },
+          carpetArea: '',
+          builtUpArea: '',
+          superBuiltUpArea: '',
+          availability: 'available',
+          totalUnits: '',
+          availableUnits: '',
+          plotDetails: {
+            dimensions: { length: '', breadth: '', frontage: '' },
+            area: { sqft: '', sqYards: '', grounds: '', acres: '', cents: '' },
+            shape: 'rectangle',
+            facing: '',
+            isCornerPlot: false,
+            cornerRoads: [],
+            roadWidth: '',
+            roadType: 'secondary',
+            boundaryWalls: false,
+            fencing: false,
+            gate: false,
+            elevationAvailable: false,
+            soilType: '',
+            landUse: 'residential',
+            developmentStatus: 'developed',
+            amenities: [],
+            utilities: {
+              electricity: false,
+              waterConnection: false,
+              sewageConnection: false,
+              gasConnection: false,
+              internetFiber: false
+            },
+            approvalDetails: {
+              dtcpApproved: false,
+              dtcpNumber: '',
+              layoutApproved: false,
+              layoutNumber: '',
+              surveyNumber: '',
+              pattaNumber: '',
+              subdivisionApproved: false
+            }
+          }
+        }],
+        buildingDetails: property.buildingDetails || {
+          name: '',
+          totalFloors: '',
+          totalUnits: '',
+          yearBuilt: '',
+          amenities: []
         },
-        kitchenType: propertyData.specifications?.kitchenType || 'regular'
-      },
-      
-      // Other fields remain the same...
-      buildingDetails: propertyData.buildingDetails || {
-        name: '',
-        totalFloors: '',
-        totalUnits: '',
-        yearBuilt: '',
-        amenities: []
-      },
-      unitFeatures: propertyData.unitFeatures || [],
-      rentalDetails: propertyData.rentalDetails || {
-        availableForRent: false,
-        leaseDuration: { value: 11, unit: 'months' },
-        rentNegotiable: true,
-        preferredTenants: ['any'],
-        includedInRent: []
-      },
-      availability: propertyData.availability || 'available',
-      isFeatured: propertyData.isFeatured || false,
-      isVerified: propertyData.isVerified || false,
-      approvalStatus: propertyData.approvalStatus || 'pending',
-      rejectionReason: propertyData.rejectionReason || '',
-      virtualTour: propertyData.virtualTour || '',
-      floorPlan: propertyData.floorPlan || { image: '', description: '' },
-      ownerDetails: propertyData.ownerDetails || {
-        name: '',
-        phoneNumber: '',
-        email: '',
-        reasonForSelling: ''
-      },
-      legalDetails: propertyData.legalDetails || {
-        ownershipType: 'freehold',
-        reraRegistered: false,
-        reraNumber: '',
-        khataCertificate: false,
-        encumbranceCertificate: false,
-        occupancyCertificate: false
-      },
-      contactPreference: propertyData.contactPreference || ['call', 'whatsapp'],
-      viewingSchedule: propertyData.viewingSchedule || [],
-      websiteAssignment: propertyData.websiteAssignment || ['cleartitle'],
-      metaTitle: propertyData.metaTitle || '',
-      metaDescription: propertyData.metaDescription || '',
-      displayOrder: propertyData.displayOrder || 0,
-      images: propertyData.images || []
-    });
-  }
-}, [property]);
+        unitFeatures: property.unitFeatures || [],
+        commonSpecifications: property.commonSpecifications || {
+          furnishing: 'unfurnished',
+          possessionStatus: 'ready-to-move',
+          ageOfProperty: '',
+          parking: { covered: 0, open: 0 },
+          kitchenType: 'regular'
+        },
+        availability: property.availability || 'available',
+        isFeatured: property.isFeatured || false,
+        isVerified: property.isVerified || false,
+        approvalStatus: property.approvalStatus || 'pending',
+        listingType: property.listingType || 'sale',
+        rejectionReason: property.rejectionReason || '',
+        ownerDetails: property.ownerDetails || {
+          name: '',
+          phoneNumber: '',
+          email: '',
+          reasonForSelling: ''
+        },
+        legalDetails: property.legalDetails || {
+          reraRegistered: false,
+          reraNumber: '',
+          reraWebsiteLink: '',
+          sanctioningAuthority: '',
+          sanctionNumber: '',
+          sanctionDate: '',
+          occupancyCertificate: false,
+          occupancyCertificateNumber: '',
+          occupancyCertificateDate: '',
+          commencementCertificate: false,
+          commencementCertificateNumber: '',
+          commencementCertificateDate: '',
+          khataStatus: 'Not Applicable',
+          clearTitle: false,
+          motherDeedAvailable: false,
+          conversionCertificate: false,
+          conversionType: '',
+          encumbranceCertificate: false,
+          encumbranceYears: '',
+          ownershipType: 'freehold',
+          bankApprovals: [],
+          legalStatusSummary: '',
+          legalVerified: false,
+          legalVerificationDate: '',
+          legalVerifier: ''
+        },
+        contactPreference: property.contactPreference || ['call', 'whatsapp'],
+        viewingSchedule: property.viewingSchedule || [],
+        viewCount: property.viewCount || 0,
+        inquiryCount: property.inquiryCount || 0,
+        favoriteCount: property.favoriteCount || 0,
+        likes: property.likes || 0,
+        displayOrder: property.displayOrder || 0
+      });
+    }
+  }, [property]);
 
-const handleChange = (e) => {
-  const { name, value, type, checked } = e.target;
-  
-  if (name.includes('.')) {
-    const [parent, child] = name.split('.');
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     
-    // Handle deeply nested objects (e.g., specifications.parking.covered)
-    if (parent.includes('.')) {
-      const [grandParent, middle] = parent.split('.');
+    if (name.includes('.')) {
+      const parts = name.split('.');
+      setFormData(prev => {
+        let updated = { ...prev };
+        let current = updated;
+        for (let i = 0; i < parts.length - 1; i++) {
+          if (!current[parts[i]]) current[parts[i]] = {};
+          current = current[parts[i]];
+        }
+        current[parts[parts.length - 1]] = type === 'checkbox' ? checked : 
+                                              type === 'number' ? (value === '' ? '' : Number(value)) : 
+                                              value;
+        return updated;
+      });
+    } else {
       setFormData(prev => ({
         ...prev,
-        [grandParent]: {
-          ...prev[grandParent],
-          [middle]: {
-            ...prev[grandParent][middle],
-            [child]: type === 'number' ? Number(value) || 0 : value
-          }
-        }
+        [name]: type === 'checkbox' ? checked : 
+                 type === 'number' ? (value === '' ? '' : Number(value)) : 
+                 value
       }));
-    } else {
-      // Handle price.amount separately to keep as string
-      if (parent === 'price' && child === 'amount') {
-        setFormData(prev => ({
-          ...prev,
-          [parent]: {
-            ...prev[parent],
-            [child]: value // Keep as string
-          }
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [parent]: {
-            ...prev[parent],
-            [child]: type === 'number' ? Number(value) || 0 : value
-          }
-        }));
-      }
     }
-  } else {
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : 
-               type === 'number' ? Number(value) || 0 : 
-               value
-    }));
-  }
-};
-
-// Keep price amount as string
-const handlePriceAmountChange = (e) => {
-  const { value } = e.target;
-  setFormData(prev => ({
-    ...prev,
-    price: {
-      ...prev.price,
-      amount: value // Keep as string
-    }
-  }));
-};
-
-
-
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const newImageFiles = files.map(file => ({
-      file,
-      preview: URL.createObjectURL(file)
-    }));
-    setNewImages(prev => [...prev, ...newImageFiles]);
   };
 
-  const handleFloorPlanUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setNewFloorPlan({
-        file,
-        preview: URL.createObjectURL(file)
+  // Update plot detail for a specific unit
+  const updatePlotDetail = (unitIndex, path, value) => {
+    setFormData(prev => {
+      const updatedUnitTypes = [...prev.unitTypes];
+      const unit = updatedUnitTypes[unitIndex];
+      
+      if (!unit.plotDetails) {
+        unit.plotDetails = {};
+      }
+      
+      const parts = path.split('.');
+      let current = unit.plotDetails;
+      
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!current[parts[i]]) {
+          current[parts[i]] = {};
+        }
+        current = current[parts[i]];
+      }
+      
+      current[parts[parts.length - 1]] = value;
+      
+      return { ...prev, unitTypes: updatedUnitTypes };
+    });
+  };
+
+  // Unit Types Management
+  const addUnitType = () => {
+    if (currentUnitType.type && currentUnitType.price.amount) {
+      setFormData(prev => ({
+        ...prev,
+        unitTypes: [...prev.unitTypes, { ...currentUnitType }]
+      }));
+      setCurrentUnitType({
+        type: '2BHK',
+        price: { amount: '', currency: 'INR', perUnit: 'total' },
+        carpetArea: '',
+        builtUpArea: '',
+        superBuiltUpArea: '',
+        availability: 'available',
+        totalUnits: '',
+        availableUnits: '',
+        plotDetails: {
+          dimensions: { length: '', breadth: '', frontage: '' },
+          area: { sqft: '', sqYards: '', grounds: '', acres: '', cents: '' },
+          shape: 'rectangle',
+          facing: '',
+          isCornerPlot: false,
+          cornerRoads: [],
+          roadWidth: '',
+          roadType: 'secondary',
+          boundaryWalls: false,
+          fencing: false,
+          gate: false,
+          elevationAvailable: false,
+          soilType: '',
+          landUse: 'residential',
+          developmentStatus: 'developed',
+          amenities: [],
+          utilities: {
+            electricity: false,
+            waterConnection: false,
+            sewageConnection: false,
+            gasConnection: false,
+            internetFiber: false
+          },
+          approvalDetails: {
+            dtcpApproved: false,
+            dtcpNumber: '',
+            layoutApproved: false,
+            layoutNumber: '',
+            surveyNumber: '',
+            pattaNumber: '',
+            subdivisionApproved: false
+          }
+        }
       });
     }
   };
 
-  const removeImage = (index) => {
+  const removeUnitType = (index) => {
     setFormData(prev => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      unitTypes: prev.unitTypes.filter((_, i) => i !== index)
     }));
   };
 
-  const removeNewImage = (index) => {
-    setNewImages(prev => prev.filter((_, i) => i !== index));
+  const updateUnitType = (index, field, value) => {
+    setFormData(prev => {
+      const updatedUnitTypes = [...prev.unitTypes];
+      if (field.includes('price.')) {
+        const priceField = field.split('.')[1];
+        updatedUnitTypes[index].price[priceField] = value;
+      } else {
+        updatedUnitTypes[index][field] = value;
+      }
+      return { ...prev, unitTypes: updatedUnitTypes };
+    });
   };
 
-  const addUnitFeature = (feature) => {
-    if (!formData.unitFeatures.includes(feature)) {
+  // Location Nearby Management
+  const addLocationNearby = () => {
+    if (currentLocationNearby.name && currentLocationNearby.distance) {
       setFormData(prev => ({
         ...prev,
-        unitFeatures: [...prev.unitFeatures, feature]
+        locationNearby: [...prev.locationNearby, { ...currentLocationNearby }]
       }));
+      setCurrentLocationNearby({
+        name: '',
+        distance: '',
+        type: 'other',
+        icon: ''
+      });
     }
   };
 
-  const removeUnitFeature = (feature) => {
+  const removeLocationNearby = (index) => {
     setFormData(prev => ({
       ...prev,
-      unitFeatures: prev.unitFeatures.filter(f => f !== feature)
+      locationNearby: prev.locationNearby.filter((_, i) => i !== index)
     }));
   };
 
+  // Bank Approval Management
+  const addBankApproval = () => {
+    if (currentBankApproval.bankName) {
+      setFormData(prev => ({
+        ...prev,
+        legalDetails: {
+          ...prev.legalDetails,
+          bankApprovals: [...prev.legalDetails.bankApprovals, { ...currentBankApproval }]
+        }
+      }));
+      setCurrentBankApproval({
+        bankName: '',
+        approved: true,
+        approvalDate: '',
+        referenceNumber: ''
+      });
+    }
+  };
+
+  const removeBankApproval = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      legalDetails: {
+        ...prev.legalDetails,
+        bankApprovals: prev.legalDetails.bankApprovals.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  // Building Amenities
   const addBuildingAmenity = () => {
     if (buildingAmenityInput.trim() && !formData.buildingDetails.amenities.includes(buildingAmenityInput.trim())) {
       setFormData(prev => ({
@@ -459,29 +639,24 @@ const handlePriceAmountChange = (e) => {
     }));
   };
 
-  const addIncludedInRent = () => {
-    if (includedInRentInput.trim() && !formData.rentalDetails.includedInRent.includes(includedInRentInput.trim())) {
+  // Unit Features
+  const addUnitFeature = (feature) => {
+    if (!formData.unitFeatures.includes(feature)) {
       setFormData(prev => ({
         ...prev,
-        rentalDetails: {
-          ...prev.rentalDetails,
-          includedInRent: [...prev.rentalDetails.includedInRent, includedInRentInput.trim()]
-        }
+        unitFeatures: [...prev.unitFeatures, feature]
       }));
-      setIncludedInRentInput('');
     }
   };
 
-  const removeIncludedInRent = (item) => {
+  const removeUnitFeature = (feature) => {
     setFormData(prev => ({
       ...prev,
-      rentalDetails: {
-        ...prev.rentalDetails,
-        includedInRent: prev.rentalDetails.includedInRent.filter(i => i !== item)
-      }
+      unitFeatures: prev.unitFeatures.filter(f => f !== feature)
     }));
   };
 
+  // Viewing Schedule
   const addViewingSlot = () => {
     if (viewingSlot.date && viewingSlot.startTime && viewingSlot.endTime) {
       setFormData(prev => ({
@@ -504,6 +679,29 @@ const handlePriceAmountChange = (e) => {
     }));
   };
 
+  // Image Handling
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const newImageFiles = files.map(file => ({
+      file,
+      preview: URL.createObjectURL(file)
+    }));
+    setNewImages(prev => [...prev, ...newImageFiles]);
+  };
+
+  const removeImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const removeNewImage = (index) => {
+    setNewImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Form Submission
+// Fixed handleSubmit function
 const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
@@ -511,165 +709,188 @@ const handleSubmit = async (e) => {
   try {
     const formDataToSubmit = new FormData();
     
-    // 1. Basic Information
-    formDataToSubmit.append('title', formData.title);
-    formDataToSubmit.append('description', formData.description);
-    formDataToSubmit.append('unitNumber', formData.unitNumber);
-    formDataToSubmit.append('propertyType', formData.propertyType);
-    formDataToSubmit.append('listingType', formData.listingType);
-    
-    // 2. Location
-    formDataToSubmit.append('city', formData.city);
-    formDataToSubmit.append('address', formData.address);
-    formDataToSubmit.append('area', formData.area);
-    formDataToSubmit.append('mapUrl', formData.mapUrl || '');
-    
-    // 3. Coordinates
-    if (formData.coordinates.latitude && formData.coordinates.longitude) {
-      formDataToSubmit.append('coordinates', JSON.stringify({
-        latitude: Number(formData.coordinates.latitude),
-        longitude: Number(formData.coordinates.longitude)
-      }));
-    }
-    
-    // 4. Price - IMPORTANT: Backend expects amount as string
-    const priceData = {
-      amount: formData.price.amount.toString(), // Ensure string
-      currency: formData.price.currency,
-      perUnit: formData.price.perUnit
-    };
-    formDataToSubmit.append('price', JSON.stringify(priceData));
-    
-    // 5. Additional financials
-    formDataToSubmit.append('maintenanceCharges', formData.maintenanceCharges.toString());
-    formDataToSubmit.append('securityDeposit', formData.securityDeposit.toString());
-    
-    // 6. Specifications
-    const specs = {
-      bedrooms: Number(formData.specifications.bedrooms),
-      bathrooms: Number(formData.specifications.bathrooms),
-      balconies: Number(formData.specifications.balconies),
-      floors: Number(formData.specifications.floors),
-      floorNumber: formData.specifications.floorNumber,
-      carpetArea: Number(formData.specifications.carpetArea),
-      builtUpArea: Number(formData.specifications.builtUpArea),
-      superBuiltUpArea: formData.specifications.superBuiltUpArea,
-      plotArea: formData.specifications.plotArea,
-      furnishing: formData.specifications.furnishing,
-      possessionStatus: formData.specifications.possessionStatus,
-      ageOfProperty: formData.specifications.ageOfProperty,
-      parking: {
-        covered: Number(formData.specifications.parking.covered),
-        open: Number(formData.specifications.parking.open)
+    // Prepare submit data - ensure all numeric fields are proper numbers
+    const submitData = {
+      title: formData.title,
+      description: formData.description,
+      city: formData.city,
+      address: formData.address,
+      mapUrl: formData.mapUrl,
+      locationNearby: formData.locationNearby,
+      propertyType: formData.propertyType,
+      listingType: formData.listingType,
+      availability: formData.availability,
+      isFeatured: formData.isFeatured,
+      isVerified: formData.isVerified,
+      approvalStatus: formData.approvalStatus,
+      rejectionReason: formData.rejectionReason,
+      contactPreference: formData.contactPreference,
+      displayOrder: Number(formData.displayOrder) || 0,
+      unitFeatures: formData.unitFeatures,
+      
+      // Unit Types with proper number conversion
+      unitTypes: formData.unitTypes.map(unit => {
+        const unitData = {
+          type: unit.type,
+          price: {
+            amount: unit.price?.amount ? Number(unit.price.amount) : 0,
+            currency: unit.price?.currency || 'INR',
+            perUnit: unit.price?.perUnit || 'total'
+          },
+          carpetArea: unit.carpetArea ? Number(unit.carpetArea) : 0,
+          builtUpArea: unit.builtUpArea ? Number(unit.builtUpArea) : 0,
+          superBuiltUpArea: unit.superBuiltUpArea ? Number(unit.superBuiltUpArea) : 0,
+          availability: unit.availability || 'available',
+          totalUnits: unit.totalUnits ? Number(unit.totalUnits) : 0,
+          availableUnits: unit.availableUnits ? Number(unit.availableUnits) : 0
+        };
+        
+        // Include plot details if this is a plot
+        if (unit.type === 'Plot' && unit.plotDetails) {
+          unitData.plotDetails = {
+            dimensions: {
+              length: unit.plotDetails.dimensions?.length ? Number(unit.plotDetails.dimensions.length) : 0,
+              breadth: unit.plotDetails.dimensions?.breadth ? Number(unit.plotDetails.dimensions.breadth) : 0,
+              frontage: unit.plotDetails.dimensions?.frontage ? Number(unit.plotDetails.dimensions.frontage) : 0
+            },
+            area: {
+              sqft: unit.plotDetails.area?.sqft ? Number(unit.plotDetails.area.sqft) : (unit.carpetArea ? Number(unit.carpetArea) : 0),
+              sqYards: unit.plotDetails.area?.sqYards ? Number(unit.plotDetails.area.sqYards) : 0,
+              grounds: unit.plotDetails.area?.grounds ? Number(unit.plotDetails.area.grounds) : 0,
+              acres: unit.plotDetails.area?.acres ? Number(unit.plotDetails.area.acres) : 0,
+              cents: unit.plotDetails.area?.cents ? Number(unit.plotDetails.area.cents) : 0
+            },
+            shape: unit.plotDetails.shape || 'rectangle',
+            facing: unit.plotDetails.facing || '',
+            isCornerPlot: unit.plotDetails.isCornerPlot || false,
+            cornerRoads: unit.plotDetails.cornerRoads || [],
+            roadWidth: unit.plotDetails.roadWidth ? Number(unit.plotDetails.roadWidth) : 0,
+            roadType: unit.plotDetails.roadType || 'secondary',
+            boundaryWalls: unit.plotDetails.boundaryWalls || false,
+            fencing: unit.plotDetails.fencing || false,
+            gate: unit.plotDetails.gate || false,
+            elevationAvailable: unit.plotDetails.elevationAvailable || false,
+            soilType: unit.plotDetails.soilType || '',
+            landUse: unit.plotDetails.landUse || 'residential',
+            developmentStatus: unit.plotDetails.developmentStatus || 'developed',
+            amenities: unit.plotDetails.amenities || [],
+            utilities: {
+              electricity: unit.plotDetails.utilities?.electricity || false,
+              waterConnection: unit.plotDetails.utilities?.waterConnection || false,
+              sewageConnection: unit.plotDetails.utilities?.sewageConnection || false,
+              gasConnection: unit.plotDetails.utilities?.gasConnection || false,
+              internetFiber: unit.plotDetails.utilities?.internetFiber || false
+            },
+            approvalDetails: {
+              dtcpApproved: unit.plotDetails.approvalDetails?.dtcpApproved || false,
+              dtcpNumber: unit.plotDetails.approvalDetails?.dtcpNumber || '',
+              layoutApproved: unit.plotDetails.approvalDetails?.layoutApproved || false,
+              layoutNumber: unit.plotDetails.approvalDetails?.layoutNumber || '',
+              surveyNumber: unit.plotDetails.approvalDetails?.surveyNumber || '',
+              pattaNumber: unit.plotDetails.approvalDetails?.pattaNumber || '',
+              subdivisionApproved: unit.plotDetails.approvalDetails?.subdivisionApproved || false
+            }
+          };
+        }
+        
+        return unitData;
+      }),
+      
+      // Building Details
+      buildingDetails: {
+        name: formData.buildingDetails.name || '',
+        totalFloors: formData.buildingDetails.totalFloors ? Number(formData.buildingDetails.totalFloors) : 0,
+        totalUnits: formData.buildingDetails.totalUnits ? Number(formData.buildingDetails.totalUnits) : 0,
+        yearBuilt: formData.buildingDetails.yearBuilt ? Number(formData.buildingDetails.yearBuilt) : 0,
+        amenities: formData.buildingDetails.amenities || []
       },
-      kitchenType: formData.specifications.kitchenType
+      
+      // Common Specifications
+      commonSpecifications: {
+        furnishing: formData.commonSpecifications.furnishing || 'unfurnished',
+        possessionStatus: formData.commonSpecifications.possessionStatus || 'ready-to-move',
+        ageOfProperty: formData.commonSpecifications.ageOfProperty ? Number(formData.commonSpecifications.ageOfProperty) : 0,
+        parking: {
+          covered: Number(formData.commonSpecifications.parking?.covered) || 0,
+          open: Number(formData.commonSpecifications.parking?.open) || 0
+        },
+        kitchenType: formData.commonSpecifications.kitchenType || 'regular'
+      },
+      
+      // Owner Details
+      ownerDetails: {
+        name: formData.ownerDetails.name || '',
+        phoneNumber: formData.ownerDetails.phoneNumber || '',
+        email: formData.ownerDetails.email || '',
+        reasonForSelling: formData.ownerDetails.reasonForSelling || ''
+      },
+      
+      // Legal Details
+      legalDetails: {
+        reraRegistered: formData.legalDetails.reraRegistered || false,
+        reraNumber: formData.legalDetails.reraNumber || '',
+        reraWebsiteLink: formData.legalDetails.reraWebsiteLink || '',
+        sanctioningAuthority: formData.legalDetails.sanctioningAuthority || '',
+        sanctionNumber: formData.legalDetails.sanctionNumber || '',
+        sanctionDate: formData.legalDetails.sanctionDate || null,
+        occupancyCertificate: formData.legalDetails.occupancyCertificate || false,
+        occupancyCertificateNumber: formData.legalDetails.occupancyCertificateNumber || '',
+        occupancyCertificateDate: formData.legalDetails.occupancyCertificateDate || null,
+        commencementCertificate: formData.legalDetails.commencementCertificate || false,
+        commencementCertificateNumber: formData.legalDetails.commencementCertificateNumber || '',
+        commencementCertificateDate: formData.legalDetails.commencementCertificateDate || null,
+        khataStatus: formData.legalDetails.khataStatus || 'Not Applicable',
+        clearTitle: formData.legalDetails.clearTitle || false,
+        motherDeedAvailable: formData.legalDetails.motherDeedAvailable || false,
+        conversionCertificate: formData.legalDetails.conversionCertificate || false,
+        conversionType: formData.legalDetails.conversionType || '',
+        encumbranceCertificate: formData.legalDetails.encumbranceCertificate || false,
+        encumbranceYears: formData.legalDetails.encumbranceYears ? Number(formData.legalDetails.encumbranceYears) : 0,
+        ownershipType: formData.legalDetails.ownershipType || 'freehold',
+        bankApprovals: formData.legalDetails.bankApprovals || [],
+        legalStatusSummary: formData.legalDetails.legalStatusSummary || '',
+        legalVerified: formData.legalDetails.legalVerified || false,
+        legalVerificationDate: formData.legalDetails.legalVerificationDate || null,
+        legalVerifier: formData.legalDetails.legalVerifier || ''
+      },
+      
+      // Viewing Schedule
+      viewingSchedule: formData.viewingSchedule.map(slot => ({
+        date: slot.date,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        slotsAvailable: Number(slot.slotsAvailable) || 1
+      }))
     };
-    formDataToSubmit.append('specifications', JSON.stringify(specs));
     
-    // 7. Building Details
-    formDataToSubmit.append('buildingDetails', JSON.stringify(formData.buildingDetails));
+    // Send as JSON instead of FormData for the data part
+    formDataToSubmit.append('data', JSON.stringify(submitData));
     
-    // 8. Unit Features
-    formDataToSubmit.append('unitFeatures', JSON.stringify(formData.unitFeatures));
-    
-    // 9. Rental Details
-    formDataToSubmit.append('rentalDetails', JSON.stringify(formData.rentalDetails));
-    
-    // 10. Status & Admin
-    formDataToSubmit.append('availability', formData.availability);
-    formDataToSubmit.append('isFeatured', formData.isFeatured.toString());
-    formDataToSubmit.append('isVerified', formData.isVerified.toString());
-    formDataToSubmit.append('approvalStatus', formData.approvalStatus);
-    if (formData.rejectionReason) {
-      formDataToSubmit.append('rejectionReason', formData.rejectionReason);
-    }
-    
-    // 11. Virtual Tour
-    formDataToSubmit.append('virtualTour', formData.virtualTour || '');
-    
-    // 12. Floor Plan
-    formDataToSubmit.append('floorPlan', JSON.stringify(formData.floorPlan));
-    
-    // 13. Owner Details
-    formDataToSubmit.append('ownerDetails', JSON.stringify(formData.ownerDetails));
-    
-    // 14. Legal Details
-    formDataToSubmit.append('legalDetails', JSON.stringify(formData.legalDetails));
-    
-    // 15. Contact Preference
-    formDataToSubmit.append('contactPreference', formData.contactPreference.join(','));
-    
-    // 16. Viewing Schedule
-    formDataToSubmit.append('viewingSchedule', JSON.stringify(formData.viewingSchedule));
-    
-    // 17. Website Assignment
-    formDataToSubmit.append('websiteAssignment', formData.websiteAssignment.join(','));
-    
-    // 18. SEO
-    formDataToSubmit.append('metaTitle', formData.metaTitle || '');
-    formDataToSubmit.append('metaDescription', formData.metaDescription || '');
-    formDataToSubmit.append('displayOrder', formData.displayOrder.toString());
-    
-    // 19. Images - handle existing images
-    if (formData.images.length > 0) {
-      const existingImageUrls = formData.images.map(img => img.url);
-      formDataToSubmit.append('existingImages', JSON.stringify(existingImageUrls));
-    }
-    
-    // 20. Add new images
+    // Append images
     newImages.forEach(image => {
       formDataToSubmit.append('images', image.file);
     });
     
-    // 21. Add floor plan image if exists
-    if (newFloorPlan) {
-      formDataToSubmit.append('floorPlanImage', newFloorPlan.file);
-    }
+    // Log what's being sent for debugging
+    console.log('Sending data:', submitData);
     
-    // 22. For admin, you might want to add admin notes or creator
-    if (formData.createdBy) {
-      formDataToSubmit.append('createdBy', formData.createdBy);
-    }
-    
-    // Submit
     await onSubmit(formDataToSubmit);
-    
   } catch (error) {
     console.error('Error submitting form:', error);
-    // You might want to show an error message to the user
+    // Show user-friendly error message
+    alert(error.response?.data?.message || 'Failed to save property. Please check all fields and try again.');
   } finally {
     setLoading(false);
   }
 };
-const validateForm = () => {
-  const errors = [];
-  
-  // Required basic fields
-  if (!formData.title) errors.push('Title is required');
-  if (!formData.city) errors.push('City is required');
-  if (!formData.address) errors.push('Address is required');
-  if (!formData.price.amount) errors.push('Price amount is required');
-  if (!formData.propertyType) errors.push('Property type is required');
-  
-  // Required specifications based on property type
-  if (formData.propertyType === 'Apartment') {
-    if (!formData.specifications.bedrooms) errors.push('Bedrooms is required for Apartments');
-    if (!formData.specifications.bathrooms) errors.push('Bathrooms is required for Apartments');
-    if (!formData.specifications.carpetArea) errors.push('Carpet area is required for Apartments');
-    if (!formData.specifications.builtUpArea) errors.push('Built-up area is required for Apartments');
-  }
-  
-  // Add more validations as needed
-  
-  return errors;
-};
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-h-[80vh] overflow-y-auto p-2">
       {/* Basic Information */}
       <div className="bg-gray-50 p-4 rounded-lg">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Title *
             </label>
@@ -680,19 +901,6 @@ const validateForm = () => {
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Unit Number
-            </label>
-            <input
-              type="text"
-              name="unitNumber"
-              value={formData.unitNumber}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., Unit 101, Villa A1"
             />
           </div>
           <div className="md:col-span-2">
@@ -750,7 +958,7 @@ const validateForm = () => {
       {/* Location */}
       <div className="bg-gray-50 p-4 rounded-lg">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Location</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               City *
@@ -764,20 +972,7 @@ const validateForm = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Area/Locality *
-            </label>
-            <input
-              type="text"
-              name="area"
-              value={formData.area}
-              onChange={handleChange}
-   
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Full Address *
             </label>
@@ -803,323 +998,463 @@ const validateForm = () => {
               placeholder="Google Maps embed URL"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Latitude
-            </label>
-            <input
-              type="number"
-              step="any"
-              name="coordinates.latitude"
-              value={formData.coordinates.latitude}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Longitude
-            </label>
-            <input
-              type="number"
-              step="any"
-              name="coordinates.longitude"
-              value={formData.coordinates.longitude}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
         </div>
-      </div>
 
-      {/* Price Details - String Amount */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Price Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price Amount *
-            </label>
-       <input
-  type="text" // Use text instead of number for price amount
-  name="price.amount"
-  value={formData.price.amount}
-  onChange={handlePriceAmountChange}
-  required
-  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-  placeholder="Enter price"
-/>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Currency
-            </label>
+        {/* Location Nearby */}
+        <div className="mt-4">
+          <h4 className="text-md font-medium text-gray-800 mb-3">Nearby Amenities</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+            <input
+              type="text"
+              placeholder="Place name (e.g., Metro Station)"
+              value={currentLocationNearby.name}
+              onChange={(e) => setCurrentLocationNearby({...currentLocationNearby, name: e.target.value})}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="Distance (e.g., 500m, 1.2km)"
+              value={currentLocationNearby.distance}
+              onChange={(e) => setCurrentLocationNearby({...currentLocationNearby, distance: e.target.value})}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
             <select
-              name="price.currency"
-              value={formData.price.currency}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={currentLocationNearby.type}
+              onChange={(e) => setCurrentLocationNearby({...currentLocationNearby, type: e.target.value})}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
-              <option value="INR">INR (₹)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
+              {locationNearbyTypes.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price Per Unit
-            </label>
-            <select
-              name="price.perUnit"
-              value={formData.price.perUnit}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            <button
+              type="button"
+              onClick={addLocationNearby}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              <option value="total">Total Price</option>
-              <option value="sqft">Per Sq. Ft</option>
-              <option value="month">Per Month</option>
-              <option value="year">Per Year</option>
-            </select>
+              Add Location
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Maintenance Charges (per month)
-            </label>
-            <input
-              type="number"
-              name="maintenanceCharges"
-              value={formData.maintenanceCharges}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Security Deposit
-            </label>
-            <input
-              type="number"
-              name="securityDeposit"
-              value={formData.securityDeposit}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Specifications */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Specifications</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Bedrooms *
-            </label>
-            <input
-              type="number"
-              name="specifications.bedrooms"
-              value={formData.specifications.bedrooms}
-              onChange={handleChange}
-              required
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Bathrooms *
-            </label>
-            <input
-              type="number"
-              name="specifications.bathrooms"
-              value={formData.specifications.bathrooms}
-              onChange={handleChange}
-              required
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Balconies
-            </label>
-            <input
-              type="number"
-              name="specifications.balconies"
-              value={formData.specifications.balconies}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Floors in Unit
-            </label>
-            <input
-              type="number"
-              name="specifications.floors"
-              value={formData.specifications.floors}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Floor Number
-            </label>
-            <input
-              type="number"
-              name="specifications.floorNumber"
-              value={formData.specifications.floorNumber}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Carpet Area (sq.ft) *
-            </label>
-            <input
-              type="number"
-              name="specifications.carpetArea"
-              value={formData.specifications.carpetArea}
-              onChange={handleChange}
-              required
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Built-up Area (sq.ft) *
-            </label>
-            <input
-              type="number"
-              name="specifications.builtUpArea"
-              value={formData.specifications.builtUpArea}
-              onChange={handleChange}
-              required
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Super Built-up Area (sq.ft)
-            </label>
-            <input
-              type="number"
-              name="specifications.superBuiltUpArea"
-              value={formData.specifications.superBuiltUpArea}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          {formData.propertyType === 'Plot' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Plot Area (sq.ft)
-              </label>
-              <input
-                type="number"
-                name="specifications.plotArea"
-                value={formData.specifications.plotArea}
-                onChange={handleChange}
-                min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+          
+          {formData.locationNearby.length > 0 && (
+            <div className="space-y-2">
+              {formData.locationNearby.map((item, index) => (
+                <div key={index} className="flex items-center justify-between bg-white border border-gray-300 rounded-lg p-3">
+                  <div>
+                    <p className="font-medium">{item.name}</p>
+                    <p className="text-sm text-gray-500">{item.distance} • {locationNearbyTypes.find(t => t.value === item.type)?.label}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeLocationNearby(index)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
             </div>
           )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Furnishing
-            </label>
+        </div>
+      </div>
+
+      {/* Unit Types */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Unit Types</h3>
+        
+        {/* Existing Unit Types */}
+        {formData.unitTypes.map((unit, index) => (
+          <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="font-medium text-gray-800">Unit Type {index + 1}</h4>
+              <button
+                type="button"
+                onClick={() => removeUnitType(index)}
+                className="text-red-500 hover:text-red-700 text-sm"
+              >
+                Remove
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <select
+                value={unit.type}
+                onChange={(e) => updateUnitType(index, 'type', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                {unitTypeOptions.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                placeholder="Price Amount"
+                value={unit.price.amount}
+                onChange={(e) => updateUnitType(index, 'price.amount', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <select
+                value={unit.price.perUnit}
+                onChange={(e) => updateUnitType(index, 'price.perUnit', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                {pricePerUnitOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                placeholder="Carpet Area (sq.ft)"
+                value={unit.carpetArea}
+                onChange={(e) => updateUnitType(index, 'carpetArea', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="number"
+                placeholder="Built-up Area (sq.ft)"
+                value={unit.builtUpArea}
+                onChange={(e) => updateUnitType(index, 'builtUpArea', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="number"
+                placeholder="Super Built-up Area (sq.ft)"
+                value={unit.superBuiltUpArea}
+                onChange={(e) => updateUnitType(index, 'superBuiltUpArea', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <select
+                value={unit.availability}
+                onChange={(e) => updateUnitType(index, 'availability', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                {unitAvailabilityOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                placeholder="Total Units"
+                value={unit.totalUnits}
+                onChange={(e) => updateUnitType(index, 'totalUnits', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="number"
+                placeholder="Available Units"
+                value={unit.availableUnits}
+                onChange={(e) => updateUnitType(index, 'availableUnits', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Plot Details Section - Show only when unit type is Plot */}
+            {unit.type === 'Plot' && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h5 className="font-medium text-gray-800 mb-3">Plot Details</h5>
+                
+                {/* Plot Dimensions */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Length (ft)
+                    </label>
+                    <input
+                      type="number"
+                      value={unit.plotDetails?.dimensions?.length || ''}
+                      onChange={(e) => updatePlotDetail(index, 'dimensions.length', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Breadth (ft)
+                    </label>
+                    <input
+                      type="number"
+                      value={unit.plotDetails?.dimensions?.breadth || ''}
+                      onChange={(e) => updatePlotDetail(index, 'dimensions.breadth', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Frontage (ft)
+                    </label>
+                    <input
+                      type="number"
+                      value={unit.plotDetails?.dimensions?.frontage || ''}
+                      onChange={(e) => updatePlotDetail(index, 'dimensions.frontage', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Plot Area */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Area (sq.ft)
+                    </label>
+                    <input
+                      type="number"
+                      value={unit.plotDetails?.area?.sqft || unit.carpetArea || ''}
+                      onChange={(e) => {
+                        updatePlotDetail(index, 'area.sqft', e.target.value);
+                        updateUnitType(index, 'carpetArea', e.target.value);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Area (sq.yards)
+                    </label>
+                    <input
+                      type="number"
+                      value={unit.plotDetails?.area?.sqYards || ''}
+                      onChange={(e) => updatePlotDetail(index, 'area.sqYards', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Area (cents)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={unit.plotDetails?.area?.cents || ''}
+                      onChange={(e) => updatePlotDetail(index, 'area.cents', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Shape and Facing */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Plot Shape
+                    </label>
+                    <select
+                      value={unit.plotDetails?.shape || 'rectangle'}
+                      onChange={(e) => updatePlotDetail(index, 'shape', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="square">Square</option>
+                      <option value="rectangle">Rectangle</option>
+                      <option value="corner">Corner</option>
+                      <option value="irregular">Irregular</option>
+                      <option value="triangular">Triangular</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Plot Facing
+                    </label>
+                    <select
+                      value={unit.plotDetails?.facing || ''}
+                      onChange={(e) => updatePlotDetail(index, 'facing', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Facing</option>
+                      <option value="north">North</option>
+                      <option value="south">South</option>
+                      <option value="east">East</option>
+                      <option value="west">West</option>
+                      <option value="north-east">North-East</option>
+                      <option value="north-west">North-West</option>
+                      <option value="south-east">South-East</option>
+                      <option value="south-west">South-West</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Corner Plot */}
+                <div className="mb-4">
+                  <div className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      id={`cornerPlot-${index}`}
+                      checked={unit.plotDetails?.isCornerPlot || false}
+                      onChange={(e) => updatePlotDetail(index, 'isCornerPlot', e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`cornerPlot-${index}`} className="ml-2 text-sm text-gray-700">
+                      Corner Plot
+                    </label>
+                  </div>
+                  
+                  {unit.plotDetails?.isCornerPlot && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Corner Roads
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter road names separated by commas"
+                        value={unit.plotDetails?.cornerRoads?.join(', ') || ''}
+                        onChange={(e) => {
+                          const roads = e.target.value.split(',').map(r => r.trim()).filter(r => r);
+                          updatePlotDetail(index, 'cornerRoads', roads);
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Land Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Land Use
+                    </label>
+                    <select
+                      value={unit.plotDetails?.landUse || 'residential'}
+                      onChange={(e) => updatePlotDetail(index, 'landUse', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="residential">Residential</option>
+                      <option value="commercial">Commercial</option>
+                      <option value="agricultural">Agricultural</option>
+                      <option value="industrial">Industrial</option>
+                      <option value="mixed-use">Mixed Use</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Development Status
+                    </label>
+                    <select
+                      value={unit.plotDetails?.developmentStatus || 'developed'}
+                      onChange={(e) => updatePlotDetail(index, 'developmentStatus', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="developed">Developed</option>
+                      <option value="semi-developed">Semi-Developed</option>
+                      <option value="undeveloped">Undeveloped</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Utilities */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Utilities Available
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`electricity-${index}`}
+                        checked={unit.plotDetails?.utilities?.electricity || false}
+                        onChange={(e) => updatePlotDetail(index, 'utilities.electricity', e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor={`electricity-${index}`} className="ml-2 text-sm text-gray-700">
+                        Electricity
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`water-${index}`}
+                        checked={unit.plotDetails?.utilities?.waterConnection || false}
+                        onChange={(e) => updatePlotDetail(index, 'utilities.waterConnection', e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor={`water-${index}`} className="ml-2 text-sm text-gray-700">
+                        Water Connection
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`sewage-${index}`}
+                        checked={unit.plotDetails?.utilities?.sewageConnection || false}
+                        onChange={(e) => updatePlotDetail(index, 'utilities.sewageConnection', e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label htmlFor={`sewage-${index}`} className="ml-2 text-sm text-gray-700">
+                        Sewage Connection
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* DTCP Approval */}
+                <div className="mb-4">
+                  <div className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      id={`dtcp-${index}`}
+                      checked={unit.plotDetails?.approvalDetails?.dtcpApproved || false}
+                      onChange={(e) => updatePlotDetail(index, 'approvalDetails.dtcpApproved', e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`dtcp-${index}`} className="ml-2 text-sm text-gray-700">
+                      DTCP Approved
+                    </label>
+                  </div>
+                  {unit.plotDetails?.approvalDetails?.dtcpApproved && (
+                    <input
+                      type="text"
+                      placeholder="DTCP Number"
+                      value={unit.plotDetails?.approvalDetails?.dtcpNumber || ''}
+                      onChange={(e) => updatePlotDetail(index, 'approvalDetails.dtcpNumber', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Add New Unit Type */}
+        <div className="border-t border-gray-200 pt-4 mt-4">
+          <h4 className="font-medium text-gray-800 mb-3">Add New Unit Type</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <select
-              name="specifications.furnishing"
-              value={formData.specifications.furnishing}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={currentUnitType.type}
+              onChange={(e) => setCurrentUnitType({...currentUnitType, type: e.target.value})}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
-              {furnishingOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+              {unitTypeOptions.map(type => (
+                <option key={type} value={type}>{type}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Possession Status
-            </label>
+            <input
+              type="number"
+              placeholder="Price Amount"
+              value={currentUnitType.price.amount}
+              onChange={(e) => setCurrentUnitType({...currentUnitType, price: {...currentUnitType.price, amount: e.target.value}})}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
             <select
-              name="specifications.possessionStatus"
-              value={formData.specifications.possessionStatus}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={currentUnitType.price.perUnit}
+              onChange={(e) => setCurrentUnitType({...currentUnitType, price: {...currentUnitType.price, perUnit: e.target.value}})}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
-              {possessionOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+              {pricePerUnitOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Age of Property (years)
-            </label>
             <input
               type="number"
-              name="specifications.ageOfProperty"
-              value={formData.specifications.ageOfProperty}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Carpet Area (sq.ft)"
+              value={currentUnitType.carpetArea}
+              onChange={(e) => setCurrentUnitType({...currentUnitType, carpetArea: e.target.value})}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Covered Parking
-            </label>
-            <input
-              type="number"
-              name="specifications.parking.covered"
-              value={formData.specifications.parking.covered}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Open Parking
-            </label>
-            <input
-              type="number"
-              name="specifications.parking.open"
-              value={formData.specifications.parking.open}
-              onChange={handleChange}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Kitchen Type
-            </label>
-            <select
-              name="specifications.kitchenType"
-              value={formData.specifications.kitchenType}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            <button
+              type="button"
+              onClick={addUnitType}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
-              {kitchenTypes.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
+              Add Unit Type
+            </button>
           </div>
         </div>
       </div>
@@ -1207,9 +1542,9 @@ const validateForm = () => {
           
           {formData.buildingDetails.amenities.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {formData.buildingDetails.amenities.map((amenity, index) => (
+              {formData.buildingDetails.amenities.map((amenity, idx) => (
                 <div
-                  key={index}
+                  key={idx}
                   className="flex items-center bg-white border border-gray-300 rounded-lg px-3 py-1"
                 >
                   <span className="mr-2">{amenity}</span>
@@ -1254,136 +1589,96 @@ const validateForm = () => {
         </div>
       </div>
 
-      {/* Rental Details (if for rent) */}
-      {formData.listingType === 'rent' && (
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Rental Details</h3>
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="rentalDetails.availableForRent"
-                checked={formData.rentalDetails.availableForRent}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">
-                Available for Rent
-              </label>
-            </div>
-            
-            {formData.rentalDetails.availableForRent && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Minimum Lease (months)
-                    </label>
-                    <input
-                      type="number"
-                      name="rentalDetails.leaseDuration.value"
-                      value={formData.rentalDetails.leaseDuration.value}
-                      onChange={handleChange}
-                      min="1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rent Negotiable
-                    </label>
-                    <select
-                      name="rentalDetails.rentNegotiable"
-                      value={formData.rentalDetails.rentNegotiable}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value={true}>Yes</option>
-                      <option value={false}>No</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preferred Tenants
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {tenantTypes.map(tenant => (
-                      <div key={tenant.value} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`tenant-${tenant.value}`}
-                          checked={formData.rentalDetails.preferredTenants.includes(tenant.value)}
-                          onChange={(e) => {
-                            const updatedTenants = e.target.checked
-                              ? [...formData.rentalDetails.preferredTenants, tenant.value]
-                              : formData.rentalDetails.preferredTenants.filter(t => t !== tenant.value);
-                            setFormData(prev => ({
-                              ...prev,
-                              rentalDetails: {
-                                ...prev.rentalDetails,
-                                preferredTenants: updatedTenants
-                              }
-                            }));
-                          }}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor={`tenant-${tenant.value}`} className="ml-1 text-sm text-gray-700">
-                          {tenant.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Included in Rent
-                  </label>
-                  <div className="flex items-center mb-3">
-                    <input
-                      type="text"
-                      value={includedInRentInput}
-                      onChange={(e) => setIncludedInRentInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addIncludedInRent())}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="e.g., Maintenance, Electricity"
-                    />
-                    <button
-                      type="button"
-                      onClick={addIncludedInRent}
-                      className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Add
-                    </button>
-                  </div>
-                  
-                  {formData.rentalDetails.includedInRent.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {formData.rentalDetails.includedInRent.map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center bg-white border border-gray-300 rounded-lg px-3 py-1"
-                        >
-                          <span className="mr-2">{item}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeIncludedInRent(item)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
+      {/* Common Specifications */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Specifications</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Furnishing
+            </label>
+            <select
+              name="commonSpecifications.furnishing"
+              value={formData.commonSpecifications.furnishing}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {furnishingOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Possession Status
+            </label>
+            <select
+              name="commonSpecifications.possessionStatus"
+              value={formData.commonSpecifications.possessionStatus}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {possessionOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Age of Property (years)
+            </label>
+            <input
+              type="number"
+              name="commonSpecifications.ageOfProperty"
+              value={formData.commonSpecifications.ageOfProperty}
+              onChange={handleChange}
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Covered Parking
+            </label>
+            <input
+              type="number"
+              name="commonSpecifications.parking.covered"
+              value={formData.commonSpecifications.parking.covered}
+              onChange={handleChange}
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Open Parking
+            </label>
+            <input
+              type="number"
+              name="commonSpecifications.parking.open"
+              value={formData.commonSpecifications.parking.open}
+              onChange={handleChange}
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Kitchen Type
+            </label>
+            <select
+              name="commonSpecifications.kitchenType"
+              value={formData.commonSpecifications.kitchenType}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {kitchenTypes.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Status & Admin Controls */}
       <div className="bg-gray-50 p-4 rounded-lg">
@@ -1466,7 +1761,7 @@ const validateForm = () => {
       {/* Owner Details */}
       <div className="bg-gray-50 p-4 rounded-lg">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Owner Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Owner Name
@@ -1503,7 +1798,7 @@ const validateForm = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div className="md:col-span-2">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Reason for Selling/Renting
             </label>
@@ -1521,7 +1816,8 @@ const validateForm = () => {
       {/* Legal Details */}
       <div className="bg-gray-50 p-4 rounded-lg">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Legal Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Ownership Type
@@ -1532,25 +1828,30 @@ const validateForm = () => {
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              {ownershipTypes.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
+              {ownershipTypeOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
               ))}
             </select>
           </div>
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              RERA Number
+              Khata Status
             </label>
-            <input
-              type="text"
-              name="legalDetails.reraNumber"
-              value={formData.legalDetails.reraNumber}
+            <select
+              name="legalDetails.khataStatus"
+              value={formData.legalDetails.khataStatus}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            >
+              {khataStatusOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center">
+          
+          <div>
+            <div className="flex items-center mb-2">
               <input
                 type="checkbox"
                 name="legalDetails.reraRegistered"
@@ -1562,31 +1863,20 @@ const validateForm = () => {
                 RERA Registered
               </label>
             </div>
-            <div className="flex items-center">
+            {formData.legalDetails.reraRegistered && (
               <input
-                type="checkbox"
-                name="legalDetails.khataCertificate"
-                checked={formData.legalDetails.khataCertificate}
+                type="text"
+                name="legalDetails.reraNumber"
+                value={formData.legalDetails.reraNumber}
                 onChange={handleChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                placeholder="RERA Number"
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-              <label className="ml-2 block text-sm text-gray-700">
-                Khata Certificate
-              </label>
-            </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="legalDetails.encumbranceCertificate"
-                checked={formData.legalDetails.encumbranceCertificate}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">
-                Encumbrance Certificate
-              </label>
-            </div>
-            <div className="flex items-center">
+            )}
+          </div>
+          
+          <div>
+            <div className="flex items-center mb-2">
               <input
                 type="checkbox"
                 name="legalDetails.occupancyCertificate"
@@ -1598,7 +1888,106 @@ const validateForm = () => {
                 Occupancy Certificate
               </label>
             </div>
+            {formData.legalDetails.occupancyCertificate && (
+              <input
+                type="text"
+                name="legalDetails.occupancyCertificateNumber"
+                value={formData.legalDetails.occupancyCertificateNumber}
+                onChange={handleChange}
+                placeholder="Certificate Number"
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            )}
           </div>
+          
+          <div>
+            <div className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                name="legalDetails.clearTitle"
+                checked={formData.legalDetails.clearTitle}
+                onChange={handleChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label className="ml-2 block text-sm text-gray-700">
+                Clear Title
+              </label>
+            </div>
+          </div>
+          
+          <div>
+            <div className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                name="legalDetails.encumbranceCertificate"
+                checked={formData.legalDetails.encumbranceCertificate}
+                onChange={handleChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label className="ml-2 block text-sm text-gray-700">
+                Encumbrance Certificate
+              </label>
+            </div>
+            {formData.legalDetails.encumbranceCertificate && (
+              <input
+                type="number"
+                name="legalDetails.encumbranceYears"
+                value={formData.legalDetails.encumbranceYears}
+                onChange={handleChange}
+                placeholder="Years"
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Bank Approvals */}
+        <div className="mt-4">
+          <h4 className="text-md font-medium text-gray-800 mb-3">Bank Approvals</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+            <input
+              type="text"
+              placeholder="Bank Name"
+              value={currentBankApproval.bankName}
+              onChange={(e) => setCurrentBankApproval({...currentBankApproval, bankName: e.target.value})}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="date"
+              placeholder="Approval Date"
+              value={currentBankApproval.approvalDate}
+              onChange={(e) => setCurrentBankApproval({...currentBankApproval, approvalDate: e.target.value})}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={addBankApproval}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add Bank Approval
+            </button>
+          </div>
+          
+          {formData.legalDetails.bankApprovals.length > 0 && (
+            <div className="space-y-2">
+              {formData.legalDetails.bankApprovals.map((approval, idx) => (
+                <div key={idx} className="flex items-center justify-between bg-white border border-gray-300 rounded-lg p-3">
+                  <div>
+                    <p className="font-medium">{approval.bankName}</p>
+                    <p className="text-sm text-gray-500">Approved: {approval.approved ? 'Yes' : 'No'}</p>
+                    {approval.approvalDate && <p className="text-xs text-gray-400">Date: {approval.approvalDate}</p>}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeBankApproval(idx)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1679,8 +2068,8 @@ const validateForm = () => {
               
               {formData.viewingSchedule.length > 0 && (
                 <div className="mt-3 space-y-2">
-                  {formData.viewingSchedule.map((slot, index) => (
-                    <div key={index} className="flex items-center justify-between bg-white border border-gray-300 rounded-lg p-3">
+                  {formData.viewingSchedule.map((slot, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-white border border-gray-300 rounded-lg p-3">
                       <div>
                         <p className="text-sm font-medium">{new Date(slot.date).toLocaleDateString()}</p>
                         <p className="text-xs text-gray-500">{slot.startTime} - {slot.endTime}</p>
@@ -1688,7 +2077,7 @@ const validateForm = () => {
                       </div>
                       <button
                         type="button"
-                        onClick={() => removeViewingSlot(index)}
+                        onClick={() => removeViewingSlot(idx)}
                         className="text-red-500 hover:text-red-700"
                       >
                         Remove
@@ -1702,100 +2091,22 @@ const validateForm = () => {
         </div>
       </div>
 
-      {/* Website Assignment & SEO */}
+      {/* Display Order */}
       <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Website & SEO</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Website Assignment
-            </label>
-            <div className="space-y-2">
-              {websiteOptions.map(option => (
-                <div key={option.value} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={`website-${option.value}`}
-                    checked={formData.websiteAssignment.includes(option.value)}
-                    onChange={(e) => {
-                      const updatedWebsites = e.target.checked
-                        ? [...formData.websiteAssignment, option.value]
-                        : formData.websiteAssignment.filter(w => w !== option.value);
-                      setFormData(prev => ({
-                        ...prev,
-                        websiteAssignment: updatedWebsites
-                      }));
-                    }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor={`website-${option.value}`} className="ml-2 text-sm text-gray-700">
-                    {option.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Meta Title
-              </label>
-              <input
-                type="text"
-                name="metaTitle"
-                value={formData.metaTitle}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="SEO meta title"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Meta Description
-              </label>
-              <textarea
-                name="metaDescription"
-                value={formData.metaDescription}
-                onChange={handleChange}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="SEO meta description"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Display Order
-              </label>
-              <input
-                type="number"
-                name="displayOrder"
-                value={formData.displayOrder}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Virtual Tour */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Virtual Tour</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Display Settings</h3>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Virtual Tour URL
+            Display Order
           </label>
           <input
-            type="text"
-            name="virtualTour"
-            value={formData.virtualTour}
+            type="number"
+            name="displayOrder"
+            value={formData.displayOrder}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter 360° tour or video URL"
+            className="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           <p className="mt-1 text-xs text-gray-500">
-            Enter a URL for virtual tour (360° image or video)
+            Lower numbers appear first in listings
           </p>
         </div>
       </div>
@@ -1811,16 +2122,16 @@ const validateForm = () => {
               Existing Images
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {formData.images.map((image, index) => (
-                <div key={index} className="relative group">
+              {formData.images.map((image, idx) => (
+                <div key={idx} className="relative group">
                   <img
                     src={image.url}
-                    alt={`Property ${index + 1}`}
+                    alt={`Property ${idx + 1}`}
                     className="w-full h-40 object-cover rounded-lg"
                   />
                   <button
                     type="button"
-                    onClick={() => removeImage(index)}
+                    onClick={() => removeImage(idx)}
                     className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     ×
@@ -1838,16 +2149,16 @@ const validateForm = () => {
               New Images to Upload
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {newImages.map((image, index) => (
-                <div key={index} className="relative group">
+              {newImages.map((image, idx) => (
+                <div key={idx} className="relative group">
                   <img
                     src={image.preview}
-                    alt={`New ${index + 1}`}
+                    alt={`New ${idx + 1}`}
                     className="w-full h-40 object-cover rounded-lg"
                   />
                   <button
                     type="button"
-                    onClick={() => removeNewImage(index)}
+                    onClick={() => removeNewImage(idx)}
                     className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     ×
@@ -1857,61 +2168,6 @@ const validateForm = () => {
             </div>
           </div>
         )}
-
-        {/* Floor Plan */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Floor Plan
-          </label>
-          {formData.floorPlan.image && (
-            <div className="mb-3">
-              <p className="text-sm text-gray-600 mb-1">Existing Floor Plan:</p>
-              <img
-                src={formData.floorPlan.image}
-                alt="Floor plan"
-                className="max-w-full h-auto max-h-48 rounded-lg"
-              />
-            </div>
-          )}
-          {newFloorPlan && (
-            <div className="mb-3">
-              <p className="text-sm text-gray-600 mb-1">New Floor Plan:</p>
-              <img
-                src={newFloorPlan.preview}
-                alt="New floor plan"
-                className="max-w-full h-auto max-h-48 rounded-lg"
-              />
-            </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Floor Plan Description
-              </label>
-              <input
-                type="text"
-                value={formData.floorPlan.description}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  floorPlan: { ...prev.floorPlan, description: e.target.value }
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Description of floor plan"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Upload Floor Plan
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFloorPlanUpload}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Upload Images */}
         <div>

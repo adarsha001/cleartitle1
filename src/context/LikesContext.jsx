@@ -79,7 +79,7 @@
 //       const controller = new AbortController();
 //       const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-//       const response = await fetch('https://saimr-backend-1.onrender.com/api/property-units/likes', {
+//       const response = await fetch(' https://saimr-backend-1.onrender.com/api/property-units/likes', {
 //         headers: {
 //           'Authorization': `Bearer ${token}`,
 //           'Content-Type': 'application/json',
@@ -177,7 +177,7 @@
 //     //(`🔄 Toggling like for property: ${propertyId}`);
       
 //       const response = await fetch(
-//         `https://saimr-backend-1.onrender.com/api/property-units/likes/toggle/${propertyId}`,
+//         ` https://saimr-backend-1.onrender.com/api/property-units/likes/toggle/${propertyId}`,
 //         {
 //           method: 'POST',
 //           headers: {

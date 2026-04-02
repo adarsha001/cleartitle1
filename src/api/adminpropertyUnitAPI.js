@@ -1,7 +1,7 @@
 // api/propertyUnitAPI.js - UPDATED VERSION
 import axios from 'axios';
 
-export const API_URL =  'https://saimr-backend-1.onrender.com/api';
+export const API_URL =  ' https://saimr-backend-1.onrender.com/api';
 
 // Create axios instance with base URL
 const API = axios.create({

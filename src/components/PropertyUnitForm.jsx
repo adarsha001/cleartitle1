@@ -3,8 +3,7 @@ import { propertyUnitAPI } from '../api/propertyUnitAPI';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
-// import { CurrencyRupee, X } from 'lucide-react'; // Added missing imports
-import {  ArrowLeft, X } from 'lucide-react'; // Added missing imports
+import { ArrowLeft, X, Plus, Trash2 } from 'lucide-react';
 
 const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const navigate = useNavigate();
@@ -12,190 +11,264 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   const [images, setImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   
-  // All individual state fields
+  // Basic Information
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [unitNumber, setUnitNumber] = useState('');
   const [city, setCity] = useState('');
   const [address, setAddress] = useState('');
-  const [coordinatesLat, setCoordinatesLat] = useState('');
-  const [coordinatesLng, setCoordinatesLng] = useState('');
   const [mapUrl, setMapUrl] = useState('');
-  const [priceAmount, setPriceAmount] = useState('');
-  const [priceCurrency, setPriceCurrency] = useState('INR');
-  const [pricePerUnit, setPricePerUnit] = useState('total');
-  const [maintenanceCharges, setMaintenanceCharges] = useState(0);
-  const [securityDeposit, setSecurityDeposit] = useState(0);
   const [propertyType, setPropertyType] = useState('Apartment');
   const [availability, setAvailability] = useState('available');
   const [listingType, setListingType] = useState('sale');
-  const [specBedrooms, setSpecBedrooms] = useState('');
-  const [specBathrooms, setSpecBathrooms] = useState('');
-  const [specBalconies, setSpecBalconies] = useState(0);
-  const [specFloors, setSpecFloors] = useState(1);
-  const [specFloorNumber, setSpecFloorNumber] = useState('');
-  const [specCarpetArea, setSpecCarpetArea] = useState('');
-  const [specBuiltUpArea, setSpecBuiltUpArea] = useState('');
-  const [specSuperBuiltUpArea, setSpecSuperBuiltUpArea] = useState('');
-  const [specPlotArea, setSpecPlotArea] = useState('');
-  const [specFurnishing, setSpecFurnishing] = useState('unfurnished');
-  const [specPossessionStatus, setSpecPossessionStatus] = useState('ready-to-move');
-  const [specAgeOfProperty, setSpecAgeOfProperty] = useState('');
-  const [specParkingCovered, setSpecParkingCovered] = useState(0);
-  const [specParkingOpen, setSpecParkingOpen] = useState(0);
-  const [specKitchenType, setSpecKitchenType] = useState('regular');
+  
+  // Unit Types Array (Multiple unit configurations)
+  const [unitTypes, setUnitTypes] = useState([]);
+  
+  // Building Details
   const [buildingName, setBuildingName] = useState('');
   const [buildingTotalFloors, setBuildingTotalFloors] = useState('');
   const [buildingTotalUnits, setBuildingTotalUnits] = useState('');
   const [buildingYearBuilt, setBuildingYearBuilt] = useState('');
   const [buildingAmenities, setBuildingAmenities] = useState([]);
+  
+  // Unit Features
   const [unitFeatures, setUnitFeatures] = useState([]);
-  const [rentalAvailable, setRentalAvailable] = useState(false);
-  const [rentalLeaseDurationValue, setRentalLeaseDurationValue] = useState(11);
-  const [rentalLeaseDurationUnit, setRentalLeaseDurationUnit] = useState('months');
-  const [rentalNegotiable, setRentalNegotiable] = useState(true);
-  const [rentalPreferredTenants, setRentalPreferredTenants] = useState(['any']);
-  const [rentalIncludedInRent, setRentalIncludedInRent] = useState([]);
-  const [websiteAssignment, setWebsiteAssignment] = useState(['cleartitle']);
-  const [virtualTour, setVirtualTour] = useState('');
-  const [floorPlanImage, setFloorPlanImage] = useState('');
-  const [floorPlanPublicId, setFloorPlanPublicId] = useState('');
-  const [floorPlanDescription, setFloorPlanDescription] = useState('');
+  
+  // Common Specifications
+  const [commonFurnishing, setCommonFurnishing] = useState('unfurnished');
+  const [commonPossessionStatus, setCommonPossessionStatus] = useState('ready-to-move');
+  const [commonAgeOfProperty, setCommonAgeOfProperty] = useState('');
+  const [commonParkingCovered, setCommonParkingCovered] = useState(0);
+  const [commonParkingOpen, setCommonParkingOpen] = useState(0);
+  const [commonKitchenType, setCommonKitchenType] = useState('regular');
+  
+  // Location Nearby
+  const [locationNearby, setLocationNearby] = useState([]);
+  
+  // Owner Details
   const [ownerName, setOwnerName] = useState('');
   const [ownerPhone, setOwnerPhone] = useState('');
   const [ownerEmail, setOwnerEmail] = useState('');
   const [ownerReason, setOwnerReason] = useState('');
-  const [legalOwnershipType, setLegalOwnershipType] = useState('');
+  
+  // Legal Details - Complete Structure
   const [legalReraRegistered, setLegalReraRegistered] = useState(false);
   const [legalReraNumber, setLegalReraNumber] = useState('');
-  const [legalKhataCertificate, setLegalKhataCertificate] = useState(false);
-  const [legalEncumbranceCertificate, setLegalEncumbranceCertificate] = useState(false);
+  const [legalReraWebsiteLink, setLegalReraWebsiteLink] = useState('');
+  const [legalSanctioningAuthority, setLegalSanctioningAuthority] = useState('');
+  const [legalSanctionNumber, setLegalSanctionNumber] = useState('');
+  const [legalSanctionDate, setLegalSanctionDate] = useState('');
   const [legalOccupancyCertificate, setLegalOccupancyCertificate] = useState(false);
-  const [viewingSchedule, setViewingSchedule] = useState([]);
+  const [legalOccupancyCertificateNumber, setLegalOccupancyCertificateNumber] = useState('');
+  const [legalOccupancyCertificateDate, setLegalOccupancyCertificateDate] = useState('');
+  const [legalCommencementCertificate, setLegalCommencementCertificate] = useState(false);
+  const [legalCommencementCertificateNumber, setLegalCommencementCertificateNumber] = useState('');
+  const [legalCommencementCertificateDate, setLegalCommencementCertificateDate] = useState('');
+  const [legalKhataStatus, setLegalKhataStatus] = useState('Not Applicable');
+  const [legalClearTitle, setLegalClearTitle] = useState(false);
+  const [legalMotherDeedAvailable, setLegalMotherDeedAvailable] = useState(false);
+  const [legalConversionCertificate, setLegalConversionCertificate] = useState(false);
+  const [legalConversionType, setLegalConversionType] = useState('');
+  const [legalEncumbranceCertificate, setLegalEncumbranceCertificate] = useState(false);
+  const [legalEncumbranceYears, setLegalEncumbranceYears] = useState('');
+  const [legalOwnershipType, setLegalOwnershipType] = useState('freehold');
+  const [legalBankApprovals, setLegalBankApprovals] = useState([]);
+  const [legalStatusSummary, setLegalStatusSummary] = useState('');
+  const [legalVerified, setLegalVerified] = useState(false);
+  const [legalVerificationDate, setLegalVerificationDate] = useState('');
+  const [legalVerifier, setLegalVerifier] = useState('');
+  
+  // Bank Approvals Management
+  const addBankApproval = () => {
+    setLegalBankApprovals([
+      ...legalBankApprovals,
+      { bankName: '', approved: true, approvalDate: '', referenceNumber: '' }
+    ]);
+  };
+  
+  const updateBankApproval = (index, field, value) => {
+    const updated = [...legalBankApprovals];
+    updated[index][field] = value;
+    setLegalBankApprovals(updated);
+  };
+  
+  const removeBankApproval = (index) => {
+    setLegalBankApprovals(legalBankApprovals.filter((_, i) => i !== index));
+  };
+  
+  // Contact Preference
   const [contactPreference, setContactPreference] = useState(['call', 'whatsapp']);
-  const [metaTitle, setMetaTitle] = useState('');
-  const [metaDescription, setMetaDescription] = useState('');
-  const [parentProperty, setParentProperty] = useState('');
-  const [priceInWords, setPriceInWords] = useState(''); // Added price in words state
-
-  // Memoized options arrays to prevent re-renders
-  const propertyTypes = useMemo(() => [
-    "Apartment", "Villa", "Independent House", "Studio", 
-    "Penthouse", "Duplex", "Pg house", "Plot", "Commercial Space"
-  ], []);
-
-  const furnishingOptions = useMemo(() => ["unfurnished", "semi-furnished", "fully-furnished"], []);
-  const possessionOptions = useMemo(() => ["ready-to-move", "under-construction", "resale"], []);
-  const kitchenTypes = useMemo(() => ["modular", "regular", "open", "closed", "none"], []);
-  const listingTypes = useMemo(() => ["sale", "rent", "lease", "pg"], []);
-  const availabilityOptions = useMemo(() => ["available", "sold", "rented", "under-agreement", "hold"], []);
-  const perUnitOptions = useMemo(() => ["total", "sqft", "sqm", "month"], []);
-  const currencies = useMemo(() => ["INR", "USD", "EUR", "GBP", "AED"], []);
-  const preferredTenantsOptions = useMemo(() => ["family", "bachelors", "corporate", "students", "any"], []);
-  const contactPreferenceOptions = useMemo(() => ["call", "whatsapp", "email", "message"], []);
-  const ownershipTypeOptions = useMemo(() => ["freehold", "leasehold", "cooperative", "power-of-attorney"], []);
   
-  const websiteOptions = useMemo(() => ["cleartitle", "saimr", "magicbricks", "99acres", "housing", "commonfloor", "makaan"], []);
+  // Location Nearby Management
+  const addLocationNearby = () => {
+    setLocationNearby([
+      ...locationNearby,
+      { name: '', distance: '', type: 'other' }
+    ]);
+  };
   
-  const unitFeaturesOptions = useMemo(() => [
-    "Air Conditioning", "Modular Kitchen", "Wardrobes", "Geyser", "Exhaust Fan", "Chimney",
-    "Lighting", "Ceiling Fans", "Smart Home Automation", "Central AC", "bore water", "Walk-in Closet",
-    "Study Room", "Pooja Room", "Utility Area", "Servant Room", "Private Garden", "Terrace",
-    "Balcony", "Swimming Pool", "Video Door Phone", "Security Alarm", "Fire Safety", "CCTV",
-    "Pet Friendly", "Wheelchair Access", "Natural Light", "View"
-  ], []);
-
-  const amenitiesOptions = useMemo(() => [
-    "Swimming Pool", "Gym", "Club House", "Children Play Area", "Park", "Garden",
-    "Power Backup", "Lift", "Security", "CCTV", "Fire Safety", "Intercom",
-    "Visitor Parking", "Reserved Parking"
-  ], []);
-
-  const includedInRentOptions = useMemo(() => ["maintenance", "electricity", "water", "gas", "internet", "parking"], []);
-
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(
-    { length: currentYear - 1949 },
-    (_, i) => currentYear - i
-  );
-
-  // Helper function to format number with Indian comma system
+  const updateLocationNearby = (index, field, value) => {
+    const updated = [...locationNearby];
+    updated[index][field] = value;
+    setLocationNearby(updated);
+  };
+  
+  const removeLocationNearby = (index) => {
+    setLocationNearby(locationNearby.filter((_, i) => i !== index));
+  };
+  
+  // Image Handling
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 10) {
+      toast.error('Maximum 10 images allowed');
+      return;
+    }
+    setImages(files);
+    const previews = files.map(file => URL.createObjectURL(file));
+    setPreviewImages(previews);
+  };
+  
+  const removeImage = useCallback((index) => {
+    setImages(images.filter((_, i) => i !== index));
+    setPreviewImages(previewImages.filter((_, i) => i !== index));
+  }, [images, previewImages]);
+  
+  const handleCheckboxArray = useCallback((array, value, setArray) => {
+    if (array.includes(value)) {
+      setArray(array.filter(item => item !== value));
+    } else {
+      setArray([...array, value]);
+    }
+  }, []);
+  
+  // Unit Type Management
+  const addUnitType = () => {
+    setUnitTypes([
+      ...unitTypes,
+      {
+        type: '2BHK',
+        price: { amount: '', currency: 'INR', perUnit: 'total' },
+        carpetArea: '',
+        builtUpArea: '',
+        superBuiltUpArea: '',
+        floors: 1,
+        floorNumber: '',
+        availability: 'available',
+        totalUnits: '',
+        availableUnits: '',
+        // Plot-specific fields (will only be used if type is 'Plot')
+        plotDetails: {
+          dimensions: { length: '', breadth: '', frontage: '' },
+          area: { sqft: '', sqYards: '', grounds: '', acres: '', cents: '' },
+          shape: 'rectangle',
+          facing: '',
+          isCornerPlot: false,
+          cornerRoads: [],
+          roadWidth: '',
+          roadType: 'secondary',
+          boundaryWalls: false,
+          fencing: false,
+          gate: false,
+          elevationAvailable: false,
+          soilType: '',
+          landUse: 'residential',
+          developmentStatus: 'developed',
+          amenities: [],
+          utilities: {
+            electricity: false,
+            waterConnection: false,
+            sewageConnection: false,
+            gasConnection: false,
+            internetFiber: false
+          },
+          approvalDetails: {
+            dtcpApproved: false,
+            dtcpNumber: '',
+            layoutApproved: false,
+            layoutNumber: '',
+            surveyNumber: '',
+            pattaNumber: '',
+            subdivisionApproved: false
+          }
+        }
+      }
+    ]);
+  };
+  
+  const updateUnitType = (index, field, value) => {
+    const updated = [...unitTypes];
+    if (field.includes('.')) {
+      const parts = field.split('.');
+      let target = updated[index];
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!target[parts[i]]) target[parts[i]] = {};
+        target = target[parts[i]];
+      }
+      target[parts[parts.length - 1]] = value;
+    } else {
+      updated[index][field] = value;
+    }
+    setUnitTypes(updated);
+  };
+  
+  const updatePlotDetail = (index, field, value) => {
+    const updated = [...unitTypes];
+    if (field.includes('.')) {
+      const parts = field.split('.');
+      let target = updated[index].plotDetails;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!target[parts[i]]) target[parts[i]] = {};
+        target = target[parts[i]];
+      }
+      target[parts[parts.length - 1]] = value;
+    } else {
+      updated[index].plotDetails[field] = value;
+    }
+    setUnitTypes(updated);
+  };
+  
+  const removeUnitType = (index) => {
+    setUnitTypes(unitTypes.filter((_, i) => i !== index));
+  };
+  
+  // Format number with commas
   const formatNumberWithCommas = (number) => {
     if (!number) return '';
     const numStr = number.toString().replace(/,/g, '');
     return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',').replace(/(\d{2})(?=\d{2}$)/, '$1,');
   };
-
-  // Helper function to convert number to Indian words
+  
   const convertToIndianWords = (numberString) => {
     if (!numberString || numberString.trim() === '') return '';
-    
     try {
       const num = parseFloat(numberString.replace(/,/g, ''));
       if (isNaN(num) || num <= 0) return '';
       
       const crore = 10000000;
       const lakh = 100000;
-      const thousand = 1000;
       
-      // For amounts in crores
       if (num >= crore) {
         const crores = num / crore;
-        if (num % crore === 0) {
-          // Exact crore amount
-          return `₹ ${parseInt(crores).toLocaleString('en-IN')} Crore${crores > 1 ? 's' : ''}`;
-        } else {
-          // Crore with decimal
-          return `₹ ${crores.toFixed(2).replace(/\.00$/, '')} Crore`;
-        }
+        return `₹ ${crores.toFixed(2).replace(/\.00$/, '')} Crore`;
       }
-      
-      // For amounts in lakhs
       if (num >= lakh) {
         const lakhs = num / lakh;
-        if (num % lakh === 0) {
-          // Exact lakh amount
-          return `₹ ${parseInt(lakhs).toLocaleString('en-IN')} Lakh${lakhs > 1 ? 's' : ''}`;
-        } else {
-          // Lakh with decimal
-          return `₹ ${lakhs.toFixed(2).replace(/\.00$/, '')} Lakh`;
-        }
+        return `₹ ${lakhs.toFixed(2).replace(/\.00$/, '')} Lakh`;
       }
-      
-      // For amounts in thousands
-      if (num >= thousand) {
-        const thousands = num / thousand;
-        if (num % thousand === 0) {
-          return `₹ ${parseInt(thousands).toLocaleString('en-IN')} Thousand`;
-        } else {
-          return `₹ ${thousands.toFixed(2).replace(/\.00$/, '')} Thousand`;
-        }
-      }
-      
-      // For amounts less than thousand
       return `₹ ${num.toLocaleString('en-IN')}`;
-      
     } catch (error) {
-      console.error('Error converting number to words:', error);
       return '';
     }
   };
-
-  // Fetch property unit data for edit mode
+  
+  // Fetch property unit for edit mode
   useEffect(() => {
     if (mode === 'edit' && propertyUnitId) {
       fetchPropertyUnit();
     }
   }, [propertyUnitId, mode]);
-
-  // Also update priceInWords when priceAmount changes (for edit mode)
-  useEffect(() => {
-    if (priceAmount && priceAmount !== 'price-on-request' && priceAmount.trim() !== '') {
-      const priceInWords = convertToIndianWords(priceAmount);
-      setPriceInWords(priceInWords);
-    }
-  }, []); // Run once on component mount for edit mode
-
+  
   const fetchPropertyUnit = async () => {
     try {
       setLoading(true);
@@ -208,80 +281,60 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       
       setTitle(data.title || '');
       setDescription(data.description || '');
-      setUnitNumber(data.unitNumber || '');
       setCity(data.city || '');
       setAddress(data.address || '');
-      setCoordinatesLat(data.coordinates?.latitude || '');
-      setCoordinatesLng(data.coordinates?.longitude || '');
       setMapUrl(data.mapUrl || '');
-      
-      // Handle price for edit mode
-      if (data.price?.amount === 'price-on-request') {
-        setPriceAmount('price-on-request');
-        setPriceInWords('Price on Request');
-      } else {
-        const amount = data.price?.amount?.toString() || '';
-        setPriceAmount(amount);
-        if (amount) {
-          const priceInWords = convertToIndianWords(amount);
-          setPriceInWords(priceInWords);
-        }
-      }
-      
-      setPriceCurrency(data.price?.currency || 'INR');
-      setPricePerUnit(data.price?.perUnit || 'total');
-      setMaintenanceCharges(data.maintenanceCharges || 0);
-      setSecurityDeposit(data.securityDeposit || 0);
       setPropertyType(data.propertyType || 'Apartment');
       setAvailability(data.availability || 'available');
       setListingType(data.listingType || 'sale');
-      setSpecBedrooms(data.specifications?.bedrooms?.toString() || '');
-      setSpecBathrooms(data.specifications?.bathrooms?.toString() || '');
-      setSpecBalconies(data.specifications?.balconies || 0);
-      setSpecFloors(data.specifications?.floors || 1);
-      setSpecFloorNumber(data.specifications?.floorNumber?.toString() || '');
-      setSpecCarpetArea(data.specifications?.carpetArea?.toString() || '');
-      setSpecBuiltUpArea(data.specifications?.builtUpArea?.toString() || '');
-      setSpecSuperBuiltUpArea(data.specifications?.superBuiltUpArea?.toString() || '');
-      setSpecPlotArea(data.specifications?.plotArea?.toString() || '');
-      setSpecFurnishing(data.specifications?.furnishing || 'unfurnished');
-      setSpecPossessionStatus(data.specifications?.possessionStatus || 'ready-to-move');
-      setSpecAgeOfProperty(data.specifications?.ageOfProperty?.toString() || '');
-      setSpecParkingCovered(data.specifications?.parking?.covered || 0);
-      setSpecParkingOpen(data.specifications?.parking?.open || 0);
-      setSpecKitchenType(data.specifications?.kitchenType || 'regular');
+      
+      setUnitTypes(data.unitTypes || []);
       setBuildingName(data.buildingDetails?.name || '');
       setBuildingTotalFloors(data.buildingDetails?.totalFloors?.toString() || '');
       setBuildingTotalUnits(data.buildingDetails?.totalUnits?.toString() || '');
       setBuildingYearBuilt(data.buildingDetails?.yearBuilt?.toString() || '');
       setBuildingAmenities(data.buildingDetails?.amenities || []);
       setUnitFeatures(data.unitFeatures || []);
-      setRentalAvailable(data.rentalDetails?.availableForRent || false);
-      setRentalLeaseDurationValue(data.rentalDetails?.leaseDuration?.value || 11);
-      setRentalLeaseDurationUnit(data.rentalDetails?.leaseDuration?.unit || 'months');
-      setRentalNegotiable(data.rentalDetails?.rentNegotiable || true);
-      setRentalPreferredTenants(data.rentalDetails?.preferredTenants || ['any']);
-      setRentalIncludedInRent(data.rentalDetails?.includedInRent || []);
-      setWebsiteAssignment(data.websiteAssignment || ['cleartitle']);
-      setVirtualTour(data.virtualTour || '');
-      setFloorPlanImage(data.floorPlan?.image || '');
-      setFloorPlanPublicId(data.floorPlan?.public_id || '');
-      setFloorPlanDescription(data.floorPlan?.description || '');
+      setCommonFurnishing(data.commonSpecifications?.furnishing || 'unfurnished');
+      setCommonPossessionStatus(data.commonSpecifications?.possessionStatus || 'ready-to-move');
+      setCommonAgeOfProperty(data.commonSpecifications?.ageOfProperty?.toString() || '');
+      setCommonParkingCovered(data.commonSpecifications?.parking?.covered || 0);
+      setCommonParkingOpen(data.commonSpecifications?.parking?.open || 0);
+      setCommonKitchenType(data.commonSpecifications?.kitchenType || 'regular');
+      setLocationNearby(data.locationNearby || []);
       setOwnerName(data.ownerDetails?.name || '');
       setOwnerPhone(data.ownerDetails?.phoneNumber || '');
       setOwnerEmail(data.ownerDetails?.email || '');
       setOwnerReason(data.ownerDetails?.reasonForSelling || '');
-      setLegalOwnershipType(data.legalDetails?.ownershipType || '');
+      
+      // Legal Details
       setLegalReraRegistered(data.legalDetails?.reraRegistered || false);
       setLegalReraNumber(data.legalDetails?.reraNumber || '');
-      setLegalKhataCertificate(data.legalDetails?.khataCertificate || false);
-      setLegalEncumbranceCertificate(data.legalDetails?.encumbranceCertificate || false);
+      setLegalReraWebsiteLink(data.legalDetails?.reraWebsiteLink || '');
+      setLegalSanctioningAuthority(data.legalDetails?.sanctioningAuthority || '');
+      setLegalSanctionNumber(data.legalDetails?.sanctionNumber || '');
+      setLegalSanctionDate(data.legalDetails?.sanctionDate ? data.legalDetails.sanctionDate.split('T')[0] : '');
       setLegalOccupancyCertificate(data.legalDetails?.occupancyCertificate || false);
-      setViewingSchedule(data.viewingSchedule || []);
+      setLegalOccupancyCertificateNumber(data.legalDetails?.occupancyCertificateNumber || '');
+      setLegalOccupancyCertificateDate(data.legalDetails?.occupancyCertificateDate ? data.legalDetails.occupancyCertificateDate.split('T')[0] : '');
+      setLegalCommencementCertificate(data.legalDetails?.commencementCertificate || false);
+      setLegalCommencementCertificateNumber(data.legalDetails?.commencementCertificateNumber || '');
+      setLegalCommencementCertificateDate(data.legalDetails?.commencementCertificateDate ? data.legalDetails.commencementCertificateDate.split('T')[0] : '');
+      setLegalKhataStatus(data.legalDetails?.khataStatus || 'Not Applicable');
+      setLegalClearTitle(data.legalDetails?.clearTitle || false);
+      setLegalMotherDeedAvailable(data.legalDetails?.motherDeedAvailable || false);
+      setLegalConversionCertificate(data.legalDetails?.conversionCertificate || false);
+      setLegalConversionType(data.legalDetails?.conversionType || '');
+      setLegalEncumbranceCertificate(data.legalDetails?.encumbranceCertificate || false);
+      setLegalEncumbranceYears(data.legalDetails?.encumbranceYears?.toString() || '');
+      setLegalOwnershipType(data.legalDetails?.ownershipType || 'freehold');
+      setLegalBankApprovals(data.legalDetails?.bankApprovals || []);
+      setLegalStatusSummary(data.legalDetails?.legalStatusSummary || '');
+      setLegalVerified(data.legalDetails?.legalVerified || false);
+      setLegalVerificationDate(data.legalDetails?.legalVerificationDate ? data.legalDetails.legalVerificationDate.split('T')[0] : '');
+      setLegalVerifier(data.legalDetails?.legalVerifier || '');
+      
       setContactPreference(data.contactPreference || ['call', 'whatsapp']);
-      setMetaTitle(data.metaTitle || '');
-      setMetaDescription(data.metaDescription || '');
-      setParentProperty(data.parentProperty || '');
       
     } catch (error) {
       toast.error('Failed to fetch property unit details');
@@ -290,40 +343,7 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       setLoading(false);
     }
   };
-
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    
-    if (files.length > 10) {
-      toast.error('Maximum 10 images allowed');
-      return;
-    }
-    
-    setImages(files);
-    
-    const previews = files.map(file => URL.createObjectURL(file));
-    setPreviewImages(previews);
-  };
-
-  const removeImage = useCallback((index) => {
-    const newImages = [...images];
-    const newPreviews = [...previewImages];
-    
-    newImages.splice(index, 1);
-    newPreviews.splice(index, 1);
-    
-    setImages(newImages);
-    setPreviewImages(newPreviews);
-  }, [images, previewImages]);
-
-  const handleCheckboxArray = useCallback((array, value, setArray) => {
-    if (array.includes(value)) {
-      setArray(array.filter(item => item !== value));
-    } else {
-      setArray([...array, value]);
-    }
-  }, []);
-
+  
   const validateForm = useCallback(() => {
     const errors = [];
     
@@ -331,128 +351,39 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
     if (!city.trim()) errors.push('City is required');
     if (!address.trim()) errors.push('Address is required');
     
-    // Price validation
-    if (!priceAmount || priceAmount.trim() === '') {
-      errors.push('Price is required');
-    } else if (priceAmount !== 'price-on-request') {
-      const priceNum = parseFloat(priceAmount.replace(/,/g, ''));
-      if (isNaN(priceNum)) {
-        errors.push('Price amount must be a valid number');
-      } else if (priceNum <= 0) {
-        errors.push('Price amount must be greater than 0');
-      }
+    if (unitTypes.length === 0) {
+      errors.push('At least one unit type is required');
     }
     
-    if (propertyType === 'Plot') {
-      if (!specPlotArea || specPlotArea.trim() === '' || parseFloat(specPlotArea) <= 0) {
-        errors.push('Plot Area is required for Plot property type and must be greater than 0');
-      }
-    } else if (propertyType === 'Villa') {
-      const bedroomsNum = parseFloat(specBedrooms);
-      if (isNaN(bedroomsNum) || bedroomsNum < 0) {
-        errors.push('Bedrooms must be 0 or a positive number');
-      }
+    unitTypes.forEach((unit, index) => {
+      if (!unit.type) errors.push(`Unit type ${index + 1}: Type is required`);
+      if (!unit.price?.amount) errors.push(`Unit type ${index + 1}: Price amount is required`);
       
-      const bathroomsNum = parseFloat(specBathrooms);
-      if (isNaN(bathroomsNum) || bathroomsNum < 0) {
-        errors.push('Bathrooms must be 0 or a positive number');
-      }
-      
-      const carpetAreaNum = parseFloat(specCarpetArea);
-      if (isNaN(carpetAreaNum) || carpetAreaNum <= 0) {
-        errors.push('Carpet Area is required and must be greater than 0');
-      }
-      
-      if (!specPlotArea || specPlotArea.trim() === '' || parseFloat(specPlotArea) <= 0) {
-        errors.push('Plot Area is required for Villa property type and must be greater than 0');
-      }
-      
-      if (specBuiltUpArea && specBuiltUpArea.trim() !== '') {
-        const builtUpAreaNum = parseFloat(specBuiltUpArea);
-        if (isNaN(builtUpAreaNum) || builtUpAreaNum <= 0) {
-          errors.push('Built-up Area must be greater than 0 if provided');
+      // Validate based on unit type
+      if (unit.type === 'Plot') {
+        // For plots, either carpetArea or plotDetails.area.sqft must be provided
+        if (!unit.carpetArea && !unit.plotDetails?.area?.sqft) {
+          errors.push(`Unit type ${index + 1} (Plot): Either Carpet Area or Plot Area (sqft) is required`);
         }
-      }
-    } else if (propertyType === 'Commercial Space') {
-      const carpetAreaNum = parseFloat(specCarpetArea);
-      if (isNaN(carpetAreaNum) || carpetAreaNum <= 0) {
-        errors.push('Carpet Area is required and must be greater than 0');
-      }
-      
-      const builtUpAreaNum = parseFloat(specBuiltUpArea);
-      if (isNaN(builtUpAreaNum) || builtUpAreaNum <= 0) {
-        errors.push('Built-up Area is required and must be greater than 0');
-      }
-      
-      if (specBedrooms && specBedrooms.trim() !== '') {
-        const bedroomsNum = parseFloat(specBedrooms);
-        if (isNaN(bedroomsNum) || bedroomsNum < 0) {
-          errors.push('Bedrooms must be 0 or a positive number if provided');
+        
+        // Validate plot dimensions if provided partially
+        if (unit.plotDetails?.dimensions) {
+          const dims = unit.plotDetails.dimensions;
+          if ((dims.length && !dims.breadth) || (!dims.length && dims.breadth)) {
+            errors.push(`Unit type ${index + 1} (Plot): Both length and breadth are required if providing dimensions`);
+          }
         }
-      }
-      
-      if (specBathrooms && specBathrooms.trim() !== '') {
-        const bathroomsNum = parseFloat(specBathrooms);
-        if (isNaN(bathroomsNum) || bathroomsNum < 0) {
-          errors.push('Bathrooms must be 0 or a positive number if provided');
+        
+        // Validate road width if road type is provided
+        if (unit.plotDetails?.roadType && unit.plotDetails.roadType !== 'secondary' && !unit.plotDetails.roadWidth) {
+          errors.push(`Unit type ${index + 1} (Plot): Road width is required for ${unit.plotDetails.roadType} road`);
         }
-      }
-    } else {
-      const bedroomsNum = parseFloat(specBedrooms);
-      if (isNaN(bedroomsNum) || bedroomsNum < 0) {
-        errors.push('Bedrooms must be 0 or a positive number');
-      }
-      
-      const bathroomsNum = parseFloat(specBathrooms);
-      if (isNaN(bathroomsNum) || bathroomsNum < 0) {
-        errors.push('Bathrooms must be 0 or a positive number');
-      }
-      
-      const carpetAreaNum = parseFloat(specCarpetArea);
-      if (isNaN(carpetAreaNum) || carpetAreaNum <= 0) {
-        errors.push('Carpet Area is required and must be greater than 0');
-      }
-      
-      const builtUpAreaNum = parseFloat(specBuiltUpArea);
-      if (isNaN(builtUpAreaNum) || builtUpAreaNum <= 0) {
-        errors.push('Built-up Area is required and must be greater than 0');
-      }
-      
-      if (specPlotArea && specPlotArea.trim() !== '') {
-        const plotAreaNum = parseFloat(specPlotArea);
-        if (isNaN(plotAreaNum) || plotAreaNum <= 0) {
-          errors.push('Plot Area must be greater than 0 if provided');
-        }
-      }
-    }
-    
-    const numericValidations = [
-      { name: 'Maintenance Charges', value: maintenanceCharges, min: 0 },
-      { name: 'Security Deposit', value: securityDeposit, min: 0 },
-      { name: 'Balconies', value: specBalconies, min: 0 },
-      { name: 'Floors in Unit', value: specFloors, min: 1 },
-      { name: 'Covered Parking', value: specParkingCovered, min: 0 },
-      { name: 'Open Parking', value: specParkingOpen, min: 0 },
-      { name: 'Age of Property', value: specAgeOfProperty, min: 0, optional: true },
-    ];
-    
-    numericValidations.forEach(({ name, value, min, optional }) => {
-      const num = parseFloat(value);
-      if (!optional || (value !== '' && value !== undefined)) {
-        if (isNaN(num)) {
-          errors.push(`${name} must be a valid number`);
-        } else if (num < min) {
-          errors.push(`${name} must be ${min === 0 ? '0 or positive' : `at least ${min}`}`);
-        }
+      } else {
+        // For residential units
+        if (!unit.carpetArea) errors.push(`Unit type ${index + 1}: Carpet area is required`);
+        if (!unit.builtUpArea) errors.push(`Unit type ${index + 1}: Built-up area is required`);
       }
     });
-    
-    if (buildingYearBuilt && buildingYearBuilt !== '') {
-      const yearNum = parseInt(buildingYearBuilt);
-      if (isNaN(yearNum) || yearNum < 1950 || yearNum > currentYear) {
-        errors.push(`Year Built must be between 1950 and ${currentYear}`);
-      }
-    }
     
     if (!images.length && mode === 'create') {
       errors.push('At least one image is required');
@@ -462,240 +393,436 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
       errors.forEach(error => toast.error(error));
       return false;
     }
-    
     return true;
-  }, [title, city, address, priceAmount, propertyType, specBedrooms, specBathrooms, specCarpetArea, 
-      specBuiltUpArea, specPlotArea, maintenanceCharges, securityDeposit, specBalconies, specFloors, 
-      specParkingCovered, specParkingOpen, specAgeOfProperty, buildingYearBuilt, images, mode]);
-
+  }, [title, city, address, unitTypes, images, mode]);
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     
     try {
       setLoading(true);
       
-      const dataToSend = {
-        title: title.trim(),
-        description: description.trim(),
-        unitNumber: unitNumber.trim(),
-        city: city.trim(),
-        address: address.trim(),
-        coordinates: {
-          latitude: coordinatesLat ? parseFloat(coordinatesLat) : undefined,
-          longitude: coordinatesLng ? parseFloat(coordinatesLng) : undefined
-        },
-        mapUrl: mapUrl.trim(),
-        price: {
-          amount: priceAmount.trim(),
-          currency: priceCurrency,
-          perUnit: pricePerUnit
-        },
-        maintenanceCharges: Number(maintenanceCharges) || 0,
-        securityDeposit: Number(securityDeposit) || 0,
-        propertyType,
-        specifications: {
-          bedrooms: propertyType === 'Plot' ? 0 : Number(specBedrooms) || 0,
-          bathrooms: propertyType === 'Plot' ? 0 : Number(specBathrooms) || 0,
-          balconies: Number(specBalconies) || 0,
-          floors: Number(specFloors) || 1,
-          floorNumber: specFloorNumber ? Number(specFloorNumber) : undefined,
-          carpetArea: Number(specCarpetArea) || 0,
-          builtUpArea: Number(specBuiltUpArea) || 0,
-          superBuiltUpArea: specSuperBuiltUpArea ? Number(specSuperBuiltUpArea) : undefined,
-          plotArea: specPlotArea ? Number(specPlotArea) : undefined,
-          furnishing: specFurnishing,
-          possessionStatus: specPossessionStatus,
-          ageOfProperty: specAgeOfProperty ? Number(specAgeOfProperty) : undefined,
-          parking: {
-            covered: Number(specParkingCovered) || 0,
-            open: Number(specParkingOpen) || 0
-          },
-          kitchenType: specKitchenType
-        },
-        buildingDetails: {
-          name: buildingName.trim(),
-          totalFloors: buildingTotalFloors ? Number(buildingTotalFloors) : undefined,
-          totalUnits: buildingTotalUnits ? Number(buildingTotalUnits) : undefined,
-          yearBuilt: buildingYearBuilt ? Number(buildingYearBuilt) : undefined,
-          amenities: buildingAmenities
-        },
-        unitFeatures,
-        rentalDetails: {
-          availableForRent: rentalAvailable,
-          leaseDuration: {
-            value: Number(rentalLeaseDurationValue) || 11,
-            unit: rentalLeaseDurationUnit
-          },
-          rentNegotiable: rentalNegotiable,
-          preferredTenants: rentalPreferredTenants,
-          includedInRent: rentalIncludedInRent
-        },
-        availability,
-        listingType,
-        websiteAssignment,
-        virtualTour: virtualTour.trim(),
-        floorPlan: {
-          image: floorPlanImage.trim(),
-          public_id: floorPlanPublicId.trim(),
-          description: floorPlanDescription.trim()
-        },
-        ownerDetails: {
-          name: ownerName.trim(),
-          phoneNumber: ownerPhone.trim(),
-          email: ownerEmail.trim(),
-          reasonForSelling: ownerReason.trim()
-        },
-        legalDetails: {
-          ownershipType: legalOwnershipType && legalOwnershipType.trim() !== '' ? legalOwnershipType.trim() : undefined,
-          reraRegistered: legalReraRegistered,
-          reraNumber: legalReraNumber.trim(),
-          khataCertificate: legalKhataCertificate,
-          encumbranceCertificate: legalEncumbranceCertificate,
-          occupancyCertificate: legalOccupancyCertificate
-        },
-        contactPreference,
-        metaTitle: metaTitle.trim(),
-        metaDescription: metaDescription.trim(),
-        parentProperty: parentProperty.trim() || undefined,
-      };
-      
-      const cleanData = {};
-      Object.keys(dataToSend).forEach(key => {
-        const value = dataToSend[key];
-        
-        if (value === null || value === undefined) {
-          return;
-        }
-        
-        if (typeof value === 'object' && !Array.isArray(value)) {
-          const cleanNested = {};
-          let hasNestedValues = false;
-          
-          Object.keys(value).forEach(nestedKey => {
-            const nestedValue = value[nestedKey];
-            if (nestedValue !== null && nestedValue !== undefined && nestedValue !== '') {
-              cleanNested[nestedKey] = nestedValue;
-              hasNestedValues = true;
-            }
-          });
-          
-          if (hasNestedValues) {
-            cleanData[key] = cleanNested;
-          }
-        } 
-        else if (Array.isArray(value)) {
-          if (value.length > 0) {
-            cleanData[key] = value;
-          }
-        }
-        else if (typeof value === 'string') {
-          if (value.trim() !== '') {
-            cleanData[key] = value.trim();
-          }
-        }
-        else {
-          cleanData[key] = value;
-        }
-      });
-      
-      if (cleanData.legalDetails && cleanData.legalDetails.ownershipType === '') {
-        delete cleanData.legalDetails.ownershipType;
-      }
-      
-      if (cleanData.legalDetails && Object.keys(cleanData.legalDetails).length === 0) {
-        delete cleanData.legalDetails;
-      }
-      
-      if (cleanData.ownerDetails) {
-        const cleanOwner = {};
-        Object.keys(cleanData.ownerDetails).forEach(key => {
-          if (cleanData.ownerDetails[key] !== '' && cleanData.ownerDetails[key] !== undefined) {
-            cleanOwner[key] = cleanData.ownerDetails[key];
-          }
-        });
-        
-        if (Object.keys(cleanOwner).length > 0) {
-          cleanData.ownerDetails = cleanOwner;
-        } else {
-          delete cleanData.ownerDetails;
-        }
-      }
-      
       const formDataToSend = new FormData();
       
-      Object.keys(cleanData).forEach(key => {
-        if (cleanData[key] !== null && cleanData[key] !== undefined) {
-          if (typeof cleanData[key] === 'object' && !Array.isArray(cleanData[key])) {
-            formDataToSend.append(key, JSON.stringify(cleanData[key]));
-          } else if (Array.isArray(cleanData[key])) {
-            formDataToSend.append(key, JSON.stringify(cleanData[key]));
-          } else {
-            formDataToSend.append(key, cleanData[key]);
-          }
+      // Basic fields
+      formDataToSend.append('title', title.trim());
+      formDataToSend.append('description', description.trim());
+      formDataToSend.append('city', city.trim());
+      formDataToSend.append('address', address.trim());
+      formDataToSend.append('mapUrl', mapUrl.trim());
+      formDataToSend.append('propertyType', propertyType);
+      formDataToSend.append('availability', availability);
+      formDataToSend.append('listingType', listingType);
+      
+      // Unit Types - Process based on type
+      const processedUnitTypes = unitTypes.map(unit => {
+        const baseUnit = {
+          type: unit.type,
+          price: {
+            amount: parseFloat(unit.price?.amount?.toString().replace(/,/g, '')) || 0,
+            currency: unit.price?.currency || 'INR',
+            perUnit: unit.price?.perUnit || 'total'
+          },
+          availability: unit.availability || 'available',
+          totalUnits: unit.totalUnits ? parseInt(unit.totalUnits) : undefined,
+          availableUnits: unit.availableUnits ? parseInt(unit.availableUnits) : undefined
+        };
+        
+        if (unit.type === 'Plot') {
+          // Handle plot-specific fields
+          baseUnit.plotDetails = {
+            dimensions: {
+              length: unit.plotDetails?.dimensions?.length ? parseFloat(unit.plotDetails.dimensions.length) : undefined,
+              breadth: unit.plotDetails?.dimensions?.breadth ? parseFloat(unit.plotDetails.dimensions.breadth) : undefined,
+              frontage: unit.plotDetails?.dimensions?.frontage ? parseFloat(unit.plotDetails.dimensions.frontage) : undefined
+            },
+            area: {
+              sqft: unit.plotDetails?.area?.sqft ? parseFloat(unit.plotDetails.area.sqft) : (unit.carpetArea ? parseFloat(unit.carpetArea) : undefined),
+              sqYards: unit.plotDetails?.area?.sqYards ? parseFloat(unit.plotDetails.area.sqYards) : undefined,
+              grounds: unit.plotDetails?.area?.grounds ? parseFloat(unit.plotDetails.area.grounds) : undefined,
+              acres: unit.plotDetails?.area?.acres ? parseFloat(unit.plotDetails.area.acres) : undefined,
+              cents: unit.plotDetails?.area?.cents ? parseFloat(unit.plotDetails.area.cents) : undefined
+            },
+            shape: unit.plotDetails?.shape || 'rectangle',
+            facing: unit.plotDetails?.facing,
+            isCornerPlot: unit.plotDetails?.isCornerPlot || false,
+            cornerRoads: unit.plotDetails?.cornerRoads || [],
+            roadWidth: unit.plotDetails?.roadWidth ? parseFloat(unit.plotDetails.roadWidth) : undefined,
+            roadType: unit.plotDetails?.roadType || 'secondary',
+            boundaryWalls: unit.plotDetails?.boundaryWalls || false,
+            fencing: unit.plotDetails?.fencing || false,
+            gate: unit.plotDetails?.gate || false,
+            elevationAvailable: unit.plotDetails?.elevationAvailable || false,
+            soilType: unit.plotDetails?.soilType,
+            landUse: unit.plotDetails?.landUse || 'residential',
+            developmentStatus: unit.plotDetails?.developmentStatus || 'developed',
+            amenities: unit.plotDetails?.amenities || [],
+            utilities: {
+              electricity: unit.plotDetails?.utilities?.electricity || false,
+              waterConnection: unit.plotDetails?.utilities?.waterConnection || false,
+              sewageConnection: unit.plotDetails?.utilities?.sewageConnection || false,
+              gasConnection: unit.plotDetails?.utilities?.gasConnection || false,
+              internetFiber: unit.plotDetails?.utilities?.internetFiber || false
+            },
+            approvalDetails: {
+              dtcpApproved: unit.plotDetails?.approvalDetails?.dtcpApproved || false,
+              dtcpNumber: unit.plotDetails?.approvalDetails?.dtcpNumber || '',
+              layoutApproved: unit.plotDetails?.approvalDetails?.layoutApproved || false,
+              layoutNumber: unit.plotDetails?.approvalDetails?.layoutNumber || '',
+              surveyNumber: unit.plotDetails?.approvalDetails?.surveyNumber || '',
+              pattaNumber: unit.plotDetails?.approvalDetails?.pattaNumber || '',
+              subdivisionApproved: unit.plotDetails?.approvalDetails?.subdivisionApproved || false
+            }
+          };
+          
+          // Remove empty values
+          Object.keys(baseUnit.plotDetails).forEach(key => {
+            if (baseUnit.plotDetails[key] === undefined || baseUnit.plotDetails[key] === '') {
+              delete baseUnit.plotDetails[key];
+            }
+          });
+        } else {
+          // For residential units
+          baseUnit.carpetArea = parseFloat(unit.carpetArea) || 0;
+          baseUnit.builtUpArea = parseFloat(unit.builtUpArea) || 0;
+          baseUnit.superBuiltUpArea = unit.superBuiltUpArea ? parseFloat(unit.superBuiltUpArea) : undefined;
+          baseUnit.floors = parseInt(unit.floors) || 1;
+          baseUnit.floorNumber = unit.floorNumber ? parseInt(unit.floorNumber) : undefined;
         }
+        
+        return baseUnit;
       });
       
-      if (images.length > 0) {
-        images.forEach((image) => {
-          formDataToSend.append('images', image);
-        });
-      } else if (mode === 'edit') {
-        formDataToSend.append('images', JSON.stringify([]));
+      formDataToSend.append('unitTypes', JSON.stringify(processedUnitTypes));
+      
+      // Building Details (only for non-plot properties)
+      if (propertyType !== 'Plot') {
+        const buildingDetails = {
+          name: buildingName.trim(),
+          totalFloors: buildingTotalFloors ? parseInt(buildingTotalFloors) : undefined,
+          totalUnits: buildingTotalUnits ? parseInt(buildingTotalUnits) : undefined,
+          yearBuilt: buildingYearBuilt ? parseInt(buildingYearBuilt) : undefined,
+          amenities: buildingAmenities
+        };
+        formDataToSend.append('buildingDetails', JSON.stringify(buildingDetails));
+      } else {
+        formDataToSend.append('buildingDetails', JSON.stringify({}));
       }
+      
+      // Unit Features
+      formDataToSend.append('unitFeatures', JSON.stringify(unitFeatures));
+      
+      // Common Specifications
+      const commonSpecifications = {
+        furnishing: commonFurnishing,
+        possessionStatus: commonPossessionStatus,
+        ageOfProperty: commonAgeOfProperty ? parseInt(commonAgeOfProperty) : undefined,
+        parking: {
+          covered: parseInt(commonParkingCovered) || 0,
+          open: parseInt(commonParkingOpen) || 0
+        },
+        kitchenType: commonKitchenType
+      };
+      formDataToSend.append('commonSpecifications', JSON.stringify(commonSpecifications));
+      
+      // Location Nearby
+      const processedLocationNearby = locationNearby.filter(loc => loc.name && loc.distance);
+      formDataToSend.append('locationNearby', JSON.stringify(processedLocationNearby));
+      
+      // Owner Details
+      const ownerDetails = {
+        name: ownerName.trim(),
+        phoneNumber: ownerPhone.trim(),
+        email: ownerEmail.trim(),
+        reasonForSelling: ownerReason.trim()
+      };
+      formDataToSend.append('ownerDetails', JSON.stringify(ownerDetails));
+      
+      // Legal Details
+      const legalDetails = {
+        reraRegistered: legalReraRegistered,
+        reraNumber: legalReraNumber.trim(),
+        reraWebsiteLink: legalReraWebsiteLink.trim(),
+        sanctioningAuthority: legalSanctioningAuthority.trim(),
+        sanctionNumber: legalSanctionNumber.trim(),
+        sanctionDate: legalSanctionDate ? new Date(legalSanctionDate) : undefined,
+        occupancyCertificate: legalOccupancyCertificate,
+        occupancyCertificateNumber: legalOccupancyCertificateNumber.trim(),
+        occupancyCertificateDate: legalOccupancyCertificateDate ? new Date(legalOccupancyCertificateDate) : undefined,
+        commencementCertificate: legalCommencementCertificate,
+        commencementCertificateNumber: legalCommencementCertificateNumber.trim(),
+        commencementCertificateDate: legalCommencementCertificateDate ? new Date(legalCommencementCertificateDate) : undefined,
+        khataStatus: legalKhataStatus,
+        clearTitle: legalClearTitle,
+        motherDeedAvailable: legalMotherDeedAvailable,
+        conversionCertificate: legalConversionCertificate,
+        conversionType: legalConversionType.trim(),
+        encumbranceCertificate: legalEncumbranceCertificate,
+        encumbranceYears: legalEncumbranceYears ? parseInt(legalEncumbranceYears) : undefined,
+        ownershipType: legalOwnershipType,
+        bankApprovals: legalBankApprovals.filter(approval => approval.bankName).map(approval => ({
+          bankName: approval.bankName,
+          approved: approval.approved,
+          approvalDate: approval.approvalDate ? new Date(approval.approvalDate) : undefined,
+          referenceNumber: approval.referenceNumber
+        })),
+        legalStatusSummary: legalStatusSummary.trim(),
+        legalVerified: legalVerified,
+        legalVerificationDate: legalVerificationDate ? new Date(legalVerificationDate) : undefined,
+        legalVerifier: legalVerifier.trim()
+      };
+      formDataToSend.append('legalDetails', JSON.stringify(legalDetails));
+      
+      // Contact Preference
+      formDataToSend.append('contactPreference', JSON.stringify(contactPreference));
+      
+      // Images
+      images.forEach((image) => {
+        formDataToSend.append('images', image);
+      });
       
       let response;
       if (mode === 'create') {
         response = await propertyUnitAPI.createPropertyUnit(formDataToSend);
         toast.success('Property unit created successfully! It will be visible after admin approval.');
-        
-        setTimeout(() => {
-          navigate('/profile');
-        }, 1500);
-        
+        setTimeout(() => navigate('/profile'), 1500);
       } else {
         response = await propertyUnitAPI.updatePropertyUnit(propertyUnitId, formDataToSend);
         toast.success('Property unit updated successfully!');
-        
-        if (onSuccess) {
-          onSuccess(response.data.propertyUnit);
-        }
+        if (onSuccess) onSuccess(response.data.propertyUnit);
       }
       
     } catch (error) {
-      console.error('Submission error details:', error);
-      console.error('Error response:', error.response?.data);
-      
+      console.error('Submission error:', error);
       if (error.response?.data?.errors) {
         error.response.data.errors.forEach(err => toast.error(err));
       } else if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
-        const errorMessage = error.message || 'Failed to save property unit';
-        toast.error(errorMessage);
+        toast.error('Failed to save property unit');
       }
     } finally {
       setLoading(false);
     }
   };
-
+  
+  // Memoized options
+  const propertyTypes = useMemo(() => [
+    "Apartment", "Villa", "Independent House", "Studio", 
+    "Penthouse", "Duplex", "Pg house", "Plot", "Commercial Space"
+  ], []);
+  
+  const unitTypeOptions = useMemo(() => ["1BHK", "2BHK", "3BHK", "4BHK", "5BHK", "Studio", "Penthouse", "Duplex", "Plot"], []);
+  const furnishingOptions = useMemo(() => ["unfurnished", "semi-furnished", "fully-furnished"], []);
+  const possessionOptions = useMemo(() => ["ready-to-move", "under-construction", "resale"], []);
+  const kitchenTypes = useMemo(() => ["modular", "regular", "open", "closed", "none"], []);
+  const listingTypes = useMemo(() => ["sale", "rent", "lease", "pg"], []);
+  const availabilityOptions = useMemo(() => ["available", "sold", "rented", "under-agreement", "hold"], []);
+  const perUnitOptions = useMemo(() => ["total", "sqft", "sqm", "month", "perSqYard", "perGround"], []);
+  const currencies = useMemo(() => ["INR", "USD", "EUR", "GBP", "AED"], []);
+  const contactPreferenceOptions = useMemo(() => ["call", "whatsapp", "email", "message"], []);
+  const ownershipTypeOptions = useMemo(() => ["freehold", "leasehold", "cooperative", "power-of-attorney"], []);
+  const khataStatusOptions = useMemo(() => ["A-Khata", "B-Khata", "E-Khata", "Not Applicable"], []);
+  const locationTypeOptions = useMemo(() => [
+    "transport", "education", "healthcare", "shopping", "entertainment", "banking", "religious", "park", "restaurant", "other"
+  ], []);
+  
+  // Plot-specific options
+  const plotShapeOptions = useMemo(() => ["square", "rectangle", "corner", "irregular", "triangular"], []);
+  const facingOptions = useMemo(() => ["north", "south", "east", "west", "north-east", "north-west", "south-east", "south-west"], []);
+  const roadTypeOptions = useMemo(() => ["main", "secondary", "internal", "service", "highway"], []);
+  const soilTypeOptions = useMemo(() => ["black", "red", "clay", "loamy", "sandy", "rocky", "other"], []);
+  const landUseOptions = useMemo(() => ["residential", "commercial", "agricultural", "industrial", "mixed-use", "institutional"], []);
+  const developmentStatusOptions = useMemo(() => ["developed", "semi-developed", "undeveloped"], []);
+  const plotAmenitiesOptions = useMemo(() => ["Electricity Connection", "Water Connection", "Sewage Connection", "Road Access", "Street Lights", "Drainage System"], []);
+  
+  const unitFeaturesOptions = useMemo(() => [
+    "Air Conditioning", "Modular Kitchen", "Wardrobes", "Geyser", "Exhaust Fan", "Chimney",
+    "Lighting", "Ceiling Fans", "Smart Home Automation", "Central AC", "bore water", "Walk-in Closet",
+    "Study Room", "Pooja Room", "Utility Area", "Servant Room", "Private Garden", "Terrace",
+    "Balcony", "Swimming Pool", "Video Door Phone", "Security Alarm", "Fire Safety", "CCTV",
+    "Pet Friendly", "Wheelchair Access", "Natural Light", "View"
+  ], []);
+  
+  const amenitiesOptions = useMemo(() => [
+    "Swimming Pool", "Gym", "Club House", "Children Play Area", "Park", "Garden",
+    "Power Backup", "Lift", "Security", "CCTV", "Fire Safety", "Intercom",
+    "Visitor Parking", "Reserved Parking"
+  ], []);
+  
+  const currentYear = new Date().getFullYear();
+  
+  // Render unit type form based on type
+  const renderUnitTypeFields = (unit, index) => {
+    const isPlot = unit.type === 'Plot';
+    
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <ResponsiveSelect label="Type *" value={unit.type} onChange={(v) => updateUnitType(index, 'type', v)} options={unitTypeOptions} required />
+        <ResponsiveInput label="Price Amount *" value={unit.price?.amount} onChange={(v) => updateUnitType(index, 'price.amount', v)} placeholder="e.g., 1,00,00,000" />
+        <ResponsiveSelect label="Currency" value={unit.price?.currency} onChange={(v) => updateUnitType(index, 'price.currency', v)} options={currencies} />
+        <ResponsiveSelect label="Per Unit" value={unit.price?.perUnit} onChange={(v) => updateUnitType(index, 'price.perUnit', v)} options={perUnitOptions} />
+        
+        {!isPlot ? (
+          // Residential unit fields
+          <>
+            <ResponsiveInput label="Carpet Area (sq.ft.) *" type="number" value={unit.carpetArea} onChange={(v) => updateUnitType(index, 'carpetArea', v)} placeholder="e.g., 1200" required />
+            <ResponsiveInput label="Built-up Area (sq.ft.) *" type="number" value={unit.builtUpArea} onChange={(v) => updateUnitType(index, 'builtUpArea', v)} placeholder="e.g., 1400" required />
+            <ResponsiveInput label="Super Built-up Area" type="number" value={unit.superBuiltUpArea} onChange={(v) => updateUnitType(index, 'superBuiltUpArea', v)} placeholder="Optional" />
+            <ResponsiveInput label="Floor Number" type="number" value={unit.floorNumber} onChange={(v) => updateUnitType(index, 'floorNumber', v)} placeholder="e.g., 3" />
+          </>
+        ) : (
+          // Plot-specific fields
+          <>
+            {/* Area Information */}
+            <div className="col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Plot Area (sq.ft.) *</label>
+              <input type="number" value={unit.plotDetails?.area?.sqft || unit.carpetArea} onChange={(v) => {
+                updatePlotDetail(index, 'area.sqft', v.target.value);
+                updateUnitType(index, 'carpetArea', v.target.value);
+              }} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" placeholder="e.g., 2400" />
+            </div>
+            
+            <ResponsiveInput label="Area (sq. yards)" type="number" value={unit.plotDetails?.area?.sqYards} onChange={(v) => updatePlotDetail(index, 'area.sqYards', v)} placeholder="Optional" />
+            <ResponsiveInput label="Area (grounds)" type="number" value={unit.plotDetails?.area?.grounds} onChange={(v) => updatePlotDetail(index, 'area.grounds', v)} placeholder="Optional" />
+            <ResponsiveInput label="Area (acres)" type="number" value={unit.plotDetails?.area?.acres} onChange={(v) => updatePlotDetail(index, 'area.acres', v)} placeholder="Optional" />
+            <ResponsiveInput label="Area (cents)" type="number" value={unit.plotDetails?.area?.cents} onChange={(v) => updatePlotDetail(index, 'area.cents', v)} placeholder="Optional" />
+            
+            {/* Dimensions */}
+            <ResponsiveInput label="Length (ft)" type="number" value={unit.plotDetails?.dimensions?.length} onChange={(v) => updatePlotDetail(index, 'dimensions.length', v)} placeholder="Optional" />
+            <ResponsiveInput label="Breadth (ft)" type="number" value={unit.plotDetails?.dimensions?.breadth} onChange={(v) => updatePlotDetail(index, 'dimensions.breadth', v)} placeholder="Optional" />
+            <ResponsiveInput label="Frontage (ft)" type="number" value={unit.plotDetails?.dimensions?.frontage} onChange={(v) => updatePlotDetail(index, 'dimensions.frontage', v)} placeholder="Optional" />
+            
+            {/* Plot Characteristics */}
+            <ResponsiveSelect label="Shape" value={unit.plotDetails?.shape || 'rectangle'} onChange={(v) => updatePlotDetail(index, 'shape', v)} options={plotShapeOptions} />
+            <ResponsiveSelect label="Facing" value={unit.plotDetails?.facing || ''} onChange={(v) => updatePlotDetail(index, 'facing', v)} options={facingOptions} />
+            <div className="flex items-center">
+              <input type="checkbox" checked={unit.plotDetails?.isCornerPlot || false} onChange={(e) => updatePlotDetail(index, 'isCornerPlot', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+              <label className="ml-2 text-sm text-gray-700">Corner Plot</label>
+            </div>
+            
+            {/* Road Details */}
+            <ResponsiveSelect label="Road Type" value={unit.plotDetails?.roadType || 'secondary'} onChange={(v) => updatePlotDetail(index, 'roadType', v)} options={roadTypeOptions} />
+            <ResponsiveInput label="Road Width (ft)" type="number" value={unit.plotDetails?.roadWidth} onChange={(v) => updatePlotDetail(index, 'roadWidth', v)} placeholder="Optional" />
+            
+            {/* Utilities */}
+            <div className="col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Utilities</label>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center">
+                  <input type="checkbox" checked={unit.plotDetails?.utilities?.electricity || false} onChange={(e) => updatePlotDetail(index, 'utilities.electricity', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                  <label className="ml-2 text-sm text-gray-700">Electricity</label>
+                </div>
+                <div className="flex items-center">
+                  <input type="checkbox" checked={unit.plotDetails?.utilities?.waterConnection || false} onChange={(e) => updatePlotDetail(index, 'utilities.waterConnection', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                  <label className="ml-2 text-sm text-gray-700">Water Connection</label>
+                </div>
+                <div className="flex items-center">
+                  <input type="checkbox" checked={unit.plotDetails?.utilities?.sewageConnection || false} onChange={(e) => updatePlotDetail(index, 'utilities.sewageConnection', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                  <label className="ml-2 text-sm text-gray-700">Sewage Connection</label>
+                </div>
+                <div className="flex items-center">
+                  <input type="checkbox" checked={unit.plotDetails?.utilities?.gasConnection || false} onChange={(e) => updatePlotDetail(index, 'utilities.gasConnection', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                  <label className="ml-2 text-sm text-gray-700">Gas Connection</label>
+                </div>
+                <div className="flex items-center">
+                  <input type="checkbox" checked={unit.plotDetails?.utilities?.internetFiber || false} onChange={(e) => updatePlotDetail(index, 'utilities.internetFiber', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                  <label className="ml-2 text-sm text-gray-700">Internet Fiber</label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Boundary Details */}
+            <div className="col-span-2 grid grid-cols-3 gap-2">
+              <div className="flex items-center">
+                <input type="checkbox" checked={unit.plotDetails?.boundaryWalls || false} onChange={(e) => updatePlotDetail(index, 'boundaryWalls', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                <label className="ml-2 text-sm text-gray-700">Boundary Walls</label>
+              </div>
+              <div className="flex items-center">
+                <input type="checkbox" checked={unit.plotDetails?.fencing || false} onChange={(e) => updatePlotDetail(index, 'fencing', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                <label className="ml-2 text-sm text-gray-700">Fencing</label>
+              </div>
+              <div className="flex items-center">
+                <input type="checkbox" checked={unit.plotDetails?.gate || false} onChange={(e) => updatePlotDetail(index, 'gate', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                <label className="ml-2 text-sm text-gray-700">Gate</label>
+              </div>
+            </div>
+            
+            {/* Land Information */}
+            <ResponsiveSelect label="Land Use" value={unit.plotDetails?.landUse || 'residential'} onChange={(v) => updatePlotDetail(index, 'landUse', v)} options={landUseOptions} />
+            <ResponsiveSelect label="Soil Type" value={unit.plotDetails?.soilType || ''} onChange={(v) => updatePlotDetail(index, 'soilType', v)} options={soilTypeOptions} />
+            <ResponsiveSelect label="Development Status" value={unit.plotDetails?.developmentStatus || 'developed'} onChange={(v) => updatePlotDetail(index, 'developmentStatus', v)} options={developmentStatusOptions} />
+            
+            {/* Approval Details */}
+            <div className="col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Approval Details</label>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <input type="checkbox" checked={unit.plotDetails?.approvalDetails?.dtcpApproved || false} onChange={(e) => updatePlotDetail(index, 'approvalDetails.dtcpApproved', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                  <label className="ml-2 text-sm text-gray-700">DTCP Approved</label>
+                </div>
+                {unit.plotDetails?.approvalDetails?.dtcpApproved && (
+                  <ResponsiveInput label="DTCP Number" value={unit.plotDetails?.approvalDetails?.dtcpNumber || ''} onChange={(v) => updatePlotDetail(index, 'approvalDetails.dtcpNumber', v)} placeholder="DTCP Number" />
+                )}
+                <div className="flex items-center">
+                  <input type="checkbox" checked={unit.plotDetails?.approvalDetails?.layoutApproved || false} onChange={(e) => updatePlotDetail(index, 'approvalDetails.layoutApproved', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                  <label className="ml-2 text-sm text-gray-700">Layout Approved</label>
+                </div>
+                {unit.plotDetails?.approvalDetails?.layoutApproved && (
+                  <ResponsiveInput label="Layout Number" value={unit.plotDetails?.approvalDetails?.layoutNumber || ''} onChange={(v) => updatePlotDetail(index, 'approvalDetails.layoutNumber', v)} placeholder="Layout Number" />
+                )}
+                <ResponsiveInput label="Survey Number" value={unit.plotDetails?.approvalDetails?.surveyNumber || ''} onChange={(v) => updatePlotDetail(index, 'approvalDetails.surveyNumber', v)} placeholder="Survey Number" />
+                <ResponsiveInput label="Patta Number" value={unit.plotDetails?.approvalDetails?.pattaNumber || ''} onChange={(v) => updatePlotDetail(index, 'approvalDetails.pattaNumber', v)} placeholder="Patta Number" />
+                <div className="flex items-center">
+                  <input type="checkbox" checked={unit.plotDetails?.approvalDetails?.subdivisionApproved || false} onChange={(e) => updatePlotDetail(index, 'approvalDetails.subdivisionApproved', e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+                  <label className="ml-2 text-sm text-gray-700">Subdivision Approved</label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Plot Amenities */}
+            <div className="col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Plot Amenities</label>
+              <div className="grid grid-cols-2 gap-2">
+                {plotAmenitiesOptions.map(amenity => (
+                  <div key={amenity} className="flex items-center">
+                    <input type="checkbox" checked={(unit.plotDetails?.amenities || []).includes(amenity)} onChange={(e) => {
+                      const currentAmenities = unit.plotDetails?.amenities || [];
+                      if (e.target.checked) {
+                        updatePlotDetail(index, 'amenities', [...currentAmenities, amenity]);
+                      } else {
+                        updatePlotDetail(index, 'amenities', currentAmenities.filter(a => a !== amenity));
+                      }
+                    }} className="h-4 w-4 text-blue-600 rounded" />
+                    <label className="ml-2 text-sm text-gray-700">{amenity}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+        
+        <ResponsiveSelect label="Unit Availability" value={unit.availability} onChange={(v) => updateUnitType(index, 'availability', v)} options={isPlot ? ["available", "sold", "limited", "coming-soon", "booked", "reserved"] : ["available", "sold", "limited", "coming-soon"]} />
+        <ResponsiveInput label="Total Units" type="number" value={unit.totalUnits} onChange={(v) => updateUnitType(index, 'totalUnits', v)} placeholder="Total units of this type" />
+        <ResponsiveInput label="Available Units" type="number" value={unit.availableUnits} onChange={(v) => updateUnitType(index, 'availableUnits', v)} placeholder="Available units" />
+      </div>
+    );
+  };
+  
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-3 md:px-4 py-4 sm:py-6 lg:py-8">
       <div className="bg-white rounded-lg sm:rounded-xl shadow-sm sm:shadow-lg overflow-hidden p-3 sm:p-4 md:p-6 lg:p-8">
         <div className="mb-4 sm:mb-6">
-             <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 sm:gap-3 text-blue-600 hover:text-blue-800 transition-colors group"
-            >
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
-              <span className="font-bold tracking-wide text-sm sm:text-base">
-                Back to Properties
-              </span>
-            </button>
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 sm:gap-3 text-blue-600 hover:text-blue-800 transition-colors group"
+          >
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-bold tracking-wide text-sm sm:text-base">Back to Properties</span>
+          </button>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
             {mode === 'create' ? 'Add New Property Unit' : 'Edit Property Unit'}
           </h1>
@@ -709,916 +836,320 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
           <div className="border-b pb-4 sm:pb-6 md:pb-8">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Basic Information</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-              <ResponsiveInput 
-                label="Title *" 
-                value={title} 
-                onChange={setTitle} 
-                placeholder="e.g., Luxury 3BHK Apartment" 
-                required 
-              />
-              <ResponsiveInput 
-                label="Unit Number" 
-                value={unitNumber} 
-                onChange={setUnitNumber} 
-                placeholder="e.g., Unit 101, Villa A1" 
-              />
+              <ResponsiveInput label="Title *" value={title} onChange={setTitle} placeholder="e.g., Luxury 3BHK Apartment" required />
+              <ResponsiveSelect label="Property Type *" value={propertyType} onChange={setPropertyType} options={propertyTypes} required />
               <div className="sm:col-span-2">
-                <ResponsiveTextarea 
-                  label="Description" 
-                  value={description} 
-                  onChange={setDescription} 
-                  placeholder="Detailed description of the property" 
-                  rows={3}
-                />
+                <ResponsiveTextarea label="Description" value={description} onChange={setDescription} placeholder="Detailed description of the property" rows={3} />
               </div>
-              <div className="sm:col-span-2">
-                <ResponsiveInput 
-                  label="Parent Property ID" 
-                  value={parentProperty} 
-                  onChange={setParentProperty} 
-                  placeholder="Property ID for grouping (optional)" 
-                />
-              </div>
+              <ResponsiveInput label="City *" value={city} onChange={setCity} placeholder="e.g., Mumbai" required />
+              <ResponsiveInput label="Address *" value={address} onChange={setAddress} placeholder="Full address" required />
+              <ResponsiveInput label="Map URL" value={mapUrl} onChange={setMapUrl} placeholder="Google Maps embed URL" />
+              <ResponsiveSelect label="Listing Type" value={listingType} onChange={setListingType} options={listingTypes} />
+              <ResponsiveSelect label="Availability" value={availability} onChange={setAvailability} options={availabilityOptions} />
             </div>
           </div>
-
-          {/* Location Section */}
+          
+          {/* Unit Types Section */}
           <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Location Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-              <ResponsiveInput 
-                label="City *" 
-                value={city} 
-                onChange={setCity} 
-                placeholder="e.g., Mumbai" 
-                required 
-              />
-              <ResponsiveInput 
-                label="Address *" 
-                value={address} 
-                onChange={setAddress} 
-                placeholder="Full address" 
-                required 
-              />
+            <div className="flex justify-between items-center mb-3 sm:mb-4 md:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Unit Types *</h2>
+              <button type="button" onClick={addUnitType} className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs sm:text-sm">
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4" /> Add Unit Type
+              </button>
             </div>
-            <div className="mt-3 sm:mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-              <ResponsiveInput 
-                label="Latitude" 
-                value={coordinatesLat} 
-                onChange={setCoordinatesLat} 
-                placeholder="e.g., 19.0760" 
-              />
-              <ResponsiveInput 
-                label="Longitude" 
-                value={coordinatesLng} 
-                onChange={setCoordinatesLng} 
-                placeholder="e.g., 72.8777" 
-              />
-            </div>
-            <div className="mt-3 sm:mt-4">
-              <ResponsiveInput 
-                label="Map URL (Optional)" 
-                value={mapUrl} 
-                onChange={setMapUrl} 
-                placeholder="Google Maps embed URL or map image URL" 
-              />
-              <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                Paste Google Maps embed URL or any map service link. Example: https://maps.google.com/...
-              </p>
-            </div>
-          </div>
-
-          {/* Price Section */}
-          <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Pricing Details</h2>
+            <p className="text-xs sm:text-sm text-gray-600 mb-4">Add different unit configurations available in this property</p>
             
-            {/* Price Type Selection */}
-            <div className="mb-4 sm:mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price Type *
-              </label>
-              <div className="flex flex-wrap gap-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    checked={priceAmount !== 'price-on-request'}
-                    onChange={() => {
-                      setPriceAmount('');
-                      setPriceInWords('');
-                    }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Enter Price</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    checked={priceAmount === 'price-on-request'}
-                    onChange={() => {
-                      setPriceAmount('price-on-request');
-                      setPriceInWords('Price on Request');
-                    }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Price on Request</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Price Input Section - Only show if not "Price on Request" */}
-            {priceAmount !== 'price-on-request' && (
-              <div className="space-y-4 sm:space-y-6">
-                {/* Real-time Price in Words Display */}
-                {priceAmount && priceAmount.trim() !== '' && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl p-4 border border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-medium text-blue-700 uppercase tracking-wider mb-1">
-                          Price in Words
-                        </p>
-                        <p className="text-lg sm:text-xl font-bold text-gray-900">
-                          {priceInWords || convertToIndianWords(priceAmount)}
-                        </p>
-                      </div>
-                      {/* <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                        <CurrencyRupee className="w-5 h-5 text-white" />
-                      </div> */}
-                    </div>
-                    {parseFloat(priceAmount.replace(/,/g, '')) > 0 && (
-                      <p className="text-xs text-blue-600 mt-2">
-                        <span className="font-medium">Numeric:</span> ₹{parseFloat(priceAmount.replace(/,/g, '')).toLocaleString('en-IN')}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                      Price Amount *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">₹</span>
-                      </div>
-                      <input
-                        type="text"
-                        value={priceAmount}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          // Allow only numbers and commas
-                          const numericValue = value.replace(/[^\d,]/g, '');
-                          // Format with commas
-                          const formatted = formatNumberWithCommas(numericValue.replace(/,/g, ''));
-                          setPriceAmount(formatted);
-                          
-                          // Update price in words in real-time
-                          if (formatted.trim() !== '') {
-                            const priceInWords = convertToIndianWords(formatted);
-                            setPriceInWords(priceInWords);
-                          } else {
-                            setPriceInWords('');
-                          }
-                        }}
-                        className="w-full pl-8 pr-3 sm:pl-10 sm:pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="e.g., 1,00,00,000"
-                        required={priceAmount !== 'price-on-request'}
-                      />
-                      {priceAmount && priceAmount.trim() !== '' && priceAmount !== 'price-on-request' && (
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPriceAmount('');
-                              setPriceInWords('');
-                            }}
-                            className="text-gray-400 hover:text-gray-600"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Enter amount in Indian Rupees</p>
-                  </div>
-
-                  <ResponsiveSelect 
-                    label="Currency" 
-                    value={priceCurrency} 
-                    onChange={setPriceCurrency} 
-                    options={currencies} 
-                  />
-                  
-                  <ResponsiveSelect 
-                    label="Per Unit" 
-                    value={pricePerUnit} 
-                    onChange={setPricePerUnit} 
-                    options={perUnitOptions} 
-                  />
-                  
-                  <ResponsiveInput 
-                    label="Maintenance Charges" 
-                    value={maintenanceCharges} 
-                    onChange={setMaintenanceCharges} 
-                    type="number" 
-                    placeholder="Monthly charges" 
-                    min="0"
-                  />
-                  
-                  <ResponsiveInput 
-                    label="Security Deposit" 
-                    value={securityDeposit} 
-                    onChange={setSecurityDeposit} 
-                    type="number" 
-                    placeholder="Refundable deposit" 
-                    min="0"
-                  />
-                </div>
-
-                {/* Price Examples */}
-                <div className="mt-4">
-                  <p className="text-xs font-medium text-gray-700 mb-2">Quick Examples:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { value: '10000000', label: '₹1 Crore' },
-                      { value: '5000000', label: '₹50 Lakh' },
-                      { value: '2500000', label: '₹25 Lakh' },
-                      { value: '7500000', label: '₹75 Lakh' },
-                      { value: '1500000', label: '₹15 Lakh' },
-                    ].map((example) => (
-                      <button
-                        key={example.value}
-                        type="button"
-                        onClick={() => {
-                          const formatted = formatNumberWithCommas(example.value);
-                          setPriceAmount(formatted);
-                          const priceInWords = convertToIndianWords(formatted);
-                          setPriceInWords(priceInWords);
-                        }}
-                        className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                      >
-                        {example.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            {unitTypes.length === 0 && (
+              <div className="text-center py-8 bg-gray-50 rounded-lg">
+                <p className="text-gray-500">No unit types added. Click "Add Unit Type" to get started.</p>
               </div>
             )}
-          </div>
-
-          {/* Property Type & Status */}
-          <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Property Type & Status</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-              <ResponsiveSelect 
-                label="Property Type *" 
-                value={propertyType} 
-                onChange={setPropertyType} 
-                options={propertyTypes} 
-                required 
-              />
-              <ResponsiveSelect 
-                label="Listing Type" 
-                value={listingType} 
-                onChange={setListingType} 
-                options={listingTypes} 
-              />
-              <ResponsiveSelect 
-                label="Availability" 
-                value={availability} 
-                onChange={setAvailability} 
-                options={availabilityOptions} 
-              />
-            </div>
-          </div>
-
-          {/* Specifications Section */}
-          <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Property Specifications</h2>
             
-            <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-blue-50 rounded-lg">
-              <p className="text-xs sm:text-sm text-blue-700">
-                <span className="font-medium">Requirements based on property type:</span>
-                {propertyType === 'Plot' && ' Plot Area is required.'}
-                {propertyType === 'Villa' && ' Bedrooms, Bathrooms, Carpet Area, and Plot Area are required.'}
-                {propertyType === 'Commercial Space' && ' Carpet Area and Built-up Area are required.'}
-                {propertyType !== 'Plot' && propertyType !== 'Villa' && propertyType !== 'Commercial Space' && 
-                  ' Bedrooms, Bathrooms, Carpet Area, and Built-up Area are required.'}
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {propertyType !== 'Plot' && (
-                <ResponsiveInput
-                  label={'Bedrooms' + (propertyType !== 'Commercial Space' ? ' *' : '')}
-                  value={specBedrooms}
-                  onChange={setSpecBedrooms}
-                  type="number"
-                  placeholder="e.g., 2"
-                  required={propertyType !== 'Commercial Space'}
-                  min="0"
-                />
-              )}
-              
-              {propertyType !== 'Plot' && (
-                <ResponsiveInput
-                  label={'Bathrooms' + (propertyType !== 'Commercial Space' ? ' *' : '')}
-                  value={specBathrooms}
-                  onChange={setSpecBathrooms}
-                  type="number"
-                  placeholder="e.g., 2"
-                  required={propertyType !== 'Commercial Space'}
-                  min="0"
-                />
-              )}
-              
-              {propertyType !== 'Plot' && (
-                <ResponsiveInput
-                  label="Carpet Area (sq.ft.) *"
-                  value={specCarpetArea}
-                  onChange={setSpecCarpetArea}
-                  type="number"
-                  placeholder="e.g., 1200"
-                  required
-                  min="1"
-                />
-              )}
-              
-              {propertyType !== 'Plot' && propertyType !== 'Villa' && (
-                <ResponsiveInput
-                  label="Built-up Area (sq.ft.) *"
-                  value={specBuiltUpArea}
-                  onChange={setSpecBuiltUpArea}
-                  type="number"
-                  placeholder="e.g., 1400"
-                  required
-                  min="1"
-                />
-              )}
-              
-              {propertyType === 'Villa' && (
-                <ResponsiveInput
-                  label="Built-up Area (sq.ft.)"
-                  value={specBuiltUpArea}
-                  onChange={setSpecBuiltUpArea}
-                  type="number"
-                  placeholder="e.g., 1400"
-                />
-              )}
-              
-              {(propertyType === 'Plot' || propertyType === 'Villa') && (
-                <ResponsiveInput
-                  label="Plot Area (sq.ft.) *"
-                  value={specPlotArea}
-                  onChange={setSpecPlotArea}
-                  type="number"
-                  placeholder="e.g., 500"
-                  required
-                  min="1"
-                />
-              )}
-              
-              {propertyType !== 'Plot' && propertyType !== 'Villa' && (
-                <ResponsiveInput
-                  label="Plot Area (sq.ft.)"
-                  value={specPlotArea}
-                  onChange={setSpecPlotArea}
-                  type="number"
-                  placeholder="e.g., 500"
-                />
-              )}
-              
-              {propertyType !== 'Plot' && (
-                <ResponsiveInput
-                  label="Super Built-up Area (sq.ft.)"
-                  value={specSuperBuiltUpArea}
-                  onChange={setSpecSuperBuiltUpArea}
-                  type="number"
-                  placeholder="e.g., 1500"
-                />
-              )}
-              
-              <ResponsiveInput
-                label="Balconies"
-                value={specBalconies}
-                onChange={setSpecBalconies}
-                type="number"
-                placeholder="e.g., 2"
-                min="0"
-              />
-              
-              <ResponsiveInput
-                label="Floors in Unit"
-                value={specFloors}
-                onChange={setSpecFloors}
-                type="number"
-                placeholder="e.g., 1"
-                min="1"
-              />
-              
-              <ResponsiveInput
-                label="Floor Number"
-                value={specFloorNumber}
-                onChange={setSpecFloorNumber}
-                type="number"
-                placeholder="e.g., 3"
-              />
-              
-              <ResponsiveSelect
-                label="Furnishing"
-                value={specFurnishing}
-                onChange={setSpecFurnishing}
-                options={furnishingOptions}
-              />
-              
-              <ResponsiveSelect
-                label="Possession Status"
-                value={specPossessionStatus}
-                onChange={setSpecPossessionStatus}
-                options={possessionOptions}
-              />
-              
-              <ResponsiveInput
-                label="Age of Property (years)"
-                value={specAgeOfProperty}
-                onChange={setSpecAgeOfProperty}
-                type="number"
-                placeholder="e.g., 5"
-                min="0"
-              />
-              
-              <ResponsiveSelect
-                label="Kitchen Type"
-                value={specKitchenType}
-                onChange={setSpecKitchenType}
-                options={kitchenTypes}
-              />
-              
-              <ResponsiveInput
-                label="Covered Parking"
-                value={specParkingCovered}
-                onChange={setSpecParkingCovered}
-                type="number"
-                placeholder="e.g., 1"
-                min="0"
-              />
-              
-              <ResponsiveInput
-                label="Open Parking"
-                value={specParkingOpen}
-                onChange={setSpecParkingOpen}
-                type="number"
-                placeholder="e.g., 1"
-                min="0"
-              />
-            </div>
-          </div>
-
-          {/* Building Details */}
-          <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Building Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <ResponsiveInput
-                label="Building Name"
-                value={buildingName}
-                onChange={setBuildingName}
-                placeholder="e.g., Skyline Towers"
-              />
-              
-              <ResponsiveInput
-                label="Total Floors"
-                value={buildingTotalFloors}
-                onChange={setBuildingTotalFloors}
-                type="number"
-                placeholder="e.g., 20"
-              />
-              
-              <ResponsiveInput
-                label="Total Units"
-                value={buildingTotalUnits}
-                onChange={setBuildingTotalUnits}
-                type="number"
-                placeholder="e.g., 80"
-              />
-              
-              <ResponsiveYearSelect
-                label="Year Built"
-                value={buildingYearBuilt}
-                onChange={setBuildingYearBuilt}
-              />
-            </div>
-            
-            {/* Building Amenities */}
-            <div className="mt-4 sm:mt-6">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
-                Building Amenities
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-                {amenitiesOptions.map(amenity => (
-                  <div key={amenity} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={buildingAmenities.includes(amenity)}
-                      onChange={() => handleCheckboxArray(buildingAmenities, amenity, setBuildingAmenities)}
-                      className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700 truncate">{amenity}</label>
+            {unitTypes.map((unit, index) => (
+              <div key={index} className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-md font-semibold text-gray-700">
+                    {unit.type === 'Plot' ? 'Plot Details' : `Unit Type ${index + 1}`}
+                  </h3>
+                  <button type="button" onClick={() => removeUnitType(index)} className="text-red-500 hover:text-red-700">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                {renderUnitTypeFields(unit, index)}
+                {unit.price?.amount && (
+                  <div className="mt-3 p-2 bg-blue-50 rounded text-sm">
+                    Price in words: {convertToIndianWords(unit.price.amount)}
                   </div>
-                ))}
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {/* Building Details - Only show for non-plot properties */}
+          {propertyType !== 'Plot' && (
+            <div className="border-b pb-4 sm:pb-6 md:pb-8">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Building Details</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <ResponsiveInput label="Building Name" value={buildingName} onChange={setBuildingName} placeholder="e.g., Skyline Towers" />
+                <ResponsiveInput label="Total Floors" type="number" value={buildingTotalFloors} onChange={setBuildingTotalFloors} placeholder="e.g., 20" />
+                <ResponsiveInput label="Total Units" type="number" value={buildingTotalUnits} onChange={setBuildingTotalUnits} placeholder="e.g., 80" />
+                <ResponsiveYearSelect label="Year Built" value={buildingYearBuilt} onChange={setBuildingYearBuilt} />
+              </div>
+              <div className="mt-4">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Building Amenities</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+                  {amenitiesOptions.map(amenity => (
+                    <div key={amenity} className="flex items-center">
+                      <input type="checkbox" checked={buildingAmenities.includes(amenity)} onChange={() => handleCheckboxArray(buildingAmenities, amenity, setBuildingAmenities)} className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 rounded" />
+                      <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700 truncate">{amenity}</label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-
+          )}
+          
           {/* Unit Features */}
           <div className="border-b pb-4 sm:pb-6 md:pb-8">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Unit Features</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
               {unitFeaturesOptions.map(feature => (
                 <div key={feature} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={unitFeatures.includes(feature)}
-                    onChange={() => handleCheckboxArray(unitFeatures, feature, setUnitFeatures)}
-                    className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
+                  <input type="checkbox" checked={unitFeatures.includes(feature)} onChange={() => handleCheckboxArray(unitFeatures, feature, setUnitFeatures)} className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 rounded" />
                   <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700 truncate">{feature}</label>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Rental Details */}
+          
+          {/* Common Specifications */}
           <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Rental Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-              <div className="space-y-3 sm:space-y-4">
-                <ResponsiveCheckbox 
-                  label="Available for Rent" 
-                  checked={rentalAvailable} 
-                  onChange={setRentalAvailable} 
-                />
-                
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Lease Duration
-                  </label>
-                  <div className="flex gap-2 sm:gap-4">
-                    <input
-                      type="number"
-                      value={rentalLeaseDurationValue}
-                      onChange={(e) => setRentalLeaseDurationValue(e.target.value)}
-                      className="w-20 sm:w-24 px-2 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      min="1"
-                    />
-                    <select
-                      value={rentalLeaseDurationUnit}
-                      onChange={(e) => setRentalLeaseDurationUnit(e.target.value)}
-                      className="w-24 sm:w-32 px-2 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="months">Months</option>
-                      <option value="years">Years</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <ResponsiveCheckbox 
-                  label="Rent Negotiable" 
-                  checked={rentalNegotiable} 
-                  onChange={setRentalNegotiable} 
-                />
-              </div>
-              
-              <div className="space-y-3 sm:space-y-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Preferred Tenants
-                  </label>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
-                    {preferredTenantsOptions.map(tenant => (
-                      <div key={tenant} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={rentalPreferredTenants.includes(tenant)}
-                          onChange={() => handleCheckboxArray(rentalPreferredTenants, tenant, setRentalPreferredTenants)}
-                          className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700">
-                          {tenant.charAt(0).toUpperCase() + tenant.slice(1)}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Included in Rent
-                  </label>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
-                    {includedInRentOptions.map(item => (
-                      <div key={item} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={rentalIncludedInRent.includes(item)}
-                          onChange={() => handleCheckboxArray(rentalIncludedInRent, item, setRentalIncludedInRent)}
-                          className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700">
-                          {item.charAt(0).toUpperCase() + item.slice(1)}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Common Specifications</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <ResponsiveSelect label="Furnishing" value={commonFurnishing} onChange={setCommonFurnishing} options={furnishingOptions} />
+              <ResponsiveSelect label="Possession Status" value={commonPossessionStatus} onChange={setCommonPossessionStatus} options={possessionOptions} />
+              <ResponsiveInput label="Age of Property (years)" type="number" value={commonAgeOfProperty} onChange={setCommonAgeOfProperty} placeholder="e.g., 5" min="0" />
+              <ResponsiveSelect label="Kitchen Type" value={commonKitchenType} onChange={setCommonKitchenType} options={kitchenTypes} />
+              <ResponsiveInput label="Covered Parking" type="number" value={commonParkingCovered} onChange={setCommonParkingCovered} placeholder="e.g., 1" min="0" />
+              <ResponsiveInput label="Open Parking" type="number" value={commonParkingOpen} onChange={setCommonParkingOpen} placeholder="e.g., 1" min="0" />
             </div>
           </div>
-
-          {/* Website Assignment */}
+          
+          {/* Location Nearby */}
           <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Website Assignment</h2>
-            <div className="space-y-3 sm:space-y-4">
-              <p className="text-xs sm:text-sm text-gray-600">
-                Select websites where this property should be listed. Default is ClearTitle.
-              </p>
-              <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
-                {websiteOptions.map(website => {
-                  const displayName = website.charAt(0).toUpperCase() + website.slice(1);
-                  
-                  return (
-                    <div key={website} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={websiteAssignment.includes(website)}
-                        onChange={() => handleCheckboxArray(websiteAssignment, website, setWebsiteAssignment)}
-                        className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm font-medium text-gray-700">
-                        {displayName}
-                      </label>
-                    </div>
-                  );
-                })}
+            <div className="flex justify-between items-center mb-3 sm:mb-4 md:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Nearby Locations</h2>
+              <button type="button" onClick={addLocationNearby} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs">
+                <Plus className="w-3 h-3" /> Add Location
+              </button>
+            </div>
+            {locationNearby.map((loc, index) => (
+              <div key={index} className="mb-4 p-4 border border-gray-200 rounded-lg">
+                <div className="flex justify-end mb-2">
+                  <button type="button" onClick={() => removeLocationNearby(index)} className="text-red-500 hover:text-red-700">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <ResponsiveInput label="Name" value={loc.name} onChange={(v) => updateLocationNearby(index, 'name', v)} placeholder="e.g., Metro Station" />
+                  <ResponsiveInput label="Distance" value={loc.distance} onChange={(v) => updateLocationNearby(index, 'distance', v)} placeholder="e.g., 500m" />
+                  <ResponsiveSelect label="Type" value={loc.type} onChange={(v) => updateLocationNearby(index, 'type', v)} options={locationTypeOptions} />
+                </div>
               </div>
+            ))}
+          </div>
+          
+          {/* Owner Details */}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Owner Details</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <ResponsiveInput label="Owner Name" value={ownerName} onChange={setOwnerName} placeholder="e.g., Ramesh Kumar" />
+              <ResponsiveInput label="Phone Number" value={ownerPhone} onChange={setOwnerPhone} placeholder="e.g., +91 9876543210" />
+              <ResponsiveInput label="Email" type="email" value={ownerEmail} onChange={setOwnerEmail} placeholder="e.g., owner@example.com" />
             </div>
           </div>
-
-          {/* Image Upload Section */}
+          
+          {/* Legal Details */}
           <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Property Images</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Legal Details</h2>
             
-            <div className="mb-4 sm:mb-6">
+            {/* RERA Information */}
+            <div className="mb-6">
+              <h3 className="text-md font-medium text-gray-700 mb-3">RERA Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <ResponsiveCheckbox label="RERA Registered" checked={legalReraRegistered} onChange={setLegalReraRegistered} />
+                <ResponsiveInput label="RERA Number" value={legalReraNumber} onChange={setLegalReraNumber} placeholder="e.g., PRM/KA/RERA/1251/..." />
+                <div className="sm:col-span-2">
+                  <ResponsiveInput label="RERA Website Link" value={legalReraWebsiteLink} onChange={setLegalReraWebsiteLink} placeholder="https://rera..." />
+                </div>
+              </div>
+            </div>
+            
+            {/* Sanction Information */}
+            <div className="mb-6">
+              <h3 className="text-md font-medium text-gray-700 mb-3">Sanction Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <ResponsiveInput label="Sanctioning Authority" value={legalSanctioningAuthority} onChange={setLegalSanctioningAuthority} placeholder="e.g., BBMP, BMRDA" />
+                <ResponsiveInput label="Sanction Number" value={legalSanctionNumber} onChange={setLegalSanctionNumber} placeholder="Sanction reference number" />
+                <ResponsiveInput label="Sanction Date" type="date" value={legalSanctionDate} onChange={setLegalSanctionDate} />
+              </div>
+            </div>
+            
+            {/* Certificates */}
+            <div className="mb-6">
+              <h3 className="text-md font-medium text-gray-700 mb-3">Certificates</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="border p-3 rounded-lg">
+                  <ResponsiveCheckbox label="Occupancy Certificate" checked={legalOccupancyCertificate} onChange={setLegalOccupancyCertificate} />
+                  {legalOccupancyCertificate && (
+                    <div className="mt-2 space-y-2">
+                      <ResponsiveInput label="Certificate Number" value={legalOccupancyCertificateNumber} onChange={setLegalOccupancyCertificateNumber} placeholder="OC Number" />
+                      <ResponsiveInput label="Certificate Date" type="date" value={legalOccupancyCertificateDate} onChange={setLegalOccupancyCertificateDate} />
+                    </div>
+                  )}
+                </div>
+                <div className="border p-3 rounded-lg">
+                  <ResponsiveCheckbox label="Commencement Certificate" checked={legalCommencementCertificate} onChange={setLegalCommencementCertificate} />
+                  {legalCommencementCertificate && (
+                    <div className="mt-2 space-y-2">
+                      <ResponsiveInput label="Certificate Number" value={legalCommencementCertificateNumber} onChange={setLegalCommencementCertificateNumber} placeholder="CC Number" />
+                      <ResponsiveInput label="Certificate Date" type="date" value={legalCommencementCertificateDate} onChange={setLegalCommencementCertificateDate} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Title & Ownership */}
+            <div className="mb-6">
+              <h3 className="text-md font-medium text-gray-700 mb-3">Title & Ownership</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <ResponsiveSelect label="Khata Status" value={legalKhataStatus} onChange={setLegalKhataStatus} options={khataStatusOptions} />
+                <ResponsiveSelect label="Ownership Type" value={legalOwnershipType} onChange={setLegalOwnershipType} options={ownershipTypeOptions} />
+                <ResponsiveCheckbox label="Clear Title" checked={legalClearTitle} onChange={setLegalClearTitle} />
+                <ResponsiveCheckbox label="Mother Deed Available" checked={legalMotherDeedAvailable} onChange={setLegalMotherDeedAvailable} />
+                <ResponsiveCheckbox label="Conversion Certificate" checked={legalConversionCertificate} onChange={setLegalConversionCertificate} />
+                {legalConversionCertificate && (
+                  <ResponsiveInput label="Conversion Type" value={legalConversionType} onChange={setLegalConversionType} placeholder="e.g., Agricultural to Non-Agricultural" />
+                )}
+              </div>
+            </div>
+            
+            {/* Encumbrance */}
+            <div className="mb-6">
+              <h3 className="text-md font-medium text-gray-700 mb-3">Encumbrance</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <ResponsiveCheckbox label="Encumbrance Certificate Available" checked={legalEncumbranceCertificate} onChange={setLegalEncumbranceCertificate} />
+                <ResponsiveInput label="Encumbrance Years" type="number" value={legalEncumbranceYears} onChange={setLegalEncumbranceYears} placeholder="e.g., 12" min="0" />
+              </div>
+            </div>
+            
+            {/* Bank Approvals */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-md font-medium text-gray-700">Bank Approvals</h3>
+                <button type="button" onClick={addBankApproval} className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">
+                  <Plus className="w-3 h-3" /> Add Bank Approval
+                </button>
+              </div>
+              {legalBankApprovals.map((approval, index) => (
+                <div key={index} className="mb-3 p-3 border border-gray-200 rounded-lg">
+                  <div className="flex justify-end mb-2">
+                    <button type="button" onClick={() => removeBankApproval(index)} className="text-red-500 hover:text-red-700">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <ResponsiveInput label="Bank Name *" value={approval.bankName} onChange={(v) => updateBankApproval(index, 'bankName', v)} placeholder="e.g., SBI, HDFC" />
+                    <ResponsiveCheckbox label="Approved" checked={approval.approved} onChange={(v) => updateBankApproval(index, 'approved', v)} />
+                    <ResponsiveInput label="Approval Date" type="date" value={approval.approvalDate?.split('T')[0]} onChange={(v) => updateBankApproval(index, 'approvalDate', v)} />
+                    <ResponsiveInput label="Reference Number" value={approval.referenceNumber} onChange={(v) => updateBankApproval(index, 'referenceNumber', v)} placeholder="Reference number" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Legal Verification */}
+            <div className="mb-6">
+              <h3 className="text-md font-medium text-gray-700 mb-3">Legal Verification</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <ResponsiveCheckbox label="Legally Verified" checked={legalVerified} onChange={setLegalVerified} />
+                {legalVerified && (
+                  <>
+                    <ResponsiveInput label="Verification Date" type="date" value={legalVerificationDate} onChange={setLegalVerificationDate} />
+                    <div className="sm:col-span-2">
+                      <ResponsiveInput label="Verifier Name" value={legalVerifier} onChange={setLegalVerifier} placeholder="Name of the verifying authority" />
+                    </div>
+                  </>
+                )}
+                <div className="sm:col-span-2">
+                  <ResponsiveTextarea label="Legal Status Summary" value={legalStatusSummary} onChange={setLegalStatusSummary} placeholder="Summary of legal status and any remarks" rows={2} />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Contact Preference */}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Contact Preference</h2>
+            <div className="flex flex-wrap gap-3">
+              {contactPreferenceOptions.map(pref => (
+                <div key={pref} className="flex items-center">
+                  <input type="checkbox" checked={contactPreference.includes(pref)} onChange={() => handleCheckboxArray(contactPreference, pref, setContactPreference)} className="h-4 w-4 text-blue-600 rounded" />
+                  <label className="ml-2 text-sm text-gray-700">{pref.charAt(0).toUpperCase() + pref.slice(1)}</label>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Images */}
+          <div className="border-b pb-4 sm:pb-6 md:pb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Property Images *</h2>
+            <div className="mb-4">
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Upload Images <span className="text-red-500">*</span>
-                <span className="text-gray-500 text-xs sm:text-sm ml-1 sm:ml-2">(Max 10 images, at least 1 required)</span>
+                <span className="text-gray-500 ml-1">(Max 10 images, at least 1 required)</span>
               </label>
-              <div className="mt-1 sm:mt-2 px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-                <div className="space-y-1 sm:space-y-2 text-center">
-                  <svg className="mx-auto h-8 sm:h-12 w-8 sm:w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <div className="mt-1 px-4 pt-4 pb-4 border-2 border-gray-300 border-dashed rounded-lg">
+                <div className="space-y-1 text-center">
+                  <svg className="mx-auto h-8 w-8 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <div className="flex flex-col sm:flex-row justify-center text-xs sm:text-sm text-gray-600 gap-1 sm:gap-0">
-                    <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                  <div className="flex justify-center text-sm text-gray-600">
+                    <label className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500">
                       <span>Upload files</span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="sr-only"
-                        required={mode === 'create'}
-                      />
+                      <input type="file" multiple accept="image/*" onChange={handleFileChange} className="sr-only" required={mode === 'create'} />
                     </label>
-                    <span className="sm:ml-1">or drag and drop</span>
+                    <span className="ml-1">or drag and drop</span>
                   </div>
                   <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
                 </div>
               </div>
             </div>
-            
-            {/* Image Previews */}
             {previewImages.length > 0 && (
-              <div className="mt-4 sm:mt-6">
-                <h3 className="text-sm sm:text-lg font-medium text-gray-700 mb-2 sm:mb-4">Image Previews</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Image Previews</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                   {previewImages.map((preview, index) => (
                     <div key={index} className="relative group">
-                      <img
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-20 sm:h-24 md:h-32 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-red-500 text-white rounded-full p-0.5 sm:p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                      <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-20 object-cover rounded-lg" />
+                      <button type="button" onClick={() => removeImage(index)} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X className="w-3 h-3" />
                       </button>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">
-                  {images.length} image(s) selected
-                </p>
               </div>
             )}
           </div>
-
-          {/* Additional Information */}
-          <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Additional Information</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-              <ResponsiveInput 
-                label="Virtual Tour URL" 
-                value={virtualTour} 
-                onChange={setVirtualTour} 
-                placeholder="https://matterport.com/..." 
-              />
-              
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  Floor Plan Image URL
-                </label>
-                <input
-                  type="text"
-                  value={floorPlanImage}
-                  onChange={(e) => setFloorPlanImage(e.target.value)}
-                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Floor plan image URL"
-                />
-              </div>
-              
-              <div className="sm:col-span-2">
-                <ResponsiveTextarea 
-                  label="Floor Plan Description" 
-                  value={floorPlanDescription} 
-                  onChange={setFloorPlanDescription} 
-                  placeholder="Description of floor plan" 
-                  rows={2}
-                />
-              </div>
-              
-              <ResponsiveInput 
-                label="Meta Title" 
-                value={metaTitle} 
-                onChange={setMetaTitle} 
-                placeholder="SEO title (optional)" 
-              />
-              
-              <div className="sm:col-span-2">
-                <ResponsiveTextarea 
-                  label="Meta Description" 
-                  value={metaDescription} 
-                  onChange={setMetaDescription} 
-                  placeholder="SEO description (optional)" 
-                  rows={2}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Owner Details */}
-          <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Owner Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-              <ResponsiveInput 
-                label="Owner Name" 
-                value={ownerName} 
-                onChange={setOwnerName} 
-                placeholder="e.g., Ramesh Kumar" 
-              />
-              <ResponsiveInput 
-                label="Phone Number" 
-                value={ownerPhone} 
-                onChange={setOwnerPhone} 
-                type="tel" 
-                placeholder="e.g., +91 9876543210" 
-              />
-              <ResponsiveInput 
-                label="Email" 
-                value={ownerEmail} 
-                onChange={setOwnerEmail} 
-                type="email" 
-                placeholder="e.g., owner@example.com" 
-              />
-              <div className="sm:col-span-2">
-                <ResponsiveTextarea 
-                  label="Reason for Selling" 
-                  value={ownerReason} 
-                  onChange={setOwnerReason} 
-                  placeholder="e.g., Moving abroad, upgrading, etc." 
-                  rows={2}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Legal Details */}
-          <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Legal Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <div className="mb-2 sm:mb-3">
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  Ownership Type
-                </label>
-                <select
-                  value={legalOwnershipType}
-                  onChange={(e) => setLegalOwnershipType(e.target.value)}
-                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select Ownership Type</option>
-                  {ownershipTypeOptions.map(option => (
-                    <option key={option} value={option}>
-                      {option.charAt(0).toUpperCase() + option.slice(1).replace(/-/g, ' ')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <ResponsiveInput 
-                label="RERA Number" 
-                value={legalReraNumber} 
-                onChange={setLegalReraNumber} 
-                placeholder="e.g., PRM/KA/RERA/1251/..." 
-              />
-              
-              <div className="col-span-1 sm:col-span-2 lg:col-span-1">
-                <ResponsiveCheckbox 
-                  label="RERA Registered" 
-                  checked={legalReraRegistered} 
-                  onChange={setLegalReraRegistered} 
-                />
-              </div>
-              
-              <ResponsiveCheckbox 
-                label="Khata Certificate" 
-                checked={legalKhataCertificate} 
-                onChange={setLegalKhataCertificate} 
-              />
-              
-              <ResponsiveCheckbox 
-                label="Encumbrance Certificate" 
-                checked={legalEncumbranceCertificate} 
-                onChange={setLegalEncumbranceCertificate} 
-              />
-              
-              <ResponsiveCheckbox 
-                label="Occupancy Certificate" 
-                checked={legalOccupancyCertificate} 
-                onChange={setLegalOccupancyCertificate} 
-              />
-            </div>
-          </div>
-
-          {/* Contact Preference */}
-          <div className="border-b pb-4 sm:pb-6 md:pb-8">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 md:mb-6">Contact Preference</h2>
-            <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4">
-              {contactPreferenceOptions.map(pref => (
-                <div key={pref} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={contactPreference.includes(pref)}
-                    onChange={() => handleCheckboxArray(contactPreference, pref, setContactPreference)}
-                    className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700">
-                    {pref.charAt(0).toUpperCase() + pref.slice(1)}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
+          
           {/* Submit Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 md:gap-4 pt-4 sm:pt-6 md:pt-8">
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-lg text-xs sm:text-sm md:text-base text-gray-700 hover:bg-gray-50 transition-colors"
-              disabled={loading}
-            >
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4">
+            <button type="button" onClick={() => window.history.back()} className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50" disabled={loading}>
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-xs sm:text-sm md:text-base"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {mode === 'create' ? 'Creating...' : 'Updating...'}
-                </>
-              ) : (
-                `${mode === 'create' ? 'Create' : 'Update'} Property Unit`
-              )}
+            <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center">
+              {loading ? (mode === 'create' ? 'Creating...' : 'Updating...') : `${mode === 'create' ? 'Create' : 'Update'} Property Unit`}
             </button>
           </div>
         </form>
@@ -1627,99 +1158,54 @@ const PropertyUnitForm = ({ propertyUnitId, onSuccess, mode = 'create' }) => {
   );
 };
 
-// Helper Components - Defined outside to prevent re-renders
-const ResponsiveInput = React.memo(({ label, value, onChange, type = 'text', placeholder = '', required = false, min = null, max = null }) => (
-  <div className="mb-3 sm:mb-4">
-    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+// Helper Components (same as before)
+const ResponsiveInput = React.memo(({ label, value, onChange, type = 'text', placeholder = '', required = false, min = null }) => (
+  <div>
+    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      placeholder={placeholder}
-      required={required}
-      min={min}
-      max={max}
-    />
+    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder={placeholder} required={required} min={min} />
   </div>
 ));
 
 const ResponsiveTextarea = React.memo(({ label, value, onChange, placeholder = '', required = false, rows = 3 }) => (
-  <div className="mb-3 sm:mb-4">
-    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+  <div>
+    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
-    <textarea
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      placeholder={placeholder}
-      required={required}
-      rows={rows}
-    />
+    <textarea value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder={placeholder} required={required} rows={rows} />
   </div>
 ));
 
 const ResponsiveSelect = React.memo(({ label, value, onChange, options, required = false }) => (
-  <div className="mb-3 sm:mb-4">
-    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+  <div>
+    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      required={required}
-    >
-      {options.map(option => (
-        <option key={option} value={option}>
-          {option.charAt(0).toUpperCase() + option.slice(1).replace(/-/g, ' ')}
-        </option>
-      ))}
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required={required}>
+      {options.map(option => (<option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1).replace(/-/g, ' ')}</option>))}
     </select>
   </div>
 ));
 
-const ResponsiveYearSelect = React.memo(({ label, value, onChange, required = false }) => {
+const ResponsiveYearSelect = React.memo(({ label, value, onChange }) => {
   const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(
-    { length: currentYear - 1949 },
-    (_, i) => currentYear - i
-  );
-  
+  const yearOptions = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
   return (
-    <div className="mb-3 sm:mb-4">
-      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        required={required}
-      >
+    <div>
+      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
         <option value="">Select Year</option>
-        {yearOptions.map(year => (
-          <option key={year} value={year}>{year}</option>
-        ))}
+        {yearOptions.map(year => (<option key={year} value={year}>{year}</option>))}
       </select>
     </div>
   );
 });
 
 const ResponsiveCheckbox = React.memo(({ label, checked, onChange }) => (
-  <div className="flex items-center mb-2 sm:mb-3">
-    <input
-      type="checkbox"
-      checked={checked}
-      onChange={(e) => onChange(e.target.checked)}
-      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-    />
-    <label className="ml-2 block text-xs sm:text-sm text-gray-700">
-      {label}
-    </label>
+  <div className="flex items-center">
+    <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 text-blue-600 rounded" />
+    <label className="ml-2 text-sm text-gray-700">{label}</label>
   </div>
 ));
 
