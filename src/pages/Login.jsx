@@ -8,6 +8,7 @@ import {
   Mail, ChevronRight, 
   FileCheck, LogIn, Eye, EyeOff 
 } from "lucide-react";
+import TruecallerAuth from "./TruecallerAuth";
 
 export default function Login() {
   const { login, googleLogin } = useAuth();
@@ -316,6 +317,20 @@ export default function Login() {
               </button>
             </div>
           </div>
+          <div className="space-y-4">
+            
+
+            
+  <TruecallerAuth />
+  
+  <div className="relative flex py-2 items-center">
+    <div className="flex-grow border-t border-white/10"></div>
+    <span className="flex-shrink mx-4 text-white/40 text-xs">OR</span>
+    <div className="flex-grow border-t border-white/10"></div>
+  </div>
+
+  {/* Your existing Google Button code here */}
+</div>
 
           {/* DIVIDER */}
           <div className="relative my-4">
