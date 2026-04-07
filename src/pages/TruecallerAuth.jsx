@@ -1,120 +1,152 @@
 import React, { useState, useEffect } from 'react';
 import { Phone } from 'lucide-react';
-import axios from 'axios';
 
 const TruecallerAuth = ({ onFetchUser }) => {
   const [loading, setLoading] = useState(false);
   const BACKEND_URL = 'https://saimr-backend-1.onrender.com';
 
   useEffect(() => {
-    // Listen for Truecaller's response - it sends a JWT token
-    const handleTruecallerResponse = (event) => {
-      console.log("Raw message received:", event.data);
+    // Check for token when component loads (for return from Truecaller)
+    const checkForToken = async () => {
+      console.log("Checking for Truecaller token in URL...");
       
-      // Truecaller sends the verification token
-      if (event.data && typeof event.data === 'object') {
-        // Check for token in response
-        if (event.data.token) {
-          console.log("Token received from Truecaller");
-          sendTokenToBackend(event.data.token);
-        }
-        // Some versions send credential
-        else if (event.data.credential) {
-          console.log("Credential received from Truecaller");
-          sendTokenToBackend(event.data.credential);
-        }
-      }
-      
-      // Check for string response (might be JSON string)
-      if (typeof event.data === 'string') {
-        try {
-          const parsed = JSON.parse(event.data);
-          if (parsed.token) {
-            sendTokenToBackend(parsed.token);
-          } else if (parsed.credential) {
-            sendTokenToBackend(parsed.credential);
-          }
-        } catch (e) {
-          // If it's a plain token string
-          if (event.data.length > 50) { // JWT tokens are long
-            sendTokenToBackend(event.data);
-          }
-        }
-      }
-    };
-
-    // Check URL for token (some versions return via redirect)
-    const checkUrlForToken = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      const credential = urlParams.get('credential');
-      const verificationToken = urlParams.get('verificationToken');
+      let token = urlParams.get('token');
+      let error = urlParams.get('error');
+      let errorMessage = urlParams.get('errorMessage');
+      
+      // Also check hash fragment
+      if (!token) {
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+          const hashParams = new URLSearchParams(hash);
+          token = hashParams.get('token');
+        }
+      }
+      
+      // Check session storage
+      if (!token) {
+        token = sessionStorage.getItem('truecaller_pending_token');
+      }
+      
+      if (error) {
+        console.error("Truecaller error:", errorMessage);
+        alert("Truecaller verification failed: " + (errorMessage || error));
+        setLoading(false);
+        sessionStorage.removeItem('truecaller_in_progress');
+        sessionStorage.removeItem('truecaller_pending_token');
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
       
       if (token) {
-        sendTokenToBackend(token);
-        return true;
+        console.log("✅ Token found, sending to backend...");
+        sessionStorage.removeItem('truecaller_in_progress');
+        sessionStorage.removeItem('truecaller_pending_token');
+        await sendTokenToBackend(token);
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
       }
-      if (credential) {
-        sendTokenToBackend(credential);
-        return true;
-      }
-      if (verificationToken) {
-        sendTokenToBackend(verificationToken);
-        return true;
-      }
-      return false;
-    };
-    
-    // Check if we're returning from Truecaller
-    const isReturningFromTruecaller = sessionStorage.getItem('truecaller_in_progress');
-    if (isReturningFromTruecaller) {
-      sessionStorage.removeItem('truecaller_in_progress');
       
-      setTimeout(() => {
-        const handled = checkUrlForToken();
-        if (!handled) {
-          setLoading(false);
-          alert("No verification data received from Truecaller. Please try again.");
-        }
-      }, 1000);
-    }
-    
-    window.addEventListener('message', handleTruecallerResponse);
-    
-    return () => {
-      window.removeEventListener('message', handleTruecallerResponse);
+      // Check if we're returning from Truecaller
+      const isReturning = sessionStorage.getItem('truecaller_in_progress');
+      if (isReturning) {
+        sessionStorage.removeItem('truecaller_in_progress');
+        console.log("Returned from Truecaller but no token found");
+        setLoading(false);
+        
+        // If no token after 2 seconds, show manual input
+        setTimeout(() => {
+          if (!token && !sessionStorage.getItem('token_processed')) {
+            const manualPhone = prompt("Truecaller verification didn't work. Please enter your phone number manually:");
+            if (manualPhone && manualPhone.length >= 10) {
+              sendManualPhoneToBackend(manualPhone);
+            }
+          }
+        }, 1000);
+      }
     };
+    
+    checkForToken();
   }, []);
 
   const sendTokenToBackend = async (token) => {
     setLoading(true);
+    sessionStorage.setItem('token_processed', 'true');
     
     try {
-      console.log("Sending token to backend:", token.substring(0, 50) + "...");
+      console.log("Sending token to backend...");
       
-      const response = await axios.post(`${BACKEND_URL}/api/auth/truecaller/verify`, {
-        verificationToken: token,
-        sourceWebsite: 'cleartitle1'
+      const response = await fetch(`${BACKEND_URL}/api/auth/truecaller/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          verificationToken: token,
+          sourceWebsite: 'cleartitle1'
+        })
       });
       
-      console.log("Backend response:", response.data);
+      const data = await response.json();
+      console.log("Backend response:", data);
       
-      if (response.data.success) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+      if (data.success) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
         
         if (onFetchUser) {
-          onFetchUser(response.data.user);
+          onFetchUser(data.user);
         }
         
         window.location.href = '/profile';
       } else {
-        throw new Error(response.data.message);
+        throw new Error(data.message);
       }
     } catch (error) {
       console.error("Backend error:", error);
-      console.error("Error details:", error.response?.data);
-      alert(error.response?.data?.message || "Verification failed. Please try again.");
+      alert(error.message || "Verification failed. Please try again.");
+      setLoading(false);
+      sessionStorage.removeItem('token_processed');
+    }
+  };
+
+  const sendManualPhoneToBackend = async (phoneNumber) => {
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auth/truecaller/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber,
+          firstName: "Manual",
+          lastName: "User",
+          sourceWebsite: 'cleartitle1'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        if (onFetchUser) {
+          onFetchUser(data.user);
+        }
+        
+        window.location.href = '/profile';
+      }
+    } catch (error) {
+      console.error("Manual verification error:", error);
+      alert("Verification failed. Please try again.");
       setLoading(false);
     }
   };
@@ -125,6 +157,9 @@ const TruecallerAuth = ({ onFetchUser }) => {
     const partnerKey = "MfIGp766770c7f5bd44ebaceb278acf625704";
     const requestNonce = `tc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
+    // Get current URL without any parameters
+    const currentUrl = window.location.href.split('?')[0];
+    
     sessionStorage.setItem('truecaller_in_progress', 'true');
     sessionStorage.setItem('truecaller_nonce', requestNonce);
     
@@ -133,18 +168,29 @@ const TruecallerAuth = ({ onFetchUser }) => {
       `&requestNonce=${requestNonce}` +
       `&partnerKey=${partnerKey}` +
       `&partnerName=cleartitle1` +
-      `&lang=en`;
+      `&lang=en` +
+      `&redirectUrl=${encodeURIComponent(currentUrl)}`;
     
     console.log("Launching Truecaller with URL:", tcUrl);
+    console.log("Redirect URL:", currentUrl);
+    
+    // Launch Truecaller
     window.location.href = tcUrl;
     
+    // Fallback timeout (30 seconds)
     setTimeout(() => {
       if (loading) {
         setLoading(false);
         sessionStorage.removeItem('truecaller_in_progress');
-        alert("Truecaller didn't respond. Please make sure:\n1. Truecaller app is installed\n2. You have internet connection\n3. Try again");
+        const tryManual = confirm("Truecaller didn't respond. Would you like to verify manually with phone number?");
+        if (tryManual) {
+          const phone = prompt("Enter your phone number:");
+          if (phone && phone.length >= 10) {
+            sendManualPhoneToBackend(phone);
+          }
+        }
       }
-    }, 20000);
+    }, 30000);
   };
 
   return (
