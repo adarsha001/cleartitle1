@@ -5,6 +5,9 @@ import axios from 'axios';
 const TruecallerAuth = ({ onFetchUser }) => {
   const [loading, setLoading] = useState(false);
 
+  // Set backend URL directly
+  const BACKEND_URL = 'https://saimr-backend-1.onrender.com';
+
   useEffect(() => {
     // CRITICAL: Listen for Truecaller's response
     const handleTruecallerResponse = (event) => {
@@ -112,7 +115,15 @@ const TruecallerAuth = ({ onFetchUser }) => {
       
       console.log("Sending to backend:", payload);
       
-      const response = await axios.post('/api/auth/truecaller/verify', payload);
+      // Using the Render.com backend URL directly
+      const response = await axios.post(`${BACKEND_URL}/api/auth/truecaller/verify`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log("Backend response:", response.data);
       
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
@@ -128,6 +139,7 @@ const TruecallerAuth = ({ onFetchUser }) => {
       }
     } catch (error) {
       console.error("Backend error:", error);
+      console.error("Error details:", error.response?.data);
       alert(error.response?.data?.message || "Verification failed. Please try again.");
       setLoading(false);
       
