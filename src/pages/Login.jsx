@@ -346,14 +346,7 @@ export default function Login() {
 </div>
 
           {/* DIVIDER */}
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-black px-4 text-white/50">Or continue with email</span>
-            </div>
-          </div>
+   
 
           {/* FORM */}
           <form onSubmit={handleSubmit} className="space-y-6">
