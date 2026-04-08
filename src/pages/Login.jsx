@@ -36,6 +36,15 @@ export default function Login() {
       isMounted.current = false;
     };
   }, []);
+    const handleLoginSuccess = (user) => {
+    console.log('Login successful:', user);
+    // Additional success handling if needed
+  };
+
+  const handleLoginError = (error) => {
+    console.error('Login error:', error);
+    // Additional error handling if needed
+  };
 
   /* ---------------- SIMPLIFIED GOOGLE LOGIN SDK ---------------- */
   useEffect(() => {
