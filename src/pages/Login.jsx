@@ -321,7 +321,11 @@ export default function Login() {
             
 
             
-  <TruecallerAuth />
+       <TruecallerAuth 
+            onSuccess={handleLoginSuccess}
+            onError={handleLoginError}
+            redirectUrl="/profile"
+          />
   
   <div className="relative flex py-2 items-center">
     <div className="flex-grow border-t border-white/10"></div>
