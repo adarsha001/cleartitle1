@@ -4,7 +4,7 @@ import axios from 'axios';
 // Create axios instance
 const API = axios.create({
   baseURL: ' https://saimr-backend-1.onrender.com/api',
-  timeout: 15000,
+  timeout: 20000,
 });
 
 

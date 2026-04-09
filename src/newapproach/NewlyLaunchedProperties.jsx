@@ -173,13 +173,15 @@ export default function NewlyLaunchedProperties() {
       
       if (res.data && res.data.success) {
         const allUnits = res.data.data || [];
-        
+     
         const stats = {
           "7": 0,
           "14": 0,
           "30": 0,
           total: allUnits.length
         };
+
+        console.log("stats  ",stats)
 
         allUnits.forEach(unit => {
           const unitDate = new Date(unit.createdAt || unit.updatedAt);
@@ -193,6 +195,8 @@ export default function NewlyLaunchedProperties() {
             }
           });
         });
+
+
 
         // setStats(stats);
         
