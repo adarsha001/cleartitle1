@@ -432,6 +432,18 @@ export default function Register() {
               </div>
             )}
           </div>
+                      
+                 <TruecallerAuth 
+                      onSuccess={handleLoginSuccess}
+                      onError={handleLoginError}
+                      redirectUrl="/profile"
+                    />
+            
+            <div className="relative flex py-2 items-center">
+              <div className="flex-grow border-t border-white/10"></div>
+              <span className="flex-shrink mx-4 text-white/40 text-xs">OR</span>
+              <div className="flex-grow border-t border-white/10"></div>
+            </div>
 
           {/* Divider */}
           <div className="relative">

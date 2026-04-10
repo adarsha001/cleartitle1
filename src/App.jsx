@@ -36,7 +36,7 @@ import BatchDetails from "./components/BatchDetails";
 import CategoryPropertiesPage from "./focusedapproach/CategoryPropertiesPage";
 import Finalized from "./focusedapproach/finalized";
 import CarouselAdmin from "./components/CarouselAdmin";
-import TruecallerAuth from "./components/TruecallerAuth"; // Import your component
+import TruecallerAuth from "./pages/TruecallerAuth";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -44,7 +44,23 @@ const PublicRoute = ({ children }) => {
   return user ? <Navigate to="/" replace /> : children;
 };
 
-// Modal component for Truecaller prompt
+// Helper function to detect if user is on Android mobile
+const isAndroidMobile = () => {
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  
+  // Check if it's Android
+  const isAndroid = /android/i.test(userAgent);
+  
+  // Check if it's mobile (not tablet)
+  const isMobile = /mobile/i.test(userAgent);
+  
+  // Check if it's not iPad, iPod, iPhone
+  const isNotIOS = !/iPad|iPhone|iPod/.test(userAgent);
+  
+  return isAndroid && isMobile && isNotIOS;
+};
+
+// Modal component for Truecaller prompt (Android only)
 const TruecallerModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
   
@@ -76,7 +92,7 @@ const TruecallerModal = ({ isOpen, onClose }) => {
         
         <TruecallerAuth 
           onSuccess={() => {
-            window.location.reload(); // Refresh after successful login
+            window.location.reload();
           }}
           onError={(error) => {
             console.error('Login failed:', error);
@@ -98,14 +114,27 @@ const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
   const [showTruecallerPrompt, setShowTruecallerPrompt] = useState(false);
   const [hasShownPrompt, setHasShownPrompt] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
-    // Show Truecaller prompt after 5 seconds if user is not authenticated
-    if (!loading && !isAuthenticated && !hasShownPrompt) {
+    // Detect if user is on Android mobile
+    const androidUser = isAndroidMobile();
+    setIsAndroid(androidUser);
+    
+    console.log('Device detection:', { 
+      isAndroid: androidUser, 
+      userAgent: navigator.userAgent 
+    });
+    
+    // Only show Truecaller prompt after 5 seconds if:
+    // 1. User is not authenticated
+    // 2. User is on Android mobile
+    // 3. Prompt hasn't been shown yet
+    if (!loading && !isAuthenticated && !hasShownPrompt && androidUser) {
       const timer = setTimeout(() => {
         setShowTruecallerPrompt(true);
         setHasShownPrompt(true);
-      }, 5000); // 5 seconds delay
+      }, 5000);
 
       return () => clearTimeout(timer);
     }
@@ -391,7 +420,7 @@ const AppContent = () => {
         />
       </Routes>
 
-      {/* Truecaller Modal - Shows after 5 seconds if user not authenticated */}
+      {/* Truecaller Modal - Shows after 5 seconds ONLY for Android mobile users */}
       <TruecallerModal 
         isOpen={showTruecallerPrompt}
         onClose={() => setShowTruecallerPrompt(false)}
