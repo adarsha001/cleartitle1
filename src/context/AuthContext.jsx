@@ -194,6 +194,34 @@ const register = async (registerData) => {
       throw error;
     }
   };
+const loginWithTruecaller = async (truecallerData) => {
+  try {
+    const { token, user } = truecallerData;
+    
+    if (!token || !user) {
+      throw new Error('Invalid Truecaller login data');
+    }
+    
+    // Store token and user data
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('requiresPhoneUpdate', user.requiresPhoneUpdate || false);
+    
+    // Store website info
+    if (user.sourceWebsite) {
+      localStorage.setItem('currentWebsite', user.sourceWebsite);
+    }
+    
+    // Update state
+    setUser(user);
+    setRequiresPhoneUpdate(user.requiresPhoneUpdate || false);
+    
+    return { success: true, user };
+  } catch (error) {
+    console.error('❌ Truecaller login error:', error);
+    throw error;
+  }
+};
 
   const logout = () => {
     // Clear Google session if exists
@@ -221,7 +249,7 @@ const register = async (registerData) => {
   const value = {
     user,
     login,
-    googleLogin,
+    googleLogin,  loginWithTruecaller,
     register,
     logout,
     updateUser,

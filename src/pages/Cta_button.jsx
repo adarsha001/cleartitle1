@@ -1,4 +1,4 @@
-// Cta_button.jsx - Updated with fixed dimensions for uniformity
+// Cta_button.jsx - Updated with increased height (520px) for uniformity
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -80,7 +80,7 @@ const LuxuryAuthCTA = () => {
 
   if (authLoading || (isAuthenticated && loading)) {
     return (
-      <div className="w-full h-[440px] bg-gradient-to-br from-stone-100 to-stone-200 animate-pulse rounded-3xl shadow-xl" />
+      <div className="w-full h-[520px] bg-gradient-to-br from-stone-100 to-stone-200 animate-pulse rounded-3xl shadow-xl" />
     );
   }
 
@@ -89,14 +89,14 @@ const LuxuryAuthCTA = () => {
       <div className="w-full">
         <AnimatePresence mode="wait">
           {!isAuthenticated ? (
-            /* GUEST STATE - Fixed Height */
+            /* GUEST STATE - Fixed Height (520px) */
             <motion.div
               key="guest-state"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-              className="relative w-full h-[440px] overflow-hidden rounded-3xl bg-white shadow-2xl group"
+              className="relative w-full h-[520px] overflow-hidden rounded-3xl bg-white shadow-2xl group"
             >
               {/* Gradient Background */}
               <div className="absolute inset-0 " />
@@ -131,9 +131,9 @@ const LuxuryAuthCTA = () => {
                 </Link>
               </div>
 
-              {/* Hero Image */}
+              {/* Hero Image - Increased height proportionally */}
               <Link to="/login">
-                <div className="absolute top-0 left-0 right-0 h-[38%] overflow-hidden cursor-pointer group/image">
+                <div className="absolute top-0 left-0 right-0 h-[42%] overflow-hidden cursor-pointer group/image">
                   <div className="absolute inset-0 bg-gradient-to-t from-white via-white/30 to-transparent z-10" />
                   <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/20 transition-colors duration-500 z-20" />
                   
@@ -149,13 +149,13 @@ const LuxuryAuthCTA = () => {
                   <img 
                     src='./girl.png' 
                     alt="Luxury Real Estate" 
-                    className="w-full h-full object-cover object-center scale-105 group-hover/image:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover object-center scale-90 group-hover/image:scale-95 transition-transform duration-700"
                   />
                 </div>
               </Link>
 
-              {/* Content Section */}
-              <div className="absolute bottom-0 left-0 right-0 h-[62%] p-5 flex flex-col">
+              {/* Content Section - Adjusted bottom padding for more space */}
+              <div className="absolute bottom-0 left-0 right-0 h-[58%] p-5 flex flex-col">
                 {/* Brand Header */}
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
@@ -244,15 +244,7 @@ const LuxuryAuthCTA = () => {
                     </motion.button>
                   </Link>
                   
-                  <div className="flex items-center justify-between px-2">
-                    <Link to="/register" className="text-[10px] font-medium text-stone-400 hover:text-amber-700 transition-colors">
-                      Create Account
-                    </Link>
-                    <span className="text-stone-300 text-sm">•</span>
-                    <Link to="/properties" className="text-[10px] font-medium text-stone-400 hover:text-amber-700 transition-colors">
-                      Browse Listings
-                    </Link>
-                  </div>
+      
                 </motion.div>
               </div>
 
@@ -260,14 +252,14 @@ const LuxuryAuthCTA = () => {
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
             </motion.div>
           ) : (
-            /* MEMBER STATE - Fixed Height */
+            /* MEMBER STATE - Fixed Height (520px) */
             <motion.div
               key="auth-state"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-              className="relative w-full h-[440px] overflow-hidden rounded-3xl bg-white shadow-2xl"
+              className="relative w-full h-[520px] overflow-hidden rounded-3xl bg-white shadow-2xl"
             >
               {/* Background */}
               <div className="absolute inset-0 bg-gradient-to-br from-amber-50/60 via-white to-stone-50/60" />
@@ -306,14 +298,14 @@ const LuxuryAuthCTA = () => {
                 </div>
               </div>
 
-              {/* Main Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center pt-10">
+              {/* Main Content - Adjusted spacing for taller card */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center pt-8">
                 {/* Profile Section */}
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                  className="relative mb-3"
+                  className="relative mb-4"
                 >
                   <div className="absolute inset-0 bg-gradient-to-tr from-amber-300 via-amber-200 to-amber-100 rounded-full filter blur-xl opacity-60" />
                   <div className="relative p-1 rounded-full bg-gradient-to-tr from-amber-400 via-stone-300 to-amber-300">
@@ -362,7 +354,7 @@ const LuxuryAuthCTA = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="flex flex-col items-center gap-0.5 mb-3"
+                  className="flex flex-col items-center gap-0.5 mb-4"
                 >
                   <div className="flex items-center gap-1.5">
                     <Award className="w-3.5 h-3.5 text-amber-600" />
@@ -386,7 +378,7 @@ const LuxuryAuthCTA = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 }}
-                  className="flex justify-center gap-8 mb-3"
+                  className="flex justify-center gap-8 mb-4"
                 >
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1">
@@ -418,7 +410,7 @@ const LuxuryAuthCTA = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="relative mb-3 px-4"
+                  className="relative mb-4 px-4"
                 >
                   <p className="text-xs font-serif italic text-stone-600 leading-relaxed px-3 line-clamp-2">
                     "{dailyQuote}"
