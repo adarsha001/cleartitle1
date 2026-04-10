@@ -89,17 +89,7 @@ const TruecallerAuth = ({ onSuccess, onError, redirectUrl = "/profile" }) => {
     // Try to open Truecaller app
     window.location.href = tcUrl;
     
-    // Fallback for web if app doesn't open after 1 second
-    setTimeout(() => {
-      if (!loading) {
-        const useWeb = window.confirm(
-          "Truecaller app not detected. Would you like to verify via web browser?"
-        );
-        if (useWeb) {
-          window.open(webFallbackUrl, '_blank');
-        }
-      }
-    }, 1000);
+
 
     // Start polling for response
     startPolling(requestId);
