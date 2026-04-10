@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Building2, User, Mail, Lock, Phone, UserCircle, ChevronRight, Briefcase, Shield, CheckCircle, FileCheck, AlertCircle, LogIn } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
+import TruecallerAuth from "./TruecallerAuth";
 
 export default function Register() {
   const { register, googleLogin } = useAuth();
@@ -161,6 +162,15 @@ export default function Register() {
       }
     };
   }, [GOOGLE_CLIENT_ID]);
+      const handleLoginSuccess = (user) => {
+    console.log('Login successful:', user);
+    // Additional success handling if needed
+  };
+
+  const handleLoginError = (error) => {
+    console.error('Login error:', error);
+    // Additional error handling if needed
+  };
 
   const handleGoogleResponse = async (response) => {
     if (!response || !response.credential) {
@@ -432,7 +442,11 @@ export default function Register() {
               </div>
             )}
           </div>
-                      
+                      <div className="relative flex py-2 items-center">
+              <div className="flex-grow border-t border-white/10"></div>
+              <span className="flex-shrink mx-4 text-white/40 text-xs">OR</span>
+              <div className="flex-grow border-t border-white/10"></div>
+            </div>    
                  <TruecallerAuth 
                       onSuccess={handleLoginSuccess}
                       onError={handleLoginError}
@@ -445,17 +459,7 @@ export default function Register() {
               <div className="flex-grow border-t border-white/10"></div>
             </div>
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-gradient-to-br from-blue-900 via-blue-800 to-black px-4 text-white/50">
-                Or register with email
-              </span>
-            </div>
-          </div>
+     
 
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
