@@ -1,4 +1,4 @@
-// FeaturedProperties.jsx (corrected version)
+// FeaturedProperties.jsx
 import { useEffect, useState, useRef } from "react";
 import { 
   Star, 
@@ -7,7 +7,10 @@ import {
   ChevronRight,
   ArrowRight,
   LayoutGrid,
-  X
+  X,
+  Home,
+  Shield,
+  CheckCircle2
 } from "lucide-react";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
@@ -25,7 +28,7 @@ export default function FeaturedProperties() {
   const [showAllGrid, setShowAllGrid] = useState(false);
   const scrollContainerRef = useRef(null);
 
-  const ITEMS_PER_PAGE = 4; // Show 4 items on mobile initially
+  const ITEMS_PER_PAGE = 4;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -39,16 +42,10 @@ export default function FeaturedProperties() {
       setLoading(true);
       setError(null);
       
-      // Use the dedicated featured endpoint - NO limit parameter
       const res = await propertyUnitAPI.getFeaturedPropertyUnits();
-      
-      console.log("Featured properties response:", res);
       
       if (res.data && res.data.success) {
         const featuredProperties = res.data.data || [];
-        
-        console.log(`Found ${featuredProperties.length} featured properties`);
-        
         setPropertyUnits(featuredProperties);
         setTotalPages(Math.ceil(featuredProperties.length / ITEMS_PER_PAGE));
       } else {
@@ -75,7 +72,6 @@ export default function FeaturedProperties() {
         setCanScrollLeft(scrollLeft > 0);
         setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
         
-        // Show view more button when user has scrolled through initial items
         const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
         if (scrolledPercentage > 0.7 && currentPage < totalPages) {
           setShowViewMore(true);
@@ -118,14 +114,12 @@ export default function FeaturedProperties() {
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
       
-      // Calculate current page based on scroll position
-      const itemWidth = 320 + 32; // card width + gap
+      const itemWidth = 320 + 32;
       const newPage = Math.floor(scrollLeft / itemWidth) + 1;
       if (newPage !== currentPage && newPage <= totalPages) {
         setCurrentPage(newPage);
       }
 
-      // Show view more button when near the end
       const scrolledPercentage = (scrollLeft + clientWidth) / scrollWidth;
       if (scrolledPercentage > 0.8 && currentPage < totalPages) {
         setShowViewMore(true);
@@ -137,9 +131,8 @@ export default function FeaturedProperties() {
 
   const handleViewMore = () => {
     if (currentPage < totalPages && scrollContainerRef.current) {
-      // Scroll to the next page
       const nextPage = currentPage + 1;
-      const scrollPosition = (nextPage - 1) * (320 + 32); // (page-1) * (card width + gap)
+      const scrollPosition = (nextPage - 1) * (320 + 32);
       
       scrollContainerRef.current.scrollTo({
         left: scrollPosition,
@@ -179,19 +172,8 @@ export default function FeaturedProperties() {
             <div className="w-6 h-6 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-full animate-pulse" />
             <div className="w-20 md:w-32 h-0.5 bg-gradient-to-l from-blue-100 to-transparent animate-pulse" />
           </div>
-
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
-            {[1, 2, 3, 4].map((i) => (
-              <div 
-                key={`filter-skel-${i}`}
-                className="bg-gradient-to-r from-blue-100 to-indigo-50 w-32 h-12 rounded-xl animate-pulse border border-blue-200"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              ></div>
-            ))}
-          </div>
         </div>
 
-        {/* Desktop Grid Skeleton */}
         <div className="hidden md:grid md:grid-cols-3 gap-8">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div 
@@ -218,7 +200,6 @@ export default function FeaturedProperties() {
           ))}
         </div>
 
-        {/* Mobile Horizontal Skeleton */}
         <div className="md:hidden flex space-x-8 pb-8 overflow-x-auto scrollbar-hide">
           {[1, 2, 3, 4].map((i) => (
             <div 
@@ -292,13 +273,9 @@ export default function FeaturedProperties() {
 
   const PropertyCard = ({ unit }) => (
     <div className="relative group">
-      {/* Property Card Container */}
-      <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg ">
-        {/* Premium border effect on hover */}
+      <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg">
         <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-100 rounded-3xl transition-all duration-500 pointer-events-none"></div>
-        
-        {/* Property Card */}
-        <div className="transform group-hover:-translate-y-1 transition-transform duration-500 ">
+        <div className="transform group-hover:-translate-y-1 transition-transform duration-500">
           <PropertyUnitCard 
             propertyUnit={unit} 
             viewMode="compact"
@@ -308,7 +285,6 @@ export default function FeaturedProperties() {
     </div>
   );
 
-  // Calculate visible items for mobile
   const visibleItems = isMobile && !showAllGrid
     ? propertyUnits.slice(0, currentPage * ITEMS_PER_PAGE)
     : propertyUnits;
@@ -318,7 +294,6 @@ export default function FeaturedProperties() {
       <div className="relative max-w-7xl mx-auto px-4">
         {/* Header Section */}
         <div className="text-center md:mb-20">
-          {/* Main Title */}
           <div className="mb-6 hidden sm:block">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 font-serif tracking-tight">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-blue-700 to-indigo-800">
@@ -342,7 +317,6 @@ export default function FeaturedProperties() {
         {/* Mobile Horizontal Scroll Layout */}
         {!showAllGrid ? (
           <div className="md:hidden py-2 relative">
-            {/* Scroll Navigation Buttons */}
             <div className="relative mb-8">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900 font-sans">
@@ -374,7 +348,6 @@ export default function FeaturedProperties() {
                     <ChevronRight className="w-5 h-5" />
                   </button>
 
-                  {/* View All Button */}
                   {propertyUnits.length > ITEMS_PER_PAGE && (
                     <button
                       onClick={handleViewAll}
@@ -388,7 +361,6 @@ export default function FeaturedProperties() {
               </div>
             </div>
 
-            {/* Mobile Scroll Container */}
             <div 
               ref={scrollContainerRef}
               onScroll={handleScroll}
@@ -405,7 +377,6 @@ export default function FeaturedProperties() {
               ))}
             </div>
 
-            {/* View More Button */}
             {showViewMore && currentPage < totalPages && propertyUnits.length > currentPage * ITEMS_PER_PAGE && (
               <div className="flex justify-center mt-6 animate-fade-in">
                 <button
@@ -419,9 +390,7 @@ export default function FeaturedProperties() {
             )}
           </div>
         ) : (
-          /* Mobile Grid View */
           <div className="md:hidden py-2 relative">
-            {/* Grid Header */}
             <div className="relative mb-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900 font-sans">
@@ -439,7 +408,6 @@ export default function FeaturedProperties() {
               </div>
             </div>
 
-            {/* Grid Container */}
             <div className="grid grid-cols-2 gap-4 pb-8">
               {propertyUnits.map((unit) => (
                 <div key={unit._id || `featured-grid-${unit.slug || Math.random()}`} className="w-full">
@@ -451,7 +419,6 @@ export default function FeaturedProperties() {
         )}
       </div>
 
-      {/* Custom scrollbar hide styles */}
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;

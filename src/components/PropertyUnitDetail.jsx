@@ -1789,7 +1789,7 @@ export default function PropertyUnitDetail() {
 
 {/* Plot Details Section (if property is a plot) */}
 {propertyType === 'Plot' && safePlotDetails && (
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+  <div className="max-w-full px-4 sm:px-6 py-6 sm:py-8">
     <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
       <button
         onClick={() => toggleSection('plotDetails')}
@@ -1809,105 +1809,320 @@ export default function PropertyUnitDetail() {
       </button>
       
       <div className={`${expandedSections.plotDetails ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
-        {/* Plot Pricing Information */}
-        {safePlotDetails.prices && safePlotDetails.prices.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-600" />
-              Pricing Information
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {safePlotDetails.prices.map((priceItem, idx) => (
-                <div key={idx} className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
-                  <p className="text-sm text-green-600 font-semibold mb-1">Price</p>
-                  <p className="text-2xl font-bold text-green-900">
-                    {formatCurrency(priceItem.amount, priceItem.currency)}
-                  </p>
-                  {priceItem.perUnit !== 'total' && (
-                    <p className="text-xs text-green-600 mt-1">
-                      per {priceItem.perUnit === 'sqft' ? 'sq.ft.' : 
-                             priceItem.perUnit === 'sqm' ? 'sq.m.' :
-                             priceItem.perUnit === 'perSqYard' ? 'sq.yard' :
-                             priceItem.perUnit === 'perGround' ? 'ground' : 
-                             priceItem.perUnit}
-                    </p>
-                  )}
-                  {priceItem.unitType && (
-                    <p className="text-xs text-gray-600 mt-1">
-                      Unit Type: {priceItem.unitType}
-                    </p>
-                  )}
-                </div>
-              ))}
+        
+        {/* Price & Area Comparison Table */}
+        {safeUnitTypes.filter(unit => unit.type === 'Plot').length > 0 && (
+          <div className="mb-8">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-200">
+              <table className="w-full min-w-[900px]">
+                <thead className="bg-gradient-to-r from-green-50 to-green-100">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-bold text-gray-900 border-b border-green-200">Dimensions (L x B)</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-900 border-b border-green-200">Area (sq.ft.)</th>
+                    {/* Only show area columns if data exists */}
+                    {safeUnitTypes.some(unit => (unit.plotDetails?.area?.sqYards || safePlotDetails.sqYards)) && (
+                      <th className="px-4 py-3 text-left font-bold text-gray-900 border-b border-green-200">Area (sq.yards)</th>
+                    )}
+                    {safeUnitTypes.some(unit => (unit.plotDetails?.area?.grounds || safePlotDetails.grounds)) && (
+                      <th className="px-4 py-3 text-left font-bold text-gray-900 border-b border-green-200">Area (grounds)</th>
+                    )}
+                    {safeUnitTypes.some(unit => (unit.plotDetails?.area?.acres || safePlotDetails.acres)) && (
+                      <th className="px-4 py-3 text-left font-bold text-gray-900 border-b border-green-200">Area (acres)</th>
+                    )}
+                    {safeUnitTypes.some(unit => (unit.plotDetails?.area?.cents || safePlotDetails.cents)) && (
+                      <th className="px-4 py-3 text-left font-bold text-gray-900 border-b border-green-200">Area (cents)</th>
+                    )}
+                    <th className="px-4 py-3 text-left font-bold text-gray-900 border-b border-green-200">Price</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-900 border-b border-green-200">Rate (per sq.ft.)</th>
+                    <th className="px-4 py-3 text-left font-bold text-gray-900 border-b border-green-200">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {safeUnitTypes.filter(unit => unit.type === 'Plot').map((plotUnit, idx) => {
+                    const areaSqft = plotUnit.plotDetails?.area?.sqft || plotUnit.carpetArea || safePlotDetails.sqft;
+                    const areaSqYards = plotUnit.plotDetails?.area?.sqYards || safePlotDetails.sqYards;
+                    const areaGrounds = plotUnit.plotDetails?.area?.grounds || safePlotDetails.grounds;
+                    const areaAcres = plotUnit.plotDetails?.area?.acres || safePlotDetails.acres;
+                    const areaCents = plotUnit.plotDetails?.area?.cents || safePlotDetails.cents;
+                    
+                    // Get dimensions
+                    const length = plotUnit.plotDetails?.dimensions?.length || safePlotDetails.dimensions?.length;
+                    const breadth = plotUnit.plotDetails?.dimensions?.breadth || safePlotDetails.dimensions?.breadth;
+                    const frontage = plotUnit.plotDetails?.dimensions?.frontage || safePlotDetails.dimensions?.frontage;
+                    
+                    // Calculate dimensions display
+                    let dimensionsDisplay = '-';
+                    if (length && breadth) {
+                      dimensionsDisplay = `${length}' × ${breadth}'`;
+                    } else if (length && frontage) {
+                      dimensionsDisplay = `${length}' (L) × ${frontage}' (F)`;
+                    } else if (length) {
+                      dimensionsDisplay = `${length}' length`;
+                    } else if (breadth) {
+                      dimensionsDisplay = `${breadth}' breadth`;
+                    } else if (frontage) {
+                      dimensionsDisplay = `${frontage}' frontage`;
+                    }
+                    
+                    // Calculate rate per sq.ft.
+                    let ratePerSqft = null;
+                    if (plotUnit.price?.amount && areaSqft) {
+                      ratePerSqft = plotUnit.price.amount / areaSqft;
+                    }
+                    
+                    return (
+                      <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <span className="font-semibold text-gray-900">{dimensionsDisplay}</span>
+                          {frontage && !length && !breadth && (
+                            <p className="text-xs text-gray-500 mt-1">Frontage: {frontage}'</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-gray-900">
+                          {areaSqft?.toLocaleString() || '-'}
+                        </td>
+                        {areaSqYards && (
+                          <td className="px-4 py-3 text-gray-700">
+                            {areaSqYards?.toLocaleString() || '-'}
+                          </td>
+                        )}
+                        {areaGrounds && (
+                          <td className="px-4 py-3 text-gray-700">
+                            {areaGrounds || '-'}
+                          </td>
+                        )}
+                        {areaAcres && (
+                          <td className="px-4 py-3 text-gray-700">
+                            {areaAcres || '-'}
+                          </td>
+                        )}
+                        {areaCents && (
+                          <td className="px-4 py-3 text-gray-700">
+                            {areaCents || '-'}
+                          </td>
+                        )}
+                        <td className="px-4 py-3">
+                          <span className="font-bold text-green-600">
+                            {formatUnitPrice(plotUnit.price)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {ratePerSqft && (
+                            <span className="text-sm font-semibold text-blue-600">
+                              ₹{Math.round(ratePerSqft).toLocaleString()}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-bold ${
+                            plotUnit.availability === 'available' ? 'bg-green-100 text-green-700' :
+                            plotUnit.availability === 'sold' ? 'bg-red-100 text-red-700' :
+                            plotUnit.availability === 'limited' ? 'bg-amber-100 text-amber-700' :
+                            plotUnit.availability === 'booked' ? 'bg-orange-100 text-orange-700' :
+                            plotUnit.availability === 'reserved' ? 'bg-purple-100 text-purple-700' :
+                            'bg-blue-100 text-blue-700'
+                          }`}>
+                            {plotUnit.availability === 'available' ? 'Available' :
+                             plotUnit.availability === 'sold' ? 'Sold' :
+                             plotUnit.availability === 'limited' ? 'Limited' :
+                             plotUnit.availability === 'booked' ? 'Booked' :
+                             plotUnit.availability === 'reserved' ? 'Reserved' :
+                             'Coming Soon'}
+                          </span>
+                          {plotUnit.availableUnits > 0 && (
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({plotUnit.availableUnits} left)
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-4">
+              {safeUnitTypes.filter(unit => unit.type === 'Plot').map((plotUnit, idx) => {
+                const areaSqft = plotUnit.plotDetails?.area?.sqft || plotUnit.carpetArea || safePlotDetails.sqft;
+                const areaSqYards = plotUnit.plotDetails?.area?.sqYards || safePlotDetails.sqYards;
+                const areaGrounds = plotUnit.plotDetails?.area?.grounds || safePlotDetails.grounds;
+                const areaAcres = plotUnit.plotDetails?.area?.acres || safePlotDetails.acres;
+                const areaCents = plotUnit.plotDetails?.area?.cents || safePlotDetails.cents;
+                
+                // Get dimensions
+                const length = plotUnit.plotDetails?.dimensions?.length || safePlotDetails.dimensions?.length;
+                const breadth = plotUnit.plotDetails?.dimensions?.breadth || safePlotDetails.dimensions?.breadth;
+                const frontage = plotUnit.plotDetails?.dimensions?.frontage || safePlotDetails.dimensions?.frontage;
+                
+                // Calculate dimensions display
+                let dimensionsDisplay = '';
+                if (length && breadth) {
+                  dimensionsDisplay = `${length}' × ${breadth}'`;
+                } else if (length && frontage) {
+                  dimensionsDisplay = `${length}' L × ${frontage}' F`;
+                } else if (length) {
+                  dimensionsDisplay = `${length}' length`;
+                } else if (breadth) {
+                  dimensionsDisplay = `${breadth}' breadth`;
+                } else if (frontage) {
+                  dimensionsDisplay = `${frontage}' frontage`;
+                }
+                
+                // Calculate rate per sq.ft.
+                let ratePerSqft = null;
+                if (plotUnit.price?.amount && areaSqft) {
+                  ratePerSqft = plotUnit.price.amount / areaSqft;
+                }
+                
+                return (
+                  <div key={idx} className="border border-green-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                    <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-gray-900">Plot Details</h4>
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          plotUnit.availability === 'available' ? 'bg-green-100 text-green-700' :
+                          plotUnit.availability === 'sold' ? 'bg-red-100 text-red-700' :
+                          'bg-amber-100 text-amber-700'
+                        }`}>
+                          {plotUnit.availability === 'available' ? 'Available' :
+                           plotUnit.availability === 'sold' ? 'Sold' :
+                           plotUnit.availability === 'limited' ? 'Limited' :
+                           plotUnit.availability === 'booked' ? 'Booked' :
+                           plotUnit.availability === 'reserved' ? 'Reserved' :
+                           'Coming Soon'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-3">
+                      {/* Dimensions Section */}
+                      {dimensionsDisplay && (
+                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                          <p className="text-xs text-gray-600 font-semibold mb-1">Dimensions</p>
+                          <p className="text-lg font-bold text-gray-900">{dimensionsDisplay}</p>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-amber-50 p-3 rounded-lg">
+                          <p className="text-xs text-amber-600 font-semibold mb-1">Area (sq.ft.)</p>
+                          <p className="text-lg font-bold text-amber-900">{areaSqft?.toLocaleString() || '-'}</p>
+                        </div>
+                        {areaSqYards && (
+                          <div className="bg-green-50 p-3 rounded-lg">
+                            <p className="text-xs text-green-600 font-semibold mb-1">Area (sq.yards)</p>
+                            <p className="text-lg font-bold text-green-900">{areaSqYards?.toLocaleString() || '-'}</p>
+                          </div>
+                        )}
+                        {areaGrounds && (
+                          <div className="bg-purple-50 p-3 rounded-lg">
+                            <p className="text-xs text-purple-600 font-semibold mb-1">Area (grounds)</p>
+                            <p className="text-lg font-bold text-purple-900">{areaGrounds}</p>
+                          </div>
+                        )}
+                        {areaAcres && (
+                          <div className="bg-blue-50 p-3 rounded-lg">
+                            <p className="text-xs text-blue-600 font-semibold mb-1">Area (acres)</p>
+                            <p className="text-lg font-bold text-blue-900">{areaAcres}</p>
+                          </div>
+                        )}
+                        {areaCents && (
+                          <div className="bg-indigo-50 p-3 rounded-lg">
+                            <p className="text-xs text-indigo-600 font-semibold mb-1">Area (cents)</p>
+                            <p className="text-lg font-bold text-indigo-900">{areaCents}</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
+                        <p className="text-xs text-green-600 font-semibold mb-1">Price</p>
+                        <p className="text-xl font-bold text-green-900">{formatUnitPrice(plotUnit.price)}</p>
+                        {ratePerSqft && (
+                          <p className="text-sm text-green-700 mt-1 font-semibold">
+                            ₹{Math.round(ratePerSqft).toLocaleString()} per sq.ft.
+                          </p>
+                        )}
+                        {plotUnit.price?.perUnit && plotUnit.price.perUnit !== 'total' && (
+                          <p className="text-xs text-green-600 mt-1">
+                            per {plotUnit.price.perUnit === 'sqft' ? 'sq.ft.' : 
+                                   plotUnit.price.perUnit === 'sqm' ? 'sq.m.' :
+                                   plotUnit.price.perUnit === 'perSqYard' ? 'sq.yard' :
+                                   plotUnit.price.perUnit === 'perGround' ? 'ground' : 
+                                   plotUnit.price.perUnit}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {plotUnit.availableUnits > 0 && (
+                        <div className="text-center text-sm text-green-600 font-semibold">
+                          {plotUnit.availableUnits} plot{plotUnit.availableUnits > 1 ? 's' : ''} available
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
         
-        {/* Area Information */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Area Details</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {safePlotDetails.sqft && (
-              <div className="p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl border border-amber-200">
-                <p className="text-sm text-amber-600 font-semibold mb-1">Area (sq.ft.)</p>
-                <p className="text-2xl font-bold text-amber-900">{safePlotDetails.sqft.toLocaleString()}</p>
-              </div>
-            )}
-            {safePlotDetails.sqYards && (
-              <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
-                <p className="text-sm text-green-600 font-semibold mb-1">Area (sq.yards)</p>
-                <p className="text-2xl font-bold text-green-900">{safePlotDetails.sqYards.toLocaleString()}</p>
-              </div>
-            )}
-            {safePlotDetails.grounds && (
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
-                <p className="text-sm text-purple-600 font-semibold mb-1">Area (grounds)</p>
-                <p className="text-2xl font-bold text-purple-900">{safePlotDetails.grounds}</p>
-              </div>
-            )}
-            {safePlotDetails.acres && (
-              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-                <p className="text-sm text-blue-600 font-semibold mb-1">Area (acres)</p>
-                <p className="text-2xl font-bold text-blue-900">{safePlotDetails.acres}</p>
-              </div>
-            )}
-            {safePlotDetails.cents && (
-              <div className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl border border-indigo-200">
-                <p className="text-sm text-indigo-600 font-semibold mb-1">Area (cents)</p>
-                <p className="text-2xl font-bold text-indigo-900">{safePlotDetails.cents}</p>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Dimensions */}
-        {safePlotDetails.dimensions && (safePlotDetails.dimensions.length || safePlotDetails.dimensions.breadth || safePlotDetails.dimensions.frontage) && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <p className="font-bold text-gray-900 mb-2">Dimensions</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {/* Detailed Dimensions Card - Only show if dimensions exist */}
+        {(safePlotDetails.dimensions?.length || safePlotDetails.dimensions?.breadth || safePlotDetails.dimensions?.frontage) && (
+          <div className="mt-4 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Detailed Dimensions</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {safePlotDetails.dimensions.length && (
-                <div>
-                  <p className="text-sm text-gray-600">Length</p>
-                  <p className="font-semibold text-gray-900">{safePlotDetails.dimensions.length} ft</p>
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 text-center">
+                  <p className="text-sm text-blue-600 font-semibold mb-1">Length</p>
+                  <p className="text-2xl font-bold text-blue-900">{safePlotDetails.dimensions.length} ft</p>
+                  {safePlotDetails.dimensions.breadth && (
+                    <p className="text-xs text-blue-600 mt-2">× {safePlotDetails.dimensions.breadth} ft breadth</p>
+                  )}
                 </div>
               )}
               {safePlotDetails.dimensions.breadth && (
-                <div>
-                  <p className="text-sm text-gray-600">Breadth</p>
-                  <p className="font-semibold text-gray-900">{safePlotDetails.dimensions.breadth} ft</p>
+                <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 text-center">
+                  <p className="text-sm text-green-600 font-semibold mb-1">Breadth</p>
+                  <p className="text-2xl font-bold text-green-900">{safePlotDetails.dimensions.breadth} ft</p>
+                  {safePlotDetails.dimensions.length && (
+                    <p className="text-xs text-green-600 mt-2">× {safePlotDetails.dimensions.length} ft length</p>
+                  )}
                 </div>
               )}
               {safePlotDetails.dimensions.frontage && (
-                <div>
-                  <p className="text-sm text-gray-600">Frontage</p>
-                  <p className="font-semibold text-gray-900">{safePlotDetails.dimensions.frontage} ft</p>
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 text-center">
+                  <p className="text-sm text-purple-600 font-semibold mb-1">Frontage</p>
+                  <p className="text-2xl font-bold text-purple-900">{safePlotDetails.dimensions.frontage} ft</p>
+                  <p className="text-xs text-purple-600 mt-2">Road facing width</p>
                 </div>
               )}
             </div>
+            
+            {/* Total Area Calculation - Only show if both length and breadth exist */}
+            {safePlotDetails.dimensions.length && safePlotDetails.dimensions.breadth && (
+              <div className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-200">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <p className="text-sm text-amber-600 font-semibold">Total Calculated Area</p>
+                    <p className="text-2xl font-bold text-amber-900">
+                      {(safePlotDetails.dimensions.length * safePlotDetails.dimensions.breadth).toLocaleString()} sq.ft.
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-amber-600">Length × Breadth</p>
+                    <p className="text-sm font-medium text-amber-700">
+                      {safePlotDetails.dimensions.length}' × {safePlotDetails.dimensions.breadth}'
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
         
-        {/* Plot Characteristics */}
+        {/* Plot Characteristics - Only show if any characteristic exists */}
         {(safePlotDetails.shape || safePlotDetails.facing || safePlotDetails.isCornerPlot !== undefined || 
           safePlotDetails.roadWidth || safePlotDetails.roadType || safePlotDetails.landUse || 
           safePlotDetails.developmentStatus || safePlotDetails.soilType) && (
@@ -1966,32 +2181,32 @@ export default function PropertyUnitDetail() {
           </div>
         )}
         
-        {/* Boundary Details */}
+        {/* Boundary Details - Only show if any boundary detail exists */}
         {(safePlotDetails.boundaryWalls !== undefined || safePlotDetails.fencing !== undefined || 
           safePlotDetails.gate !== undefined || safePlotDetails.elevationAvailable !== undefined) && (
           <div className="mt-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Boundary & Structure</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {safePlotDetails.boundaryWalls !== undefined && (
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
                   <p className="text-sm text-gray-600 mb-1">Boundary Walls</p>
                   <p className="font-semibold text-gray-900">{safePlotDetails.boundaryWalls ? '✓ Available' : '✗ Not Available'}</p>
                 </div>
               )}
               {safePlotDetails.fencing !== undefined && (
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
                   <p className="text-sm text-gray-600 mb-1">Fencing</p>
                   <p className="font-semibold text-gray-900">{safePlotDetails.fencing ? '✓ Available' : '✗ Not Available'}</p>
                 </div>
               )}
               {safePlotDetails.gate !== undefined && (
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
                   <p className="text-sm text-gray-600 mb-1">Gate</p>
                   <p className="font-semibold text-gray-900">{safePlotDetails.gate ? '✓ Available' : '✗ Not Available'}</p>
                 </div>
               )}
               {safePlotDetails.elevationAvailable !== undefined && (
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
                   <p className="text-sm text-gray-600 mb-1">Elevation Available</p>
                   <p className="font-semibold text-gray-900">{safePlotDetails.elevationAvailable ? '✓ Yes' : '✗ No'}</p>
                 </div>
@@ -2000,7 +2215,7 @@ export default function PropertyUnitDetail() {
           </div>
         )}
         
-        {/* Amenities */}
+        {/* Amenities - Only show if amenities exist */}
         {safePlotDetails.amenities && safePlotDetails.amenities.length > 0 && (
           <div className="mt-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Plot Amenities</h3>
@@ -2015,7 +2230,7 @@ export default function PropertyUnitDetail() {
           </div>
         )}
         
-        {/* Utilities */}
+        {/* Utilities - Only show if any utility exists */}
         {safePlotDetails.utilities && Object.values(safePlotDetails.utilities).some(v => v === true) && (
           <div className="mt-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Utilities</h3>
@@ -2049,7 +2264,7 @@ export default function PropertyUnitDetail() {
           </div>
         )}
         
-        {/* Approval Details */}
+        {/* Approval Details - Only show if any approval detail exists */}
         {safePlotDetails.approvalDetails && Object.values(safePlotDetails.approvalDetails).some(v => v === true || v) && (
           <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <p className="font-bold text-gray-900 mb-2">Approval Details</p>
@@ -2202,7 +2417,7 @@ export default function PropertyUnitDetail() {
             )}
 
             {/* Building Details */}
-            {safeBuildingDetails && Object.keys(safeBuildingDetails).length > 0 && (
+            {propertyType !== 'Plot' && safeBuildingDetails && Object.keys(safeBuildingDetails).length > 0 && (
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
                 <button
                   onClick={() => toggleSection('buildingDetails')}

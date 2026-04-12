@@ -4,7 +4,7 @@ import axios from 'axios';
 // Create axios instance
 const API = axios.create({
   baseURL: ' https://saimr-backend-1.onrender.com/api',
-  timeout: 20000,
+  timeout: 30000,
 });
 
 
@@ -105,18 +105,9 @@ getPropertyUnits: (params = {}) => {
   getMyProperties: () => {
     return API.get('/property-units/my-properties');
   },
- getFeaturedPropertyUnits: async (params = {}) => {
-    try {
-      // Don't pass any limit parameter - let the backend handle it
-      // The backend already has a default limit of 50 but can be configured
-      // If you want ALL featured properties, remove the limit parameter entirely
-      const response = await API.get('/property-units/featured');
-      return response;
-    } catch (error) {
-      console.error('Error in getFeaturedPropertyUnits:', error.response?.data || error.message);
-      throw error;
-    }
-  },
-  // Get featured property units
-
+ // Get featured property units - Direct approach without dedicated endpoint
+ getFeaturedPropertyUnits: async () => {
+    const response = await API.get('/property-units/featured');
+    return response;
+  }  
 };

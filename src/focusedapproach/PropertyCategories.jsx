@@ -1,4 +1,4 @@
-// PropertyCategories.jsx - Fully Responsive with Uniform Layout
+// PropertyCategories.jsx - Fixed Responsive Layout
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
@@ -146,9 +146,9 @@ const PropertyCategories = () => {
   }, [isMobile]);
 
   return (
-    <div className="w-full overflow-x-hidden ">
-      {/* Mobile Layout */}
-      <div className="lg:hidden">
+    <div className="w-full overflow-x-hidden">
+      {/* Mobile Layout - Only for screens < 640px */}
+      <div className="block sm:hidden">
         <section className="w-full px-3 sm:px-4 py-3 sm:py-4">
           {/* Search Bar */}
           <div className="mb-3 sm:mb-4">
@@ -163,7 +163,7 @@ const PropertyCategories = () => {
                 onClick={() => navigate(`/properties/category/${cat.id}`)}
                 className={`group relative overflow-hidden cursor-pointer rounded-xl shadow-md active:scale-[0.98] transition-all duration-300
                   ${i === 2 ? 'col-span-2' : 'col-span-1'}
-                  h-[140px] xs:h-[160px] sm:h-[200px]`}
+                  h-[140px] xs:h-[160px]`}
               >
                 {/* Background */}
                 <div className={`absolute inset-0 z-0 ${cat.bgColor}`}>
@@ -186,11 +186,11 @@ const PropertyCategories = () => {
 
                 {/* Content */}
                 <div className="absolute inset-0 z-30 p-3 sm:p-4 flex flex-col justify-end">
-                  <p className="text-[9px] xs:text-[10px] sm:text-xs font-medium tracking-wider text-amber-300 uppercase mb-0.5">
+                  <p className="text-[9px] xs:text-[10px] font-medium tracking-wider text-amber-300 uppercase mb-0.5">
                     {cat.tagline}
                   </p>
                   
-                  <h4 className="text-sm xs:text-base sm:text-lg font-semibold text-white mb-0.5">
+                  <h4 className="text-sm xs:text-base font-semibold text-white mb-0.5">
                     {cat.name}
                   </h4>
                   
@@ -224,7 +224,85 @@ const PropertyCategories = () => {
         </section>
       </div>
 
-      {/* Desktop Layout - Uniform across all screen sizes */}
+      {/* Tablet Layout - For screens 640px to 1024px */}
+      <div className="hidden sm:block lg:hidden">
+        <section className="w-full px-6 py-6">
+          <div className="max-w-4xl mx-auto">
+            {/* Search Bar */}
+            <div className="mb-6">
+              <SearchBar />
+            </div>
+
+            {/* Category Grid - 2 Columns */}
+            <div className="grid grid-cols-2 gap-4">
+              {categories.map((cat, i) => (
+                <div
+                  key={cat.id}
+                  onClick={() => navigate(`/properties/category/${cat.id}`)}
+                  className={`group relative overflow-hidden cursor-pointer rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500
+                    ${i === 2 ? 'col-span-2' : 'col-span-1'}
+                    h-[220px]`}
+                >
+                  {/* Background */}
+                  <div className={`absolute inset-0 z-0 ${cat.bgColor}`}>
+                    <CloudSVG className="absolute top-4 -left-8 w-48 opacity-70" />
+                    <CloudSVG className="absolute top-8 -right-8 w-44 opacity-80 scale-x-[-1]" />
+                  </div>
+
+                  {/* Image */}
+                  <div className='relative z-10 w-full h-full'>
+                    <img 
+                      src={cat.img} 
+                      alt={cat.name}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+                  {/* Content */}
+                  <div className="absolute inset-0 z-30 p-5 flex flex-col justify-end">
+                    <p className="text-xs font-medium tracking-wider text-amber-300 uppercase mb-1">
+                      {cat.tagline}
+                    </p>
+                    
+                    <h4 className="text-xl font-semibold text-white mb-1">
+                      {cat.name}
+                    </h4>
+                    
+                    <p className="text-sm text-white/70">
+                      {cat.location}
+                    </p>
+                  </div>
+
+                  {/* Corner Accent */}
+                  <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-white/20 rounded-tr-lg"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tablet CTA */}
+            <div className="mt-6 p-6 bg-gradient-to-r from-amber-50 to-stone-50 rounded-2xl border border-amber-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-stone-800">Ready to find your dream home?</h3>
+                  <p className="text-sm text-stone-600 mt-1">Join thousands of satisfied homeowners</p>
+                </div>
+                <button 
+                  onClick={() => navigate('/register')}
+                  className="px-6 py-3 bg-amber-600 text-white font-medium rounded-xl shadow-md hover:bg-amber-700 transition-all"
+                >
+                  Get Started
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Desktop Layout - For screens >= 1024px */}
       <div className="hidden lg:block">
         <div className="flex items-stretch min-h-[600px]">
           {/* Left Spacer - Dynamic */}
@@ -309,84 +387,6 @@ const PropertyCategories = () => {
           {/* Right Spacer - Dynamic */}
           <div className="w-[15%] xl:w-[17%] 2xl:w-[15%]"></div>
         </div>
-      </div>
-
-      {/* Tablet Layout - Intermediate */}
-      <div className="hidden sm:block lg:hidden">
-        <section className="w-full px-6 py-6">
-          <div className="max-w-4xl mx-auto">
-            {/* Search Bar */}
-            <div className="mb-6">
-              <SearchBar />
-            </div>
-
-            {/* Category Grid - 2 Columns */}
-            <div className="grid grid-cols-2 gap-4">
-              {categories.map((cat, i) => (
-                <div
-                  key={cat.id}
-                  onClick={() => navigate(`/properties/category/${cat.id}`)}
-                  className={`group relative overflow-hidden cursor-pointer rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500
-                    ${i === 2 ? 'col-span-2' : 'col-span-1'}
-                    h-[220px]`}
-                >
-                  {/* Background */}
-                  <div className={`absolute inset-0 z-0 ${cat.bgColor}`}>
-                    <CloudSVG className="absolute top-4 -left-8 w-48 opacity-70" />
-                    <CloudSVG className="absolute top-8 -right-8 w-44 opacity-80 scale-x-[-1]" />
-                  </div>
-
-                  {/* Image */}
-                  <div className='relative z-10 w-full h-full'>
-                    <img 
-                      src={cat.img} 
-                      alt={cat.name}
-                      loading="lazy"
-                      className="absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-                  {/* Content */}
-                  <div className="absolute inset-0 z-30 p-5 flex flex-col justify-end">
-                    <p className="text-xs font-medium tracking-wider text-amber-300 uppercase mb-1">
-                      {cat.tagline}
-                    </p>
-                    
-                    <h4 className="text-xl font-semibold text-white mb-1">
-                      {cat.name}
-                    </h4>
-                    
-                    <p className="text-sm text-white/70">
-                      {cat.location}
-                    </p>
-                  </div>
-
-                  {/* Corner Accent */}
-                  <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 border-white/20 rounded-tr-lg"></div>
-                </div>
-              ))}
-            </div>
-
-            {/* Tablet CTA */}
-            <div className="mt-6 p-6 bg-gradient-to-r from-amber-50 to-stone-50 rounded-2xl border border-amber-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-stone-800">Ready to find your dream home?</h3>
-                  <p className="text-sm text-stone-600 mt-1">Join thousands of satisfied homeowners</p>
-                </div>
-                <button 
-                  onClick={() => navigate('/register')}
-                  className="px-6 py-3 bg-amber-600 text-white font-medium rounded-xl shadow-md hover:bg-amber-700 transition-all"
-                >
-                  Get Started
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );
