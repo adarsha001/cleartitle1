@@ -1,11 +1,8 @@
+// FeaturedProperties.jsx (corrected version)
 import { useEffect, useState, useRef } from "react";
 import { 
-  Building2, 
   Star, 
-  CheckCircle2, 
-  Shield, 
   AlertCircle,
-  Home,
   ChevronLeft,
   ChevronRight,
   ArrowRight,
@@ -42,24 +39,18 @@ export default function FeaturedProperties() {
       setLoading(true);
       setError(null);
       
-      // Fetch all property units
-      const res = await propertyUnitAPI.getPropertyUnits({
-              limit: 1000,
-              sortBy: "createdAt",
-              sortOrder: "desc"
-            });
-            
-      console.log("All properties response:", res);
+      // Use the dedicated featured endpoint - NO limit parameter
+      const res = await propertyUnitAPI.getFeaturedPropertyUnits();
+      
+      console.log("Featured properties response:", res);
       
       if (res.data && res.data.success) {
-        // Filter featured properties in frontend (isFeatured = true)
-        const allProperties = res.data.data || [];
-        const featuredOnly = allProperties.filter(unit => unit.isFeatured === true);
+        const featuredProperties = res.data.data || [];
         
-        console.log(`Found ${featuredOnly.length} featured properties out of ${allProperties.length} total`);
+        console.log(`Found ${featuredProperties.length} featured properties`);
         
-        setPropertyUnits(featuredOnly);
-        setTotalPages(Math.ceil(featuredOnly.length / ITEMS_PER_PAGE));
+        setPropertyUnits(featuredProperties);
+        setTotalPages(Math.ceil(featuredProperties.length / ITEMS_PER_PAGE));
       } else {
         setPropertyUnits([]);
         setError("Failed to load featured properties");

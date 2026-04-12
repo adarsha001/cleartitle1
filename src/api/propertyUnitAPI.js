@@ -105,31 +105,18 @@ getPropertyUnits: (params = {}) => {
   getMyProperties: () => {
     return API.get('/property-units/my-properties');
   },
-
-  // Get featured property units
  getFeaturedPropertyUnits: async (params = {}) => {
-  try {
-  //('getFeaturedPropertyUnits called with params:', params);
-    
-    // For featured endpoint, we don't send any parameters
-    // Remove all parameters or only send essential ones if backend expects them
-    const cleanParams = {};
-    
-    // Only include parameters that the backend actually accepts
-    // If backend doesn't accept any params, leave cleanParams empty
-    
-  //('Making request with cleaned params:', cleanParams);
-    
-    const response = await API.get('/property-units/featured', { 
-      // Remove params entirely or keep empty object
-      // params: cleanParams, // Comment this out if backend doesn't accept params
-    });
-    
-  //('Featured properties response:', response.data);
-    return response;
-  } catch (error) {
-    console.error('Error in getFeaturedPropertyUnits:', error.response?.data || error.message);
-    throw error;
-  }
-}
+    try {
+      // Don't pass any limit parameter - let the backend handle it
+      // The backend already has a default limit of 50 but can be configured
+      // If you want ALL featured properties, remove the limit parameter entirely
+      const response = await API.get('/property-units/featured');
+      return response;
+    } catch (error) {
+      console.error('Error in getFeaturedPropertyUnits:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+  // Get featured property units
+
 };
