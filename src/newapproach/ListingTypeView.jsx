@@ -600,9 +600,9 @@ const ListingTypeView = () => {
    
       
       {/* Property Card Container */}
-      <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg h-full">
-        <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-100 rounded-3xl transition-all duration-500 pointer-events-none"></div>
-        
+      <div className="relative overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg ">
+        {/* <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-100 rounded-3xl transition-all duration-500 pointer-events-none"></div>
+         */}
         <div className="transform group-hover:-translate-y-1 transition-transform duration-500 h-full">
           <PropertyUnitCard 
             propertyUnit={unit}

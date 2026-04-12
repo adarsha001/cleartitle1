@@ -272,7 +272,7 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
   if (viewMode === "compact") {
     return (
       <Link to={`/property-units/${_id}`} className="block">
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-shadow duration-200">
+        <div className=" rounded-lg shadow-sm overflow-hidden  transition-shadow duration-200">
           <div className="relative h-36">
             <img
               src={safeImages[0]?.url || "https://via.placeholder.com/600x400"}
@@ -374,7 +374,7 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
     const hasMoreUnits = safeUnitTypes.length > 3;
 
     return (
-      <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 hover:border-blue-600/30">
+      <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden  hover:border-blue-600/30">
         <div className="flex flex-col md:flex-row">
           {/* Image Section */}
           <div className="w-full md:w-80 h-64 md:h-auto relative overflow-hidden">
@@ -590,7 +590,7 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
   const hasMoreUnits = safeUnitTypes.length > 2;
 
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 hover:border-blue-600/30 group">
+    <div className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden  hover:border-blue-600/30 group">
       <Link to={`/property-units/${_id}`}>
         <div className="relative h-56 overflow-hidden">
           <img

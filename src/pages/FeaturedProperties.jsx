@@ -300,7 +300,7 @@ export default function FeaturedProperties() {
   }
 
   const PropertyCard = ({ unit }) => (
-    <div className="relative group h-full">
+    <div className="relative group">
       {/* Property Card Container */}
       <div className="relative bg-white rounded-3xl overflow-hidden border border-gray-100 group-hover:border-blue-200 transition-all duration-500 group-hover:shadow-2xl shadow-lg h-full">
         {/* Premium border effect on hover */}
