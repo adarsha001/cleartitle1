@@ -163,50 +163,50 @@ export default function NewlyLaunchedProperties() {
   };
 
   // Fetch property counts for each time period
-  const fetchPropertyStats = async () => {
-    try {
-      const res = await propertyUnitAPI.getPropertyUnits({
-        limit: 1000,
-        sortBy: "createdAt",
-        sortOrder: "desc"
-      });
+  // const fetchPropertyStats = async () => {
+  //   try {
+  //     const res = await propertyUnitAPI.getPropertyUnits({
+  //       limit: 1000,
+  //       sortBy: "createdAt",
+  //       sortOrder: "desc"
+  //     });
       
-      if (res.data && res.data.success) {
-        const allUnits = res.data.data || [];
+  //     if (res.data && res.data.success) {
+  //       const allUnits = res.data.data || [];
      
-        const stats = {
-          "7": 0,
-          "14": 0,
-          "30": 0,
-          total: allUnits.length
-        };
+  //       // const stats = {
+  //       //   "7": 0,
+  //       //   "14": 0,
+  //       //   "30": 0,
+  //       //   total: allUnits.length
+  //       // };
 
-        console.log("stats  ",stats)
+  //       // console.log("stats  ",stats)
 
-        allUnits.forEach(unit => {
-          const unitDate = new Date(unit.createdAt || unit.updatedAt);
-          const now = new Date();
+  //       allUnits.forEach(unit => {
+  //         const unitDate = new Date(unit.createdAt || unit.updatedAt);
+  //         const now = new Date();
           
-          [7, 14, 30].forEach(days => {
-            const cutoffDate = new Date();
-            cutoffDate.setDate(now.getDate() - days);
-            if (unitDate >= cutoffDate) {
-              stats[days.toString()]++;
-            }
-          });
-        });
+  //         [7, 14, 30].forEach(days => {
+  //           const cutoffDate = new Date();
+  //           cutoffDate.setDate(now.getDate() - days);
+  //           if (unitDate >= cutoffDate) {
+  //             stats[days.toString()]++;
+  //           }
+  //         });
+  //       });
 
 
 
-        // setStats(stats);
+  //       // setStats(stats);
         
-        // Load initial properties
-        fetchNewlyLaunchedProperties("30", 1);
-      }
-    } catch (error) {
-      console.error("Error fetching property stats:", error);
-    }
-  };
+  //       // Load initial properties
+  //       
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching property stats:", error);
+  //   }
+  // };
 
   const fetchNewlyLaunchedProperties = async (days = timePeriod, page = 1, append = false) => {
     try {
@@ -260,7 +260,7 @@ export default function NewlyLaunchedProperties() {
   };
 
   useEffect(() => {
-    fetchPropertyStats();
+fetchNewlyLaunchedProperties("30", 1);
   }, []);
 
   const handleTimePeriodChange = (days) => {

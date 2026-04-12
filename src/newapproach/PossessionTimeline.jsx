@@ -180,7 +180,7 @@ const PossessionTimeline = () => {
         // });
         
         // Load initial properties
-        fetchPropertiesForCategory("ready-to-move", 1);
+       
       }
     } catch (error) {
       console.error("Error fetching property stats:", error);
@@ -323,7 +323,7 @@ const PossessionTimeline = () => {
   };
 
   useEffect(() => {
-    fetchPropertyStats();
+    fetchPropertiesForCategory("ready-to-move", 1);
   }, []);
 
   // Mobile Compact Category Selector

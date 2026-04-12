@@ -225,7 +225,7 @@ const ListingTypeView = () => {
         // setStats(stats);
         
         // Load initial properties for selected type
-        fetchPropertiesForType(selectedType, 1, false);
+       
       }
     } catch (error) {
       console.error("Error fetching property stats:", error);
@@ -444,7 +444,7 @@ const ListingTypeView = () => {
   };
 
   useEffect(() => {
-    fetchPropertyStats();
+   fetchPropertiesForType(selectedType, 1, false);
   }, []);
 
   // Mobile Compact Category Selector
