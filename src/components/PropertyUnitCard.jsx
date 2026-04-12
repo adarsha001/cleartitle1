@@ -558,7 +558,7 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
                 </div>
               )}
             </div>
-
+{/* 
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
               <div>
                 <div className="text-sm text-gray-500">Price Range</div>
@@ -578,7 +578,7 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
@@ -590,7 +590,7 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
   const hasMoreUnits = safeUnitTypes.length > 2;
 
   return (
-    <div className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden  hover:border-blue-600/30 group">
+    <div className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 hover:border-blue-600/30 group">
       <Link to={`/property-units/${_id}`}>
         <div className="relative h-56 overflow-hidden">
           <img

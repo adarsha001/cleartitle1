@@ -917,7 +917,7 @@ const CategoryPropertiesPage = () => {
                 <h4 className="font-medium text-gray-900 mb-3">Price Range (₹)</h4>
                 <div className="space-y-3">
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                  <div className="absolute left-3 top-4 transform -translate-y-1/2 text-gray-400 w-4 h-4" >₹</div>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -928,7 +928,7 @@ const CategoryPropertiesPage = () => {
                     />
                   </div>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <div className="absolute left-3 top-4 transform -translate-y-1/2 text-gray-400 w-4 h-4" >₹</div>
                     <input
                       type="text"
                       inputMode="numeric"

@@ -2713,205 +2713,209 @@ export default function PropertyUnitDetail() {
             )}
 
             {/* Legal Details */}
-            {safeLegalDetails && Object.keys(safeLegalDetails).length > 0 && (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
-                <button
-                  onClick={() => toggleSection('legalDetails')}
-                  className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors"
+         {safeLegalDetails && Object.keys(safeLegalDetails).length > 0 && (
+  <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-blue-200 overflow-hidden">
+    <button
+      onClick={() => toggleSection('legalDetails')}
+      className="w-full flex items-center justify-between p-4 sm:p-6 md:p-8 text-left hover:bg-blue-50 transition-colors"
+    >
+      <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+        Legal Details
+      </h2>
+      <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
+        expandedSections.legalDetails ? 'rotate-180' : ''
+      }`} />
+    </button>
+    
+    <div className={`${expandedSections.legalDetails ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Only show RERA if registered */}
+        {safeLegalDetails.reraRegistered === true && (
+          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div>
+              <p className="font-bold text-gray-900">RERA Registered</p>
+              <p className="text-gray-700">Yes</p>
+              {safeLegalDetails.reraNumber && (
+                <p className="text-xs text-gray-500 mt-1">RERA: {safeLegalDetails.reraNumber}</p>
+              )}
+              {safeLegalDetails.reraWebsiteLink && (
+                <a 
+                  href={safeLegalDetails.reraWebsiteLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:underline mt-1 inline-block"
                 >
-                  <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                    Legal Details
-                  </h2>
-                  <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${
-                    expandedSections.legalDetails ? 'rotate-180' : ''
-                  }`} />
-                </button>
-                
-                <div className={`${expandedSections.legalDetails ? 'block' : 'hidden'} px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8`}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {safeLegalDetails.reraRegistered !== undefined && (
-                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-                        {safeLegalDetails.reraRegistered ? (
-                          <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                        ) : (
-                          <X className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
-                        )}
-                        <div>
-                          <p className="font-bold text-gray-900">RERA Registered</p>
-                          <p className="text-gray-700">{safeLegalDetails.reraRegistered ? 'Yes' : 'No'}</p>
-                          {safeLegalDetails.reraNumber && (
-                            <p className="text-xs text-gray-500 mt-1">RERA: {safeLegalDetails.reraNumber}</p>
-                          )}
-                          {safeLegalDetails.reraWebsiteLink && (
-                            <a 
-                              href={safeLegalDetails.reraWebsiteLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:underline mt-1 inline-block"
-                            >
-                              View RERA Details
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.sanctioningAuthority && (
-                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                        <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                        <div>
-                          <p className="font-bold text-gray-900">Sanctioning Authority</p>
-                          <p className="text-gray-700">{safeLegalDetails.sanctioningAuthority}</p>
-                          {safeLegalDetails.sanctionNumber && (
-                            <p className="text-xs text-gray-500 mt-1">Sanction No: {safeLegalDetails.sanctionNumber}</p>
-                          )}
-                          {safeLegalDetails.sanctionDate && (
-                            <p className="text-xs text-gray-500">Date: {formatDate(safeLegalDetails.sanctionDate)}</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.khataStatus && (
-                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                        <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                        <div>
-                          <p className="font-bold text-gray-900">Khata Status</p>
-                          <p className="text-gray-700">{safeLegalDetails.khataStatus}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.clearTitle !== undefined && (
-                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-                        {safeLegalDetails.clearTitle ? (
-                          <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                        ) : (
-                          <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
-                        )}
-                        <div>
-                          <p className="font-bold text-gray-900">Clear Title</p>
-                          <p className="text-gray-700">{safeLegalDetails.clearTitle ? 'Yes' : 'Verification Required'}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.ownershipType && (
-                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                        <Home className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                        <div>
-                          <p className="font-bold text-gray-900">Ownership Type</p>
-                          <p className="text-gray-700 capitalize">{safeLegalDetails.ownershipType.replace('-', ' ')}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.motherDeedAvailable !== undefined && (
-                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                        <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                        <div>
-                          <p className="font-bold text-gray-900">Mother Deed</p>
-                          <p className="text-gray-700">{safeLegalDetails.motherDeedAvailable ? 'Available' : 'Not Available'}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.conversionCertificate !== undefined && (
-                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                        <FileCheck className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                        <div>
-                          <p className="font-bold text-gray-900">Conversion Certificate</p>
-                          <p className="text-gray-700">{safeLegalDetails.conversionCertificate ? 'Available' : 'Not Available'}</p>
-                          {safeLegalDetails.conversionType && (
-                            <p className="text-xs text-gray-500 mt-1">Type: {safeLegalDetails.conversionType}</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.encumbranceCertificate && (
-                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                        <div>
-                          <p className="font-bold text-gray-900">Encumbrance Certificate</p>
-                          <p className="text-gray-700">
-                            Available {safeLegalDetails.encumbranceYears && `(Last ${safeLegalDetails.encumbranceYears} years)`}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.occupancyCertificate && (
-                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                        <div>
-                          <p className="font-bold text-gray-900">Occupancy Certificate</p>
-                          <p className="text-gray-700">
-                            Available
-                            {safeLegalDetails.occupancyCertificateNumber && ` (${safeLegalDetails.occupancyCertificateNumber})`}
-                          </p>
-                          {safeLegalDetails.occupancyCertificateDate && (
-                            <p className="text-xs text-gray-500 mt-1">Date: {formatDate(safeLegalDetails.occupancyCertificateDate)}</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.commencementCertificate && (
-                      <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                        <div>
-                          <p className="font-bold text-gray-900">Commencement Certificate</p>
-                          <p className="text-gray-700">
-                            Available
-                            {safeLegalDetails.commencementCertificateNumber && ` (${safeLegalDetails.commencementCertificateNumber})`}
-                          </p>
-                          {safeLegalDetails.commencementCertificateDate && (
-                            <p className="text-xs text-gray-500 mt-1">Date: {formatDate(safeLegalDetails.commencementCertificateDate)}</p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.bankApprovals && safeLegalDetails.bankApprovals.length > 0 && (
-                      <div className="col-span-1 sm:col-span-2">
-                        <p className="font-bold text-gray-900 mb-3">Bank Approvals</p>
-                        <div className="flex flex-wrap gap-2">
-                          {safeLegalDetails.bankApprovals.map((bank, index) => (
-                            <div key={index} className="inline-flex flex-col items-start gap-1 bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm font-medium">
-                              <span className="flex items-center gap-1">
-                                <Banknote className="w-3 h-3" />
-                                {bank.bankName}
-                              </span>
-                              {bank.approvalDate && (
-                                <span className="text-xs text-green-600">Approved: {formatDate(bank.approvalDate)}</span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {safeLegalDetails.legalStatusSummary && (
-                      <div className="col-span-1 sm:col-span-2">
-                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                          <p className="font-bold text-gray-900 mb-2">Legal Summary</p>
-                          <p className="text-gray-700 text-sm">{safeLegalDetails.legalStatusSummary}</p>
-                          {safeLegalDetails.legalVerified && (
-                            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
-                              <BadgeCheck className="w-4 h-4 text-green-600" />
-                              <span className="text-sm text-green-700 font-medium">
-                                Legally Verified on {formatDate(safeLegalDetails.legalVerificationDate)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  View RERA Details
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Sanctioning Authority if exists */}
+        {safeLegalDetails.sanctioningAuthority && (
+          <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div>
+              <p className="font-bold text-gray-900">Sanctioning Authority</p>
+              <p className="text-gray-700">{safeLegalDetails.sanctioningAuthority}</p>
+              {safeLegalDetails.sanctionNumber && (
+                <p className="text-xs text-gray-500 mt-1">Sanction No: {safeLegalDetails.sanctionNumber}</p>
+              )}
+              {safeLegalDetails.sanctionDate && (
+                <p className="text-xs text-gray-500">Date: {formatDate(safeLegalDetails.sanctionDate)}</p>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Khata Status if exists */}
+        {safeLegalDetails.khataStatus && (
+          <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div>
+              <p className="font-bold text-gray-900">Khata Status</p>
+              <p className="text-gray-700">{safeLegalDetails.khataStatus}</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Clear Title if true */}
+        {safeLegalDetails.clearTitle === true && (
+          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div>
+              <p className="font-bold text-gray-900">Clear Title</p>
+              <p className="text-gray-700">Yes</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Ownership Type if exists */}
+        {safeLegalDetails.ownershipType && (
+          <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <Home className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div>
+              <p className="font-bold text-gray-900">Ownership Type</p>
+              <p className="text-gray-700 capitalize">{safeLegalDetails.ownershipType.replace('-', ' ')}</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Mother Deed if available */}
+        {safeLegalDetails.motherDeedAvailable === true && (
+          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+            <FileTextIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div>
+              <p className="font-bold text-gray-900">Mother Deed</p>
+              <p className="text-gray-700">Available</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Conversion Certificate if available */}
+        {safeLegalDetails.conversionCertificate === true && (
+          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+            <FileCheck className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div>
+              <p className="font-bold text-gray-900">Conversion Certificate</p>
+              <p className="text-gray-700">Available</p>
+              {safeLegalDetails.conversionType && (
+                <p className="text-xs text-gray-500 mt-1">Type: {safeLegalDetails.conversionType}</p>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Encumbrance Certificate if available */}
+        {safeLegalDetails.encumbranceCertificate === true && (
+          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div>
+              <p className="font-bold text-gray-900">Encumbrance Certificate</p>
+              <p className="text-gray-700">
+                Available {safeLegalDetails.encumbranceYears && `(Last ${safeLegalDetails.encumbranceYears} years)`}
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Occupancy Certificate if available */}
+        {safeLegalDetails.occupancyCertificate === true && (
+          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div>
+              <p className="font-bold text-gray-900">Occupancy Certificate</p>
+              <p className="text-gray-700">
+                Available
+                {safeLegalDetails.occupancyCertificateNumber && ` (${safeLegalDetails.occupancyCertificateNumber})`}
+              </p>
+              {safeLegalDetails.occupancyCertificateDate && (
+                <p className="text-xs text-gray-500 mt-1">Date: {formatDate(safeLegalDetails.occupancyCertificateDate)}</p>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Commencement Certificate if available */}
+        {safeLegalDetails.commencementCertificate === true && (
+          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div>
+              <p className="font-bold text-gray-900">Commencement Certificate</p>
+              <p className="text-gray-700">
+                Available
+                {safeLegalDetails.commencementCertificateNumber && ` (${safeLegalDetails.commencementCertificateNumber})`}
+              </p>
+              {safeLegalDetails.commencementCertificateDate && (
+                <p className="text-xs text-gray-500 mt-1">Date: {formatDate(safeLegalDetails.commencementCertificateDate)}</p>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Bank Approvals if available */}
+        {safeLegalDetails.bankApprovals && safeLegalDetails.bankApprovals.length > 0 && (
+          <div className="col-span-1 sm:col-span-2">
+            <p className="font-bold text-gray-900 mb-3">Bank Approvals</p>
+            <div className="flex flex-wrap gap-2">
+              {safeLegalDetails.bankApprovals.map((bank, index) => (
+                <div key={index} className="inline-flex flex-col items-start gap-1 bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm font-medium">
+                  <span className="flex items-center gap-1">
+                    <Banknote className="w-3 h-3" />
+                    {bank.bankName}
+                  </span>
+                  {bank.approvalDate && (
+                    <span className="text-xs text-green-600">Approved: {formatDate(bank.approvalDate)}</span>
+                  )}
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Only show Legal Summary if available */}
+        {safeLegalDetails.legalStatusSummary && (
+          <div className="col-span-1 sm:col-span-2">
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <p className="font-bold text-gray-900 mb-2">Legal Summary</p>
+              <p className="text-gray-700 text-sm">{safeLegalDetails.legalStatusSummary}</p>
+              {safeLegalDetails.legalVerified === true && (
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
+                  <BadgeCheck className="w-4 h-4 text-green-600" />
+                  <span className="text-sm text-green-700 font-medium">
+                    Legally Verified on {formatDate(safeLegalDetails.legalVerificationDate)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
 
             {/* Owner Details */}
             {/* {safeOwnerDetails && Object.keys(safeOwnerDetails).length > 0 && (
