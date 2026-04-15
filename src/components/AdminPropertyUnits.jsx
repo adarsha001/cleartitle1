@@ -1,5 +1,5 @@
 // components/AdminPropertyUnits.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { toast } from 'react-toastify';
@@ -73,12 +73,17 @@ const DraggablePropertyRow = ({
     return statusColors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  // Get the lowest price from unitTypes
-  const getMinPrice = () => {
+  // Get price range from unitTypes
+  const getPriceRange = () => {
     if (property.unitTypes && property.unitTypes.length > 0) {
       const prices = property.unitTypes.map(unit => unit.price?.amount || 0);
       const minPrice = Math.min(...prices);
-      return formatPrice({ amount: minPrice });
+      const maxPrice = Math.max(...prices);
+      
+      if (minPrice === maxPrice) {
+        return formatPrice({ amount: minPrice });
+      }
+      return `${formatPrice({ amount: minPrice })} - ${formatPrice({ amount: maxPrice })}`;
     }
     return formatPrice(property.price);
   };
@@ -181,16 +186,11 @@ const DraggablePropertyRow = ({
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="font-medium text-gray-900">
-          {getMinPrice()}
+          {getPriceRange()}
         </div>
         {property.unitTypes && property.unitTypes.length > 1 && (
           <div className="text-xs text-gray-500">
             From {property.unitTypes.length} types
-          </div>
-        )}
-        {property.price?.perUnit && (
-          <div className="text-sm text-gray-500">
-            {property.price.perUnit}
           </div>
         )}
       </td>
@@ -359,6 +359,7 @@ const AdminPropertyUnits = () => {
   const [selectedProperties, setSelectedProperties] = useState([]);
   const [showBulkPanel, setShowBulkPanel] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   // Filter options
   const [filterOptions, setFilterOptions] = useState({
@@ -370,13 +371,29 @@ const AdminPropertyUnits = () => {
     listingTypes: ['sale', 'rent', 'lease', 'pg']
   });
 
+  // Debounced filter change
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+
   // Fetch property units (admin endpoint)
-  const fetchPropertyUnits = async (params = {}) => {
+  const fetchPropertyUnits = useCallback(async (params = {}) => {
     try {
       setLoading(true);
       
+      // Clean up filters - remove empty strings
+      const cleanedFilters = {};
+      Object.keys(debouncedFilters).forEach(key => {
+        if (debouncedFilters[key] !== '' && debouncedFilters[key] !== null && debouncedFilters[key] !== undefined) {
+          cleanedFilters[key] = debouncedFilters[key];
+        }
+      });
+      
+      // For search, ensure it's properly formatted
+      if (cleanedFilters.search) {
+        cleanedFilters.search = cleanedFilters.search.trim();
+      }
+      
       const response = await propertyUnitAPI.getAllPropertyUnits({
-        ...filters,
+        ...cleanedFilters,
         ...params
       });
       
@@ -408,10 +425,19 @@ const AdminPropertyUnits = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedFilters]);
+
+  // Debounce filter changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [filters]);
 
   // Fetch stats (admin endpoint)
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await propertyUnitAPI.getPropertyUnitStats();
       if (response.success) {
@@ -420,12 +446,15 @@ const AdminPropertyUnits = () => {
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPropertyUnits();
+  }, [fetchPropertyUnits]);
+
+  useEffect(() => {
     fetchStats();
-  }, [filters]);
+  }, [fetchStats]);
 
   // Handle reordering
   const moveProperty = (fromIndex, toIndex) => {
@@ -752,6 +781,157 @@ const AdminPropertyUnits = () => {
     }
   };
 
+  // Export functionality
+  const handleExportSelected = async () => {
+    if (selectedProperties.length === 0) {
+      toast.error('Please select properties first');
+      return;
+    }
+
+    try {
+      setExportLoading(true);
+      
+      const selectedPropertiesData = propertyUnits.filter(p => 
+        selectedProperties.includes(p._id)
+      );
+      
+      const exportData = [];
+      
+      for (const property of selectedPropertiesData) {
+        const getBuildingName = () => {
+          return property.complexName || property.buildingName || property.title || 'N/A';
+        };
+
+        const getFullAddress = () => {
+          const parts = [];
+          if (property.address) parts.push(property.address);
+          if (property.locality) parts.push(property.locality);
+          if (property.city) parts.push(property.city);
+          if (property.state) parts.push(property.state);
+          if (property.pincode) parts.push(property.pincode);
+          return parts.join(', ') || 'N/A';
+        };
+
+        const getLocation = () => {
+          const parts = [];
+          if (property.locality) parts.push(property.locality);
+          if (property.city) parts.push(property.city);
+          if (property.state) parts.push(property.state);
+          return parts.join(', ') || 'N/A';
+        };
+
+        const websiteLink = `https://www.cleartitle1.com/property-units/${property._id}`;
+
+        if (property.unitTypes && property.unitTypes.length > 0) {
+          for (const unit of property.unitTypes) {
+            const getUnitTypeName = () => {
+              if (unit.type === 'plot') return 'Plot';
+              if (unit.type === 'commercial') return 'Commercial Space';
+              return unit.type || 'N/A';
+            };
+
+            const getUnitPrice = () => {
+              if (unit.price?.amount) return `₹${unit.price.amount.toLocaleString('en-IN')}`;
+              return 'N/A';
+            };
+
+            const getUnitArea = () => {
+              if (unit.carpetArea) return `${unit.carpetArea.toLocaleString()} sq.ft`;
+              if (unit.builtUpArea) return `${unit.builtUpArea.toLocaleString()} sq.ft`;
+              if (unit.plotDetails?.area?.sqft) return `${unit.plotDetails.area.sqft.toLocaleString()} sq.ft`;
+              return 'N/A';
+            };
+
+            exportData.push({
+              'Property Title': property.title || 'N/A',
+              'Building Name': getBuildingName(),
+              'Address': getFullAddress(),
+              'Location': getLocation(),
+              'Property Type': property.propertyType || 'N/A',
+              'Unit Type': getUnitTypeName(),
+              'Unit Area': getUnitArea(),
+              'Unit Price': getUnitPrice(),
+              'Listing Type': property.listingType === 'sale' ? 'For Sale' : 
+                              property.listingType === 'rent' ? 'For Rent' : 
+                              property.listingType === 'lease' ? 'For Lease' : 'PG/Hostel',
+              'Availability': unit.availability || property.availability || 'N/A',
+              'Furnishing': unit.furnishing || property.commonSpecifications?.furnishing || 'N/A',
+              'Approval Status': property.approvalStatus === 'approved' ? 'Approved' :
+                                property.approvalStatus === 'pending' ? 'Pending' : 'Rejected',
+              'Featured': property.isFeatured ? 'Yes' : 'No',
+              'Website Link': websiteLink,
+              'Property ID': property._id
+            });
+          }
+        } else {
+          exportData.push({
+            'Property Title': property.title || 'N/A',
+            'Building Name': getBuildingName(),
+            'Address': getFullAddress(),
+            'Location': getLocation(),
+            'Property Type': property.propertyType || 'N/A',
+            'Unit Type': property.propertyType || 'N/A',
+            'Unit Area': property.specifications?.carpetArea ? `${property.specifications.carpetArea} sq.ft` : 'N/A',
+            'Unit Price': property.price?.amount ? `₹${property.price.amount.toLocaleString('en-IN')}` : 'N/A',
+            'Listing Type': property.listingType === 'sale' ? 'For Sale' : 
+                            property.listingType === 'rent' ? 'For Rent' : 
+                            property.listingType === 'lease' ? 'For Lease' : 'PG/Hostel',
+            'Availability': property.availability || 'N/A',
+            'Furnishing': property.commonSpecifications?.furnishing || 'N/A',
+            'Approval Status': property.approvalStatus === 'approved' ? 'Approved' :
+                              property.approvalStatus === 'pending' ? 'Pending' : 'Rejected',
+            'Featured': property.isFeatured ? 'Yes' : 'No',
+            'Website Link': websiteLink,
+            'Property ID': property._id
+          });
+        }
+      }
+
+      exportToCSV(exportData, `property_units_export_${new Date().toISOString().split('T')[0]}.csv`);
+      toast.success(`Successfully exported ${exportData.length} unit rows from ${selectedPropertiesData.length} properties`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export properties');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const exportToCSV = (data, filename) => {
+    if (!data || data.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+    
+    for (const row of data) {
+      const values = headers.map(header => {
+        let value = row[header];
+        if (value === undefined || value === null) value = '';
+        let stringValue = String(value);
+        stringValue = stringValue.replace(/"/g, '""');
+        if (stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('"')) {
+          stringValue = `"${stringValue}"`;
+        }
+        return stringValue;
+      });
+      csvRows.push(values.join(','));
+    }
+    
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const formatPrice = (price) => {
     if (!price) return 'N/A';
     if (typeof price === 'number') return `₹${price.toLocaleString()}`;
@@ -791,6 +971,14 @@ const AdminPropertyUnits = () => {
       page: 1,
       limit: 50
     });
+  };
+
+  const clearPriceFilters = () => {
+    setFilters(prev => ({
+      ...prev,
+      minPrice: '',
+      maxPrice: ''
+    }));
   };
 
   return (
@@ -914,13 +1102,32 @@ const AdminPropertyUnits = () => {
             {!isReordering ? (
               <>
                 {selectedProperties.length > 0 && (
-                  <button
-                    onClick={() => setShowBulkPanel(!showBulkPanel)}
-                    className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors flex items-center"
-                  >
-                    <span className="mr-2">📋</span>
-                    Bulk Edit ({selectedProperties.length})
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setShowBulkPanel(!showBulkPanel)}
+                      className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors flex items-center"
+                    >
+                      <span className="mr-2">📋</span>
+                      Bulk Edit ({selectedProperties.length})
+                    </button>
+                    <button
+                      onClick={handleExportSelected}
+                      disabled={exportLoading}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center disabled:opacity-50"
+                    >
+                      {exportLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Exporting...
+                        </>
+                      ) : (
+                        <>
+                          <span className="mr-2">📥</span>
+                          Export ({selectedProperties.length})
+                        </>
+                      )}
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={startReordering}
@@ -940,7 +1147,7 @@ const AdminPropertyUnits = () => {
               Add New
             </button>
             <button
-              onClick={fetchPropertyUnits}
+              onClick={() => fetchPropertyUnits()}
               disabled={isReordering || loading}
               className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -962,7 +1169,7 @@ const AdminPropertyUnits = () => {
                   onClick={clearFilters}
                   className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
                 >
-                  Clear Filters
+                  Clear All Filters
                 </button>
               )}
               <button
@@ -974,14 +1181,40 @@ const AdminPropertyUnits = () => {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <input
-              type="text"
-              placeholder="Search properties..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              disabled={isReordering}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-            />
+            {/* Enhanced Search Input */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search by title, address, location, description..."
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                disabled={isReordering}
+                className="w-full px-4 py-2 pl-10 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              />
+              <svg
+                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              {filters.search && (
+                <button
+                  onClick={() => handleFilterChange('search', '')}
+                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
             <select
               value={filters.approvalStatus}
               onChange={(e) => handleFilterChange('approvalStatus', e.target.value)}
@@ -999,7 +1232,7 @@ const AdminPropertyUnits = () => {
               disabled={isReordering}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
             >
-              <option value="">All Types</option>
+              <option value="">All Property Types</option>
               {filterOptions.propertyTypes.map(type => (
                 <option key={type} value={type}>{type}</option>
               ))}
@@ -1028,17 +1261,21 @@ const AdminPropertyUnits = () => {
                 </option>
               ))}
             </select>
-            <select
-              value={filters.city}
-              onChange={(e) => handleFilterChange('city', e.target.value)}
-              disabled={isReordering}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-            >
-              <option value="">All Cities</option>
-              {filterOptions.cities.map(city => (
-                <option key={city} value={city}>{city}</option>
-              ))}
-            </select>
+            <div>
+              <input
+                list="cities"
+                placeholder="City"
+                value={filters.city}
+                onChange={(e) => handleFilterChange('city', e.target.value)}
+                disabled={isReordering}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              />
+              <datalist id="cities">
+                {filterOptions.cities.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </datalist>
+            </div>
             <select
               value={filters.availability}
               onChange={(e) => handleFilterChange('availability', e.target.value)}
@@ -1098,23 +1335,38 @@ const AdminPropertyUnits = () => {
               <option value="true">Verified Only</option>
               <option value="false">Not Verified</option>
             </select>
-            <div className="flex space-x-2">
-              <input
-                type="number"
-                placeholder="Min Price"
-                value={filters.minPrice}
-                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                disabled={isReordering}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-              />
-              <input
-                type="number"
-                placeholder="Max Price"
-                value={filters.maxPrice}
-                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                disabled={isReordering}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-              />
+            <div className="flex space-x-2 items-end">
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">Min Price (₹)</label>
+                <input
+                  type="number"
+                  placeholder="Min Price"
+                  value={filters.minPrice}
+                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                  disabled={isReordering}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">Max Price (₹)</label>
+                <input
+                  type="number"
+                  placeholder="Max Price"
+                  value={filters.maxPrice}
+                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                  disabled={isReordering}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+                />
+              </div>
+              {(filters.minPrice || filters.maxPrice) && (
+                <button
+                  onClick={clearPriceFilters}
+                  className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                  title="Clear price filters"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
           <div className="mt-4 flex justify-between items-center">
@@ -1363,4 +1615,4 @@ const AdminPropertyUnits = () => {
   );
 };
 
-export default AdminPropertyUnits;  
+export default AdminPropertyUnits;

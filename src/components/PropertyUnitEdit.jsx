@@ -1,4 +1,4 @@
-// components/PropertyUnitEdit.jsx (Complete Fixed Version)
+// components/PropertyUnitEdit.jsx (Complete Fixed Version with Image Deletion)
 import React, { useState, useEffect } from 'react';
 
 const PropertyUnitEdit = ({ property, onSubmit, onCancel }) => {
@@ -169,6 +169,10 @@ const PropertyUnitEdit = ({ property, onSubmit, onCancel }) => {
     endTime: '',
     slotsAvailable: 1
   });
+
+  // Track deleted images
+  const [deletedImages, setDeletedImages] = useState([]); // Track public_ids for Cloudinary deletion
+  const [deletedImageIds, setDeletedImageIds] = useState([]); // Track database IDs
 
   // Unit Types Management
   const [currentUnitType, setCurrentUnitType] = useState({
@@ -433,6 +437,10 @@ const PropertyUnitEdit = ({ property, onSubmit, onCancel }) => {
         likes: property.likes || 0,
         displayOrder: property.displayOrder || 0
       });
+      
+      // Reset deleted images tracking
+      setDeletedImages([]);
+      setDeletedImageIds([]);
     }
   }, [property]);
 
@@ -679,7 +687,7 @@ const PropertyUnitEdit = ({ property, onSubmit, onCancel }) => {
     }));
   };
 
-  // Image Handling
+  // Image Handling with deletion tracking
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     const newImageFiles = files.map(file => ({
@@ -690,6 +698,19 @@ const PropertyUnitEdit = ({ property, onSubmit, onCancel }) => {
   };
 
   const removeImage = (index) => {
+    const imageToDelete = formData.images[index];
+    
+    // Track the image for deletion on backend
+    if (imageToDelete) {
+      if (imageToDelete.public_id) {
+        setDeletedImages(prev => [...prev, imageToDelete.public_id]);
+      }
+      if (imageToDelete._id) {
+        setDeletedImageIds(prev => [...prev, imageToDelete._id]);
+      }
+    }
+    
+    // Remove from local state
     setFormData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index)
@@ -697,192 +718,206 @@ const PropertyUnitEdit = ({ property, onSubmit, onCancel }) => {
   };
 
   const removeNewImage = (index) => {
+    // Revoke object URL to avoid memory leaks
+    URL.revokeObjectURL(newImages[index].preview);
     setNewImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Form Submission
-// Fixed handleSubmit function
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  
-  try {
-    const formDataToSubmit = new FormData();
+  // Form Submission with image deletion support
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     
-    // Prepare submit data - ensure all numeric fields are proper numbers
-    const submitData = {
-      title: formData.title,
-      description: formData.description,
-      city: formData.city,
-      address: formData.address,
-      mapUrl: formData.mapUrl,
-      locationNearby: formData.locationNearby,
-      propertyType: formData.propertyType,
-      listingType: formData.listingType,
-      availability: formData.availability,
-      isFeatured: formData.isFeatured,
-      isVerified: formData.isVerified,
-      approvalStatus: formData.approvalStatus,
-      rejectionReason: formData.rejectionReason,
-      contactPreference: formData.contactPreference,
-      displayOrder: Number(formData.displayOrder) || 0,
-      unitFeatures: formData.unitFeatures,
+    try {
+      const formDataToSubmit = new FormData();
       
-      // Unit Types with proper number conversion
-      unitTypes: formData.unitTypes.map(unit => {
-        const unitData = {
-          type: unit.type,
-          price: {
-            amount: unit.price?.amount ? Number(unit.price.amount) : 0,
-            currency: unit.price?.currency || 'INR',
-            perUnit: unit.price?.perUnit || 'total'
-          },
-          carpetArea: unit.carpetArea ? Number(unit.carpetArea) : 0,
-          builtUpArea: unit.builtUpArea ? Number(unit.builtUpArea) : 0,
-          superBuiltUpArea: unit.superBuiltUpArea ? Number(unit.superBuiltUpArea) : 0,
-          availability: unit.availability || 'available',
-          totalUnits: unit.totalUnits ? Number(unit.totalUnits) : 0,
-          availableUnits: unit.availableUnits ? Number(unit.availableUnits) : 0
-        };
+      // Prepare submit data - ensure all numeric fields are proper numbers
+      const submitData = {
+        title: formData.title,
+        description: formData.description,
+        city: formData.city,
+        address: formData.address,
+        mapUrl: formData.mapUrl,
+        locationNearby: formData.locationNearby,
+        propertyType: formData.propertyType,
+        listingType: formData.listingType,
+        availability: formData.availability,
+        isFeatured: formData.isFeatured,
+        isVerified: formData.isVerified,
+        approvalStatus: formData.approvalStatus,
+        rejectionReason: formData.rejectionReason,
+        contactPreference: formData.contactPreference,
+        displayOrder: Number(formData.displayOrder) || 0,
+        unitFeatures: formData.unitFeatures,
         
-        // Include plot details if this is a plot
-        if (unit.type === 'Plot' && unit.plotDetails) {
-          unitData.plotDetails = {
-            dimensions: {
-              length: unit.plotDetails.dimensions?.length ? Number(unit.plotDetails.dimensions.length) : 0,
-              breadth: unit.plotDetails.dimensions?.breadth ? Number(unit.plotDetails.dimensions.breadth) : 0,
-              frontage: unit.plotDetails.dimensions?.frontage ? Number(unit.plotDetails.dimensions.frontage) : 0
+        // Send remaining images
+        images: formData.images,
+        
+        // Send deleted image information
+        deletedImages: deletedImages,
+        deletedImageIds: deletedImageIds,
+        
+        // Unit Types with proper number conversion
+        unitTypes: formData.unitTypes.map(unit => {
+          const unitData = {
+            type: unit.type,
+            price: {
+              amount: unit.price?.amount ? Number(unit.price.amount) : 0,
+              currency: unit.price?.currency || 'INR',
+              perUnit: unit.price?.perUnit || 'total'
             },
-            area: {
-              sqft: unit.plotDetails.area?.sqft ? Number(unit.plotDetails.area.sqft) : (unit.carpetArea ? Number(unit.carpetArea) : 0),
-              sqYards: unit.plotDetails.area?.sqYards ? Number(unit.plotDetails.area.sqYards) : 0,
-              grounds: unit.plotDetails.area?.grounds ? Number(unit.plotDetails.area.grounds) : 0,
-              acres: unit.plotDetails.area?.acres ? Number(unit.plotDetails.area.acres) : 0,
-              cents: unit.plotDetails.area?.cents ? Number(unit.plotDetails.area.cents) : 0
-            },
-            shape: unit.plotDetails.shape || 'rectangle',
-            facing: unit.plotDetails.facing || '',
-            isCornerPlot: unit.plotDetails.isCornerPlot || false,
-            cornerRoads: unit.plotDetails.cornerRoads || [],
-            roadWidth: unit.plotDetails.roadWidth ? Number(unit.plotDetails.roadWidth) : 0,
-            roadType: unit.plotDetails.roadType || 'secondary',
-            boundaryWalls: unit.plotDetails.boundaryWalls || false,
-            fencing: unit.plotDetails.fencing || false,
-            gate: unit.plotDetails.gate || false,
-            elevationAvailable: unit.plotDetails.elevationAvailable || false,
-            soilType: unit.plotDetails.soilType || '',
-            landUse: unit.plotDetails.landUse || 'residential',
-            developmentStatus: unit.plotDetails.developmentStatus || 'developed',
-            amenities: unit.plotDetails.amenities || [],
-            utilities: {
-              electricity: unit.plotDetails.utilities?.electricity || false,
-              waterConnection: unit.plotDetails.utilities?.waterConnection || false,
-              sewageConnection: unit.plotDetails.utilities?.sewageConnection || false,
-              gasConnection: unit.plotDetails.utilities?.gasConnection || false,
-              internetFiber: unit.plotDetails.utilities?.internetFiber || false
-            },
-            approvalDetails: {
-              dtcpApproved: unit.plotDetails.approvalDetails?.dtcpApproved || false,
-              dtcpNumber: unit.plotDetails.approvalDetails?.dtcpNumber || '',
-              layoutApproved: unit.plotDetails.approvalDetails?.layoutApproved || false,
-              layoutNumber: unit.plotDetails.approvalDetails?.layoutNumber || '',
-              surveyNumber: unit.plotDetails.approvalDetails?.surveyNumber || '',
-              pattaNumber: unit.plotDetails.approvalDetails?.pattaNumber || '',
-              subdivisionApproved: unit.plotDetails.approvalDetails?.subdivisionApproved || false
-            }
+            carpetArea: unit.carpetArea ? Number(unit.carpetArea) : 0,
+            builtUpArea: unit.builtUpArea ? Number(unit.builtUpArea) : 0,
+            superBuiltUpArea: unit.superBuiltUpArea ? Number(unit.superBuiltUpArea) : 0,
+            availability: unit.availability || 'available',
+            totalUnits: unit.totalUnits ? Number(unit.totalUnits) : 0,
+            availableUnits: unit.availableUnits ? Number(unit.availableUnits) : 0
           };
-        }
+          
+          // Include plot details if this is a plot
+          if (unit.type === 'Plot' && unit.plotDetails) {
+            unitData.plotDetails = {
+              dimensions: {
+                length: unit.plotDetails.dimensions?.length ? Number(unit.plotDetails.dimensions.length) : 0,
+                breadth: unit.plotDetails.dimensions?.breadth ? Number(unit.plotDetails.dimensions.breadth) : 0,
+                frontage: unit.plotDetails.dimensions?.frontage ? Number(unit.plotDetails.dimensions.frontage) : 0
+              },
+              area: {
+                sqft: unit.plotDetails.area?.sqft ? Number(unit.plotDetails.area.sqft) : (unit.carpetArea ? Number(unit.carpetArea) : 0),
+                sqYards: unit.plotDetails.area?.sqYards ? Number(unit.plotDetails.area.sqYards) : 0,
+                grounds: unit.plotDetails.area?.grounds ? Number(unit.plotDetails.area.grounds) : 0,
+                acres: unit.plotDetails.area?.acres ? Number(unit.plotDetails.area.acres) : 0,
+                cents: unit.plotDetails.area?.cents ? Number(unit.plotDetails.area.cents) : 0
+              },
+              shape: unit.plotDetails.shape || 'rectangle',
+              facing: unit.plotDetails.facing || null,
+              isCornerPlot: unit.plotDetails.isCornerPlot || false,
+              cornerRoads: unit.plotDetails.cornerRoads || [],
+              roadWidth: unit.plotDetails.roadWidth ? Number(unit.plotDetails.roadWidth) : 0,
+              roadType: unit.plotDetails.roadType || 'secondary',
+              boundaryWalls: unit.plotDetails.boundaryWalls || false,
+              fencing: unit.plotDetails.fencing || false,
+              gate: unit.plotDetails.gate || false,
+              elevationAvailable: unit.plotDetails.elevationAvailable || false,
+              soilType: unit.plotDetails.soilType || null,
+              landUse: unit.plotDetails.landUse || 'residential',
+              developmentStatus: unit.plotDetails.developmentStatus || 'developed',
+              amenities: unit.plotDetails.amenities || [],
+              utilities: {
+                electricity: unit.plotDetails.utilities?.electricity || false,
+                waterConnection: unit.plotDetails.utilities?.waterConnection || false,
+                sewageConnection: unit.plotDetails.utilities?.sewageConnection || false,
+                gasConnection: unit.plotDetails.utilities?.gasConnection || false,
+                internetFiber: unit.plotDetails.utilities?.internetFiber || false
+              },
+              approvalDetails: {
+                dtcpApproved: unit.plotDetails.approvalDetails?.dtcpApproved || false,
+                dtcpNumber: unit.plotDetails.approvalDetails?.dtcpNumber || '',
+                layoutApproved: unit.plotDetails.approvalDetails?.layoutApproved || false,
+                layoutNumber: unit.plotDetails.approvalDetails?.layoutNumber || '',
+                surveyNumber: unit.plotDetails.approvalDetails?.surveyNumber || '',
+                pattaNumber: unit.plotDetails.approvalDetails?.pattaNumber || '',
+                subdivisionApproved: unit.plotDetails.approvalDetails?.subdivisionApproved || false
+              }
+            };
+          }
+          
+          return unitData;
+        }),
         
-        return unitData;
-      }),
-      
-      // Building Details
-      buildingDetails: {
-        name: formData.buildingDetails.name || '',
-        totalFloors: formData.buildingDetails.totalFloors ? Number(formData.buildingDetails.totalFloors) : 0,
-        totalUnits: formData.buildingDetails.totalUnits ? Number(formData.buildingDetails.totalUnits) : 0,
-        yearBuilt: formData.buildingDetails.yearBuilt ? Number(formData.buildingDetails.yearBuilt) : 0,
-        amenities: formData.buildingDetails.amenities || []
-      },
-      
-      // Common Specifications
-      commonSpecifications: {
-        furnishing: formData.commonSpecifications.furnishing || 'unfurnished',
-        possessionStatus: formData.commonSpecifications.possessionStatus || 'ready-to-move',
-        ageOfProperty: formData.commonSpecifications.ageOfProperty ? Number(formData.commonSpecifications.ageOfProperty) : 0,
-        parking: {
-          covered: Number(formData.commonSpecifications.parking?.covered) || 0,
-          open: Number(formData.commonSpecifications.parking?.open) || 0
+        // Building Details
+        buildingDetails: {
+          name: formData.buildingDetails.name || '',
+          totalFloors: formData.buildingDetails.totalFloors ? Number(formData.buildingDetails.totalFloors) : 0,
+          totalUnits: formData.buildingDetails.totalUnits ? Number(formData.buildingDetails.totalUnits) : 0,
+          yearBuilt: formData.buildingDetails.yearBuilt ? Number(formData.buildingDetails.yearBuilt) : 0,
+          amenities: formData.buildingDetails.amenities || []
         },
-        kitchenType: formData.commonSpecifications.kitchenType || 'regular'
-      },
+        
+        // Common Specifications
+        commonSpecifications: {
+          furnishing: formData.commonSpecifications.furnishing || 'unfurnished',
+          possessionStatus: formData.commonSpecifications.possessionStatus || 'ready-to-move',
+          ageOfProperty: formData.commonSpecifications.ageOfProperty ? Number(formData.commonSpecifications.ageOfProperty) : 0,
+          parking: {
+            covered: Number(formData.commonSpecifications.parking?.covered) || 0,
+            open: Number(formData.commonSpecifications.parking?.open) || 0
+          },
+          kitchenType: formData.commonSpecifications.kitchenType || 'regular'
+        },
+        
+        // Owner Details
+        ownerDetails: {
+          name: formData.ownerDetails.name || '',
+          phoneNumber: formData.ownerDetails.phoneNumber || '',
+          email: formData.ownerDetails.email || '',
+          reasonForSelling: formData.ownerDetails.reasonForSelling || ''
+        },
+        
+        // Legal Details
+        legalDetails: {
+          reraRegistered: formData.legalDetails.reraRegistered || false,
+          reraNumber: formData.legalDetails.reraNumber || '',
+          reraWebsiteLink: formData.legalDetails.reraWebsiteLink || '',
+          sanctioningAuthority: formData.legalDetails.sanctioningAuthority || '',
+          sanctionNumber: formData.legalDetails.sanctionNumber || '',
+          sanctionDate: formData.legalDetails.sanctionDate || null,
+          occupancyCertificate: formData.legalDetails.occupancyCertificate || false,
+          occupancyCertificateNumber: formData.legalDetails.occupancyCertificateNumber || '',
+          occupancyCertificateDate: formData.legalDetails.occupancyCertificateDate || null,
+          commencementCertificate: formData.legalDetails.commencementCertificate || false,
+          commencementCertificateNumber: formData.legalDetails.commencementCertificateNumber || '',
+          commencementCertificateDate: formData.legalDetails.commencementCertificateDate || null,
+          khataStatus: formData.legalDetails.khataStatus || 'Not Applicable',
+          clearTitle: formData.legalDetails.clearTitle || false,
+          motherDeedAvailable: formData.legalDetails.motherDeedAvailable || false,
+          conversionCertificate: formData.legalDetails.conversionCertificate || false,
+          conversionType: formData.legalDetails.conversionType || '',
+          encumbranceCertificate: formData.legalDetails.encumbranceCertificate || false,
+          encumbranceYears: formData.legalDetails.encumbranceYears ? Number(formData.legalDetails.encumbranceYears) : 0,
+          ownershipType: formData.legalDetails.ownershipType || 'freehold',
+          bankApprovals: formData.legalDetails.bankApprovals || [],
+          legalStatusSummary: formData.legalDetails.legalStatusSummary || '',
+          legalVerified: formData.legalDetails.legalVerified || false,
+          legalVerificationDate: formData.legalDetails.legalVerificationDate || null,
+          legalVerifier: formData.legalDetails.legalVerifier || ''
+        },
+        
+        // Viewing Schedule
+        viewingSchedule: formData.viewingSchedule.map(slot => ({
+          date: slot.date,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          slotsAvailable: Number(slot.slotsAvailable) || 1
+        }))
+      };
       
-      // Owner Details
-      ownerDetails: {
-        name: formData.ownerDetails.name || '',
-        phoneNumber: formData.ownerDetails.phoneNumber || '',
-        email: formData.ownerDetails.email || '',
-        reasonForSelling: formData.ownerDetails.reasonForSelling || ''
-      },
+      // Send as JSON
+      formDataToSubmit.append('data', JSON.stringify(submitData));
       
-      // Legal Details
-      legalDetails: {
-        reraRegistered: formData.legalDetails.reraRegistered || false,
-        reraNumber: formData.legalDetails.reraNumber || '',
-        reraWebsiteLink: formData.legalDetails.reraWebsiteLink || '',
-        sanctioningAuthority: formData.legalDetails.sanctioningAuthority || '',
-        sanctionNumber: formData.legalDetails.sanctionNumber || '',
-        sanctionDate: formData.legalDetails.sanctionDate || null,
-        occupancyCertificate: formData.legalDetails.occupancyCertificate || false,
-        occupancyCertificateNumber: formData.legalDetails.occupancyCertificateNumber || '',
-        occupancyCertificateDate: formData.legalDetails.occupancyCertificateDate || null,
-        commencementCertificate: formData.legalDetails.commencementCertificate || false,
-        commencementCertificateNumber: formData.legalDetails.commencementCertificateNumber || '',
-        commencementCertificateDate: formData.legalDetails.commencementCertificateDate || null,
-        khataStatus: formData.legalDetails.khataStatus || 'Not Applicable',
-        clearTitle: formData.legalDetails.clearTitle || false,
-        motherDeedAvailable: formData.legalDetails.motherDeedAvailable || false,
-        conversionCertificate: formData.legalDetails.conversionCertificate || false,
-        conversionType: formData.legalDetails.conversionType || '',
-        encumbranceCertificate: formData.legalDetails.encumbranceCertificate || false,
-        encumbranceYears: formData.legalDetails.encumbranceYears ? Number(formData.legalDetails.encumbranceYears) : 0,
-        ownershipType: formData.legalDetails.ownershipType || 'freehold',
-        bankApprovals: formData.legalDetails.bankApprovals || [],
-        legalStatusSummary: formData.legalDetails.legalStatusSummary || '',
-        legalVerified: formData.legalDetails.legalVerified || false,
-        legalVerificationDate: formData.legalDetails.legalVerificationDate || null,
-        legalVerifier: formData.legalDetails.legalVerifier || ''
-      },
+      // Append new images
+      newImages.forEach(image => {
+        formDataToSubmit.append('images', image.file);
+      });
       
-      // Viewing Schedule
-      viewingSchedule: formData.viewingSchedule.map(slot => ({
-        date: slot.date,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        slotsAvailable: Number(slot.slotsAvailable) || 1
-      }))
-    };
-    
-    // Send as JSON instead of FormData for the data part
-    formDataToSubmit.append('data', JSON.stringify(submitData));
-    
-    // Append images
-    newImages.forEach(image => {
-      formDataToSubmit.append('images', image.file);
-    });
-    
-    // Log what's being sent for debugging
-    console.log('Sending data:', submitData);
-    
-    await onSubmit(formDataToSubmit);
-  } catch (error) {
-    console.error('Error submitting form:', error);
-    // Show user-friendly error message
-    alert(error.response?.data?.message || 'Failed to save property. Please check all fields and try again.');
-  } finally {
-    setLoading(false);
-  }
-};
+      // Log what's being sent for debugging
+      console.log('Sending data:', submitData);
+      console.log('Deleted images:', deletedImages);
+      console.log('Deleted image IDs:', deletedImageIds);
+      
+      await onSubmit(formDataToSubmit);
+      
+      // Clear deleted images tracking after successful submission
+      setDeletedImages([]);
+      setDeletedImageIds([]);
+      
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert(error.response?.data?.message || 'Failed to save property. Please check all fields and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-h-[80vh] overflow-y-auto p-2">
@@ -897,7 +932,7 @@ const handleSubmit = async (e) => {
             <input
               type="text"
               name="title"
-              value={formData.title}
+              value={formData.title || ''}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -909,7 +944,7 @@ const handleSubmit = async (e) => {
             </label>
             <textarea
               name="description"
-              value={formData.description}
+              value={formData.description || ''}
               onChange={handleChange}
               required
               rows={3}
@@ -927,7 +962,7 @@ const handleSubmit = async (e) => {
           </label>
           <select
             name="propertyType"
-            value={formData.propertyType}
+            value={formData.propertyType || 'Apartment'}
             onChange={handleChange}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -943,7 +978,7 @@ const handleSubmit = async (e) => {
           </label>
           <select
             name="listingType"
-            value={formData.listingType}
+            value={formData.listingType || 'sale'}
             onChange={handleChange}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -966,7 +1001,7 @@ const handleSubmit = async (e) => {
             <input
               type="text"
               name="city"
-              value={formData.city}
+              value={formData.city || ''}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -979,7 +1014,7 @@ const handleSubmit = async (e) => {
             <input
               type="text"
               name="address"
-              value={formData.address}
+              value={formData.address || ''}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -992,7 +1027,7 @@ const handleSubmit = async (e) => {
             <input
               type="text"
               name="mapUrl"
-              value={formData.mapUrl}
+              value={formData.mapUrl || ''}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Google Maps embed URL"
@@ -1036,7 +1071,7 @@ const handleSubmit = async (e) => {
             </button>
           </div>
           
-          {formData.locationNearby.length > 0 && (
+          {formData.locationNearby && formData.locationNearby.length > 0 && (
             <div className="space-y-2">
               {formData.locationNearby.map((item, index) => (
                 <div key={index} className="flex items-center justify-between bg-white border border-gray-300 rounded-lg p-3">
@@ -1063,7 +1098,7 @@ const handleSubmit = async (e) => {
         <h3 className="text-lg font-medium text-gray-900 mb-4">Unit Types</h3>
         
         {/* Existing Unit Types */}
-        {formData.unitTypes.map((unit, index) => (
+        {formData.unitTypes && formData.unitTypes.map((unit, index) => (
           <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
             <div className="flex justify-between items-center mb-3">
               <h4 className="font-medium text-gray-800">Unit Type {index + 1}</h4>
@@ -1077,7 +1112,7 @@ const handleSubmit = async (e) => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <select
-                value={unit.type}
+                value={unit.type || '2BHK'}
                 onChange={(e) => updateUnitType(index, 'type', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
@@ -1088,12 +1123,12 @@ const handleSubmit = async (e) => {
               <input
                 type="number"
                 placeholder="Price Amount"
-                value={unit.price.amount}
+                value={unit.price?.amount || ''}
                 onChange={(e) => updateUnitType(index, 'price.amount', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
               <select
-                value={unit.price.perUnit}
+                value={unit.price?.perUnit || 'total'}
                 onChange={(e) => updateUnitType(index, 'price.perUnit', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
@@ -1104,26 +1139,26 @@ const handleSubmit = async (e) => {
               <input
                 type="number"
                 placeholder="Carpet Area (sq.ft)"
-                value={unit.carpetArea}
+                value={unit.carpetArea || ''}
                 onChange={(e) => updateUnitType(index, 'carpetArea', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="number"
                 placeholder="Built-up Area (sq.ft)"
-                value={unit.builtUpArea}
+                value={unit.builtUpArea || ''}
                 onChange={(e) => updateUnitType(index, 'builtUpArea', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="number"
                 placeholder="Super Built-up Area (sq.ft)"
-                value={unit.superBuiltUpArea}
+                value={unit.superBuiltUpArea || ''}
                 onChange={(e) => updateUnitType(index, 'superBuiltUpArea', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
               <select
-                value={unit.availability}
+                value={unit.availability || 'available'}
                 onChange={(e) => updateUnitType(index, 'availability', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
@@ -1134,14 +1169,14 @@ const handleSubmit = async (e) => {
               <input
                 type="number"
                 placeholder="Total Units"
-                value={unit.totalUnits}
+                value={unit.totalUnits || ''}
                 onChange={(e) => updateUnitType(index, 'totalUnits', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="number"
                 placeholder="Available Units"
-                value={unit.availableUnits}
+                value={unit.availableUnits || ''}
                 onChange={(e) => updateUnitType(index, 'availableUnits', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -1470,7 +1505,7 @@ const handleSubmit = async (e) => {
             <input
               type="text"
               name="buildingDetails.name"
-              value={formData.buildingDetails.name}
+              value={formData.buildingDetails?.name || ''}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -1482,7 +1517,7 @@ const handleSubmit = async (e) => {
             <input
               type="number"
               name="buildingDetails.totalFloors"
-              value={formData.buildingDetails.totalFloors}
+              value={formData.buildingDetails?.totalFloors || ''}
               onChange={handleChange}
               min="0"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1495,7 +1530,7 @@ const handleSubmit = async (e) => {
             <input
               type="number"
               name="buildingDetails.totalUnits"
-              value={formData.buildingDetails.totalUnits}
+              value={formData.buildingDetails?.totalUnits || ''}
               onChange={handleChange}
               min="0"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1508,7 +1543,7 @@ const handleSubmit = async (e) => {
             <input
               type="number"
               name="buildingDetails.yearBuilt"
-              value={formData.buildingDetails.yearBuilt}
+              value={formData.buildingDetails?.yearBuilt || ''}
               onChange={handleChange}
               min="1900"
               max="2100"
@@ -1540,7 +1575,7 @@ const handleSubmit = async (e) => {
             </button>
           </div>
           
-          {formData.buildingDetails.amenities.length > 0 && (
+          {formData.buildingDetails?.amenities && formData.buildingDetails.amenities.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {formData.buildingDetails.amenities.map((amenity, idx) => (
                 <div
@@ -1571,7 +1606,7 @@ const handleSubmit = async (e) => {
               <input
                 type="checkbox"
                 id={`feature-${feature}`}
-                checked={formData.unitFeatures.includes(feature)}
+                checked={formData.unitFeatures?.includes(feature) || false}
                 onChange={(e) => {
                   if (e.target.checked) {
                     addUnitFeature(feature);
@@ -1599,7 +1634,7 @@ const handleSubmit = async (e) => {
             </label>
             <select
               name="commonSpecifications.furnishing"
-              value={formData.commonSpecifications.furnishing}
+              value={formData.commonSpecifications?.furnishing || 'unfurnished'}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -1614,7 +1649,7 @@ const handleSubmit = async (e) => {
             </label>
             <select
               name="commonSpecifications.possessionStatus"
-              value={formData.commonSpecifications.possessionStatus}
+              value={formData.commonSpecifications?.possessionStatus || 'ready-to-move'}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -1630,7 +1665,7 @@ const handleSubmit = async (e) => {
             <input
               type="number"
               name="commonSpecifications.ageOfProperty"
-              value={formData.commonSpecifications.ageOfProperty}
+              value={formData.commonSpecifications?.ageOfProperty || ''}
               onChange={handleChange}
               min="0"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1643,7 +1678,7 @@ const handleSubmit = async (e) => {
             <input
               type="number"
               name="commonSpecifications.parking.covered"
-              value={formData.commonSpecifications.parking.covered}
+              value={formData.commonSpecifications?.parking?.covered || 0}
               onChange={handleChange}
               min="0"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1656,7 +1691,7 @@ const handleSubmit = async (e) => {
             <input
               type="number"
               name="commonSpecifications.parking.open"
-              value={formData.commonSpecifications.parking.open}
+              value={formData.commonSpecifications?.parking?.open || 0}
               onChange={handleChange}
               min="0"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1668,7 +1703,7 @@ const handleSubmit = async (e) => {
             </label>
             <select
               name="commonSpecifications.kitchenType"
-              value={formData.commonSpecifications.kitchenType}
+              value={formData.commonSpecifications?.kitchenType || 'regular'}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -1690,7 +1725,7 @@ const handleSubmit = async (e) => {
             </label>
             <select
               name="approvalStatus"
-              value={formData.approvalStatus}
+              value={formData.approvalStatus || 'pending'}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -1705,7 +1740,7 @@ const handleSubmit = async (e) => {
             </label>
             <select
               name="availability"
-              value={formData.availability}
+              value={formData.availability || 'available'}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -1719,7 +1754,7 @@ const handleSubmit = async (e) => {
               <input
                 type="checkbox"
                 name="isFeatured"
-                checked={formData.isFeatured}
+                checked={formData.isFeatured || false}
                 onChange={handleChange}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
@@ -1731,7 +1766,7 @@ const handleSubmit = async (e) => {
               <input
                 type="checkbox"
                 name="isVerified"
-                checked={formData.isVerified}
+                checked={formData.isVerified || false}
                 onChange={handleChange}
                 className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
               />
@@ -1748,7 +1783,7 @@ const handleSubmit = async (e) => {
             </label>
             <textarea
               name="rejectionReason"
-              value={formData.rejectionReason}
+              value={formData.rejectionReason || ''}
               onChange={handleChange}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1769,7 +1804,7 @@ const handleSubmit = async (e) => {
             <input
               type="text"
               name="ownerDetails.name"
-              value={formData.ownerDetails.name}
+              value={formData.ownerDetails?.name || ''}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -1781,7 +1816,7 @@ const handleSubmit = async (e) => {
             <input
               type="tel"
               name="ownerDetails.phoneNumber"
-              value={formData.ownerDetails.phoneNumber}
+              value={formData.ownerDetails?.phoneNumber || ''}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -1793,7 +1828,7 @@ const handleSubmit = async (e) => {
             <input
               type="email"
               name="ownerDetails.email"
-              value={formData.ownerDetails.email}
+              value={formData.ownerDetails?.email || ''}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -1805,7 +1840,7 @@ const handleSubmit = async (e) => {
             <input
               type="text"
               name="ownerDetails.reasonForSelling"
-              value={formData.ownerDetails.reasonForSelling}
+              value={formData.ownerDetails?.reasonForSelling || ''}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -1824,7 +1859,7 @@ const handleSubmit = async (e) => {
             </label>
             <select
               name="legalDetails.ownershipType"
-              value={formData.legalDetails.ownershipType}
+              value={formData.legalDetails?.ownershipType || 'freehold'}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -1840,7 +1875,7 @@ const handleSubmit = async (e) => {
             </label>
             <select
               name="legalDetails.khataStatus"
-              value={formData.legalDetails.khataStatus}
+              value={formData.legalDetails?.khataStatus || 'Not Applicable'}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -1855,7 +1890,7 @@ const handleSubmit = async (e) => {
               <input
                 type="checkbox"
                 name="legalDetails.reraRegistered"
-                checked={formData.legalDetails.reraRegistered}
+                checked={formData.legalDetails?.reraRegistered || false}
                 onChange={handleChange}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
@@ -1863,11 +1898,11 @@ const handleSubmit = async (e) => {
                 RERA Registered
               </label>
             </div>
-            {formData.legalDetails.reraRegistered && (
+            {formData.legalDetails?.reraRegistered && (
               <input
                 type="text"
                 name="legalDetails.reraNumber"
-                value={formData.legalDetails.reraNumber}
+                value={formData.legalDetails?.reraNumber || ''}
                 onChange={handleChange}
                 placeholder="RERA Number"
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -1880,7 +1915,7 @@ const handleSubmit = async (e) => {
               <input
                 type="checkbox"
                 name="legalDetails.occupancyCertificate"
-                checked={formData.legalDetails.occupancyCertificate}
+                checked={formData.legalDetails?.occupancyCertificate || false}
                 onChange={handleChange}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
@@ -1888,11 +1923,11 @@ const handleSubmit = async (e) => {
                 Occupancy Certificate
               </label>
             </div>
-            {formData.legalDetails.occupancyCertificate && (
+            {formData.legalDetails?.occupancyCertificate && (
               <input
                 type="text"
                 name="legalDetails.occupancyCertificateNumber"
-                value={formData.legalDetails.occupancyCertificateNumber}
+                value={formData.legalDetails?.occupancyCertificateNumber || ''}
                 onChange={handleChange}
                 placeholder="Certificate Number"
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -1905,7 +1940,7 @@ const handleSubmit = async (e) => {
               <input
                 type="checkbox"
                 name="legalDetails.clearTitle"
-                checked={formData.legalDetails.clearTitle}
+                checked={formData.legalDetails?.clearTitle || false}
                 onChange={handleChange}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
@@ -1920,7 +1955,7 @@ const handleSubmit = async (e) => {
               <input
                 type="checkbox"
                 name="legalDetails.encumbranceCertificate"
-                checked={formData.legalDetails.encumbranceCertificate}
+                checked={formData.legalDetails?.encumbranceCertificate || false}
                 onChange={handleChange}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
@@ -1928,11 +1963,11 @@ const handleSubmit = async (e) => {
                 Encumbrance Certificate
               </label>
             </div>
-            {formData.legalDetails.encumbranceCertificate && (
+            {formData.legalDetails?.encumbranceCertificate && (
               <input
                 type="number"
                 name="legalDetails.encumbranceYears"
-                value={formData.legalDetails.encumbranceYears}
+                value={formData.legalDetails?.encumbranceYears || ''}
                 onChange={handleChange}
                 placeholder="Years"
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -1968,7 +2003,7 @@ const handleSubmit = async (e) => {
             </button>
           </div>
           
-          {formData.legalDetails.bankApprovals.length > 0 && (
+          {formData.legalDetails?.bankApprovals && formData.legalDetails.bankApprovals.length > 0 && (
             <div className="space-y-2">
               {formData.legalDetails.bankApprovals.map((approval, idx) => (
                 <div key={idx} className="flex items-center justify-between bg-white border border-gray-300 rounded-lg p-3">
@@ -2005,11 +2040,11 @@ const handleSubmit = async (e) => {
                   <input
                     type="checkbox"
                     id={`contact-${option.value}`}
-                    checked={formData.contactPreference.includes(option.value)}
+                    checked={formData.contactPreference?.includes(option.value) || false}
                     onChange={(e) => {
                       const updatedContacts = e.target.checked
-                        ? [...formData.contactPreference, option.value]
-                        : formData.contactPreference.filter(c => c !== option.value);
+                        ? [...(formData.contactPreference || []), option.value]
+                        : (formData.contactPreference || []).filter(c => c !== option.value);
                       setFormData(prev => ({
                         ...prev,
                         contactPreference: updatedContacts
@@ -2066,7 +2101,7 @@ const handleSubmit = async (e) => {
                 </button>
               </div>
               
-              {formData.viewingSchedule.length > 0 && (
+              {formData.viewingSchedule && formData.viewingSchedule.length > 0 && (
                 <div className="mt-3 space-y-2">
                   {formData.viewingSchedule.map((slot, idx) => (
                     <div key={idx} className="flex items-center justify-between bg-white border border-gray-300 rounded-lg p-3">
@@ -2101,7 +2136,7 @@ const handleSubmit = async (e) => {
           <input
             type="number"
             name="displayOrder"
-            value={formData.displayOrder}
+            value={formData.displayOrder || 0}
             onChange={handleChange}
             className="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
@@ -2116,7 +2151,7 @@ const handleSubmit = async (e) => {
         <h3 className="text-lg font-medium text-gray-900 mb-4">Images</h3>
         
         {/* Existing Images */}
-        {formData.images.length > 0 && (
+        {formData.images && formData.images.length > 0 && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Existing Images

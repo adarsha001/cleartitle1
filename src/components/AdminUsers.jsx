@@ -801,64 +801,81 @@ const AdminUsers = () => {
                       </div>
 
                       {/* Posted Properties */}
-                      <div>
-                        <h3 className="text-xl font-semibold mb-4">
-                          Listed Properties ({userDetails.postedProperties?.length || 0})
-                        </h3>
-                        {(!userDetails.postedProperties || userDetails.postedProperties.length === 0) ? (
-                          <p className="text-gray-500 text-center py-4 bg-gray-50 rounded-lg">No listed properties</p>
-                        ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {userDetails.postedProperties.map((property) => (
-                              <div 
-                                key={property._id} 
-                                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-white"
-                                onClick={(e) => handlePropertyClick(property._id, e)}
-                              >
-                                <div className="flex items-start space-x-4">
-                                  <img
-                                    src={property.images?.[0]?.url || "https://via.placeholder.com/80x60?text=No+Image"}
-                                    alt={property.title}
-                                    className="w-20 h-16 object-cover rounded flex-shrink-0"
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-gray-900 hover:text-blue-600">
-                                      {property.title}
-                                    </h4>
-                                    <p className="text-sm text-gray-600 mt-1">
-                                      {property.city} • {property.category}
-                                    </p>
-                                    <p className="text-blue-700 font-bold mt-1">
-                                      {formatPrice(property.price)}
-                                    </p>
-                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                      <span className={`text-xs px-2 py-1 rounded-full ${
-                                        property.approvalStatus === 'approved' 
-                                          ? 'bg-green-100 text-green-800'
-                                          : property.approvalStatus === 'pending'
-                                          ? 'bg-yellow-100 text-yellow-800'
-                                          : 'bg-red-100 text-red-800'
-                                      }`}>
-                                        {property.approvalStatus}
-                                      </span>
-                                      {property.isFeatured && (
-                                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
-                                          Featured
-                                        </span>
-                                      )}
-                                      {property.postedAt && (
-                                        <span className="text-xs text-gray-500">
-                                          Posted {formatDate(property.postedAt)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+{/* Posted Properties */}
+<div>
+  <h3 className="text-xl font-semibold mb-4">
+    Listed Properties ({userDetails.postedProperties?.length || 0})
+  </h3>
+  {(!userDetails.postedProperties || userDetails.postedProperties.length === 0) ? (
+    <p className="text-gray-500 text-center py-4 bg-gray-50 rounded-lg">No listed properties</p>
+  ) : (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {userDetails.postedProperties.map((item) => {
+        // Access the property from the nested structure
+        const property = item.property;
+        
+        // Skip if property doesn't exist
+        if (!property) return null;
+        
+        return (
+          <div 
+            key={property._id} 
+            className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-white"
+            onClick={(e) => handlePropertyClick(property._id, e)}
+          >
+            <div className="flex items-start space-x-4">
+              <img
+                src={property.images?.[0]?.url || "https://via.placeholder.com/80x60?text=No+Image"}
+                alt={property.title || 'Property'}
+                className="w-20 h-16 object-cover rounded flex-shrink-0"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/80x60?text=No+Image";
+                }}
+              />
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-gray-900 hover:text-blue-600">
+                  {property.title || 'Untitled Property'}
+                </h4>
+                <p className="text-sm text-gray-600 mt-1">
+                  {property.city || 'Location not specified'} • {property.propertyType || property.category || 'Uncategorized'}
+                </p>
+                <p className="text-blue-700 font-bold mt-1">
+                  {formatPrice(property.price)}
+                </p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    property.approvalStatus === 'approved' 
+                      ? 'bg-green-100 text-green-800'
+                      : property.approvalStatus === 'pending'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {property.approvalStatus || 'pending'}
+                  </span>
+                  {property.isFeatured && (
+                    <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                      Featured
+                    </span>
+                  )}
+                  {item.postedAt && (
+                    <span className="text-xs text-gray-500">
+                      Posted {formatDate(item.postedAt)}
+                    </span>
+                  )}
+                </div>
+                {property.createdBy && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Listed by: {property.createdBy.name || property.createdBy.username}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</div>
                     </div>
                   </>
                 ) : (

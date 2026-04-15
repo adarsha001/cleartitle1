@@ -93,21 +93,225 @@ const BulkEditPanel = ({
       setSelectedProperties(allIds);
     }
   };
+const handleExportSelected = async () => {
+  if (selectedProperties.length === 0) {
+    toast.error('Please select properties first');
+    return;
+  }
 
-  const handleExportSelected = async () => {
-    if (selectedProperties.length === 0) {
-      toast.error('Please select properties first');
-      return;
+  try {
+    setExportLoading(true);
+    
+    // Get the selected properties data
+    const selectedPropertiesData = propertyUnits.filter(p => 
+      selectedProperties.includes(p._id)
+    );
+    
+    // Format data for export - create separate rows for each unit type
+    const exportData = [];
+    
+    for (const property of selectedPropertiesData) {
+      // Get building name
+      const getBuildingName = () => {
+        return property.complexName || property.buildingName || property.title || 'N/A';
+      };
+
+      // Get full address
+      const getFullAddress = () => {
+        const parts = [];
+        if (property.address) parts.push(property.address);
+        if (property.locality) parts.push(property.locality);
+        if (property.city) parts.push(property.city);
+        if (property.state) parts.push(property.state);
+        if (property.pincode) parts.push(property.pincode);
+        return parts.join(', ') || 'N/A';
+      };
+
+      // Get location (city/state)
+      const getLocation = () => {
+        const parts = [];
+        if (property.locality) parts.push(property.locality);
+        if (property.city) parts.push(property.city);
+        if (property.state) parts.push(property.state);
+        return parts.join(', ') || 'N/A';
+      };
+
+      // Get property type
+      const getPropertyType = () => {
+        return property.propertyType || 'N/A';
+      };
+
+      // Generate website link
+      const websiteLink = `https://www.cleartitle1.com/property-units/${property._id}`;
+
+      // Check if property has unitTypes
+      if (property.unitTypes && property.unitTypes.length > 0) {
+        // Create a separate row for each unit type
+        for (const unit of property.unitTypes) {
+          // Get unit type name
+          const getUnitTypeName = () => {
+            if (unit.type === 'plot') return 'Plot';
+            if (unit.type === 'commercial') return 'Commercial Space';
+            return unit.type || 'N/A';
+          };
+
+          // Get unit price
+          const getUnitPrice = () => {
+            if (unit.price?.amount) return unit.price.amount;
+            return 0;
+          };
+
+          // Get unit area
+          const getUnitArea = () => {
+            if (unit.carpetArea) return `${unit.carpetArea} sq.ft`;
+            if (unit.builtUpArea) return `${unit.builtUpArea} sq.ft`;
+            if (unit.plotDetails?.area?.sqft) return `${unit.plotDetails.area.sqft} sq.ft`;
+            if (unit.superBuiltUpArea) return `${unit.superBuiltUpArea} sq.ft`;
+            return 'N/A';
+          };
+
+          // Get bedroom info
+          const getBedroomInfo = () => {
+            if (unit.type === 'plot') return 'Plot';
+            if (unit.bedrooms) return `${unit.bedrooms} BHK`;
+            return 'Studio';
+          };
+
+          // Get bathroom info
+          const getBathroomInfo = () => {
+            if (unit.bathrooms) return `${unit.bathrooms} Bath${unit.bathrooms > 1 ? 's' : ''}`;
+            return 'N/A';
+          };
+
+          // Get furnishing status for this unit
+          const getFurnishing = () => {
+            if (unit.furnishing) return unit.furnishing;
+            return property.commonSpecifications?.furnishing || property.specifications?.furnishing || 'N/A';
+          };
+
+          // Get availability for this unit
+          const getAvailability = () => {
+            if (unit.availability) return unit.availability;
+            return property.availability || 'N/A';
+          };
+
+          exportData.push({
+            'Title': property.title || 'N/A',
+            'Building Name': getBuildingName(),
+            'Address': getFullAddress(),
+            'Location': getLocation(),
+            'Property Type': getPropertyType(),
+            'Unit Type': getUnitTypeName(),
+         
+            'Unit Area': getUnitArea(),
+            'Unit Price (₹)': getUnitPrice(),
+            'Unit Furnishing': getFurnishing(),
+            'Unit Availability': getAvailability(),
+            'Listing Type': property.listingType === 'sale' ? 'For Sale' : 
+                            property.listingType === 'rent' ? 'For Rent' : 
+                            property.listingType === 'lease' ? 'For Lease' : 'PG/Hostel',
+            'Approval Status': property.approvalStatus === 'approved' ? 'Approved' :
+                              property.approvalStatus === 'pending' ? 'Pending' : 'Rejected',
+            'Featured': property.isFeatured ? 'Yes' : 'No',
+            'Website Link': websiteLink,
+            'Property ID': property._id
+          });
+        }
+      } else {
+        // Fallback for properties without unitTypes
+        exportData.push({
+          'Title': property.title || 'N/A',
+          'Building Name': getBuildingName(),
+          'Address': getFullAddress(),
+          'Location': getLocation(),
+          'Property Type': getPropertyType(),
+          'Unit Type': property.propertyType || 'N/A',
+
+          'Unit Area': property.specifications?.carpetArea ? `${property.specifications.carpetArea} sq.ft` : 'N/A',
+          'Unit Price (₹)': property.price?.amount || 0,
+          'Unit Furnishing': property.commonSpecifications?.furnishing || property.specifications?.furnishing || 'N/A',
+          'Unit Availability': property.availability || 'N/A',
+          'Listing Type': property.listingType === 'sale' ? 'For Sale' : 
+                          property.listingType === 'rent' ? 'For Rent' : 
+                          property.listingType === 'lease' ? 'For Lease' : 'PG/Hostel',
+          'Approval Status': property.approvalStatus === 'approved' ? 'Approved' :
+                            property.approvalStatus === 'pending' ? 'Pending' : 'Rejected',
+          'Featured': property.isFeatured ? 'Yes' : 'No',
+          'Website Link': websiteLink,
+          'Property ID': property._id
+        });
+      }
     }
 
-    try {
-      toast.info('Export feature coming soon');
-      // Implement export if you have the endpoint
-    } catch (error) {
-      toast.error('Export feature not available');
-    }
-  };
+    // Export to CSV
+    exportToCSV(exportData, `property_units_export_${new Date().toISOString().split('T')[0]}.csv`);
+    
+    toast.success(`Successfully exported ${exportData.length} unit rows from ${selectedPropertiesData.length} properties`);
+  } catch (error) {
+    console.error('Export error:', error);
+    toast.error('Failed to export properties');
+  } finally {
+    setExportLoading(false);
+  }
+};
 
+// CSV Export helper function
+const exportToCSV = (data, filename) => {
+  if (!data || data.length === 0) {
+    toast.error('No data to export');
+    return;
+  }
+
+  // Get headers
+  const headers = Object.keys(data[0]);
+  
+  // Convert data to CSV rows
+  const csvRows = [];
+  
+  // Add headers
+  csvRows.push(headers.join(','));
+  
+  // Add data rows
+  for (const row of data) {
+    const values = headers.map(header => {
+      let value = row[header];
+      
+      // Handle special characters and formatting
+      if (value === undefined || value === null) {
+        value = '';
+      }
+      
+      // Convert to string and escape quotes
+      let stringValue = String(value);
+      
+      // Escape double quotes
+      stringValue = stringValue.replace(/"/g, '""');
+      
+      // If value contains comma, newline, or double quote, wrap in quotes
+      if (stringValue.includes(',') || stringValue.includes('\n') || stringValue.includes('"')) {
+        stringValue = `"${stringValue}"`;
+      }
+      
+      return stringValue;
+    });
+    csvRows.push(values.join(','));
+  }
+  
+  // Create blob and download
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+const [exportLoading, setExportLoading] = useState(false);
   return (
     <div className="bg-white rounded-lg shadow-lg border-2 border-yellow-200 mb-6">
       {/* Header */}
@@ -208,14 +412,23 @@ const BulkEditPanel = ({
               </button>
             </div>
 
-            <button
-              onClick={handleExportSelected}
-              disabled={selectedProperties.length === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-medium transition-colors disabled:opacity-50"
-            >
-              <Download className="w-4 h-4" />
-              Export Selected
-            </button>
+<button
+  onClick={handleExportSelected}
+  disabled={selectedProperties.length === 0 || exportLoading}
+  className="flex items-center gap-2 px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-medium transition-colors disabled:opacity-50"
+>
+  {exportLoading ? (
+    <>
+      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-700"></div>
+      Exporting...
+    </>
+  ) : (
+    <>
+      <Download className="w-4 h-4" />
+      Export Selected
+    </>
+  )}
+</button>
           </div>
 
           {/* Bulk Edit Form */}
