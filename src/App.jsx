@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Helmet, HelmetProvider } from 'react-v19-helmet-async';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Navbar from "./components/Navbar";
 import PropertyDetail from "./pages/PropertyDetail";
 import FeaturedProperties from "./pages/FeaturedProperties";
@@ -60,8 +60,33 @@ const isAndroidMobile = () => {
   return isAndroid && isMobile && isNotIOS;
 };
 
-// Modal component for Truecaller prompt (Android only)
+// Modal component for Truecaller prompt (Android only) - AUTO ACTIVATING
 const TruecallerModal = ({ isOpen, onClose }) => {
+  const truecallerRef = useRef(null);
+  const hasAutoTriggered = useRef(false);
+
+  useEffect(() => {
+    // Auto-trigger Truecaller when modal opens
+    if (isOpen && !hasAutoTriggered.current) {
+      hasAutoTriggered.current = true;
+      
+      // Small delay to ensure the Truecaller component is mounted
+      setTimeout(() => {
+        const truecallerButton = truecallerRef.current?.querySelector('button');
+        if (truecallerButton && !truecallerButton.disabled) {
+          console.log('Auto-triggering Truecaller login...');
+          truecallerButton.click();
+        } else {
+          // Fallback: try to find any button inside the component
+          const anyButton = truecallerRef.current?.querySelector('[role="button"], button');
+          if (anyButton && !anyButton.disabled) {
+            anyButton.click();
+          }
+        }
+      }, 1000);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
   
   return (
@@ -78,7 +103,7 @@ const TruecallerModal = ({ isOpen, onClose }) => {
         
         <div className="text-center mb-6">
           <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-blue-600 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 13c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z"/>
             </svg>
           </div>
@@ -86,20 +111,22 @@ const TruecallerModal = ({ isOpen, onClose }) => {
             Quick Login Required
           </h3>
           <p className="text-gray-600 text-sm">
-            Please login with Truecaller to continue
+            Please wait, redirecting to Truecaller...
           </p>
         </div>
         
-        <TruecallerAuth 
-          onSuccess={() => {
-            window.location.reload();
-          }}
-          onError={(error) => {
-            console.error('Login failed:', error);
-            alert('Login failed: ' + error);
-          }}
-          redirectUrl="/"
-        />
+        <div ref={truecallerRef}>
+          <TruecallerAuth 
+            onSuccess={() => {
+              window.location.reload();
+            }}
+            onError={(error) => {
+              console.error('Login failed:', error);
+              alert('Login failed: ' + error);
+            }}
+            redirectUrl="/"
+          />
+        </div>
         
         <p className="text-xs text-center text-gray-500 mt-4">
           By continuing, you agree to our Terms & Privacy Policy
@@ -115,6 +142,7 @@ const AppContent = () => {
   const [showTruecallerPrompt, setShowTruecallerPrompt] = useState(false);
   const [hasShownPrompt, setHasShownPrompt] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
+  const truecallerInitialized = useRef(false);
 
   useEffect(() => {
     // Detect if user is on Android mobile
@@ -130,7 +158,8 @@ const AppContent = () => {
     // 1. User is not authenticated
     // 2. User is on Android mobile
     // 3. Prompt hasn't been shown yet
-    if (!loading && !isAuthenticated && !hasShownPrompt && androidUser) {
+    if (!loading && !isAuthenticated && !hasShownPrompt && androidUser && !truecallerInitialized.current) {
+      truecallerInitialized.current = true;
       const timer = setTimeout(() => {
         setShowTruecallerPrompt(true);
         setHasShownPrompt(true);
@@ -420,7 +449,7 @@ const AppContent = () => {
         />
       </Routes>
 
-      {/* Truecaller Modal - Shows after 5 seconds ONLY for Android mobile users */}
+      {/* Truecaller Modal - Auto activates after 5 seconds ONLY for Android mobile users */}
       <TruecallerModal 
         isOpen={showTruecallerPrompt}
         onClose={() => setShowTruecallerPrompt(false)}
