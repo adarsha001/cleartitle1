@@ -19,6 +19,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BatchAdminPanel from "./BatchAdminPanel";
 import CarouselAdmin from "./CarouselAdmin";
+import BatchAnalytics from "./AdminBatchAnalytics";
 
 // Inline LoadingSpinner component
 const LoadingSpinner = ({ message = "Loading..." }) => {
@@ -243,6 +244,9 @@ const AdminDashboard = () => {
         );
       case "enquiries":
         return <AdminEnquiries />;
+      case "batch_analytics":
+        return <BatchAnalytics />;
+        
       case "property-form":
         return (
           <div className="p-4 sm:p-6">
@@ -469,6 +473,25 @@ const AdminDashboard = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
               </svg>
               <span>Users</span>
+            </button>
+
+
+                     <button
+              onClick={() => {
+                setActiveSection("batch_analytics");
+                setAnalyticsView("overview");
+                setError(null);
+              }}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+                activeSection === "users"
+                  ? "bg-purple-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              </svg>
+              <span>batch_analytics</span>
             </button>
 
             

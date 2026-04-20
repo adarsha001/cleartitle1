@@ -166,6 +166,84 @@ export default function PropertyUnitDetail() {
     rentalDetails: true
   });
 
+    const viewStartTime = useRef(null);
+  const viewRecorded = useRef(false);
+  const pageVisible = useRef(true);
+
+
+    useEffect(() => {
+    const handleVisibilityChange = () => {
+      pageVisible.current = !document.hidden;
+      if (pageVisible.current && viewStartTime.current && !viewRecorded.current) {
+        // Page became visible again, reset start time
+        viewStartTime.current = Date.now();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+
+
+    useEffect(() => {
+    return () => {
+      if (viewStartTime.current && propertyUnit && user && !viewRecorded.current) {
+        const viewDuration = Math.floor((Date.now() - viewStartTime.current) / 1000);
+        // Only record if viewed for more than 5 seconds
+        if (viewDuration > 5) {
+          propertyUnitAPI.recordPropertyView(propertyUnit._id, {
+            duration: viewDuration,
+            source: 'direct'
+          }).catch(console.warn);
+          viewRecorded.current = true;
+        }
+      }
+    };
+  }, [propertyUnit, user]);
+    // Your existing fetch property useEffect
+  useEffect(() => {
+    const fetchPropertyUnit = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Start timing the view
+        if (user) {
+          viewStartTime.current = Date.now();
+        }
+        
+        const response = await propertyUnitAPI.getPropertyUnit(id);
+        
+        if (response.data.success) {
+          setPropertyUnit(response.data.data);
+          setLikeCount(response.data.data.likes || 0);
+          
+          if (user && response.data.data.likedByUser) {
+            setIsLiked(true);
+          }
+          
+          if (response.data.data.unitTypes && response.data.data.unitTypes.length > 0) {
+            setSelectedUnitType(response.data.data.unitTypes[0]);
+          }
+        } else {
+          setError(response.data.message || "Failed to fetch property details");
+        }
+      } catch (error) {
+        console.error("Error fetching property unit:", error);
+        // Error handling...
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (id) {
+      fetchPropertyUnit();
+    } else {
+      setError("Invalid property ID");
+      setLoading(false);
+    }
+  }, [id, user]);
   // Available time slots
   const timeSlots = [
     "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
@@ -282,69 +360,69 @@ export default function PropertyUnitDetail() {
   }, [showFullscreenImage]);
 
   // Fetch property unit details
-  useEffect(() => {
-    const fetchPropertyUnit = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // useEffect(() => {
+  //   const fetchPropertyUnit = async () => {
+  //     try {
+  //       setLoading(true);
+  //       setError(null);
         
-        const response = await propertyUnitAPI.getPropertyUnit(id);
+  //       const response = await propertyUnitAPI.getPropertyUnit(id);
         
-        if (response.data.success) {
-          setPropertyUnit(response.data.data);
-          setLikeCount(response.data.data.likes || 0);
-          // Check if user has liked this property (if logged in)
-          if (user && response.data.data.likedByUser) {
-            setIsLiked(true);
-          }
-          // Select first unit type by default if available
-          if (response.data.data.unitTypes && response.data.data.unitTypes.length > 0) {
-            setSelectedUnitType(response.data.data.unitTypes[0]);
-          }
-        } else {
-          console.error("Failed to fetch property unit:", response.data.message);
-          setError(response.data.message || "Failed to fetch property details");
-        }
-      } catch (error) {
-        console.error("Error fetching property unit:", error);
+  //       if (response.data.success) {
+  //         setPropertyUnit(response.data.data);
+  //         setLikeCount(response.data.data.likes || 0);
+  //         // Check if user has liked this property (if logged in)
+  //         if (user && response.data.data.likedByUser) {
+  //           setIsLiked(true);
+  //         }
+  //         // Select first unit type by default if available
+  //         if (response.data.data.unitTypes && response.data.data.unitTypes.length > 0) {
+  //           setSelectedUnitType(response.data.data.unitTypes[0]);
+  //         }
+  //       } else {
+  //         console.error("Failed to fetch property unit:", response.data.message);
+  //         setError(response.data.message || "Failed to fetch property details");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching property unit:", error);
         
-        if (error.response) {
-          switch (error.response.status) {
-            case 400:
-              setError("Invalid property ID format");
-              break;
-            case 404:
-              setError("Property not found or not available");
-              break;
-            case 401:
-              setError("Unauthorized access");
-              break;
-            case 403:
-              setError("You don't have permission to view this property");
-              break;
-            case 500:
-              setError("Server error. Please try again later");
-              break;
-            default:
-              setError(error.response.data?.message || "Failed to load property details");
-          }
-        } else if (error.request) {
-          setError("Network error. Please check your connection");
-        } else {
-          setError(error.message || "An unexpected error occurred");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       if (error.response) {
+  //         switch (error.response.status) {
+  //           case 400:
+  //             setError("Invalid property ID format");
+  //             break;
+  //           case 404:
+  //             setError("Property not found or not available");
+  //             break;
+  //           case 401:
+  //             setError("Unauthorized access");
+  //             break;
+  //           case 403:
+  //             setError("You don't have permission to view this property");
+  //             break;
+  //           case 500:
+  //             setError("Server error. Please try again later");
+  //             break;
+  //           default:
+  //             setError(error.response.data?.message || "Failed to load property details");
+  //         }
+  //       } else if (error.request) {
+  //         setError("Network error. Please check your connection");
+  //       } else {
+  //         setError(error.message || "An unexpected error occurred");
+  //       }
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
     
-    if (id) {
-      fetchPropertyUnit();
-    } else {
-      setError("Invalid property ID");
-      setLoading(false);
-    }
-  }, [id, user]);
+  //   if (id) {
+  //     fetchPropertyUnit();
+  //   } else {
+  //     setError("Invalid property ID");
+  //     setLoading(false);
+  //   }
+  // }, [id, user]);
 
   // Handle like/unlike
   const handleLike = async () => {

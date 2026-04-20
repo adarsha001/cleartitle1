@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
-import { batchService } from "../api/batchService";
 
 // Custom debounce function
 const debounce = (func, wait) => {
@@ -19,18 +18,11 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
   const [searchTerm, setSearchTerm] = useState('');
   const [propertyUnits, setPropertyUnits] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [filters, setFilters] = useState({
-    page: 1,
-    limit: 10,
     search: '',
     approvalStatus: 'approved',
     availability: 'available'
-  });
-  const [pagination, setPagination] = useState({
-    page: 1,
-    total: 0,
-    pages: 1,
-    limit: 10
   });
   const [filterOptions, setFilterOptions] = useState({
     cities: [],
@@ -39,18 +31,28 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
   });
   const [showFilters, setShowFilters] = useState(false);
   const [selectedIds, setSelectedIds] = useState(selectedUnits);
-  const [viewMode, setViewMode] = useState('paginated'); // 'paginated' or 'all'
-
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  
+  const [viewMode, setViewMode] = useState('paginated');
+  
   // Available page size options
-  const pageSizeOptions = [10, 25, 50, 100];
+  const pageSizeOptions = [10, 20, 50, 100];
 
   // Use useRef for debounced function
   const debouncedSearchRef = useRef();
+  const isFetchingRef = useRef(false);
 
   // Initialize debounced function
   useEffect(() => {
     debouncedSearchRef.current = debounce((searchValue) => {
-      setFilters(prev => ({ ...prev, search: searchValue, page: 1 }));
+      setFilters(prev => ({ ...prev, search: searchValue }));
+      setCurrentPage(1); // Reset to page 1 when searching
+      setPropertyUnits([]); // Clear existing units
     }, 500);
   }, []);
 
@@ -63,83 +65,29 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
     }
   };
 
-  // Fetch property units with filters
-  const fetchPropertyUnits = async (reset = false) => {
-    if (loading) return;
+  // Fetch property units with pagination
+  const fetchPropertyUnits = async (page, isLoadMore = false) => {
+    if (isFetchingRef.current) return;
     
-    setLoading(true);
-    try {
-      const currentPage = reset ? 1 : filters.page;
-      const params = {
-        ...filters,
-        page: currentPage,
-        limit: filters.limit,
-        excludeBatch: batchId // Exclude units already in this batch
-      };
-
-      // Clean up params - remove empty values
-      Object.keys(params).forEach(key => {
-        if (params[key] === '' || params[key] === null || params[key] === undefined) {
-          delete params[key];
-        }
-      });
-
-      // Try to use batchService first, fall back to propertyUnitAPI
-      let response;
-      try {
-        response = await batchService.getAssignablePropertyUnits(params);
-      } catch (error) {
-        // Fall back to propertyUnitAPI
-        const apiResponse = await propertyUnitAPI.getPropertyUnits(params);
-        response = {
-          success: true,
-          data: apiResponse.data?.data || apiResponse.data || [],
-          pagination: apiResponse.data?.pagination || {
-            page: currentPage,
-            total: (apiResponse.data?.data || apiResponse.data || []).length,
-            pages: 1,
-            limit: params.limit
-          }
-        };
-      }
-      
-      if (response.success) {
-        const data = response.data || [];
-        
-        if (reset) {
-          setPropertyUnits(data);
-        } else {
-          setPropertyUnits(prev => [...prev, ...data]);
-        }
-        
-        setPagination(response.pagination || {
-          page: currentPage,
-          total: data.length,
-          pages: 1,
-          limit: params.limit
-        });
-
-        // Set filter options if available
-        if (response.filters) {
-          setFilterOptions(response.filters);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching property units:', error);
-    } finally {
-      setLoading(false);
+    isFetchingRef.current = true;
+    
+    if (!isLoadMore) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
     }
-  };
-
-  // Fetch all property units (without pagination)
-  const fetchAllPropertyUnits = async () => {
-    setLoading(true);
+    
     try {
       const params = {
         ...filters,
-        limit: 1000, // Large limit to get all records
-        excludeBatch: batchId
+        page: page,
+        limit: pageSize,
       };
+      
+      // Only add excludeBatch if batchId is valid
+      if (batchId && batchId !== 'null' && batchId !== 'undefined' && batchId !== '') {
+        params.excludeBatch = batchId;
+      }
 
       // Clean up params
       Object.keys(params).forEach(key => {
@@ -148,56 +96,159 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         }
       });
 
-      let allUnits = [];
-      let currentPage = 1;
-      let totalPages = 1;
-
-      // Fetch all pages
-      while (currentPage <= totalPages) {
-        const pageParams = { ...params, page: currentPage };
+      console.log(`Fetching page ${page} with params:`, params);
+      
+      const response = await propertyUnitAPI.getPropertyUnits(params);
+      
+      console.log('Response:', response.data);
+      
+      if (response.data && response.data.success) {
+        const newData = response.data.data || [];
+        const total = response.data.total || 0;
+        const pages = response.data.totalPages || 1;
         
-        let response;
-        try {
-          response = await batchService.getAssignablePropertyUnits(pageParams);
-        } catch (error) {
-          const apiResponse = await propertyUnitAPI.getPropertyUnits(pageParams);
-          response = {
-            success: true,
-            data: apiResponse.data?.data || apiResponse.data || [],
-            pagination: apiResponse.data?.pagination || {
-              page: currentPage,
-              total: 0,
-              pages: 1
-            }
-          };
+        if (isLoadMore) {
+          // Append new data to existing
+          setPropertyUnits(prev => [...prev, ...newData]);
+        } else {
+          // Replace existing data
+          setPropertyUnits(newData);
         }
-
-        if (response.success) {
-          allUnits = [...allUnits, ...(response.data || [])];
-          totalPages = response.pagination?.pages || 1;
-          setPagination(response.pagination || {
-            page: currentPage,
-            total: allUnits.length,
-            pages: totalPages,
-            limit: params.limit
+        
+        setTotalItems(total);
+        setTotalPages(pages);
+        setCurrentPage(page);
+        
+        console.log(`Loaded page ${page} of ${pages}, total items: ${total}, has more: ${page < pages}`);
+        
+        // Update filter options on first load
+        if (!isLoadMore && response.data.filters) {
+          setFilterOptions({
+            cities: response.data.filters.availableCities || response.data.filters.cities || [],
+            propertyTypes: response.data.filters.availablePropertyTypes || response.data.filters.propertyTypes || [],
+            bedroomOptions: response.data.filters.bedroomOptions || []
           });
         }
-        
-        currentPage++;
+      } else {
+        console.error('Response success false:', response.data);
+        if (!isLoadMore) {
+          setPropertyUnits([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching property units:', error);
+      if (!isLoadMore) {
+        setPropertyUnits([]);
+      }
+    } finally {
+      isFetchingRef.current = false;
+      if (!isLoadMore) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
+    }
+  };
+
+  // Fetch all property units (no pagination)
+  const fetchAllPropertyUnits = async () => {
+    if (isFetchingRef.current) return;
+    
+    isFetchingRef.current = true;
+    setLoading(true);
+    
+    try {
+      const params = {
+        ...filters,
+      };
+      
+      // Only add excludeBatch if batchId is valid
+      if (batchId && batchId !== 'null' && batchId !== 'undefined' && batchId !== '') {
+        params.excludeBatch = batchId;
       }
 
-      setPropertyUnits(allUnits);
+      // Clean up params
+      Object.keys(params).forEach(key => {
+        if (params[key] === '' || params[key] === null || params[key] === undefined) {
+          delete params[key];
+        }
+      });
+
+      console.log('Fetching all params:', params);
+
+      let data = [];
+      let filtersData = {};
+
+      try {
+        // Try the new endpoint first
+        const response = await propertyUnitAPI.getAllAssignablePropertyUnits(params);
+        console.log('Response from all endpoint:', response);
+        
+        if (response.success) {
+          data = response.data || [];
+          filtersData = response.filters || {};
+        }
+      } catch (error) {
+        console.log('New endpoint failed, using fallback with large limit');
+        
+        // Fallback: Use existing endpoint with large limit
+        const fallbackResponse = await propertyUnitAPI.getPropertyUnits({
+          ...params,
+          limit: 10000
+        });
+        
+        if (fallbackResponse.data && fallbackResponse.data.success) {
+          data = fallbackResponse.data.data || [];
+          filtersData = fallbackResponse.data.filters || {};
+        }
+      }
+      
+      setPropertyUnits(data);
+      setTotalItems(data.length);
+      setTotalPages(1);
+      setCurrentPage(1);
+      
+      // Set filter options
+      if (filtersData) {
+        setFilterOptions({
+          cities: filtersData.cities || filtersData.availableCities || [],
+          propertyTypes: filtersData.propertyTypes || filtersData.availablePropertyTypes || [],
+          bedroomOptions: filtersData.bedroomOptions || []
+        });
+      }
     } catch (error) {
-      console.error('Error fetching all property units:', error);
+      console.error('Error fetching property units:', error);
+      setPropertyUnits([]);
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
     }
+  };
+
+  // Load more items
+  const loadMore = () => {
+    if (!loadingMore && currentPage < totalPages && !isFetchingRef.current) {
+      const nextPage = currentPage + 1;
+      console.log(`Loading more: next page ${nextPage}`);
+      fetchPropertyUnits(nextPage, true);
+    }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    const newLimit = parseInt(e.target.value);
+    setPageSize(newLimit);
+    setCurrentPage(1);
+    setPropertyUnits([]); // Clear existing data
+    // Fetch will be triggered by useEffect
   };
 
   // Initial fetch and when filters change
   useEffect(() => {
     if (viewMode === 'paginated') {
-      fetchPropertyUnits(true);
+      setCurrentPage(1);
+      setPropertyUnits([]);
+      fetchPropertyUnits(1, false);
     } else {
       fetchAllPropertyUnits();
     }
@@ -208,8 +259,8 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
     filters.city, 
     filters.propertyType, 
     filters.bedrooms,
-    filters.limit,
-    viewMode
+    viewMode,
+    pageSize
   ]);
 
   // Handle unit selection
@@ -227,14 +278,50 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
     onChange(newSelection);
   };
 
-  // Handle bulk selection/deselection
+  // Handle bulk selection/deselection for current page
   const handleBulkSelect = () => {
-    if (selectedIds.length === propertyUnits.length) {
-      // Deselect all
-      setSelectedIds([]);
-      onChange([]);
+    const currentPageIds = propertyUnits.map(unit => unit._id);
+    const allSelectedCurrentPage = currentPageIds.every(id => selectedIds.includes(id));
+    
+    if (allSelectedCurrentPage) {
+      // Deselect all on current page
+      const newSelection = selectedIds.filter(id => !currentPageIds.includes(id));
+      setSelectedIds(newSelection);
+      onChange(newSelection);
     } else {
-      // Select all visible units
+      // Select all on current page
+      const newSelection = [...new Set([...selectedIds, ...currentPageIds])];
+      setSelectedIds(newSelection);
+      onChange(newSelection);
+    }
+  };
+
+  // Select all units across all pages
+  const handleSelectAll = async () => {
+    if (viewMode === 'paginated') {
+      setLoading(true);
+      try {
+        const params = {
+          ...filters,
+          limit: 10000,
+        };
+        
+        if (batchId && batchId !== 'null' && batchId !== 'undefined' && batchId !== '') {
+          params.excludeBatch = batchId;
+        }
+        
+        const response = await propertyUnitAPI.getPropertyUnits(params);
+        if (response.data && response.data.success) {
+          const allIds = response.data.data.map(unit => unit._id);
+          setSelectedIds(allIds);
+          onChange(allIds);
+        }
+      } catch (error) {
+        console.error('Error selecting all:', error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
       const allIds = propertyUnits.map(unit => unit._id);
       setSelectedIds(allIds);
       onChange(allIds);
@@ -245,58 +332,23 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value === 'all' ? '' : value,
-      page: 1
+      [key]: value === 'all' ? '' : value
     }));
-  };
-
-  // Handle page size change
-  const handlePageSizeChange = (e) => {
-    const newLimit = parseInt(e.target.value);
-    setFilters(prev => ({
-      ...prev,
-      limit: newLimit,
-      page: 1
-    }));
-  };
-
-  // Pagination navigation
-  const goToPage = (page) => {
-    if (page >= 1 && page <= pagination.pages) {
-      setFilters(prev => ({ ...prev, page }));
-    }
+    setCurrentPage(1);
+    setPropertyUnits([]);
   };
 
   // Get selected units count
   const selectedCount = selectedIds.length;
+  
+  // Check if all items on current page are selected
+  const allCurrentPageSelected = propertyUnits.length > 0 && 
+    propertyUnits.every(unit => selectedIds.includes(unit._id));
 
-  // Calculate page numbers to display
-  const getPageNumbers = () => {
-    const delta = 2;
-    const range = [];
-    const rangeWithDots = [];
-    let l;
-
-    for (let i = 1; i <= pagination.pages; i++) {
-      if (i === 1 || i === pagination.pages || (i >= pagination.page - delta && i <= pagination.page + delta)) {
-        range.push(i);
-      }
-    }
-
-    range.forEach((i) => {
-      if (l) {
-        if (i - l === 2) {
-          rangeWithDots.push(l + 1);
-        } else if (i - l !== 1) {
-          rangeWithDots.push('...');
-        }
-      }
-      rangeWithDots.push(i);
-      l = i;
-    });
-
-    return rangeWithDots;
-  };
+  // Calculate displayed range
+  const startRange = propertyUnits.length > 0 ? (currentPage - 1) * pageSize + 1 : 0;
+  const endRange = Math.min(currentPage * pageSize, totalItems);
+  const hasMore = currentPage < totalPages;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -305,10 +357,13 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
           <h3 className="text-xl font-semibold text-gray-800">Select Property Units</h3>
           <div className="flex space-x-2">
             <button
-              onClick={() => setViewMode(viewMode === 'paginated' ? 'all' : 'paginated')}
+              onClick={() => {
+                setViewMode(viewMode === 'paginated' ? 'all' : 'paginated');
+                setPropertyUnits([]);
+              }}
               className="px-3 py-1 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md transition-colors"
             >
-              {viewMode === 'paginated' ? 'Show All' : 'Show Paginated'}
+              {viewMode === 'paginated' ? 'Load All' : 'Show Paginated'}
             </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -396,25 +451,53 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         )}
 
         {/* Selection Summary */}
-        <div className="flex justify-between items-center mb-4 p-3 bg-blue-50 rounded-lg">
+        <div className="flex justify-between items-center mb-4 p-3 bg-blue-50 rounded-lg flex-wrap gap-2">
           <div>
             <span className="text-sm text-gray-600">
               Selected: <span className="font-semibold text-blue-700">{selectedCount}</span> units
             </span>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-wrap gap-2">
             <span className="text-sm text-gray-600">
-              Total: <span className="font-semibold">{pagination.total}</span> units
+              Total: <span className="font-semibold">{totalItems || propertyUnits.length}</span> units
             </span>
             <button
               onClick={handleBulkSelect}
               className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors"
             >
-              {selectedCount === propertyUnits.length ? 'Deselect All' : 'Select All Visible'}
+              {allCurrentPageSelected ? 'Deselect Page' : 'Select Current Page'}
+            </button>
+            <button
+              onClick={handleSelectAll}
+              className="px-3 py-1 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded-md transition-colors"
+            >
+              Select All
             </button>
           </div>
         </div>
       </div>
+
+      {/* Page Size Selector (only in paginated mode) */}
+      {viewMode === 'paginated' && (
+        <div className="mb-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <label className="text-sm text-gray-600">Show:</label>
+            <select
+              value={pageSize}
+              onChange={handlePageSizeChange}
+              className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {pageSizeOptions.map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+            <span className="text-sm text-gray-600">per page</span>
+          </div>
+          <div className="text-sm text-gray-600">
+            Showing {startRange} - {endRange} of {totalItems}
+          </div>
+        </div>
+      )}
 
       {/* Property Units List */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -433,28 +516,6 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
           </div>
         ) : (
           <>
-            {/* Page Size Selector */}
-            {viewMode === 'paginated' && (
-              <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-600">Show:</label>
-                  <select
-                    value={filters.limit}
-                    onChange={handlePageSizeChange}
-                    className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {pageSizeOptions.map(size => (
-                      <option key={size} value={size}>{size}</option>
-                    ))}
-                  </select>
-                  <span className="text-sm text-gray-600">per page</span>
-                </div>
-                <div className="text-sm text-gray-600">
-                  Showing {(pagination.page - 1) * filters.limit + 1} - {Math.min(pagination.page * filters.limit, pagination.total)} of {pagination.total}
-                </div>
-              </div>
-            )}
-
             <div className="max-h-96 overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0">
@@ -511,7 +572,7 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">{unit.title}</div>
                               <div className="text-sm text-gray-500">
-                                {unit.specifications?.bedrooms} Beds, {unit.specifications?.bathrooms} Baths
+                                {unit.specifications?.bedrooms || unit.unitTypes?.[0]?.type} Beds, {unit.specifications?.bathrooms || 1} Baths
                               </div>
                             </div>
                           </div>
@@ -526,7 +587,7 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ₹{unit.price?.amount?.toLocaleString() || 'N/A'}
+                          ₹{(unit.price?.amount || unit.unitTypes?.[0]?.price?.amount || 0).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -546,76 +607,25 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
               </table>
             </div>
 
-            {/* Pagination Controls */}
-            {viewMode === 'paginated' && pagination.pages > 1 && (
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => goToPage(1)}
-                      disabled={pagination.page === 1}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                    >
-                      First
-                    </button>
-                    <button
-                      onClick={() => goToPage(pagination.page - 1)}
-                      disabled={pagination.page === 1}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                    >
-                      Previous
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center space-x-1">
-                    {getPageNumbers().map((pageNum, index) => (
-                      pageNum === '...' ? (
-                        <span key={`dots-${index}`} className="px-3 py-1 text-sm text-gray-500">...</span>
-                      ) : (
-                        <button
-                          key={pageNum}
-                          onClick={() => goToPage(pageNum)}
-                          className={`px-3 py-1 text-sm border rounded-md ${
-                            pagination.page === pageNum
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'border-gray-300 hover:bg-gray-100'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      )
-                    ))}
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => goToPage(pagination.page + 1)}
-                      disabled={pagination.page === pagination.pages}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                    >
-                      Next
-                    </button>
-                    <button
-                      onClick={() => goToPage(pagination.pages)}
-                      disabled={pagination.page === pagination.pages}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                    >
-                      Last
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Load More Button (for backward compatibility) */}
-            {viewMode === 'paginated' && pagination.page < pagination.pages && (
+            {/* Load More Button for Paginated Mode */}
+            {viewMode === 'paginated' && hasMore && (
               <div className="p-4 border-t border-gray-200 text-center">
                 <button
                   onClick={loadMore}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                  disabled={loadingMore}
+                  className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {loading ? 'Loading...' : 'Load More'}
+                  {loadingMore ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Loading...
+                    </span>
+                  ) : (
+                    `Load More (${currentPage} of ${totalPages})`
+                  )}
                 </button>
               </div>
             )}
@@ -629,7 +639,7 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
           <h4 className="text-lg font-medium text-gray-800 mb-3">
             Selected Units ({selectedCount})
           </h4>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
             {propertyUnits
               .filter(unit => selectedIds.includes(unit._id))
               .slice(0, 10)

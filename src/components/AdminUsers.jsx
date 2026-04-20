@@ -43,6 +43,7 @@ const AdminUsers = () => {
         
         if (data.success) {
           setUsers(data.users || []);
+          console.log("data user",data.users)
           setTotalPages(data.totalPages || 1);
           setCurrentPage(data.currentPage || page);
           setTotalUsers(data.total || 0);
@@ -97,6 +98,7 @@ const AdminUsers = () => {
       
       if (data.success) {
         setUserDetails(data.user);
+        console.log("user details",data.user)
       } else {
         throw new Error(data.message || 'Failed to fetch user details');
       }
