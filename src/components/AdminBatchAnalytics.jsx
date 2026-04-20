@@ -6,7 +6,8 @@ import {
   Trash2, Edit, MoreVertical, CheckCircle, XCircle,
   BarChart3, Activity, Zap, Award, Crown, Calendar,
   ArrowUpDown, Loader, AlertCircle, FileText, FileSpreadsheet,
-  Printer, Mail, Share2, PieChart, LineChart
+  Printer, Mail, Share2, PieChart, LineChart, Phone, Mail as MailIcon,
+  MapPin, DollarSign, Calendar as CalendarIcon, FileJson
 } from 'lucide-react';
 import { batchAPI } from '../api/batchAPI';
 
@@ -29,6 +30,9 @@ export default function AdminBatchAnalytics() {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [batchAnalytics, setBatchAnalytics] = useState(null);
+  const [selectedTab, setSelectedTab] = useState('properties');
+  const [expandedProperty, setExpandedProperty] = useState(null);
+  const [expandedUser, setExpandedUser] = useState(null);
 
   useEffect(() => {
     fetchAllBatches();
@@ -56,7 +60,9 @@ export default function AdminBatchAnalytics() {
       if (response.success) {
         setSelectedBatch(response.data);
         setBatchAnalytics(response.data.analytics);
+        console.log("test", response.data.analytics);
         setShowBatchDetails(true);
+        setSelectedTab('properties');
       }
     } catch (error) {
       console.error('Error fetching batch details:', error);
@@ -66,30 +72,208 @@ export default function AdminBatchAnalytics() {
     }
   };
 
-  const handleDeleteBatch = async (batchId, batchName) => {
-    if (window.confirm(`Are you sure you want to delete batch "${batchName}"? This action cannot be undone.`)) {
-      try {
-        await batchAPI.deleteBatch(batchId);
-        await fetchAllBatches();
-        if (selectedBatch?.batch?.id === batchId) {
-          setShowBatchDetails(false);
-          setSelectedBatch(null);
-          setBatchAnalytics(null);
-        }
-      } catch (error) {
-        console.error('Error deleting batch:', error);
-        alert('Failed to delete batch');
-      }
+  // Helper function to get property price
+  const getPropertyPrice = (property) => {
+    if (property?.price) return `₹${property.price.toLocaleString()}`;
+    if (property?.priceRange?.min && property?.priceRange?.max) {
+      return `₹${property.priceRange.min.toLocaleString()} - ₹${property.priceRange.max.toLocaleString()}`;
     }
+    if (property?.priceRange?.min) return `₹${property.priceRange.min.toLocaleString()}+`;
+    return 'Contact for price';
   };
 
-  const handleToggleStatus = async (batchId, currentStatus) => {
+  // Helper function to get BHK info
+  const getPropertyBHK = (property) => {
+    if (property?.bhk) return property.bhk;
+    if (property?.unitTypes && property.unitTypes.length > 0) {
+      const bhkTypes = property.unitTypes.map(u => u.bhk || u.type).filter(Boolean);
+      return bhkTypes.join(', ');
+    }
+    return 'N/A';
+  };
+
+  // Helper function to get property area
+  const getPropertyArea = (property) => {
+    if (property?.area) return `${property.area} sq.ft`;
+    if (property?.plotArea) return `${property.plotArea} sq.ft`;
+    if (property?.unitTypes && property.unitTypes.length > 0) {
+      const areas = property.unitTypes.map(u => u.area).filter(Boolean);
+      if (areas.length) return `${areas[0]} sq.ft`;
+    }
+    return 'N/A';
+  };
+
+  // COMPREHENSIVE EXPORT - All Data in One Excel/CSV
+  const exportCompleteAnalytics = async (batchId, batchName) => {
     try {
-      await batchAPI.toggleBatchStatus(batchId);
-      await fetchAllBatches();
+      setExporting(true);
+      
+      // Fetch all data
+      const batchDetails = await batchAPI.getBatchById(batchId);
+      const propertyStats = await batchAPI.getBatchPropertyClickStats(batchId);
+      const userStats = await batchAPI.getBatchUserClickStats(batchId);
+      
+      if (!batchDetails.success) throw new Error('Failed to fetch batch data');
+      
+      // Create CSV with multiple sheets approach (using multiple CSVs in a zip is complex, so we'll create one comprehensive CSV)
+      const rows = [];
+      
+      // Header Section
+      rows.push(['=' .repeat(10) + ' BATCH ANALYTICS REPORT ' + '=' .repeat(10), '']);
+      rows.push(['Report Generated', new Date().toLocaleString()]);
+      rows.push(['Batch Name', batchDetails.data.batch?.batchName]);
+      rows.push(['Batch Code', batchDetails.data.batch?.batchCode]);
+      rows.push(['Location', batchDetails.data.batch?.locationName]);
+      rows.push(['Batch Type', batchDetails.data.batch?.batchType]);
+      rows.push(['Created By', batchDetails.data.batch?.createdBy?.name]);
+      rows.push(['Created At', new Date(batchDetails.data.batch?.createdAt).toLocaleString()]);
+      rows.push(['']);
+      
+      // Summary Section
+      rows.push(['=' .repeat(10) + ' SUMMARY STATISTICS ' + '=' .repeat(10), '']);
+      rows.push(['Total Properties', batchDetails.data.analytics?.summary?.totalProperties || 0]);
+      rows.push(['Total Views', batchDetails.data.analytics?.summary?.totalViews || 0]);
+      rows.push(['Unique Viewers', batchDetails.data.analytics?.summary?.uniqueViewers || 0]);
+      rows.push(['Last Viewed', batchDetails.data.analytics?.summary?.lastViewedAt ? new Date(batchDetails.data.analytics.summary.lastViewedAt).toLocaleString() : 'Never']);
+      rows.push(['']);
+      
+      // Properties Section
+      rows.push(['=' .repeat(10) + ' PROPERTIES DETAILS ' + '=' .repeat(10), '', '', '', '', '', '', '']);
+      rows.push([
+        'S.No',
+        'Property ID', 
+        'Property Title', 
+        'Property Type', 
+        'City', 
+        'Price', 
+        'BHK', 
+        'Area',
+        'Total Views', 
+        'Unique Viewers', 
+        'Avg View Duration (s)', 
+        'Last Viewed'
+      ]);
+      
+      const properties = batchDetails.data.analytics?.allProperties || [];
+      properties.forEach((prop, idx) => {
+        const property = prop.propertyId || {};
+        rows.push([
+          idx + 1,
+          property._id || prop.propertyId,
+          property.title || 'Untitled',
+          property.propertyType || 'N/A',
+          property.city || 'N/A',
+          getPropertyPrice(property),
+          getPropertyBHK(property),
+          getPropertyArea(property),
+          prop.totalViews || 0,
+          prop.uniqueViewers || 0,
+          prop.avgViewDuration || 0,
+          prop.lastViewedAt ? new Date(prop.lastViewedAt).toLocaleString() : 'Never'
+        ]);
+      });
+      rows.push(['']);
+      
+      // User Views Section
+      rows.push(['=' .repeat(10) + ' USER VIEWS DETAILS ' + '=' .repeat(10), '', '', '', '', '', '', '', '', '', '', '']);
+      rows.push([
+        'S.No',
+        'User Name', 
+        'Email', 
+        'Phone Number', 
+        'User Type',
+        'Property Title',
+        'Property Type',
+        'Property City',
+        'View Duration (s)',
+        'Viewed At',
+        'Session ID',
+        'Source'
+      ]);
+      
+      let userViewCount = 1;
+      properties.forEach((prop) => {
+        const property = prop.propertyId || {};
+        const recentViews = prop.recentViews || [];
+        recentViews.forEach((view) => {
+          rows.push([
+            userViewCount++,
+            view.userName || 'Anonymous',
+            view.userEmail || 'N/A',
+            view.userPhone || 'N/A',
+            view.userType || 'N/A',
+            property.title || 'Untitled',
+            property.propertyType || 'N/A',
+            property.city || 'N/A',
+            view.viewDuration || 0,
+            view.viewedAt ? new Date(view.viewedAt).toLocaleString() : 'N/A',
+            view.sessionId || 'N/A',
+            view.source || 'direct'
+          ]);
+        });
+      });
+      
+      if (userViewCount === 1) {
+        rows.push(['No user views recorded yet']);
+      }
+      rows.push(['']);
+      
+      // User Summary Section
+      rows.push(['=' .repeat(10) + ' USER SUMMARY (Aggregated) ' + '=' .repeat(10), '', '', '', '', '', '', '']);
+      rows.push([
+        'S.No',
+        'User Name', 
+        'Email', 
+        'Phone Number', 
+        'User Type',
+        'Total Views',
+        'Total Duration (s)',
+        'Avg Duration (s)',
+        'Unique Properties Viewed',
+        'First View',
+        'Last View'
+      ]);
+      
+      const users = batchDetails.data.analytics?.topUsers || [];
+      users.forEach((user, idx) => {
+        rows.push([
+          idx + 1,
+          user.name || 'Anonymous',
+          user.email || 'N/A',
+          user.phone || 'N/A',
+          user.userType || 'N/A',
+          user.views || 0,
+          user.duration || 0,
+          user.avgViewDuration || 0,
+          user.uniquePropertiesViewed || 0,
+          user.firstView ? new Date(user.firstView).toLocaleString() : 'N/A',
+          user.lastView ? new Date(user.lastView).toLocaleString() : 'N/A'
+        ]);
+      });
+      
+      if (users.length === 0) {
+        rows.push(['No users recorded yet']);
+      }
+      
+      // Create CSV content
+      const csvContent = rows.map(row => row.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `batch_${batchName.replace(/\s/g, '_')}_complete_analytics_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      alert('Complete analytics exported successfully!');
     } catch (error) {
-      console.error('Error toggling batch status:', error);
-      alert('Failed to update batch status');
+      console.error('Error exporting complete analytics:', error);
+      alert('Failed to export complete analytics: ' + error.message);
+    } finally {
+      setExporting(false);
+      setShowExportMenu(null);
     }
   };
 
@@ -243,18 +427,17 @@ export default function AdminBatchAnalytics() {
       const stats = await batchAPI.getBatchPropertyClickStats(batchId);
       
       if (stats.success && stats.data) {
-        const headers = ['Property ID', 'Property Title', 'Property Type', 'City', 'Total Views', 'Unique Viewers', 'Avg View Duration (s)', 'Last Viewed'];
+        const headers = ['Property ID', 'Property Title', 'Property Type', 'City', 'Price', 'BHK', 'Area', 'Total Views', 'Unique Viewers', 'Avg View Duration (s)', 'Last Viewed'];
         const rows = stats.data.map(prop => {
-          const propertyId = prop.propertyId?._id || prop.propertyId || 'N/A';
-          const propertyTitle = prop.propertyId?.title || 'Unknown';
-          const propertyType = prop.propertyId?.propertyType || 'Unknown';
-          const propertyCity = prop.propertyId?.city || 'Unknown';
-          
+          const property = prop.propertyId || {};
           return [
-            `"${propertyId}"`,
-            `"${propertyTitle}"`,
-            `"${propertyType}"`,
-            `"${propertyCity}"`,
+            `"${property._id || prop.propertyId || 'N/A'}"`,
+            `"${property.title || 'Unknown Property'}"`,
+            `"${property.propertyType || 'Unknown'}"`,
+            `"${property.city || 'Unknown'}"`,
+            getPropertyPrice(property),
+            getPropertyBHK(property),
+            getPropertyArea(property),
             prop.totalViews || 0,
             prop.uniqueViewers || 0,
             prop.avgViewDuration || 0,
@@ -444,7 +627,6 @@ export default function AdminBatchAnalytics() {
               <p className="text-gray-600 mt-1">Admin view - All property batches and their performance</p>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {/* Date Range Filter */}
               <button
                 onClick={() => setShowDateFilter(!showDateFilter)}
                 className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -454,7 +636,6 @@ export default function AdminBatchAnalytics() {
                 <ChevronDown className="w-4 h-4" />
               </button>
               
-              {/* Export All Button */}
               <div className="relative">
                 <button
                   onClick={() => setShowExportMenu(showExportMenu === 'all' ? null : 'all')}
@@ -504,7 +685,6 @@ export default function AdminBatchAnalytics() {
             </div>
           </div>
           
-          {/* Date Range Picker */}
           {showDateFilter && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex flex-wrap gap-4 items-end">
@@ -701,13 +881,21 @@ export default function AdminBatchAnalytics() {
                           </button>
                           
                           {showExportMenu === batch.id && (
-                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                            <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
                               <div className="p-2">
+                                <button
+                                  onClick={() => exportCompleteAnalytics(batch.id, batch.name)}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center gap-2 font-semibold text-blue-600"
+                                >
+                                  <FileSpreadsheet className="w-4 h-4" />
+                                  Export Complete Analytics (All Data)
+                                </button>
+                                <div className="border-t my-1"></div>
                                 <button
                                   onClick={() => exportBatchData(batch.id, batch.name, 'csv')}
                                   className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center gap-2"
                                 >
-                                  <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                                  <FileText className="w-4 h-4 text-green-600" />
                                   Export Batch Summary
                                 </button>
                                 <button
@@ -722,7 +910,7 @@ export default function AdminBatchAnalytics() {
                                   className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center gap-2"
                                 >
                                   <Users className="w-4 h-4 text-purple-600" />
-                                  Export User Details (with contacts)
+                                  Export User Details
                                 </button>
                               </div>
                             </div>
@@ -768,47 +956,56 @@ export default function AdminBatchAnalytics() {
         </div>
       </div>
 
-      {/* Batch Details Modal */}
+      {/* Batch Details Modal - Enhanced with Expandable Sections */}
       {showBatchDetails && selectedBatch && batchAnalytics && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
             <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowBatchDetails(false)}></div>
             
-            <div className="relative bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="relative bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
               <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">{selectedBatch.batch?.name}</h2>
-                  <p className="text-sm text-gray-600">{selectedBatch.batch?.location}</p>
+                  <h2 className="text-xl font-bold text-gray-900">{selectedBatch.batch?.batchName || selectedBatch.batch?.name}</h2>
+                  <p className="text-sm text-gray-600">{selectedBatch.batch?.locationName || selectedBatch.batch?.location}</p>
+                  <p className="text-xs text-gray-500 mt-1">Batch Code: {selectedBatch.batch?.batchCode}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative">
-                    {/* <button
+                    <button
                       onClick={() => setShowExportMenu(showExportMenu === 'modal' ? null : 'modal')}
                       className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
                       <Download className="w-4 h-4" />
                       Export
-                    </button> */}
+                    </button>
                     
                     {showExportMenu === 'modal' && selectedBatch.batch && (
-                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-30">
+                      <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-30">
                         <div className="p-2">
                           <button
-                            onClick={() => exportBatchData(selectedBatch.batch.id, selectedBatch.batch.name, 'csv')}
+                            onClick={() => exportCompleteAnalytics(selectedBatch.batch._id, selectedBatch.batch.batchName)}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center gap-2 font-semibold text-blue-600"
+                          >
+                            <FileSpreadsheet className="w-4 h-4" />
+                            Export Complete Analytics
+                          </button>
+                          <div className="border-t my-1"></div>
+                          <button
+                            onClick={() => exportBatchData(selectedBatch.batch._id, selectedBatch.batch.batchName, 'csv')}
                             className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center gap-2"
                           >
-                            <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                            <FileText className="w-4 h-4 text-green-600" />
                             Export Summary
                           </button>
                           <button
-                            onClick={() => exportPropertyStats(selectedBatch.batch.id, selectedBatch.batch.name)}
+                            onClick={() => exportPropertyStats(selectedBatch.batch._id, selectedBatch.batch.batchName)}
                             className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center gap-2"
                           >
                             <Home className="w-4 h-4 text-blue-600" />
                             Export Property Stats
                           </button>
                           <button
-                            onClick={() => exportUserStats(selectedBatch.batch.id, selectedBatch.batch.name)}
+                            onClick={() => exportUserStats(selectedBatch.batch._id, selectedBatch.batch.batchName)}
                             className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm flex items-center gap-2"
                           >
                             <Users className="w-4 h-4 text-purple-600" />
@@ -827,83 +1024,388 @@ export default function AdminBatchAnalytics() {
                 </div>
               </div>
 
-              <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 80px)' }}>
-                {/* Analytics Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <p className="text-sm text-blue-600 mb-1">Total Views</p>
-                    <p className="text-2xl font-bold text-blue-900">
-                      {batchAnalytics?.summary?.totalViews || 0}
-                    </p>
-                  </div>
-                  <div className="bg-green-50 rounded-lg p-4">
-                    <p className="text-sm text-green-600 mb-1">Unique Viewers</p>
-                    <p className="text-2xl font-bold text-green-900">
-                      {batchAnalytics?.summary?.uniqueViewers || 0}
-                    </p>
-                  </div>
-                  <div className="bg-purple-50 rounded-lg p-4">
-                    <p className="text-sm text-purple-600 mb-1">Total Properties</p>
-                    <p className="text-2xl font-bold text-purple-900">
-                      {batchAnalytics?.summary?.totalProperties || 0}
-                    </p>
-                  </div>
-                  <div className="bg-orange-50 rounded-lg p-4">
-                    <p className="text-sm text-orange-600 mb-1">Last Viewed</p>
-                    <p className="text-sm font-medium text-orange-900">
-                      {batchAnalytics?.summary?.lastViewedAt 
-                        ? new Date(batchAnalytics.summary.lastViewedAt).toLocaleDateString()
-                        : 'Never'}
-                    </p>
-                  </div>
+              {/* Tabs */}
+              <div className="border-b border-gray-200 px-6">
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setSelectedTab('overview')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      selectedTab === 'overview'
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Overview
+                  </button>
+                  <button
+                    onClick={() => setSelectedTab('properties')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      selectedTab === 'properties'
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Properties ({batchAnalytics?.summary?.totalProperties || 0})
+                  </button>
+                  <button
+                    onClick={() => setSelectedTab('users')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      selectedTab === 'users'
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Users ({batchAnalytics?.summary?.uniqueViewers || 0})
+                  </button>
                 </div>
+              </div>
 
-                {/* Top Properties */}
-                {batchAnalytics?.topProperties?.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Top Properties</h3>
-                    <div className="space-y-2">
-                      {batchAnalytics.topProperties.map((prop, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              Property #{typeof prop.propertyId === 'string' ? prop.propertyId.slice(-6) : (prop.propertyId?.toString().slice(-6) || 'N/A')}
-                            </p>
-                            <p className="text-sm text-gray-500">{prop.uniqueViewers || 0} unique viewers</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-blue-600">{prop.totalViews || 0} views</p>
-                            <p className="text-xs text-gray-500">{prop.avgViewDuration || 0}s avg</p>
-                          </div>
+              <div className="overflow-y-auto p-6" style={{ maxHeight: 'calc(90vh - 120px)' }}>
+                {/* Overview Tab */}
+                {selectedTab === 'overview' && (
+                  <div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-blue-50 rounded-lg p-4">
+                        <p className="text-sm text-blue-600 mb-1">Total Views</p>
+                        <p className="text-2xl font-bold text-blue-900">
+                          {batchAnalytics?.summary?.totalViews?.toLocaleString() || 0}
+                        </p>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-4">
+                        <p className="text-sm text-green-600 mb-1">Unique Viewers</p>
+                        <p className="text-2xl font-bold text-green-900">
+                          {batchAnalytics?.summary?.uniqueViewers?.toLocaleString() || 0}
+                        </p>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-4">
+                        <p className="text-sm text-purple-600 mb-1">Total Properties</p>
+                        <p className="text-2xl font-bold text-purple-900">
+                          {batchAnalytics?.summary?.totalProperties || 0}
+                        </p>
+                      </div>
+                      <div className="bg-orange-50 rounded-lg p-4">
+                        <p className="text-sm text-orange-600 mb-1">Last Viewed</p>
+                        <p className="text-sm font-medium text-orange-900">
+                          {batchAnalytics?.summary?.lastViewedAt 
+                            ? new Date(batchAnalytics.summary.lastViewedAt).toLocaleString()
+                            : 'Never'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                      <h3 className="font-semibold text-gray-900 mb-3">Batch Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-500">Batch Name</p>
+                          <p className="font-medium">{selectedBatch.batch?.batchName}</p>
                         </div>
-                      ))}
+                        <div>
+                          <p className="text-sm text-gray-500">Batch Code</p>
+                          <p className="font-medium">{selectedBatch.batch?.batchCode}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Location</p>
+                          <p className="font-medium">{selectedBatch.batch?.locationName}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Batch Type</p>
+                          <p className="font-medium capitalize">{selectedBatch.batch?.batchType}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Created By</p>
+                          <p className="font-medium">{selectedBatch.batch?.createdBy?.name || 'Unknown'}</p>
+                          <p className="text-xs text-gray-500">{selectedBatch.batch?.createdBy?.email}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Created At</p>
+                          <p className="font-medium">{new Date(selectedBatch.batch?.createdAt).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {batchAnalytics?.topProperties?.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3">🏆 Top Performing Properties</h3>
+                        <div className="space-y-2">
+                          {batchAnalytics.topProperties.slice(0, 5).map((prop, idx) => {
+                            const property = prop.propertyId || {};
+                            return (
+                              <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-gray-400">#{idx + 1}</span>
+                                    <p className="font-medium text-gray-900">
+                                      {property.title || `Property ${property._id?.slice(-6) || 'N/A'}`}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-wrap gap-4 mt-1 text-sm text-gray-500">
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="w-3 h-3" />
+                                      {property.city || 'Unknown'}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <DollarSign className="w-3 h-3" />
+                                      {getPropertyPrice(property)}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Home className="w-3 h-3" />
+                                      {getPropertyBHK(property)} BHK
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold text-blue-600">{prop.totalViews?.toLocaleString() || 0} views</p>
+                                  <p className="text-xs text-gray-500">{prop.uniqueViewers || 0} unique viewers</p>
+                                  <p className="text-xs text-gray-500">{prop.avgViewDuration || 0}s avg duration</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Properties Tab - Expandable with User Details */}
+                {selectedTab === 'properties' && (
+                  <div>
+                    <div className="mb-4 flex justify-between items-center">
+                      <h3 className="text-lg font-semibold text-gray-900">Properties in this Batch</h3>
+                      <button
+                        onClick={() => exportPropertyStats(selectedBatch.batch._id, selectedBatch.batch.batchName)}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                        Export Properties
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {batchAnalytics?.allProperties?.map((prop, idx) => {
+                        const property = prop.propertyId || {};
+                        const isExpanded = expandedProperty === idx;
+                        const recentViews = prop.recentViews || [];
+                        
+                        return (
+                          <div key={idx} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                            <div className="p-4">
+                              <div className="flex flex-col md:flex-row gap-4">
+                                <div className="w-full md:w-32 h-32 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                  <img
+                                    src={property.images?.[0]?.url || property.image?.url || 'https://via.placeholder.com/128'}
+                                    alt={property.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                
+                                <div className="flex-1">
+                                  <div className="flex justify-between items-start flex-wrap gap-2">
+                                    <div>
+                                      <h4 className="font-semibold text-gray-900">{property.title || 'Untitled Property'}</h4>
+                                      <p className="text-sm text-gray-500">{property.propertyType || 'Property'} in {property.city || 'Unknown location'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-lg font-bold text-blue-600">{prop.totalViews?.toLocaleString() || 0} views</p>
+                                      <p className="text-xs text-gray-500">{prop.uniqueViewers || 0} unique viewers</p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 text-sm">
+                                    <div>
+                                      <p className="text-gray-500">Price</p>
+                                      <p className="font-medium">{getPropertyPrice(property)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500">Area</p>
+                                      <p className="font-medium">{getPropertyArea(property)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500">BHK</p>
+                                      <p className="font-medium">{getPropertyBHK(property)}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500">Avg View Duration</p>
+                                      <p className="font-medium">{prop.avgViewDuration || 0}s</p>
+                                    </div>
+                                  </div>
+                                  
+                                  {recentViews.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-gray-100">
+                                      <button
+                                        onClick={() => setExpandedProperty(isExpanded ? null : idx)}
+                                        className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                      >
+                                        {isExpanded ? 'Hide' : 'Show'} Recent Viewers ({recentViews.length})
+                                        <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                      </button>
+                                      
+                                      {isExpanded && (
+                                        <div className="mt-2 space-y-2">
+                                          {recentViews.map((view, vIdx) => (
+                                            <div key={vIdx} className="bg-gray-50 rounded-lg p-3 text-sm">
+                                              <div className="flex flex-wrap justify-between gap-2">
+                                                <div>
+                                                  <p className="font-medium">{view.userName || 'Anonymous'}</p>
+                                                  <div className="flex flex-wrap gap-3 text-xs text-gray-500 mt-1">
+                                                    {view.userEmail && view.userEmail !== 'N/A' && (
+                                                      <span className="flex items-center gap-1">
+                                                        <MailIcon className="w-3 h-3" />
+                                                        {view.userEmail}
+                                                      </span>
+                                                    )}
+                                                    {view.userPhone && view.userPhone !== 'N/A' && (
+                                                      <span className="flex items-center gap-1">
+                                                        <Phone className="w-3 h-3" />
+                                                        {view.userPhone}
+                                                      </span>
+                                                    )}
+                                                    <span className="capitalize">{view.userType || 'User'}</span>
+                                                  </div>
+                                                </div>
+                                                <div className="text-right text-xs">
+                                                  <p>Duration: {view.viewDuration || 0}s</p>
+                                                  <p className="text-gray-500">{new Date(view.viewedAt).toLocaleString()}</p>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      
+                      {(!batchAnalytics?.allProperties || batchAnalytics.allProperties.length === 0) && (
+                        <div className="text-center py-8 text-gray-500">
+                          No properties found in this batch
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
 
-                {/* Top Users */}
-                {batchAnalytics?.topUsers?.length > 0 && (
+                {/* Users Tab - Expandable with Property Details */}
+                {selectedTab === 'users' && (
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Most Engaged Users</h3>
-                    <div className="space-y-2">
-                      {batchAnalytics.topUsers.slice(0, 10).map((user, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                              <User className="w-4 h-4 text-blue-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{user.name || 'Anonymous'}</p>
-                              <p className="text-xs text-gray-500 capitalize">{user.type || 'user'}</p>
-                              {user.email && <p className="text-xs text-gray-400">{user.email}</p>}
+                    <div className="mb-4 flex justify-between items-center">
+                      <h3 className="text-lg font-semibold text-gray-900">Users who viewed properties in this batch</h3>
+                      <button
+                        onClick={() => exportUserStats(selectedBatch.batch._id, selectedBatch.batch.batchName)}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                        Export Users
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {batchAnalytics?.topUsers?.map((user, idx) => {
+                        const isExpanded = expandedUser === idx;
+                        return (
+                          <div key={idx} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                            <div className="p-4">
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                    {user.name?.charAt(0) || 'U'}
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-gray-900">{user.name || 'Anonymous User'}</p>
+                                    <div className="flex flex-wrap gap-3 text-sm text-gray-500 mt-1">
+                                      {user.email && user.email !== 'N/A' && (
+                                        <span className="flex items-center gap-1">
+                                          <MailIcon className="w-3 h-3" />
+                                          {user.email}
+                                        </span>
+                                      )}
+                                      {user.phone && user.phone !== 'N/A' && (
+                                        <span className="flex items-center gap-1">
+                                          <Phone className="w-3 h-3" />
+                                          {user.phone}
+                                        </span>
+                                      )}
+                                      <span className="capitalize flex items-center gap-1">
+                                        <User className="w-3 h-3" />
+                                        {user.userType || 'User'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex gap-6 text-center">
+                                  <div>
+                                    <p className="text-2xl font-bold text-blue-600">{user.views || 0}</p>
+                                    <p className="text-xs text-gray-500">Total Views</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-2xl font-bold text-green-600">{user.uniquePropertiesViewed || 0}</p>
+                                    <p className="text-xs text-gray-500">Properties Viewed</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-2xl font-bold text-purple-600">{user.avgViewDuration || 0}s</p>
+                                    <p className="text-xs text-gray-500">Avg Duration</p>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <CalendarIcon className="w-4 h-4 text-gray-400" />
+                                  <span className="text-gray-500">First view:</span>
+                                  <span>{user.firstView ? new Date(user.firstView).toLocaleString() : 'N/A'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-gray-400" />
+                                  <span className="text-gray-500">Last view:</span>
+                                  <span>{user.lastView ? new Date(user.lastView).toLocaleString() : 'N/A'}</span>
+                                </div>
+                              </div>
+                              
+                              {user.recentViews && user.recentViews.length > 0 && (
+                                <div className="mt-3">
+                                  <button
+                                    onClick={() => setExpandedUser(isExpanded ? null : idx)}
+                                    className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                                  >
+                                    {isExpanded ? 'Hide' : 'Show'} Viewed Properties ({user.recentViews.length})
+                                    <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                  </button>
+                                  
+                                  {isExpanded && (
+                                    <div className="mt-2 space-y-2">
+                                      {user.recentViews.map((view, vIdx) => (
+                                        <div key={vIdx} className="bg-gray-50 rounded-lg p-3 text-sm">
+                                          <div className="flex justify-between items-start">
+                                            <div>
+                                              <p className="font-medium">Property: {view.propertyId?.title || 'Unknown'}</p>
+                                              <p className="text-xs text-gray-500 mt-1">
+                                                Viewed for {view.duration || 0}s on {new Date(view.viewedAt).toLocaleString()}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-sm font-bold">{user.views || 0} views</p>
-                            <p className="text-xs text-gray-500">{Math.round((user.duration || 0) / (user.views || 1))}s avg</p>
-                          </div>
+                        );
+                      })}
+                      
+                      {(!batchAnalytics?.topUsers || batchAnalytics.topUsers.length === 0) && (
+                        <div className="text-center py-8 text-gray-500">
+                          No user views recorded for this batch yet
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 )}
