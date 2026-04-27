@@ -37,6 +37,12 @@ import CategoryPropertiesPage from "./focusedapproach/CategoryPropertiesPage";
 import Finalized from "./focusedapproach/finalized";
 import CarouselAdmin from "./components/CarouselAdmin";
 import TruecallerAuth from "./pages/TruecallerAuth";
+import Employeelogin from './components/Employeelogin'
+import EmployeeRegistration from './components/EmployeeRegistration'
+import EmployeeDashboard from "./components/EmployeeDashboard";
+import ProtectedEmployeeRoute from "./components/ProtectedEmployeeRoute";
+import { EmployeeAuthProvider } from './context/EmployeeAuthContext';
+import EmployeeProfile from "./components/EmployeeProfile";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -48,36 +54,28 @@ const PublicRoute = ({ children }) => {
 const isAndroidMobile = () => {
   const userAgent = navigator.userAgent || navigator.vendor || window.opera;
   
-  // Check if it's Android
   const isAndroid = /android/i.test(userAgent);
-  
-  // Check if it's mobile (not tablet)
   const isMobile = /mobile/i.test(userAgent);
-  
-  // Check if it's not iPad, iPod, iPhone
   const isNotIOS = !/iPad|iPhone|iPod/.test(userAgent);
   
   return isAndroid && isMobile && isNotIOS;
 };
 
-// Modal component for Truecaller prompt (Android only) - AUTO ACTIVATING
+// Modal component for Truecaller prompt
 const TruecallerModal = ({ isOpen, onClose }) => {
   const truecallerRef = useRef(null);
   const hasAutoTriggered = useRef(false);
 
   useEffect(() => {
-    // Auto-trigger Truecaller when modal opens
     if (isOpen && !hasAutoTriggered.current) {
       hasAutoTriggered.current = true;
       
-      // Small delay to ensure the Truecaller component is mounted
       setTimeout(() => {
         const truecallerButton = truecallerRef.current?.querySelector('button');
         if (truecallerButton && !truecallerButton.disabled) {
           console.log('Auto-triggering Truecaller login...');
           truecallerButton.click();
         } else {
-          // Fallback: try to find any button inside the component
           const anyButton = truecallerRef.current?.querySelector('[role="button"], button');
           if (anyButton && !anyButton.disabled) {
             anyButton.click();
@@ -136,7 +134,7 @@ const TruecallerModal = ({ isOpen, onClose }) => {
   );
 };
 
-// Wrapper component to handle Truecaller prompt for unauthenticated users
+// Wrapper component to handle Truecaller prompt
 const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
   const [showTruecallerPrompt, setShowTruecallerPrompt] = useState(false);
@@ -145,7 +143,6 @@ const AppContent = () => {
   const truecallerInitialized = useRef(false);
 
   useEffect(() => {
-    // Detect if user is on Android mobile
     const androidUser = isAndroidMobile();
     setIsAndroid(androidUser);
     
@@ -154,10 +151,6 @@ const AppContent = () => {
       userAgent: navigator.userAgent 
     });
     
-    // Only show Truecaller prompt after 5 seconds if:
-    // 1. User is not authenticated
-    // 2. User is on Android mobile
-    // 3. Prompt hasn't been shown yet
     if (!loading && !isAuthenticated && !hasShownPrompt && androidUser && !truecallerInitialized.current) {
       truecallerInitialized.current = true;
       const timer = setTimeout(() => {
@@ -184,7 +177,6 @@ const AppContent = () => {
         theme="light"
       />
       
-      {/* Global Enquiry Form - Shows on all pages except admin */}
       <Routes>
         <Route path="/admin/*" element={null} />
         <Route path="*" element={<EnquiryForm />} />
@@ -201,14 +193,10 @@ const AppContent = () => {
                 <meta name="description" content="Discover the best properties, real estate listings, and property units. Find your dream home today!" />
                 <meta name="keywords" content="real estate, properties, property units, homes for sale, rental properties" />
                 <link rel="canonical" href="https://yourdomain.com/" />
-                
-                {/* Open Graph */}
                 <meta property="og:title" content="Your Property Site" />
                 <meta property="og:description" content="Find your dream property today" />
                 <meta property="og:url" content="https://yourdomain.com/" />
                 <meta property="og:image" content="https://yourdomain.com/og-image.jpg" />
-                
-                {/* Twitter */}
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content="Your Property Site" />
                 <meta name="twitter:description" content="Find your dream property today" />
@@ -312,8 +300,28 @@ const AppContent = () => {
             </>
           }
         />
-        
-        {/* Auth Routes - No SEO needed */}
+
+        {/* Employee Routes - Now inside the Routes but without Provider inside */}
+        <Route path="/employee-login" element={<Employeelogin />} />
+        <Route path="/employee-register" element={<EmployeeRegistration />} />
+        <Route 
+          path="/employee-dashboard" 
+          element={
+            <ProtectedEmployeeRoute>
+              <EmployeeDashboard />
+            </ProtectedEmployeeRoute>
+          } 
+        />
+        <Route 
+          path="/employee/profile" 
+          element={
+            <ProtectedEmployeeRoute>
+              <EmployeeProfile />
+            </ProtectedEmployeeRoute>
+          } 
+        />
+
+        {/* Auth Routes */}
         <Route 
           path="/login" 
           element={
@@ -332,7 +340,7 @@ const AppContent = () => {
           } 
         />
         
-        {/* Protected User Routes - No SEO needed */}
+        {/* Protected User Routes */}
         <Route
           path="/profile"
           element={
@@ -341,7 +349,9 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
+        
         <Route path="/admin/carousel" element={<CarouselAdmin />} />
+        
         <Route
           path="/add-property"
           element={
@@ -369,7 +379,7 @@ const AppContent = () => {
           } 
         />
         
-        {/* Admin Routes - No SEO needed */}
+        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -449,7 +459,7 @@ const AppContent = () => {
         />
       </Routes>
 
-      {/* Truecaller Modal - Auto activates after 5 seconds ONLY for Android mobile users */}
+      {/* Truecaller Modal */}
       <TruecallerModal 
         isOpen={showTruecallerPrompt}
         onClose={() => setShowTruecallerPrompt(false)}
@@ -462,19 +472,20 @@ export default function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
+        {/* All Providers must be OUTSIDE of Routes */}
         <AuthProvider>
           <ViewModeProvider>
-            <ScrollToTop />
-            
-            {/* Global Helmet with default SEO settings */}
-            <Helmet>
-              <meta charSet="utf-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <html lang="en" />
-            </Helmet>
-            
-            <AppContent />
-            
+            <EmployeeAuthProvider>
+              <ScrollToTop />
+              
+              <Helmet>
+                <meta charSet="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <html lang="en" />
+              </Helmet>
+              
+              <AppContent />
+            </EmployeeAuthProvider>
           </ViewModeProvider>
         </AuthProvider>
       </BrowserRouter>
