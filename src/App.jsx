@@ -43,6 +43,7 @@ import EmployeeDashboard from "./components/EmployeeDashboard";
 import ProtectedEmployeeRoute from "./components/ProtectedEmployeeRoute";
 import { EmployeeAuthProvider } from './context/EmployeeAuthContext';
 import EmployeeProfile from "./components/EmployeeProfile";
+import AdminEmployee from "./components/AdminEmployee";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -273,7 +274,7 @@ const AppContent = () => {
             </>
           } 
         />
-        
+{/*         
         <Route 
           path="/terms-and-conditions" 
           element={
@@ -281,12 +282,12 @@ const AppContent = () => {
               <Helmet>
                 <title>Terms and Conditions - Your Property Site</title>
                 <meta name="description" content="Read our terms and conditions to understand your rights and obligations when using our platform." />
-                <link rel="canonical" href="https://yourdomain.com/terms-and-conditions" />
+           
               </Helmet>
               <TermsAndConditionsClearTitle1 />
             </>
           } 
-        />
+        /> */}
         
         <Route 
           path="/properties/category/:categoryId" 

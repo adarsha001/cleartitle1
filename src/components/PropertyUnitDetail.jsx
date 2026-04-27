@@ -842,6 +842,16 @@ export default function PropertyUnitDetail() {
     
     try {
       const { coordinates, mapUrl, address, city } = propertyUnit;
+            if (mapUrl) {
+        const coordMatch = mapUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (coordMatch) {
+          return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&z=15&output=embed`;
+        }
+        
+        if (mapUrl.includes('maps.google.com') || mapUrl.includes('goo.gl/maps')) {
+          return mapUrl.replace('/?', '/embed?');
+        }
+      }
       if (address && city) {
         const query = encodeURIComponent(`${address}, ${city}`);
         return `https://maps.google.com/maps?q=${query}&z=15&output=embed`;

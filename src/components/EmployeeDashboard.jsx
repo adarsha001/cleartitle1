@@ -248,7 +248,7 @@ export default function EmployeeDashboard() {
                 )}
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Welcome back, {employee?.username}!</h1>
+                <h1 className=" font-bold text-gray-900">Welcome back, {employee?.username}!</h1>
                 <p className="text-gray-600">{employee?.email}</p>
                 <p className="text-gray-400 text-sm">{employee?.phoneNumber}</p>
               </div>

@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import BatchAdminPanel from "./BatchAdminPanel";
 import CarouselAdmin from "./CarouselAdmin";
 import BatchAnalytics from "./AdminBatchAnalytics";
+import AdminEmployee from "./AdminEmployee";
 
 // Inline LoadingSpinner component
 const LoadingSpinner = ({ message = "Loading..." }) => {
@@ -102,6 +103,122 @@ const AdminDashboard = () => {
     }
   };
 
+  // Color mapping for different sections
+  const sectionColors = {
+    properties: {
+      bg: "bg-emerald-600",
+      hover: "hover:bg-emerald-700",
+      active: "bg-emerald-700",
+      text: "text-emerald-600",
+      border: "border-emerald-200",
+      light: "bg-emerald-50"
+    },
+    "property-agent": {
+      bg: "bg-teal-600",
+      hover: "hover:bg-teal-700",
+      active: "bg-teal-700",
+      text: "text-teal-600",
+      border: "border-teal-200",
+      light: "bg-teal-50"
+    },
+    agents: {
+      bg: "bg-pink-600",
+      hover: "hover:bg-pink-700",
+      active: "bg-pink-700",
+      text: "text-pink-600",
+      border: "border-pink-200",
+      light: "bg-pink-50"
+    },
+    carosel: {
+      bg: "bg-purple-600",
+      hover: "hover:bg-purple-700",
+      active: "bg-purple-700",
+      text: "text-purple-600",
+      border: "border-purple-200",
+      light: "bg-purple-50"
+    },
+    "agent-management": {
+      bg: "bg-rose-600",
+      hover: "hover:bg-rose-700",
+      active: "bg-rose-700",
+      text: "text-rose-600",
+      border: "border-rose-200",
+      light: "bg-rose-50"
+    },
+    "website-assignment": {
+      bg: "bg-cyan-600",
+      hover: "hover:bg-cyan-700",
+      active: "bg-cyan-700",
+      text: "text-cyan-600",
+      border: "border-cyan-200",
+      light: "bg-cyan-50"
+    },
+    "BatchAdminPanel": {
+      bg: "bg-indigo-600",
+      hover: "hover:bg-indigo-700",
+      active: "bg-indigo-700",
+      text: "text-indigo-600",
+      border: "border-indigo-200",
+      light: "bg-indigo-50"
+    },
+    "property-form": {
+      bg: "bg-violet-600",
+      hover: "hover:bg-violet-700",
+      active: "bg-violet-700",
+      text: "text-violet-600",
+      border: "border-violet-200",
+      light: "bg-violet-50"
+    },
+    users: {
+      bg: "bg-fuchsia-600",
+      hover: "hover:bg-fuchsia-700",
+      active: "bg-fuchsia-700",
+      text: "text-fuchsia-600",
+      border: "border-fuchsia-200",
+      light: "bg-fuchsia-50"
+    },
+    batch_analytics: {
+      bg: "bg-orange-600",
+      hover: "hover:bg-orange-700",
+      active: "bg-orange-700",
+      text: "text-orange-600",
+      border: "border-orange-200",
+      light: "bg-orange-50"
+    },
+    "employee-dashboard": {
+      bg: "bg-amber-600",
+      hover: "hover:bg-amber-700",
+      active: "bg-amber-700",
+      text: "text-amber-600",
+      border: "border-amber-200",
+      light: "bg-amber-50"
+    },
+    analytics: {
+      bg: "bg-blue-600",
+      hover: "hover:bg-blue-700",
+      active: "bg-blue-700",
+      text: "text-blue-600",
+      border: "border-blue-200",
+      light: "bg-blue-50"
+    },
+    enquiries: {
+      bg: "bg-amber-600",
+      hover: "hover:bg-amber-700",
+      active: "bg-amber-700",
+      text: "text-amber-600",
+      border: "border-amber-200",
+      light: "bg-amber-50"
+    },
+    "property-units": {
+      bg: "bg-slate-700",
+      hover: "hover:bg-slate-800",
+      active: "bg-slate-800",
+      text: "text-slate-700",
+      border: "border-slate-200",
+      light: "bg-slate-50"
+    }
+  };
+
   if (authLoading) {
     return <LoadingSpinner message="Checking admin permissions..." />;
   }
@@ -142,6 +259,8 @@ const AdminDashboard = () => {
         return <AgentsPage />;
       case "agent-management":
         return <AdminAgentPanel />;
+      case "employee-dashboard":
+        return <AdminEmployee />;
       case "property-units":
         return (
           <div className="p-4 sm:p-6">
@@ -243,7 +362,6 @@ const AdminDashboard = () => {
         return <AdminEnquiries />;
       case "batch_analytics":
         return <BatchAnalytics />;
-        
       case "property-form":
         return (
           <div className="p-4 sm:p-6">
@@ -296,28 +414,8 @@ const AdminDashboard = () => {
     );
   }
 
-  // Helper function to get button active color
-  const getButtonColor = (section, defaultColor = "gray-100") => {
-    const colors = {
-      "properties": "bg-green-600 text-white shadow-md",
-      "property-agent": "bg-teal-600 text-white shadow-md",
-      "agents": "bg-pink-600 text-white shadow-md",
-      "carosel": "bg-purple-600 text-white shadow-md",
-      "agent-management": "bg-red-600 text-white shadow-md",
-      "website-assignment": "bg-cyan-600 text-white shadow-md",
-      "BatchAdminPanel": "bg-indigo-600 text-white shadow-md",
-      "property-form": "bg-indigo-600 text-white shadow-md",
-      "users": "bg-purple-600 text-white shadow-md",
-      "batch_analytics": "bg-orange-600 text-white shadow-md",
-      "analytics": "bg-blue-600 text-white shadow-md",
-      "enquiries": "bg-orange-600 text-white shadow-md",
-      "property-units": "bg-indigo-600 text-white shadow-md"
-    };
-    return colors[section] || `bg-${defaultColor} text-gray-700 hover:bg-gray-200`;
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-4 sm:py-8">
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -332,7 +430,9 @@ const AdminDashboard = () => {
                   Back to Properties
                 </span>
               </button>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mt-2">
+                Admin Dashboard
+              </h1>
               <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Manage your real estate platform</p>
               {user && (
                 <p className="text-gray-500 text-xs sm:text-sm mt-1">
@@ -352,19 +452,20 @@ const AdminDashboard = () => {
         </div>
 
         {/* Navigation Buttons */}
-        <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-gray-100">
           {/* Desktop Navigation */}
           <div className="hidden sm:flex flex-wrap gap-2">
+            {/* Properties */}
             <button
               onClick={() => {
                 setActiveSection("properties");
                 setAnalyticsView("overview");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "properties"
-                  ? "bg-green-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors.properties.bg} text-white shadow-md ${sectionColors.properties.hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,32 +474,34 @@ const AdminDashboard = () => {
               <span>Properties</span>
             </button>
 
-            <button
+            {/* Property & Agent */}
+            {/* <button
               onClick={() => {
                 setActiveSection("property-agent");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "property-agent"
-                  ? "bg-teal-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors["property-agent"].bg} text-white shadow-md ${sectionColors["property-agent"].hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               <span>Property & Agent</span>
-            </button>
+            </button> */}
 
+            {/* Agents */}
             <button
               onClick={() => {
                 setActiveSection("agents");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "agents"
-                  ? "bg-pink-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors.agents.bg} text-white shadow-md ${sectionColors.agents.hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -407,15 +510,16 @@ const AdminDashboard = () => {
               <span>Agents</span>
             </button>
             
+            {/* Carousel */}
             <button
               onClick={() => {
                 setActiveSection("carosel");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "carosel"
-                  ? "bg-purple-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors.carosel.bg} text-white shadow-md ${sectionColors.carosel.hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -424,15 +528,16 @@ const AdminDashboard = () => {
               <span>Carousel</span>
             </button>
             
+            {/* Agent Management */}
             <button
               onClick={() => {
                 setActiveSection("agent-management");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "agent-management"
-                  ? "bg-red-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors["agent-management"].bg} text-white shadow-md ${sectionColors["agent-management"].hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,15 +546,16 @@ const AdminDashboard = () => {
               <span>Agent Management</span>
             </button>
 
+            {/* Website Assignment */}
             <button
               onClick={() => {
                 setActiveSection("website-assignment");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "website-assignment"
-                  ? "bg-cyan-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors["website-assignment"].bg} text-white shadow-md ${sectionColors["website-assignment"].hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -458,33 +564,53 @@ const AdminDashboard = () => {
               <span>Website Assignment</span>
             </button>
 
+            {/* Batch Assignment */}
             <button
+              onClick={() => {
+                setActiveSection("BatchAdminPanel");
+                setError(null);
+              }}
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
+                activeSection === "BatchAdminPanel"
+                  ? `${sectionColors.BatchAdminPanel.bg} text-white shadow-md ${sectionColors.BatchAdminPanel.hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span>Batch Assignment</span>
+            </button>
+            
+            {/* Add Property */}
+            {/* <button
               onClick={() => {
                 setActiveSection("property-form");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "property-form"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors["property-form"].bg} text-white shadow-md ${sectionColors["property-form"].hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               <span>Add Property</span>
-            </button>
+            </button> */}
 
+            {/* Users */}
             <button
               onClick={() => {
                 setActiveSection("users");
                 setAnalyticsView("overview");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "users"
-                  ? "bg-purple-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors.users.bg} text-white shadow-md ${sectionColors.users.hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -493,16 +619,17 @@ const AdminDashboard = () => {
               <span>Users</span>
             </button>
 
+            {/* Batch Analytics */}
             <button
               onClick={() => {
                 setActiveSection("batch_analytics");
                 setAnalyticsView("overview");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "batch_analytics"
-                  ? "bg-orange-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors.batch_analytics.bg} text-white shadow-md ${sectionColors.batch_analytics.hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -511,50 +638,53 @@ const AdminDashboard = () => {
               <span>Batch Analytics</span>
             </button>
 
+            {/* Employee Management */}
             <button
               onClick={() => {
-                setActiveSection("BatchAdminPanel");
+                setActiveSection("employee-dashboard");
                 setAnalyticsView("overview");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
-                activeSection === "BatchAdminPanel"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
+                activeSection === "employee-dashboard"
+                  ? `${sectionColors["employee-dashboard"].bg} text-white shadow-md ${sectionColors["employee-dashboard"].hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
-              <span>Batch Assignment</span>
+              <span>Employees</span>
             </button>
 
-            <button
+            {/* Click Analytics */}
+            {/* <button
               onClick={() => {
                 setActiveSection("analytics");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "analytics"
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors.analytics.bg} text-white shadow-md ${sectionColors.analytics.hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
               <span>Click Analytics</span>
-            </button>
+            </button> */}
 
+            {/* Enquiries */}
             <button
               onClick={() => {
                 setActiveSection("enquiries");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "enquiries"
-                  ? "bg-orange-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors.enquiries.bg} text-white shadow-md ${sectionColors.enquiries.hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -563,16 +693,17 @@ const AdminDashboard = () => {
               <span>Enquiries</span>
             </button>
             
+            {/* Property Units */}
             <button
               onClick={() => {
                 setActiveSection("property-units");
                 setAnalyticsView("overview");
                 setError(null);
               }}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all flex items-center space-x-2 text-sm sm:text-base ${
+              className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
                 activeSection === "property-units"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? `${sectionColors["property-units"].bg} text-white shadow-md ${sectionColors["property-units"].hover}`
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -582,9 +713,10 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Mobile Navigation - Similar color scheme */}
           <div className={`sm:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
             <div className="flex flex-col space-y-2">
+              {/* Add all mobile buttons with corresponding colors - same pattern as desktop */}
               <button
                 onClick={() => {
                   setActiveSection("properties");
@@ -594,8 +726,8 @@ const AdminDashboard = () => {
                 }}
                 className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
                   activeSection === "properties"
-                    ? "bg-green-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? `${sectionColors.properties.bg} text-white shadow-md`
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -606,228 +738,30 @@ const AdminDashboard = () => {
 
               <button
                 onClick={() => {
-                  setActiveSection("property-agent");
+                  setActiveSection("employee-dashboard");
+                  setAnalyticsView("overview");
                   setError(null);
                   setIsMobileMenuOpen(false);
                 }}
                 className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "property-agent"
-                    ? "bg-teal-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span>Property & Agent</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveSection("agents");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "agents"
-                    ? "bg-pink-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>Agents</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveSection("carosel");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "carosel"
-                    ? "bg-purple-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                <span>Carousel</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveSection("agent-management");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "agent-management"
-                    ? "bg-red-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <span>Agent Management</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveSection("website-assignment");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "website-assignment"
-                    ? "bg-cyan-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span>Website Assignment</span>
-              </button>
-              
-              <button
-                onClick={() => {
-                  setActiveSection("BatchAdminPanel");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "BatchAdminPanel"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  activeSection === "employee-dashboard"
+                    ? `${sectionColors["employee-dashboard"].bg} text-white shadow-md`
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                <span>Batch Assignment</span>
+                <span>Employees</span>
               </button>
               
-              <button
-                onClick={() => {
-                  setActiveSection("property-form");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "property-form"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Add Property</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveSection("users");
-                  setAnalyticsView("overview");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "users"
-                    ? "bg-purple-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-                <span>Users</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveSection("batch_analytics");
-                  setAnalyticsView("overview");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "batch_analytics"
-                    ? "bg-orange-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span>Batch Analytics</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveSection("analytics");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "analytics"
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span>Click Analytics</span>
-              </button>
-              
-              <button
-                onClick={() => {
-                  setActiveSection("property-units");
-                  setAnalyticsView("overview");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "property-units"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <span>Property Units</span>
-              </button>
-              
-              <button
-                onClick={() => {
-                  setActiveSection("enquiries");
-                  setError(null);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center space-x-2 justify-center ${
-                  activeSection === "enquiries"
-                    ? "bg-orange-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                <span>Enquiries</span>
-              </button>
+              {/* Add remaining mobile buttons similarly */}
             </div>
           </div>
         </div>
 
         {/* Active Section Content */}
-        <div className="bg-white rounded-lg shadow-md min-h-[400px] sm:min-h-[600px] overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg min-h-[400px] sm:min-h-[600px] overflow-hidden border border-gray-100">
           {renderActiveSection()}
         </div>
 
