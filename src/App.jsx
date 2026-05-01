@@ -44,6 +44,8 @@ import ProtectedEmployeeRoute from "./components/ProtectedEmployeeRoute";
 import { EmployeeAuthProvider } from './context/EmployeeAuthContext';
 import EmployeeProfile from "./components/EmployeeProfile";
 import AdminEmployee from "./components/AdminEmployee";
+import MyProperties from "./components/MyProperties";
+import EditProperty from "./components/EditProperty";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -321,7 +323,22 @@ const AppContent = () => {
             </ProtectedEmployeeRoute>
           } 
         />
-
+               <Route
+          path="/my-properties"
+          element={
+            <ProtectedRoute>
+              <MyProperties />
+            </ProtectedRoute>
+          }
+        />
+             <Route
+          path="/edit-property/:id"
+          element={
+            <ProtectedRoute>
+              <EditProperty />
+            </ProtectedRoute>
+          }
+        />
         {/* Auth Routes */}
         <Route 
           path="/login" 

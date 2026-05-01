@@ -265,20 +265,20 @@ export default function AdminEmployee() {
                 <Trophy className="w-4 h-4" />
                 <span>Leaderboard</span>
               </button>
-              {/* <button
+              <button
                 onClick={() => navigate("/employee-dashboard")}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all"
               >
                 <Eye className="w-4 h-4" />
                 <span>My Dashboard</span>
-              </button> */}
-              {/* <button
+              </button>
+              <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 rounded-xl transition-all text-red-700"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
-              </button> */}
+              </button>
             </div>
           </div>
         </div>

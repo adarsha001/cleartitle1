@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://saimr-backend-1.onrender.com/api/employee/admin', // Changed from /api/employee/admin to /api/admin
+  baseURL: 'http://localhost:5000/api/employee/admin', // Changed from /api/employee/admin to /api/admin
   timeout: 70000,
 });
 
