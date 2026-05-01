@@ -10,7 +10,7 @@ import {
   XCircle, Check, AlertCircle, Trophy, Medal, Crown,
   Star, Target, Zap, Sparkles, BarChart, PieChart,
   TrendingDown, ArrowUp, ArrowDown, Filter, Download,
-  Timer, ListChecks, CheckSquare
+  Timer, ListChecks, CheckSquare, Calendar as CalendarIcon
 } from "lucide-react";
 
 export default function AdminEmployee() {
@@ -56,6 +56,16 @@ export default function AdminEmployee() {
       }
     });
     return Math.round(totalHours * 10) / 10;
+  };
+
+  // Format date and time for display
+  const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return "Not available";
+    const date = new Date(dateTimeString);
+    return {
+      date: date.toLocaleDateString('default', { year: 'numeric', month: 'short', day: 'numeric' }),
+      time: date.toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    };
   };
 
   // Calculate points based on hours worked, tasks completed, and tasks total
@@ -612,7 +622,7 @@ export default function AdminEmployee() {
                   </div>
                 </div>
 
-                {/* Selected Date Details */}
+                {/* Selected Date Details with Work Item Creation Date/Time */}
                 {selectedDate && (
                   <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
                     <div className="flex justify-between items-center mb-4">
@@ -681,22 +691,58 @@ export default function AdminEmployee() {
                               <Briefcase className="w-4 h-4" />
                               <span className="text-sm">Work Items ({record.completedCount}/{record.workItemsCount})</span>
                             </div>
-                            <div className="space-y-2 max-h-64 overflow-y-auto">
-                              {record.workItems.map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-2 p-2 bg-white rounded-lg">
-                                  {item.completed ? (
-                                    <CheckCircle className="w-4 h-4 text-green-600" />
-                                  ) : (
-                                    <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
-                                  )}
-                                  <span className={`flex-1 text-sm ${item.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                                    {item.description}
-                                  </span>
-                                  {item.image && (
-                                    <img src={item.image} alt="work" className="w-8 h-8 rounded object-cover cursor-pointer" onClick={() => window.open(item.image)} />
-                                  )}
-                                </div>
-                              ))}
+                            <div className="space-y-3 max-h-96 overflow-y-auto">
+                              {record.workItems.map((item, idx) => {
+                                const createdDateTime = formatDateTime(item.createdAt || item.createdDate || item.date);
+                                return (
+                                  <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-md transition-shadow">
+                                    <div className="flex items-start gap-3">
+                                      <div className="flex-shrink-0 mt-1">
+                                        {item.completed ? (
+                                          <CheckCircle className="w-5 h-5 text-green-600" />
+                                        ) : (
+                                          <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
+                                        )}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center justify-between flex-wrap gap-2">
+                                          <span className={`text-sm font-medium ${item.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                                            {item.description}
+                                          </span>
+                                          {item.image && (
+                                            <img 
+                                              src={item.image} 
+                                              alt="work" 
+                                              className="w-10 h-10 rounded object-cover cursor-pointer hover:scale-110 transition-transform" 
+                                              onClick={() => window.open(item.image)} 
+                                            />
+                                          )}
+                                        </div>
+                                        
+                                        {/* Work Item Creation Date and Time */}
+                                        <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                                          <div className="flex items-center gap-1">
+                                            <CalendarIcon className="w-3 h-3" />
+                                            <span>Created: {createdDateTime.date}</span>
+                                          </div>
+                                          <div className="flex items-center gap-1">
+                                            <Clock className="w-3 h-3" />
+                                            <span>Time: {createdDateTime.time}</span>
+                                          </div>
+                                          {item.completedAt && (
+                                            <>
+                                              <div className="flex items-center gap-1 text-green-600">
+                                                <CheckCircle className="w-3 h-3" />
+                                                <span>Completed: {new Date(item.completedAt).toLocaleDateString()}</span>
+                                              </div>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
 
