@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL =  'http://localhost:5000/api/myproperties';
+const API_URL =  'https://saimr-backend-1.onrender.com/api/myproperties';
 
 const api = axios.create({
   baseURL: API_URL,
