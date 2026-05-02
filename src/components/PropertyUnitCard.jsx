@@ -50,6 +50,8 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
     updatedAt
   } = propertyUnit;
 
+
+
   // GSAP animations for badges
   useEffect(() => {
     if (isVerified && verifiedBadgeRef.current) {

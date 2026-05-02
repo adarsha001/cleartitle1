@@ -11,6 +11,7 @@ import BengaluruEastLandPriceChart from '../newapproach/BengaluruEastLandPriceCh
 import LocationBatches from '../components/batches/LocationBatches';
 import ProjectGroupBatches from '../components/batches/ProjectGroupBatches';
 import CategoryGrid from '../focusedapproach/bentogridCatogarized';
+import PropertyComparison from '../components/PropertyComparison';
 
 const Home = () => {
   const sectionRefs = useRef([]);
@@ -22,6 +23,7 @@ const Home = () => {
     { name: 'Newly Launched', component: NewlyLaunchedProperties },
     { name: 'BengaluruEastLandPriceChart', component:  LocationBatches},
     { name: 'Possession Timeline', component: PossessionTimeline },
+    { name: 'property comparision', component: PropertyComparison },
     { name: 'ProjectGroupBatches ', component: ProjectGroupBatches },
     { name: 'ListingTypeView', component:  ListingTypeView},
     { name: 'Quality', component: QualityAssurance },

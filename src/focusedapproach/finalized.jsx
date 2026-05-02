@@ -15,6 +15,7 @@ import PropertyCategories from '../focusedapproach/PropertyCategories';
 import ImprovedCarousel from '../newapproach/CarouselSlider';
 import UnifiedAuthCTA from './UnifiedAuthCTA';
 import BuildingMarquee from '../pages/Building';
+import PropertyComparison from '../components/PropertyComparison';
 
 const Finalized = () => {
   const sectionRefs = useRef([]);
@@ -29,6 +30,7 @@ const Finalized = () => {
     { name: 'Possession Timeline', component: PossessionTimeline },
     { name: 'BengaluruEastLandPriceChart', component:  LocationBatches},
     { name: 'UnifiedAuthCTA ', component: UnifiedAuthCTA },
+        { name: 'property comparision', component: PropertyComparison },
     { name: 'ListingTypeView', component:  ListingTypeView},
     { name: 'Quality', component: QualityAssurance },
   ];

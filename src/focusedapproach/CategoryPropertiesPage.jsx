@@ -46,8 +46,10 @@ import { propertyUnitAPI } from "../api/propertyUnitAPI";
 import PropertyUnitCard from "../components/PropertyUnitCard";
 import { motion, AnimatePresence } from "framer-motion";
 import CategoryBanner from "./CategoryBanner";
+import PropertyComparison from "../components/PropertyComparison";
 
 // Category Icons
+
 const categoryIcons = {
   'Apartment': <Building className="w-8 h-8" strokeWidth={1.5} />,
   'Commercial Space': <Building2 className="w-8 h-8" strokeWidth={1.5} />,
@@ -787,7 +789,7 @@ const CategoryPropertiesPage = () => {
   // ---------------------------
   // PAGE NUMBER LOGIC
   // ---------------------------
-
+const [showMoreFilters, setShowMoreFilters] = useState(false);
   const getPageNumbers = () => {
     const pages = [];
     let start = Math.max(1, page - 2);
@@ -898,298 +900,316 @@ const CategoryPropertiesPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex gap-8">
           {/* DESKTOP FILTERS */}
-          <div className="hidden md:block w-80 flex-shrink-0">
-            <div className="sticky top-24 bg-white rounded-2xl shadow-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-semibold text-gray-900">Filters</h3>
-                {activeFilterCount > 0 && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
+        <div className="hidden md:block w-80 flex-shrink-0">
+  <div className="sticky top-24 bg-white rounded-2xl shadow-xl p-6">
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="font-semibold text-gray-900">Filters</h3>
+      {activeFilterCount > 0 && (
+        <button
+          onClick={clearFilters}
+          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+        >
+          Clear all
+        </button>
+      )}
+    </div>
 
-              {/* Price Range */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Price Range (₹)</h4>
-                <div className="space-y-3">
-                  <div className="relative">
-                                  <div className="absolute left-3 top-4 transform -translate-y-1/2 text-gray-400 w-4 h-4" >₹</div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Min Price"
-                      value={filters.minPrice}
-                      onChange={(e) => handlePriceChange('min', e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                    />
-                  </div>
-                  <div className="relative">
-                    <div className="absolute left-3 top-4 transform -translate-y-1/2 text-gray-400 w-4 h-4" >₹</div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Max Price"
-                      value={filters.maxPrice}
-                      onChange={(e) => handlePriceChange('max', e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                    />
-                  </div>
-                  {priceError && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
-                      <X className="w-3 h-3" />
-                      {priceError}
-                    </p>
-                  )}
-                </div>
-              </div>
+    {/* Price Range */}
+    <div className="mb-6">
+      <h4 className="font-medium text-gray-900 mb-3">Price Range (₹)</h4>
+      <div className="space-y-3">
+        <div className="relative">
+          <div className="absolute left-3 top-4 transform -translate-y-1/2 text-gray-400 w-4 h-4">₹</div>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="Min Price"
+            value={filters.minPrice}
+            onChange={(e) => handlePriceChange('min', e.target.value)}
+            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+          />
+        </div>
+        <div className="relative">
+          <div className="absolute left-3 top-4 transform -translate-y-1/2 text-gray-400 w-4 h-4">₹</div>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="Max Price"
+            value={filters.maxPrice}
+            onChange={(e) => handlePriceChange('max', e.target.value)}
+            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+          />
+        </div>
+        {priceError && (
+          <p className="text-xs text-red-500 flex items-center gap-1">
+            <X className="w-3 h-3" />
+            {priceError}
+          </p>
+        )}
+      </div>
+    </div>
 
-              {/* Area Range - Only for Plot Category */}
-              {isPlotCategory && (
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">Area Range (sq.ft.)</h4>
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="Min Area"
-                        value={filters.minArea}
-                        onChange={(e) => handleAreaChange('min', e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                      />
-                    </div>
-                    <div className="relative">
-                      <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="Max Area"
-                        value={filters.maxArea}
-                        onChange={(e) => handleAreaChange('max', e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
-                      />
-                    </div>
-                    {areaError && (
-                      <p className="text-xs text-red-500 flex items-center gap-1">
-                        <X className="w-3 h-3" />
-                        {areaError}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
+    {/* Area Range - Only for Plot Category */}
+    {isPlotCategory && (
+      <div className="mb-6">
+        <h4 className="font-medium text-gray-900 mb-3">Area Range (sq.ft.)</h4>
+        <div className="space-y-3">
+          <div className="relative">
+            <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Min Area"
+              value={filters.minArea}
+              onChange={(e) => handleAreaChange('min', e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+            />
+          </div>
+          <div className="relative">
+            <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Max Area"
+              value={filters.maxArea}
+              onChange={(e) => handleAreaChange('max', e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+            />
+          </div>
+          {areaError && (
+            <p className="text-xs text-red-500 flex items-center gap-1">
+              <X className="w-3 h-3" />
+              {areaError}
+            </p>
+          )}
+        </div>
+      </div>
+    )}
 
-              {/* Listing Type */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">I want to</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {filterOptions.listingType.map(({ value, label, icon: Icon }) => (
+    {/* Listing Type */}
+    <div className="mb-6">
+      <h4 className="font-medium text-gray-900 mb-3">I want to</h4>
+      <div className="grid grid-cols-2 gap-2">
+        {filterOptions.listingType.map(({ value, label, icon: Icon }) => (
+          <button
+            key={value}
+            onClick={() => handleFilterChange('listingType', value)}
+            className={`p-3 rounded-xl border-2 transition-all ${
+              filters.listingType === value
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <Icon className="w-5 h-5 mx-auto mb-1" strokeWidth={1.5} />
+            <span className="text-xs">{label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Unit Type / Bedrooms - Only for non-plot categories */}
+    {!isPlotCategory && (
+      <>
+        <div className="mb-6">
+          <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-blue-500" />
+            Unit Type
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {filterOptions.unitTypes.map((unit) => (
+              <FilterChip
+                key={unit.value}
+                label={unit.label}
+                active={filters.unitType === unit.value}
+                onClick={() => handleFilterChange('unitType', unit.value)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Furnishing */}
+        <div className="mb-6">
+          <h4 className="font-medium text-gray-900 mb-3">Furnishing</h4>
+          <div className="space-y-2">
+            {filterOptions.furnishing.map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                onClick={() => handleFilterChange('furnishing', value)}
+                className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                  filters.furnishing === value
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Icon className="w-4 h-4" strokeWidth={1.5} />
+                <span className="text-sm font-medium">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Possession Status */}
+        <div className="mb-6">
+          <h4 className="font-medium text-gray-900 mb-3">Possession</h4>
+          <div className="space-y-2">
+            {filterOptions.possessionStatus.map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                onClick={() => handleFilterChange('possessionStatus', value)}
+                className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                  filters.possessionStatus === value
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Icon className="w-4 h-4" strokeWidth={1.5} />
+                <span className="text-sm font-medium">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </>
+    )}
+
+    {/* Plot-Specific Filters */}
+    {isPlotCategory && (
+      <>
+        {/* Land Use */}
+        <div className="mb-6">
+          <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+            <LandPlot className="w-4 h-4 text-blue-500" />
+            Land Use
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {filterOptions.plotFilters.landUse.map(({ value, label, icon: Icon }) => (
+              <FilterChip
+                key={value}
+                label={label}
+                icon={Icon}
+                active={filters.landUse === value}
+                onClick={() => handleFilterChange('landUse', value)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Dropdown Section for Additional Filters */}
+        <div className="border-t border-gray-200 pt-4 mb-4">
+          <button
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+            className="w-full flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            <span className="font-medium text-gray-900">More Filters</span>
+            <ChevronDown 
+              className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
+                showMoreFilters ? 'rotate-180' : ''
+              }`} 
+            />
+          </button>
+          
+          {showMoreFilters && (
+            <div className="mt-4 space-y-6 animate-slideDown">
+              {/* Development Status */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Development Status</h4>
+                <div className="space-y-2">
+                  {filterOptions.plotFilters.developmentStatus.map(({ value, label, icon: Icon }) => (
                     <button
                       key={value}
-                      onClick={() => handleFilterChange('listingType', value)}
-                      className={`p-3 rounded-xl border-2 transition-all ${
-                        filters.listingType === value
+                      onClick={() => handleFilterChange('developmentStatus', value)}
+                      className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                        filters.developmentStatus === value
                           ? 'bg-blue-600 text-white border-blue-600'
                           : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
                       }`}
                     >
-                      <Icon className="w-5 h-5 mx-auto mb-1" strokeWidth={1.5} />
-                      <span className="text-xs">{label}</span>
+                      <Icon className="w-4 h-4" strokeWidth={1.5} />
+                      <span className="text-sm font-medium">{label}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Unit Type / Bedrooms - Only for non-plot categories */}
-              {!isPlotCategory && (
-                <>
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-blue-500" />
-                      Unit Type
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {filterOptions.unitTypes.map((unit) => (
-                        <FilterChip
-                          key={unit.value}
-                          label={unit.label}
-                          active={filters.unitType === unit.value}
-                          onClick={() => handleFilterChange('unitType', unit.value)}
-                        />
-                      ))}
-                    </div>
-                  </div>
+              {/* Facing */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-blue-500" />
+                  Facing
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {filterOptions.plotFilters.facing.map(({ value, label, icon: Icon }) => (
+                    <FilterChip
+                      key={value}
+                      label={label}
+                      icon={Icon}
+                      active={filters.facing === value}
+                      onClick={() => handleFilterChange('facing', value)}
+                    />
+                  ))}
+                </div>
+              </div>
 
-                  {/* Furnishing */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">Furnishing</h4>
-                    <div className="space-y-2">
-                      {filterOptions.furnishing.map(({ value, label, icon: Icon }) => (
-                        <button
-                          key={value}
-                          onClick={() => handleFilterChange('furnishing', value)}
-                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
-                            filters.furnishing === value
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" strokeWidth={1.5} />
-                          <span className="text-sm font-medium">{label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              {/* Road Type */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                  Road Type
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {filterOptions.plotFilters.roadType.map(({ value, label, icon: Icon }) => (
+                    <FilterChip
+                      key={value}
+                      label={label}
+                      icon={Icon}
+                      active={filters.roadType === value}
+                      onClick={() => handleFilterChange('roadType', value)}
+                    />
+                  ))}
+                </div>
+              </div>
 
-                  {/* Possession Status */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">Possession</h4>
-                    <div className="space-y-2">
-                      {filterOptions.possessionStatus.map(({ value, label, icon: Icon }) => (
-                        <button
-                          key={value}
-                          onClick={() => handleFilterChange('possessionStatus', value)}
-                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
-                            filters.possessionStatus === value
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" strokeWidth={1.5} />
-                          <span className="text-sm font-medium">{label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
+              {/* Utilities */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Utilities Available</h4>
+                <div className="space-y-2">
+                  {filterOptions.plotFilters.utilities.map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      onClick={() => handleArrayFilterChange('utilities', value)}
+                      className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                        filters.utilities.includes(value)
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" strokeWidth={1.5} />
+                      <span className="text-sm font-medium">{label}</span>
+                      {filters.utilities.includes(value) && (
+                        <CheckCircle className="w-4 h-4 ml-auto" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-              {/* Plot-Specific Filters */}
-              {isPlotCategory && (
-                <>
-                  {/* Land Use */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <LandPlot className="w-4 h-4 text-blue-500" />
-                      Land Use
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {filterOptions.plotFilters.landUse.map(({ value, label, icon: Icon }) => (
-                        <FilterChip
-                          key={value}
-                          label={label}
-                          icon={Icon}
-                          active={filters.landUse === value}
-                          onClick={() => handleFilterChange('landUse', value)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Development Status */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">Development Status</h4>
-                    <div className="space-y-2">
-                      {filterOptions.plotFilters.developmentStatus.map(({ value, label, icon: Icon }) => (
-                        <button
-                          key={value}
-                          onClick={() => handleFilterChange('developmentStatus', value)}
-                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
-                            filters.developmentStatus === value
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" strokeWidth={1.5} />
-                          <span className="text-sm font-medium">{label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Facing */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <Compass className="w-4 h-4 text-blue-500" />
-                      Facing
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {filterOptions.plotFilters.facing.map(({ value, label, icon: Icon }) => (
-                        <FilterChip
-                          key={value}
-                          label={label}
-                          icon={Icon}
-                          active={filters.facing === value}
-                          onClick={() => handleFilterChange('facing', value)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Road Type */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      {/* <Road className="w-4 h-4 text-blue-500" /> */}
-                      Road Type
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {filterOptions.plotFilters.roadType.map(({ value, label, icon: Icon }) => (
-                        <FilterChip
-                          key={value}
-                          label={label}
-                          icon={Icon}
-                          active={filters.roadType === value}
-                          onClick={() => handleFilterChange('roadType', value)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Utilities */}
-                  <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">Utilities Available</h4>
-                    <div className="space-y-2">
-                      {filterOptions.plotFilters.utilities.map(({ value, label, icon: Icon }) => (
-                        <button
-                          key={value}
-                          onClick={() => handleArrayFilterChange('utilities', value)}
-                          className={`w-full p-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
-                            filters.utilities.includes(value)
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" strokeWidth={1.5} />
-                          <span className="text-sm font-medium">{label}</span>
-                          {filters.utilities.includes(value) && (
-                            <CheckCircle className="w-4 h-4 ml-auto" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Corner Plot */}
-                  <div className="mb-6">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={filters.isCornerPlot}
-                        onChange={(e) => setFilters(prev => ({ ...prev, isCornerPlot: e.target.checked }))}
-                        className="w-4 h-4 text-blue-600 rounded"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Corner Plot Only</span>
-                    </label>
-                  </div>
-                </>
-              )}
+              {/* Corner Plot */}
+              <div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filters.isCornerPlot}
+                    onChange={(e) => setFilters(prev => ({ ...prev, isCornerPlot: e.target.checked }))}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Corner Plot Only</span>
+                </label>
+              </div>
             </div>
-          </div>
+          )}
+        </div>
+      </>
+    )}
+  </div>
+</div>
 
           {/* PROPERTIES GRID/LIST */}
           <div className="flex-1">
@@ -1675,6 +1695,9 @@ const CategoryPropertiesPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <div>
+        <PropertyComparison/>
+      </div>
     </div>
   );
 };

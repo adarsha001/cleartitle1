@@ -46,6 +46,7 @@ import EmployeeProfile from "./components/EmployeeProfile";
 import AdminEmployee from "./components/AdminEmployee";
 import MyProperties from "./components/MyProperties";
 import EditProperty from "./components/EditProperty";
+import PropertyComparison from "./components/PropertyComparison";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -348,7 +349,7 @@ const AppContent = () => {
             </PublicRoute>
           } 
         />
-        
+        <Route path="/compare-properties" element={<PropertyComparison />} />
         <Route 
           path="/register" 
           element={

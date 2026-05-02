@@ -126,6 +126,7 @@ import Footer from "../pages/Footer";
 import PossessionTimeline from "../newapproach/PossessionTimeline";
 import NewlyLaunchedProperties from "../newapproach/NewlyLaunchedProperties";
 import FeaturedProperties from "../pages/FeaturedProperties";
+import PropertyComparison from "./PropertyComparison";
 
 export default function PropertyUnitDetail() {
   const { id } = useParams();
@@ -323,7 +324,46 @@ export default function PropertyUnitDetail() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showShareOptions]);
-
+useEffect(() => {
+  // Save to recently viewed when component mounts
+  if (propertyUnit && propertyUnit._id) {
+    const stored = localStorage.getItem('recentlyViewedProperties');
+    let recent = stored ? JSON.parse(stored) : [];
+    
+    // Remove if already exists
+    recent = recent.filter(p => p._id !== propertyUnit._id);
+    
+    // Add to beginning with building details
+    recent.unshift({
+      _id: propertyUnit._id,
+      title: propertyUnit.title,
+      city: propertyUnit.city,
+      propertyType: propertyUnit.propertyType,
+      images: propertyUnit.images,
+      unitTypes: propertyUnit.unitTypes,
+      listingType: propertyUnit.listingType,
+      priceRange: propertyUnit.priceRange,
+      timestamp: new Date().toISOString(),
+      // Building Details
+      buildingName: propertyUnit.buildingDetails?.name || '',
+      buildingDetails: {
+        name: propertyUnit.buildingDetails?.name || '',
+        totalFloors: propertyUnit.buildingDetails?.totalFloors || 0,
+        totalUnits: propertyUnit.buildingDetails?.totalUnits || 0,
+        yearBuilt: propertyUnit.buildingDetails?.yearBuilt || 0
+      },
+      // Common Specifications
+      furnishing: propertyUnit.commonSpecifications?.furnishing || '',
+      possessionStatus: propertyUnit.commonSpecifications?.possessionStatus || '',
+      parking: propertyUnit.commonSpecifications?.parking || { covered: 0, open: 0 }
+    });
+    
+    // Keep only last 12
+    recent = recent.slice(0, 4);
+    
+    localStorage.setItem('recentlyViewedProperties', JSON.stringify(recent));
+  }
+}, [propertyUnit]);
   // Handle keyboard shortcuts for fullscreen image
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -3347,7 +3387,7 @@ export default function PropertyUnitDetail() {
           </div>
         </div>
       </div>
-      
+      <PropertyComparison/>
       <FeaturedProperties/>
       <PossessionTimeline/>
       <Footer />
