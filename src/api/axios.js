@@ -1,3 +1,4 @@
+// src/api/axios.js
 import axios from 'axios';
 
 const baseURL = 'https://saimr-backend-1.onrender.com/api';
@@ -26,13 +27,10 @@ API.interceptors.request.use(
     
     config.headers['Content-Type'] = 'application/json';
     
-  //log(`🚀 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-    
     return config;
   },
   (error) => {
-  //error('❌ Request error:', error);
-    // return Promise.reject(error);
+    return Promise.reject(error);
   }
 );
 
@@ -44,19 +42,14 @@ APII.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // ⚠️ CRITICAL: Don't set Content-Type for FormData
-    // Let the browser set it automatically with boundary
+    // Don't set Content-Type for FormData - let browser set it automatically
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
     
-  //log(`📁 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, 
-                // config.data instanceof FormData ? '(FormData)' : '');
-    
     return config;
   },
   (error) => {
-  //error('❌ FormData Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -78,7 +71,6 @@ const handleResponseError = (error) => {
   if (error.response?.status === 401) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    // Don't redirect here to avoid loops
   }
 
   if (error.response?.status === 403) {
@@ -94,7 +86,6 @@ const handleResponseError = (error) => {
 
 API.interceptors.response.use(
   (response) => {
-  //log(`✅ ${response.status} ${response.config.url}`);
     return response;
   },
   handleResponseError
@@ -102,47 +93,165 @@ API.interceptors.response.use(
 
 APII.interceptors.response.use(
   (response) => {
-  //log(`✅ ${response.status} ${response.config.url} (FormData)`);
     return response;
   },
   handleResponseError
 );
 
-// API functions
-
+// ==================== PROPERTY APIs ====================
 export const getProperties = (params = {}) => {
   return API.get("/properties", { 
     params: { 
       ...params, 
       website: "cleartitle",
       page: params.page || 1,
-      limit: params.limit || 12 // Add limit parameter
+      limit: params.limit || 12
     } 
   });
 };
+
 export const getPropertyById = (id) => API.get(`/properties/${id}`);
-// export const likeProperty = (propertyId) => API.post(`/users/like/${propertyId}`);
-// export const unlikeProperty = (propertyId) => API.delete(`/users/like/${propertyId}`);
-// export const checkIfLiked = (propertyId) => API.get(`/users/like/${propertyId}/check`);
-// export const toggleLike = (propertyId) => API.post(`/users/like/${propertyId}/toggle`);
 export const getAllProperties = () => API.get("/properties", { 
   params: { 
     limit: 1000, 
     page: 1 
   } 
 });
+
+// ==================== ENQUIRY APIs ====================
 export const createEnquiry = (enquiryData) => API.post("/auth/enquiries", enquiryData);
-export const getUserProfile = () => API.get("/users/profile");
 export const getUserEnquiries = () => API.get("/users/my-enquiries");
+
+// ==================== USER PROFILE APIs ====================
+export const getUserProfile = () => API.get("/users/profile");
 export const updateUserProfile = (userData) => API.put("/users/profile", userData);
 export const deleteUserAccount = () => API.delete("/users/account");
 export const getUserProperties = () => API.get("/users/properties");
 export const deleteUserProperty = (propertyId) => API.delete(`/properties/${propertyId}`);
 
-// FormData/Multimedia APIs
+// ==================== PASSWORD MANAGEMENT APIs ====================
+
+/**
+ * Change user password (within profile update)
+ * This is handled by updateUserProfile with password fields
+ * @param {Object} passwordData - { currentPassword, newPassword, confirmNewPassword }
+ * @returns {Promise} - Returns success message
+ */
+export const changePassword = (passwordData) => {
+  return API.post('/users/change-password', passwordData);
+};
+
+/**
+ * Forgot password - Request password reset email
+ * @param {string} email - User's email address
+ * @returns {Promise} - Returns success message
+ */
+export const forgotPassword = (email) => {
+  return API.post('/auth/forgot-password', { email });
+};
+
+/**
+ * Reset password with token
+ * @param {string} token - Reset token from email
+ * @param {string} newPassword - New password
+ * @param {string} confirmPassword - Confirm new password
+ * @returns {Promise} - Returns success message
+ */
+export const resetPassword = (token, newPassword, confirmPassword) => {
+  return API.post(`/auth/reset-password/${token}`, { newPassword, confirmPassword });
+};
+
+// ==================== AGENT APIs ====================
+
+/**
+ * Apply for agent status (called after user selects agent type)
+ * @param {string} referralCode - Optional referral code from another agent
+ * @returns {Promise} - Returns agent profile data
+ */
+export const applyForAgent = (referralCode) => {
+  return API.post('/users/apply-agent', { referralCode });
+};
+
+/**
+ * Check if current user has an agent profile
+ * @returns {Promise} - Returns hasAgentProfile boolean and agent data if exists
+ */
+export const checkAgentStatus = () => {
+  return API.get('/users/check-agent-status');
+};
+
+/**
+ * Get agent profile details
+ * @returns {Promise} - Returns complete agent profile
+ */
+export const getAgentProfile = () => {
+  return API.get('/agent/profile');
+};
+
+/**
+ * Get agent referral info (code and stats only)
+ * @returns {Promise} - Returns referral code, count, and rewards
+ */
+export const getAgentReferralInfo = () => {
+  return API.get('/agent/referral-info');
+};
+
+/**
+ * Get agent dashboard statistics
+ * @returns {Promise} - Returns dashboard stats including referrals, rewards, appointments
+ */
+export const getAgentDashboard = () => {
+  return API.get('/agent/dashboard');
+};
+
+/**
+ * Get all appointments for the agent
+ * @param {Object} params - Query parameters (status, startDate, endDate)
+ * @returns {Promise} - Returns list of appointments
+ */
+export const getAgentAppointments = (params = {}) => {
+  return API.get('/agent/appointments', { params });
+};
+
+/**
+ * Schedule a new appointment for a client
+ * @param {Object} appointmentData - { clientId, propertyId, appointmentDate, appointmentTime, notes }
+ * @returns {Promise} - Returns created appointment
+ */
+export const scheduleAppointment = (appointmentData) => {
+  return API.post('/agent/appointments', appointmentData);
+};
+
+/**
+ * Update appointment status
+ * @param {string} appointmentId - ID of the appointment
+ * @param {Object} updateData - { status, feedback, dealValue }
+ * @returns {Promise} - Returns updated appointment
+ */
+export const updateAppointmentStatus = (appointmentId, updateData) => {
+  return API.put(`/agent/appointments/${appointmentId}`, updateData);
+};
+
+/**
+ * Get agent referral statistics with history
+ * @returns {Promise} - Returns referral stats including history
+ */
+export const getAgentReferralStats = () => {
+  return API.get('/agent/referral-stats');
+};
+
+/**
+ * Track referral signup (called during user registration)
+ * @param {Object} data - { referralCode, userId }
+ * @returns {Promise} - Returns tracking result
+ */
+export const trackReferralSignup = (data) => {
+  return API.post('/agent/track-referral', data);
+};
+
+// ==================== PROPERTY FORM DATA APIs ====================
 export const createProperty = (formData) => APII.post("/properties", formData);
 
-// New multimedia upload routes
 export const uploadPropertyImages = (propertyId, images) => {
   const formData = new FormData();
   images.forEach(image => {
@@ -168,4 +277,6 @@ export const uploadUserAvatar = (avatarFile) => {
   return APII.post('/users/upload-avatar', formData);
 };
 
+// ==================== EXPORTS ====================
+export { APII };
 export default API;

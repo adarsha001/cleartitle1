@@ -43,7 +43,7 @@ const ProjectGroupBatches = () => {
   useEffect(() => {
     if (!batches.length || !marqueeContentRef.current) return;
     const content = marqueeContentRef.current;
-    const itemWidth = content.children[0].offsetWidth + 16;
+    const itemWidth = content.children[0]?.offsetWidth + 16 || 400;
     const totalWidth = itemWidth * batches.length;
     const wrap = gsap.utils.wrap(-totalWidth, 0);
     let scrollPos = 0;
@@ -97,9 +97,59 @@ const ProjectGroupBatches = () => {
     gsap.to(modalRef.current, { y: 100, opacity: 0, duration: 0.4, onComplete: () => {
       setShowModal(false);
       setSelectedBatch(null);
+      setPropertyUnits([]);
       setFetchError(null);
     }});
     gsap.to(modalOverlayRef.current, { opacity: 0, duration: 0.3 });
+  };
+
+  // Function to transform property units data
+  const transformPropertyUnits = (propertyUnitsData) => {
+    if (!propertyUnitsData || !Array.isArray(propertyUnitsData)) return [];
+    
+    return propertyUnitsData.map(unit => {
+      // Check if property data is nested inside propertyId
+      if (unit.propertyId && typeof unit.propertyId === 'object') {
+        const propertyData = unit.propertyId;
+        
+        // Return flattened object that PropertyUnitCard expects
+        return {
+          _id: propertyData._id || unit._id,
+          // Property basic info
+          title: propertyData.title || propertyData.propertyName || 'Property',
+          propertyName: propertyData.propertyName || propertyData.title,
+          description: propertyData.description || '',
+          // Location info
+          address: propertyData.address || '',
+          city: propertyData.city || '',
+          state: propertyData.state || '',
+          pincode: propertyData.pincode || '',
+          // Property details
+          propertyType: propertyData.propertyType || '',
+          bedroomCount: propertyData.bedroomCount || 0,
+          bathroomCount: propertyData.bathroomCount || 0,
+          area: propertyData.area || 0,
+          areaUnit: propertyData.areaUnit || 'sqft',
+          // Pricing
+          price: propertyData.price || 0,
+          expectedPrice: propertyData.expectedPrice || 0,
+          // Images
+          images: propertyData.images || [],
+          thumbnail: propertyData.thumbnail || propertyData.images?.[0]?.url || '',
+          // Status
+          status: propertyData.status || 'available',
+          isActive: propertyData.isActive !== false,
+          // Unit specific fields
+          unitDisplayOrder: unit.displayOrder,
+          unitStats: unit.propertyStats,
+          // Additional fields that PropertyUnitCard might need
+          ...propertyData
+        };
+      }
+      
+      // If propertyId is just an ID string or property data is already flat
+      return unit;
+    });
   };
 
   const handleBatchClick = async (batch) => {
@@ -107,17 +157,37 @@ const ProjectGroupBatches = () => {
     setShowModal(true);
     setUnitsLoading(true);
     setFetchError(null);
+    setPropertyUnits([]);
+    
     try {
       const response = await batchService.getBatch(batch._id);
-      if (response.success) setPropertyUnits(response.data.propertyUnits || []);
+      if (response.success && response.data) {
+        console.log("Project Group API Response:", response.data);
+        
+        // Transform the property units to extract nested property data
+        const transformedUnits = transformPropertyUnits(response.data.propertyUnits);
+        console.log("Transformed Units:", transformedUnits);
+        
+        setPropertyUnits(transformedUnits);
+      } else {
+        setPropertyUnits([]);
+      }
     } catch (e) {
+      console.error('Error fetching properties:', e);
       setFetchError("Request timed out. The server is taking too long to respond.");
+      setPropertyUnits([]);
     } finally {
       setUnitsLoading(false);
     }
   };
 
-  if (loading) return <div className="h-96 flex items-center justify-center bg-white"><div className="w-10 h-10 border-t-2 border-blue-600 rounded-full animate-spin" /></div>;
+  if (loading) {
+    return (
+      <div className="h-96 flex items-center justify-center bg-white">
+        <div className="w-10 h-10 border-t-2 border-blue-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white py-2 md:py-24 overflow-hidden select-none">
@@ -140,19 +210,22 @@ const ProjectGroupBatches = () => {
               className="flex gap-4 will-change-transform py-10"
               style={{ width: 'fit-content' }}
             >
-              {[...batches, ...batches, ...batches].map((batch, index) => (
+              {batches.length > 0 && [...batches, ...batches, ...batches].map((batch, index) => (
                 <div 
                   key={`${batch._id}-${index}`}
                   onClick={() => handleBatchClick(batch)}
                   className="flex-shrink-0 w-[300px] md:w-[420px] group transition-transform duration-500 cursor-pointer"
                 >
-                  {/* YOUR EXACT CARD DESIGN PRESERVED */}
+                  {/* CARD DESIGN */}
                   <div className="flex items-center bg-white border border-slate-100 rounded-2xl p-5 transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] group-hover:border-blue-100">
                     <div className="relative w-28 h-28 flex-shrink-0 overflow-hidden rounded-xl bg-slate-50">
                       <img 
                         src={batch.image?.url || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        alt=""
+                        alt={batch.projectName || batch.batchName}
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800';
+                        }}
                       />
                     </div>
                     <div className="flex-1 pl-6">
@@ -177,107 +250,127 @@ const ProjectGroupBatches = () => {
       </div>
 
       {/* --- PREMIUM MODAL INTERFACE --- */}
-  {showModal && selectedBatch && (
-  <div 
-    ref={modalOverlayRef} 
-    className="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/60 backdrop-blur-md p-0 md:p-10"
-  >
-    <div 
-      ref={modalRef} 
-      className="bg-white w-full h-full md:h-full max-w-7xl md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative"
-    >
-      
-      {/* Close Button - Adjusted for mobile visibility */}
-      <button 
-        onClick={handleCloseModal} 
-        className="absolute top-4 right-4 z-[110] w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:bg-slate-50 transition-colors"
-      >
-        <X className="w-5 h-5 text-slate-900" />
-      </button>
+      {showModal && selectedBatch && (
+        <div 
+          ref={modalOverlayRef} 
+          className="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/60 backdrop-blur-md p-0 md:p-10"
+        >
+          <div 
+            ref={modalRef} 
+            className="bg-white w-full h-full md:h-full max-w-7xl md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col relative"
+          >
+            
+            {/* Close Button */}
+            <button 
+              onClick={handleCloseModal} 
+              className="absolute top-4 right-4 z-[110] w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:bg-slate-50 transition-colors"
+            >
+              <X className="w-5 h-5 text-slate-900" />
+            </button>
 
-      {/* Main Container - Stacks on mobile (flex-col), Side-by-side on desktop (lg:flex-row) */}
-      <div className="flex flex-col lg:flex-row h-full overflow-y-auto lg:overflow-hidden">
-        
-        {/* Sidebar Info - Full width on mobile, 1/3 on desktop */}
-        <div className="w-full lg:w-1/3 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col shrink-0">
-          <div className="h-48 sm:h-64 lg:h-80 relative shrink-0">
-              <img src={selectedBatch.image?.url} className="w-full h-full object-cover" alt="" />
-              <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent lg:hidden" />
-          </div>
-          
-          <div className="p-6 md:p-8 space-y-4 md:space-y-6">
-            <div className="flex items-center gap-2 text-blue-600">
-              <Shield className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Master Collection</span>
-            </div>
-            <h2 className="text-2xl md:text-4xl font-serif text-slate-900 leading-tight">
-              {selectedBatch.projectName}
-            </h2>
-            <p className="text-slate-500 text-sm leading-relaxed font-light line-clamp-3 lg:line-clamp-none">
-              {selectedBatch.description || "An architectural masterpiece offering unparalleled luxury and community-centric design."}
-            </p>
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="bg-slate-50 p-4 rounded-2xl">
-                <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Portfolio Size</p>
-                <p className="text-base md:text-lg font-serif text-slate-900">
-                  {selectedBatch.stats?.totalProperties || 0} Units
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Inventory Grid - Takes remaining space */}
-        <div className="w-full lg:w-2/3 flex flex-col bg-[#FCFCFC] min-h-[400px]">
-          {/* Sticky header inside inventory */}
-          <div className="p-4 md:p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
-              <div className="flex items-center gap-3">
-                  <LayoutGrid className="w-4 h-4 text-blue-600" />
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-900">Live Inventory</h3>
-              </div>
-          </div>
-
-          {/* Scrollable Area */}
-          <div className="p-4 md:p-8 overflow-y-auto lg:flex-grow">
-            {unitsLoading ? (
-              <div className="py-20 flex flex-col items-center justify-center space-y-4">
-                <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin" />
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fetching Assets...</p>
-              </div>
-            ) : fetchError ? (
-              <div className="py-12 md:h-full flex flex-col items-center justify-center text-center px-6">
-                  <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4"><Info className="text-red-500 w-6 h-6" /></div>
-                  <h4 className="text-lg font-serif mb-2">Network Timeout</h4>
-                  <p className="text-xs text-slate-500 max-w-xs mb-6">{fetchError}</p>
-                  <button onClick={() => handleBatchClick(selectedBatch)} className="px-8 py-3 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-blue-700 transition-all">Retry Request</button>
-              </div>
-            ) : propertyUnits.length === 0 ? (
-              <div className="py-20 flex flex-col items-center justify-center opacity-40">
-                <Building2 className="w-12 h-12 mb-4" />
-                <p className="font-serif italic text-slate-500 text-sm">No properties found.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 pb-20 lg:pb-0">
-                {propertyUnits.map((unit) => (
-                  <div key={unit._id} className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100/50">
-                    <PropertyUnitCard propertyUnit={unit} viewMode="compact" />
+            {/* Main Container */}
+            <div className="flex flex-col lg:flex-row h-full overflow-y-auto lg:overflow-hidden">
+              
+              {/* Sidebar Info */}
+              <div className="w-full lg:w-1/3 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col shrink-0">
+                <div className="h-48 sm:h-64 lg:h-80 relative shrink-0">
+                  <img 
+                    src={selectedBatch.image?.url} 
+                    className="w-full h-full object-cover" 
+                    alt={selectedBatch.projectName}
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent lg:hidden" />
+                </div>
+                
+                <div className="p-6 md:p-8 space-y-4 md:space-y-6">
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Master Collection</span>
                   </div>
-                ))}
+                  <h2 className="text-2xl md:text-4xl font-serif text-slate-900 leading-tight">
+                    {selectedBatch.projectName || selectedBatch.batchName}
+                  </h2>
+                  <p className="text-slate-500 text-sm leading-relaxed font-light line-clamp-3 lg:line-clamp-none">
+                    {selectedBatch.description || "An architectural masterpiece offering unparalleled luxury and community-centric design."}
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="bg-slate-50 p-4 rounded-2xl">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Portfolio Size</p>
+                      <p className="text-base md:text-lg font-serif text-slate-900">
+                        {selectedBatch.stats?.totalProperties || 0} Units
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Bottom Navigation - Hidden on mobile if preferred, or kept sticky */}
-          <div className="hidden lg:flex p-6 bg-white border-t border-slate-100 justify-center shrink-0">
-              <button onClick={handleCloseModal} className="text-slate-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2 hover:text-blue-600 transition-colors">
-                  Back to collections <ChevronRight className="w-3 h-3" />
-              </button>
+              {/* Inventory Grid */}
+              <div className="w-full lg:w-2/3 flex flex-col bg-[#FCFCFC] min-h-[400px]">
+                {/* Sticky header inside inventory */}
+                <div className="p-4 md:p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                  <div className="flex items-center gap-3">
+                    <LayoutGrid className="w-4 h-4 text-blue-600" />
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-900">Live Inventory</h3>
+                  </div>
+                </div>
+
+                {/* Scrollable Area */}
+                <div className="p-4 md:p-8 overflow-y-auto lg:flex-grow">
+                  {unitsLoading ? (
+                    <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                      <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin" />
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fetching Assets...</p>
+                    </div>
+                  ) : fetchError ? (
+                    <div className="py-12 md:h-full flex flex-col items-center justify-center text-center px-6">
+                      <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                        <Info className="text-red-500 w-6 h-6" />
+                      </div>
+                      <h4 className="text-lg font-serif mb-2">Network Timeout</h4>
+                      <p className="text-xs text-slate-500 max-w-xs mb-6">{fetchError}</p>
+                      <button 
+                        onClick={() => handleBatchClick(selectedBatch)} 
+                        className="px-8 py-3 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-blue-700 transition-all"
+                      >
+                        Retry Request
+                      </button>
+                    </div>
+                  ) : propertyUnits.length === 0 ? (
+                    <div className="py-20 flex flex-col items-center justify-center opacity-40">
+                      <Building2 className="w-12 h-12 mb-4" />
+                      <p className="font-serif italic text-slate-500 text-sm">No properties found.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 pb-20 lg:pb-0">
+                      {propertyUnits.map((unit, index) => (
+                        <div 
+                          key={unit._id || index} 
+                          className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100/50 transition-all duration-300 hover:shadow-md"
+                        >
+                          <PropertyUnitCard propertyUnit={unit} viewMode="compact" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Navigation */}
+                <div className="hidden lg:flex p-6 bg-white border-t border-slate-100 justify-center shrink-0">
+                  <button 
+                    onClick={handleCloseModal} 
+                    className="text-slate-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2 hover:text-blue-600 transition-colors"
+                  >
+                    Back to collections <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 };

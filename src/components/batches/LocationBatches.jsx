@@ -141,8 +141,59 @@ const LocationBatches = () => {
       setUnitsLoading(true);
       const response = await batchService.getBatch(batchId);
       if (response.success && response.data) {
-         console.log("resp",response.data)
-        setPropertyUnits(response.data.propertyUnits || []);
+        console.log("API Response:", response.data);
+        
+        // Transform the property units to extract nested property data
+        let transformedUnits = [];
+        
+        if (response.data.propertyUnits && response.data.propertyUnits.length > 0) {
+          transformedUnits = response.data.propertyUnits.map(unit => {
+            // Check if property data is nested inside propertyId
+            if (unit.propertyId && typeof unit.propertyId === 'object') {
+              // The actual property data is in propertyId
+              const propertyData = unit.propertyId;
+              
+              // Return a flattened object that PropertyUnitCard expects
+              return {
+                _id: propertyData._id || unit._id,
+                // Property basic info
+                title: propertyData.title || propertyData.propertyName || 'Property',
+                propertyName: propertyData.propertyName || propertyData.title,
+                description: propertyData.description || '',
+                // Location info
+                address: propertyData.address || '',
+                city: propertyData.city || '',
+                state: propertyData.state || '',
+                pincode: propertyData.pincode || '',
+                // Property details
+                propertyType: propertyData.propertyType || '',
+                bedroomCount: propertyData.bedroomCount || 0,
+                bathroomCount: propertyData.bathroomCount || 0,
+                area: propertyData.area || 0,
+                areaUnit: propertyData.areaUnit || 'sqft',
+                // Pricing
+                price: propertyData.price || 0,
+                expectedPrice: propertyData.expectedPrice || 0,
+                // Images
+                images: propertyData.images || [],
+                thumbnail: propertyData.thumbnail || propertyData.images?.[0]?.url || '',
+                // Status
+                status: propertyData.status || 'available',
+                isActive: propertyData.isActive !== false,
+                // Unit specific fields
+                unitDisplayOrder: unit.displayOrder,
+                unitStats: unit.propertyStats,
+                // Additional fields that PropertyUnitCard might need
+                ...propertyData
+              };
+            }
+            // If propertyId is just an ID string, return the unit as is
+            return unit;
+          });
+        }
+        
+        console.log("Transformed Units:", transformedUnits);
+        setPropertyUnits(transformedUnits);
       }
     } catch (error) {
       console.error('Error fetching properties:', error);
@@ -170,7 +221,7 @@ const LocationBatches = () => {
   }
 
   return (
-    <div className="bg-white  md:py-24">
+    <div className="bg-white md:py-24">
       <div className="max-w-7xl mx-auto px-6">
         
         {/* --- PREMIUM MINIMALIST HEADER --- */}
@@ -179,7 +230,7 @@ const LocationBatches = () => {
             <h4 className="text-[10px] font-bold tracking-[0.4em] uppercase text-blue-600 mb-2">Global Presence</h4>
             <h2 className="text-4xl md:text-5xl font-serif text-slate-900 tracking-tight">Strategic Locations</h2>
           </div>
-          <p className="text-slate-400 text-sm hidden  sm:block font-light max-w-xs italic leading-relaxed">
+          <p className="text-slate-400 text-sm hidden sm:block font-light max-w-xs italic leading-relaxed">
             "Location is the soul of real estate." — Discover our presence in the most sought-after pin codes.
           </p>
         </div>
@@ -210,6 +261,9 @@ const LocationBatches = () => {
                     src={batch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'} 
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                     alt={batch.locationName}
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800';
+                    }}
                   />
                   
                   {/* Desktop Hover Overlay */}
@@ -290,7 +344,10 @@ const LocationBatches = () => {
                   <img 
                     src={selectedBatch.image?.url} 
                     className="relative max-h-[90%] max-w-[90%] object-contain shadow-2xl rounded-sm" 
-                    alt={selectedBatch.locationName} 
+                    alt={selectedBatch.locationName}
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800';
+                    }}
                   />
                 </div>
                 
@@ -334,8 +391,11 @@ const LocationBatches = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {propertyUnits.map(unit => (
-                      <div key={unit._id} className="bg-white p-2 rounded-xl shadow-sm border border-slate-100/50 hover:shadow-2xl hover:border-blue-100/50 transition-all duration-500 group">
+                    {propertyUnits.map((unit, index) => (
+                      <div 
+                        key={unit._id || index} 
+                        className="bg-white p-2 rounded-xl shadow-sm border border-slate-100/50 hover:shadow-2xl hover:border-blue-100/50 transition-all duration-500 group"
+                      >
                         <PropertyUnitCard propertyUnit={unit} viewMode="compact" />
                       </div>
                     ))}
