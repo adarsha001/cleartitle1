@@ -1,14 +1,14 @@
+// src/services/batchService.js
 import axios from 'axios';
 
-const API_URL = 'https://saimr-backend-1.onrender.com/api/admin/batches';
+const ADMIN_BATCHES_URL = 'https://saimr-backend-1.onrender.com/api/admin/batches';
 
 // Create axios instance with auth token for admin operations
-const createAxiosInstance = () => {
+const createAxiosInstance = (baseURL) => {
   const instance = axios.create({
-    baseURL: API_URL,
+    baseURL: baseURL,
   });
 
-  // Add token to requests
   instance.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -25,12 +25,8 @@ const createAxiosInstance = () => {
   return instance;
 };
 
-const api = createAxiosInstance();
-
-// Public axios instance (no auth token) for public routes
-const publicApi = axios.create({
-  baseURL: API_URL,
-});
+const api = createAxiosInstance(ADMIN_BATCHES_URL);
+const publicApi = axios.create({ baseURL: ADMIN_BATCHES_URL });
 
 // Check if user is admin
 export const checkAdminAccess = async () => {
@@ -38,7 +34,6 @@ export const checkAdminAccess = async () => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return false;
     
-    // Decode token to check user role
     const payload = JSON.parse(atob(token.split('.')[1]));
     const isAdmin = payload.userType === 'admin' || 
                     payload.userType === 'superadmin' || 
@@ -52,280 +47,18 @@ export const checkAdminAccess = async () => {
   }
 };
 
-// Batch Services
-export const batchService = {
-  // ============ PUBLIC ROUTES (No authentication required) ============
-  
-  // GET /api/property-batches - Get all batches (public)
-  getAllBatches: async () => {
-    try {
-      const response = await publicApi.get('/');
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // GET /api/property-batches/:id - Get single batch (public)
-  getBatch: async (id) => {
-    try {
-      const response = await publicApi.get(`/${id}`);
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // GET /api/property-batches/location/:location - Get batches by location (public)
-  getBatchesByLocation: async (location) => {
-    try {
-      const response = await publicApi.get(`/location/${location}`);
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // ============ ADMIN ONLY ROUTES (Authentication required) ============
-  
-  // POST /api/property-batches - Create new batch (admin only)
-  createBatch: async (batchData) => {
-    try {
-      const formData = new FormData();
-      
-      // Append all fields to formData
-      Object.keys(batchData).forEach(key => {
-        if (key === 'image' && batchData[key] instanceof File) {
-          formData.append('image', batchData[key]);
-        } else if (key === 'propertyUnits' && Array.isArray(batchData[key])) {
-          formData.append('propertyUnits', JSON.stringify(batchData[key]));
-        } else if (key === 'locationCoordinates' && batchData[key]) {
-          formData.append('locationCoordinates', JSON.stringify(batchData[key]));
-        } else if (key === 'tags' && Array.isArray(batchData[key])) {
-          formData.append('tags', JSON.stringify(batchData[key]));
-        } else if (key === 'image' && typeof batchData[key] === 'object' && batchData[key]?.url) {
-          // Handle image object with URL
-          formData.append('image', JSON.stringify(batchData[key]));
-        } else if (batchData[key] !== undefined && batchData[key] !== null) {
-          formData.append(key, batchData[key]);
-        }
-      });
-
-      const response = await api.post('/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // PUT /api/property-batches/:id - Update batch (admin only)
-  updateBatch: async (id, batchData) => {
-    try {
-      const formData = new FormData();
-      
-      Object.keys(batchData).forEach(key => {
-        if (key === 'image' && batchData[key] instanceof File) {
-          formData.append('image', batchData[key]);
-        } else if (key === 'propertyUnits' && Array.isArray(batchData[key])) {
-          formData.append('propertyUnits', JSON.stringify(batchData[key]));
-        } else if (key === 'locationCoordinates' && batchData[key]) {
-          formData.append('locationCoordinates', JSON.stringify(batchData[key]));
-        } else if (key === 'tags' && Array.isArray(batchData[key])) {
-          formData.append('tags', JSON.stringify(batchData[key]));
-        } else if (key === 'image' && typeof batchData[key] === 'object' && batchData[key]?.url) {
-          formData.append('image', JSON.stringify(batchData[key]));
-        } else if (batchData[key] !== undefined && batchData[key] !== null) {
-          formData.append(key, batchData[key]);
-        }
-      });
-
-      const response = await api.put(`/${id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // DELETE /api/property-batches/:id - Delete batch (admin only)
-  deleteBatch: async (id) => {
-    try {
-      const response = await api.delete(`/${id}`);
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // ============ PROPERTY UNIT MANAGEMENT ROUTES (Admin only) ============
-  
-  // POST /api/property-batches/:id/add-unit - Add property unit to batch (admin only)
-  addPropertyUnit: async (batchId, propertyUnitId) => {
-    try {
-      const response = await api.post(`/${batchId}/add-unit`, { propertyUnitId });
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // POST /api/property-batches/:id/remove-unit - Remove property unit from batch (admin only)
-  removePropertyUnit: async (batchId, propertyUnitId) => {
-    try {
-      const response = await api.post(`/${batchId}/remove-unit`, { propertyUnitId });
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // ============ STATUS MANAGEMENT ROUTES (Admin only) ============
-  
-  // PATCH /api/property-batches/:id/toggle-active - Toggle batch status (admin only)
-  toggleActiveStatus: async (batchId) => {
-    try {
-      const response = await api.patch(`/${batchId}/toggle-active`);
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // ============ ADMIN SPECIAL ROUTES ============
-  
-  // GET /api/property-batches/admin/all - Get all batches including inactive (admin only)
-  getAllBatchesAdmin: async () => {
-    try {
-      const response = await api.get('/admin/all');
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // GET /api/property-batches/admin/user/:userId - Get batches by user (admin only)
-  getBatchesByUser: async (userId) => {
-    try {
-      const response = await api.get(`/admin/user/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  // ============ HELPER METHODS ============
-  
-  // Validate batch data
-  validateBatchData: (batchData) => {
-    const errors = [];
+// Check if user can perform admin action
+export const canPerformAdminAction = async () => {
+  try {
+    const isAdmin = await checkAdminAccess();
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     
-    if (!batchData.batchName?.trim()) {
-      errors.push('Batch name is required');
-    }
+    if (!token) return { allowed: false, message: 'Please login to perform this action' };
+    if (!isAdmin) return { allowed: false, message: 'Admin access required for this action' };
     
-    if (!batchData.locationName?.trim()) {
-      errors.push('Location name is required');
-    }
-    
-    if (!batchData.batchType?.trim()) {
-      errors.push('Batch type is required');
-    }
-    
-    // Check if image is provided (either File, URL string, or object with URL)
-    const hasImage = batchData.image && (
-      batchData.image instanceof File ||
-      typeof batchData.image === 'string' ||
-      (typeof batchData.image === 'object' && batchData.image.url)
-    );
-    
-    if (!hasImage) {
-      errors.push('Image is required');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  },
-
-  // Prepare batch data for submission
-  prepareBatchData: (batchData) => {
-    const preparedData = { ...batchData };
-    
-    // Convert propertyUnits to array if needed
-    if (preparedData.propertyUnits && !Array.isArray(preparedData.propertyUnits)) {
-      if (typeof preparedData.propertyUnits === 'string') {
-        try {
-          preparedData.propertyUnits = JSON.parse(preparedData.propertyUnits);
-        } catch {
-          preparedData.propertyUnits = [];
-        }
-      } else {
-        preparedData.propertyUnits = [];
-      }
-    }
-    
-    // Convert tags to array if needed
-    if (preparedData.tags && !Array.isArray(preparedData.tags)) {
-      if (typeof preparedData.tags === 'string') {
-        try {
-          preparedData.tags = JSON.parse(preparedData.tags);
-        } catch {
-          preparedData.tags = [];
-        }
-      } else {
-        preparedData.tags = [];
-      }
-    }
-    
-    // Convert locationCoordinates if needed
-    if (preparedData.locationCoordinates && typeof preparedData.locationCoordinates === 'string') {
-      try {
-        preparedData.locationCoordinates = JSON.parse(preparedData.locationCoordinates);
-      } catch {
-        preparedData.locationCoordinates = {};
-      }
-    }
-    
-    // Convert isActive to boolean
-    if (typeof preparedData.isActive === 'string') {
-      preparedData.isActive = preparedData.isActive === 'true' || preparedData.isActive === '1';
-    }
-    
-    // Convert displayOrder to number
-    if (preparedData.displayOrder !== undefined) {
-      preparedData.displayOrder = parseInt(preparedData.displayOrder) || 0;
-    }
-    
-    return preparedData;
-  },
-
-  // Generate batch types for dropdown
-  getBatchTypes: () => {
-    return [
-      { value: 'location_based', label: 'Location Based' },
-      { value: 'project_group', label: 'Project Group' },
-      { value: 'featured_listings', label: 'Featured Listings' },
-      { value: 'similar_properties', label: 'Similar Properties' },
-      { value: 'comparison_group', label: 'Comparison Group' }
-    ];
-  },
-
-  // Get status badge class
-  getStatusBadgeClass: (isActive) => {
-    return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-  },
-
-  // Get status text
-  getStatusText: (isActive) => {
-    return isActive ? 'Active' : 'Inactive';
+    return { allowed: true, message: '' };
+  } catch (error) {
+    return { allowed: false, message: 'Error checking permissions' };
   }
 };
 
@@ -336,96 +69,264 @@ export const handleApiError = (error) => {
     
     switch (status) {
       case 400:
-        return { 
-          success: false, 
-          message: data.message || 'Invalid data provided',
-          errors: data.errors || [],
-          status: 400 
-        };
+        return { success: false, message: data.message || 'Invalid data provided', errors: data.errors || [], status: 400 };
       case 401:
-        return { 
-          success: false, 
-          message: 'Please login to continue',
-          status: 401 
-        };
+        return { success: false, message: 'Please login to continue', status: 401 };
       case 403:
-        return { 
-          success: false, 
-          message: data.message || 'Admin access required for this action',
-          status: 403 
-        };
+        return { success: false, message: data.message || 'Admin access required for this action', status: 403 };
       case 404:
-        return { 
-          success: false, 
-          message: data.message || 'Resource not found',
-          status: 404 
-        };
+        return { success: false, message: data.message || 'Resource not found', status: 404 };
       case 422:
-        return { 
-          success: false, 
-          message: 'Validation failed',
-          errors: data.errors || [],
-          status: 422 
-        };
+        return { success: false, message: 'Validation failed', errors: data.errors || [], status: 422 };
       case 500:
-        return { 
-          success: false, 
-          message: 'Server error. Please try again later',
-          status: 500 
-        };
+        return { success: false, message: 'Server error. Please try again later', status: 500 };
       default:
-        return { 
-          success: false, 
-          message: data.message || 'An error occurred',
-          status: status 
-        };
+        return { success: false, message: data.message || 'An error occurred', status: status };
     }
   } else if (error.request) {
-    return { 
-      success: false, 
-      message: 'Unable to connect to server. Please check your internet connection',
-      status: 0 
-    };
+    return { success: false, message: 'Unable to connect to server. Please check your internet connection', status: 0 };
   } else {
-    return { 
-      success: false, 
-      message: error.message || 'An unexpected error occurred',
-      status: -1 
-    };
+    return { success: false, message: error.message || 'An unexpected error occurred', status: -1 };
   }
 };
 
-// Check if user can perform admin actions
-export const canPerformAdminAction = async () => {
-  try {
-    const isAdmin = await checkAdminAccess();
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    
-    if (!token) {
-      return {
-        allowed: false,
-        message: 'Please login to perform this action'
-      };
+export const batchService = {
+  // Public routes
+  getAllBatches: async () => {
+    try {
+      const response = await publicApi.get('/');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
     }
-    
-    if (!isAdmin) {
-      return {
-        allowed: false,
-        message: 'Admin access required for this action'
-      };
+  },
+
+  getBatch: async (id) => {
+    try {
+      const response = await publicApi.get(`/${id}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
     }
-    
-    return {
-      allowed: true,
-      message: ''
-    };
-  } catch (error) {
-    return {
-      allowed: false,
-      message: 'Error checking permissions'
-    };
+  },
+
+  getBatchesByLocation: async (location) => {
+    try {
+      const response = await publicApi.get(`/location/${location}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getBatchesOrderedByType: async (batchType, limit = null) => {
+    try {
+      const params = limit ? { limit } : {};
+      const response = await publicApi.get(`/type/${batchType}/ordered`, { params });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  // Admin routes
+  createBatch: async (batchData) => {
+    try {
+      const formData = new FormData();
+      
+      Object.keys(batchData).forEach(key => {
+        if (key === 'image' && batchData[key] instanceof File) {
+          formData.append('image', batchData[key]);
+        } else if (key === 'propertyUnits' && Array.isArray(batchData[key])) {
+          const cleanIds = batchData[key].filter(id => id && typeof id === 'string');
+          formData.append('propertyUnits', JSON.stringify(cleanIds));
+        } else if (key === 'locationCoordinates' && batchData[key]) {
+          formData.append('locationCoordinates', JSON.stringify(batchData[key]));
+        } else if (key === 'tags' && Array.isArray(batchData[key])) {
+          formData.append('tags', JSON.stringify(batchData[key]));
+        } else if (key === 'image' && typeof batchData[key] === 'object' && batchData[key]?.url) {
+          formData.append('image', JSON.stringify(batchData[key]));
+        } else if (batchData[key] !== undefined && batchData[key] !== null) {
+          formData.append(key, batchData[key]);
+        }
+      });
+
+      const response = await api.post('/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  updateBatch: async (id, batchData) => {
+    try {
+      console.log('=== UPDATE BATCH START ===');
+      console.log('Batch ID:', id);
+      console.log('Original propertyUnits:', batchData.propertyUnits);
+      
+      const formData = new FormData();
+      
+      for (const [key, value] of Object.entries(batchData)) {
+        if (value === undefined || value === null) continue;
+        
+        if (key === 'image' && value instanceof File) {
+          formData.append('image', value);
+        } 
+        else if (key === 'propertyUnits') {
+          let cleanPropertyUnits = [];
+          
+          if (Array.isArray(value)) {
+            cleanPropertyUnits = value
+              .map(unit => {
+                if (typeof unit === 'object' && unit !== null) {
+                  return unit.propertyId || unit._id || null;
+                }
+                if (typeof unit === 'string') {
+                  return unit;
+                }
+                return null;
+              })
+              .filter(id => id && typeof id === 'string');
+          }
+          
+          cleanPropertyUnits = [...new Set(cleanPropertyUnits)];
+          
+          console.log('Cleaned property units (IDs only):', cleanPropertyUnits);
+          formData.append('propertyUnits', JSON.stringify(cleanPropertyUnits));
+        }
+        else if (key === 'locationCoordinates' && value) {
+          formData.append('locationCoordinates', JSON.stringify(value));
+        }
+        else if (key === 'tags' && Array.isArray(value)) {
+          formData.append('tags', JSON.stringify(value));
+        }
+        else if (key === 'image' && typeof value === 'object' && value?.url) {
+          formData.append('image', JSON.stringify(value));
+        }
+        else if (key !== 'propertyUnits') {
+          if (typeof value === 'object') {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value.toString());
+          }
+        }
+      }
+      
+      console.log('FormData entries:');
+      for (let pair of formData.entries()) {
+        console.log(`  ${pair[0]}: ${pair[1]}`);
+      }
+      
+      const response = await api.put(`/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      
+      console.log('Update successful:', response.data);
+      console.log('=== UPDATE BATCH END ===');
+      
+      return response.data;
+    } catch (error) {
+      console.error('Update batch error:', error.response?.data || error.message);
+      throw handleApiError(error);
+    }
+  },
+
+  deleteBatch: async (id) => {
+    try {
+      const response = await api.delete(`/${id}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  setBatchDisplayOrder: async (id, order) => {
+    try {
+      if (!id) throw new Error('Batch ID is required');
+      
+      const orderNumber = typeof order === 'number' ? order : parseInt(order, 10);
+      if (isNaN(orderNumber)) throw new Error('Order must be a valid number');
+      
+      const response = await api.patch(`/${id}/set-display-order`, { 
+        order: orderNumber 
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('setBatchDisplayOrder error:', error.response?.data || error.message);
+      throw handleApiError(error);
+    }
+  },
+
+  addPropertyUnit: async (batchId, propertyUnitId, displayOrder = null) => {
+    try {
+      const response = await api.post(`/${batchId}/add-unit`, { 
+        propertyUnitId,
+        displayOrder 
+      });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  removePropertyUnit: async (batchId, propertyUnitId) => {
+    try {
+      const response = await api.post(`/${batchId}/remove-unit`, { propertyUnitId });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  toggleActiveStatus: async (batchId) => {
+    try {
+      const response = await api.patch(`/${batchId}/toggle-active`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getAllBatchesAdmin: async () => {
+    try {
+      const response = await api.get('/admin/all');
+      return response.data;
+    } catch (error) {
+      console.error('getAllBatchesAdmin error:', error.response?.data || error.message);
+      throw handleApiError(error);
+    }
+  },
+
+  getBatchesByUser: async (userId) => {
+    try {
+      const response = await api.get(`/admin/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getBatchTypes: () => {
+    return [
+      { value: 'location_based', label: 'Location Based' },
+      { value: 'project_group', label: 'Project Group' },
+      { value: 'featured_listings', label: 'Featured Listings' },
+      { value: 'similar_properties', label: 'Similar Properties' },
+      { value: 'comparison_group', label: 'Comparison Group' }
+    ];
+  },
+
+  getStatusBadgeClass: (isActive) => {
+    return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+  },
+
+  getStatusText: (isActive) => {
+    return isActive ? 'Active' : 'Inactive';
   }
 };
 
-// Export for convenience
+// Also export batchService as default for compatibility
 export default batchService;

@@ -449,7 +449,7 @@ const PossessionTimeline = () => {
   }
 
   return (
-    <div id="possession-timeline" className="bg-white py-4 md:py-24">
+    <div id="possession-timeline" className="bg-white  md:py-24">
       <div className="relative max-w-7xl mx-auto px-3 md:px-4">
         {/* Header - Desktop Only */}
         <div ref={headerRef} className="hidden md:block text-center mb-20">

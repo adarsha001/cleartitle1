@@ -47,6 +47,13 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
   const debouncedSearchRef = useRef();
   const isFetchingRef = useRef(false);
 
+  // CRITICAL FIX: Sync selectedIds with selectedUnits prop when it changes
+  useEffect(() => {
+    console.log('PropertyUnitSelector - Selected units updated from props:', selectedUnits);
+    console.log('PropertyUnitSelector - Selected units count:', selectedUnits.length);
+    setSelectedIds(selectedUnits);
+  }, [selectedUnits]);
+
   // Initialize debounced function
   useEffect(() => {
     debouncedSearchRef.current = debounce((searchValue) => {
@@ -274,6 +281,7 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
       newSelection = [...selectedIds, unit._id];
     }
     
+    console.log('Unit selected:', unit._id, 'New selection:', newSelection);
     setSelectedIds(newSelection);
     onChange(newSelection);
   };
@@ -313,6 +321,7 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         const response = await propertyUnitAPI.getPropertyUnits(params);
         if (response.data && response.data.success) {
           const allIds = response.data.data.map(unit => unit._id);
+          console.log('Selecting all units:', allIds.length);
           setSelectedIds(allIds);
           onChange(allIds);
         }
@@ -323,6 +332,7 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
       }
     } else {
       const allIds = propertyUnits.map(unit => unit._id);
+      console.log('Selecting all units (all mode):', allIds.length);
       setSelectedIds(allIds);
       onChange(allIds);
     }
@@ -349,6 +359,11 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
   const startRange = propertyUnits.length > 0 ? (currentPage - 1) * pageSize + 1 : 0;
   const endRange = Math.min(currentPage * pageSize, totalItems);
   const hasMore = currentPage < totalPages;
+
+  // Debug log for selected IDs
+  useEffect(() => {
+    console.log('Current selected IDs in selector:', selectedIds);
+  }, [selectedIds]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">

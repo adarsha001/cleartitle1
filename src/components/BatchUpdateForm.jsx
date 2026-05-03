@@ -35,13 +35,30 @@ const BatchUpdateForm = () => {
         
         if (response.success) {
           const batch = response.data;
+          
+          // Extract property unit IDs correctly
+          let propertyUnitIds = [];
+          if (batch.propertyUnits && Array.isArray(batch.propertyUnits)) {
+            propertyUnitIds = batch.propertyUnits
+              .map(unit => {
+                // Handle different possible structures
+                if (typeof unit === 'object') {
+                  return unit.propertyId || unit._id || null;
+                }
+                return unit;
+              })
+              .filter(id => id); // Remove null/undefined
+          }
+          
+          console.log('Fetched batch - property units:', propertyUnitIds);
+          
           setFormData({
             batchName: batch.batchName || '',
             locationName: batch.locationName || '',
             description: batch.description || '',
             image: null,
             batchType: batch.batchType || 'location_based',
-            propertyUnits: batch.propertyUnits?.map(unit => unit._id) || [],
+            propertyUnits: propertyUnitIds,
             tags: batch.tags || [],
             locationCoordinates: batch.locationCoordinates || null,
             isActive: batch.isActive !== undefined ? batch.isActive : true,
@@ -51,16 +68,20 @@ const BatchUpdateForm = () => {
           if (batch.image?.url) {
             setImagePreview(batch.image.url);
           }
+        } else {
+          setError('Failed to load batch data');
         }
       } catch (err) {
-        setError('Failed to fetch batch data');
+        setError('Failed to fetch batch data: ' + (err.message || 'Unknown error'));
         console.error('Fetch error:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBatch();
+    if (id) {
+      fetchBatch();
+    }
   }, [id]);
 
   // Handle input changes
@@ -87,7 +108,6 @@ const BatchUpdateForm = () => {
       
       setFormData(prev => ({ ...prev, image: file }));
       
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -98,6 +118,7 @@ const BatchUpdateForm = () => {
 
   // Handle property unit selection
   const handlePropertyUnitsChange = (selectedUnits) => {
+    console.log('Property units changed:', selectedUnits);
     setFormData(prev => ({
       ...prev,
       propertyUnits: selectedUnits
@@ -126,15 +147,36 @@ const BatchUpdateForm = () => {
         throw new Error('Location name is required');
       }
 
-      // Submit form data
-      const result = await batchService.updateBatch(id, formData);
+      // Prepare data for submission - ensure propertyUnits is array of strings
+      const submitData = {
+        batchName: formData.batchName,
+        locationName: formData.locationName,
+        description: formData.description,
+        batchType: formData.batchType,
+        propertyUnits: Array.isArray(formData.propertyUnits) ? formData.propertyUnits : [],
+        tags: formData.tags || [],
+        isActive: formData.isActive,
+        displayOrder: parseInt(formData.displayOrder) || 0,
+      };
+      
+      // Only add image if it's a new file
+      if (formData.image instanceof File) {
+        submitData.image = formData.image;
+      }
+
+      console.log('Submitting update with:', {
+        id,
+        propertyUnits: submitData.propertyUnits,
+        propertyUnitsType: typeof submitData.propertyUnits,
+        isArray: Array.isArray(submitData.propertyUnits)
+      });
+
+      const result = await batchService.updateBatch(id, submitData);
       
       if (result.success) {
         setSuccess('Batch updated successfully!');
-        
-        // Redirect after successful update
         setTimeout(() => {
-          navigate('/admin/');
+          navigate('/admin/batches');
         }, 2000);
       } else {
         setError(result.message || 'Failed to update batch');
@@ -161,10 +203,9 @@ const BatchUpdateForm = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate('/admin/')}
+            onClick={() => navigate('/admin/batches')}
             className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,7 +218,6 @@ const BatchUpdateForm = () => {
           <p className="mt-2 text-gray-600">Update batch information and configuration</p>
         </div>
 
-        {/* Notifications */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center">
@@ -200,10 +240,8 @@ const BatchUpdateForm = () => {
           </div>
         )}
 
-        {/* Form */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit}>
-            {/* Basic Information */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b">Basic Information</h2>
               
@@ -251,7 +289,6 @@ const BatchUpdateForm = () => {
               </div>
             </div>
 
-            {/* Image Upload */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b">Featured Image</h2>
               
@@ -289,7 +326,6 @@ const BatchUpdateForm = () => {
               </div>
             </div>
 
-            {/* Batch Configuration */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b">Batch Configuration</h2>
               
@@ -357,16 +393,15 @@ const BatchUpdateForm = () => {
               </div>
             </div>
 
-            {/* Property Unit Selection */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b">Property Units</h2>
               <PropertyUnitSelector
                 selectedUnits={formData.propertyUnits}
                 onChange={handlePropertyUnitsChange}
+                batchId={id}
               />
             </div>
 
-            {/* Form Actions */}
             <div className="flex justify-end space-x-4 pt-6 border-t">
               <button
                 type="button"

@@ -39,6 +39,7 @@ const LocationBatches = () => {
           );
           setBatches(locationBatches);
         }
+       
       } catch (error) {
         console.error('Error fetching batches:', error);
       } finally {
@@ -140,6 +141,7 @@ const LocationBatches = () => {
       setUnitsLoading(true);
       const response = await batchService.getBatch(batchId);
       if (response.success && response.data) {
+         console.log("resp",response.data)
         setPropertyUnits(response.data.propertyUnits || []);
       }
     } catch (error) {

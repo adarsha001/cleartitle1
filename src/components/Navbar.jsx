@@ -11,8 +11,8 @@ function DesktopNav({ user, isAdmin, onAddPropertyClick, onLogout, showTooltip }
         Properties
       </Link>
 
-      <Link to="/featured" className="text-gray-50 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
-        Featured
+      <Link to="/batch-listings" className="text-gray-50 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
+       Top Rated Companies
       </Link>
 
       {isAdmin && (
@@ -264,11 +264,11 @@ function MobileNav({
 
               <Link 
                 ref={addMenuItemToRefs}
-                to="/featured" 
+                to="/batch-listings" 
                 onClick={handleCloseAnimation} 
                 className="block py-3 px-4 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg text-base font-medium transition-all duration-200"
               >
-                Featured
+                Top Rated Companies
               </Link>
 
               {isAdmin && (

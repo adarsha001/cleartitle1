@@ -39,7 +39,7 @@ const getPropertyImage = (property) => {
   if (property.images && property.images[0]?.url) {
     return property.images[0].url;
   }
-  return 'https://via.placeholder.com/200x150?text=No+Image';
+
 };
 
 // Get price display
@@ -191,14 +191,14 @@ const AddPropertyModal = ({ isOpen, onClose, onAddProperty, selectedProperties }
               </div>
             </div>
 
-            <div className="max-h-[60vh] overflow-y-auto">
+            <div className="max-h-[20vh] overflow-y-auto">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-3" />
                   <p className="text-sm text-gray-500">Searching...</p>
                 </div>
               ) : searchQuery ? (
-                <div className="p-4">
+                <div className="">
                   {results.length > 0 ? (
                     <div className="space-y-2">
                       {results.map((property) => {
@@ -240,7 +240,7 @@ const AddPropertyModal = ({ isOpen, onClose, onAddProperty, selectedProperties }
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-12">
+                    <div className="text-center ">
                       <div className="text-6xl mb-4">🔍</div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">No results found</h3>
                       <p className="text-sm text-gray-500">Try different keywords</p>
@@ -414,7 +414,7 @@ const PropertyComparison = () => {
     if (property.images && property.images[0]?.url) {
       return property.images[0].url;
     }
-    return 'https://via.placeholder.com/200x150?text=No+Image';
+ 
   };
 
   const getBuildingName = (property) => {
@@ -484,7 +484,7 @@ const PropertyComparison = () => {
   }, [selectedProperties.length]);
 
   return (
-    <div className="min-h-screen mt-10">
+    <div className="min-h-screen ">
       <div className="max-w-7xl mx-auto px-3 py-4">
         {/* Stats Banner */}
         {selectedProperties.length > 0 && (
@@ -531,7 +531,7 @@ const PropertyComparison = () => {
           <div className="relative">
             <div 
               ref={scrollContainerRef}
-              className="overflow-x-auto pb-4 scrollbar-hide"
+              className="overflow-x-auto  scrollbar-hide"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
@@ -687,7 +687,7 @@ const PropertyComparison = () => {
         {/* Empty State - Show message that auto-compare is active */}
         {selectedProperties.length === 0 && (
           <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto ">
               <TrendingUp className="w-8 h-8 text-gray-400" />
             </div>
             <h3 className="text-base font-semibold text-gray-900 mb-2">No properties to compare</h3>

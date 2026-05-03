@@ -47,6 +47,9 @@ import AdminEmployee from "./components/AdminEmployee";
 import MyProperties from "./components/MyProperties";
 import EditProperty from "./components/EditProperty";
 import PropertyComparison from "./components/PropertyComparison";
+import BatchAdminPanel from "./components/BatchAdminPanel";
+import BatchListing from "./components/BatchListing";
+import Topratedcompanies from "./pages/Topratedcompanies";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -407,7 +410,14 @@ const AppContent = () => {
             </AdminRoute>
           }
         />
-        
+        <Route
+          path="/admin/batch"
+          element={
+            <AdminRoute>
+              <BatchAdminPanel />
+            </AdminRoute>
+          }
+        />
         <Route
           path="/admin/properties"
           element={
@@ -461,7 +471,15 @@ const AppContent = () => {
             </AdminRoute>
           } 
         />
-        
+                
+        <Route 
+          path="/batch-listings" 
+          element={
+            <AdminRoute>
+              <Topratedcompanies />
+            </AdminRoute>
+          } 
+        />
         <Route 
           path="/admin/batches/:id" 
           element={
