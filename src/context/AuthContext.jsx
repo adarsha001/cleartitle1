@@ -139,13 +139,29 @@ const login = async (loginData) => {
 // context/AuthContext.jsx
 const register = async (registerData) => {
   try {
+    // Extract referral code from URL if present
+    const getReferralCodeFromURL = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('ref');
+    };
+    
     // Ensure sourceWebsite is included (default to cleartitle1 if not provided)
     const dataToSend = {
       ...registerData,
       sourceWebsite: registerData.sourceWebsite || 'cleartitle1'
     };
     
-  //('Registering user from:', dataToSend.sourceWebsite);
+    // Add referral code if present in URL
+    const referralCode = getReferralCodeFromURL();
+    if (referralCode) {
+      dataToSend.referralCode = referralCode;
+      console.log('✅ Referral code detected and added to registration:', referralCode);
+    } else {
+      console.log('ℹ️ No referral code found in URL');
+    }
+    
+    console.log('Registering user from:', dataToSend.sourceWebsite);
+    if (referralCode) console.log('With referral code:', referralCode);
     
     const { data } = await API.post('/auth/register', dataToSend);
     
@@ -158,19 +174,41 @@ const register = async (registerData) => {
       localStorage.setItem('currentWebsite', dataToSend.sourceWebsite);
       localStorage.setItem('websiteLogins', JSON.stringify(data.user.websiteLogins || {}));
       
+      // Store referral info if applied
+      if (data.user.referralApplied) {
+        localStorage.setItem('referralApplied', 'true');
+        localStorage.setItem('referringAgentCode', data.user.referringAgentCode || '');
+        console.log('🎉 Referral successfully tracked! You were referred by agent:', data.user.referringAgentCode);
+      }
+      
       setUser(data.user);
       setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
       
-      return { success: true, user: data.user };
+      // Show success message with referral info
+      const successMessage = data.user.referralApplied 
+        ? `Registration successful! You were referred by an agent. Welcome aboard! 🎉`
+        : `Registration successful! Welcome aboard! 🎉`;
+      
+      return { 
+        success: true, 
+        user: data.user,
+        message: successMessage,
+        referralApplied: data.user.referralApplied || false
+      };
     } else {
       throw new Error(data.message || 'Registration failed');
     }
   } catch (error) {
     console.error('❌ Registration error:', error);
+    
+    // Handle specific referral-related errors
+    if (error.response?.data?.message?.includes('referral')) {
+      console.error('Referral tracking failed:', error.response.data.message);
+    }
+    
     throw error;
   }
 };
-
   const updateProfile = async (profileData) => {
     try {
       const token = localStorage.getItem('token');
