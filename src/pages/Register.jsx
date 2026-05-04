@@ -1,12 +1,17 @@
+// pages/Register.jsx (Updated with referral code handling)
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Building2, User, Mail, Lock, Phone, UserCircle, ChevronRight, Briefcase, Shield, CheckCircle, FileCheck, AlertCircle, LogIn } from "lucide-react";
+import { Building2, User, Mail, Lock, Phone, UserCircle, ChevronRight, Briefcase, Shield, CheckCircle, FileCheck, AlertCircle, LogIn, Gift } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
+import TruecallerAuth from "./TruecallerAuth";
 
 export default function Register() {
   const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralCodeFromUrl = searchParams.get("ref");
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [captchaError, setCaptchaError] = useState("");
@@ -23,10 +28,12 @@ export default function Register() {
     phoneNumber: "",
     gmail: "",
     password: "",
-    sourceWebsite: 'cleartitle1'
+    sourceWebsite: 'cleartitle1',
+    referralCode: referralCodeFromUrl || "" // Add referral code from URL
   });
 
   const [captchaToken, setCaptchaToken] = useState("");
+  const [showReferralInfo, setShowReferralInfo] = useState(!!referralCodeFromUrl);
 
   // Get Google Client ID from Vite environment
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -38,7 +45,6 @@ export default function Register() {
     const MAX_INIT_ATTEMPTS = 3;
 
     const initializeGoogleSignIn = () => {
-      // Check if Google SDK is fully loaded
       if (!window.google || !window.google.accounts) {
         console.warn("Google SDK not fully loaded yet");
         initializationAttempts++;
@@ -55,8 +61,6 @@ export default function Register() {
         setGoogleError("Google Sign-In API not available in this browser");
         return;
       }
-
-    //("Initializing Google Sign-In for registration page");
       
       try {
         window.google.accounts.id.initialize({
@@ -68,7 +72,6 @@ export default function Register() {
           ux_mode: "popup"
         });
 
-        // Render Google Sign-In button
         if (googleButtonRef.current) {
           try {
             window.google.accounts.id.renderButton(
@@ -95,16 +98,13 @@ export default function Register() {
       }
     };
 
-    // Load Google SDK script
     const loadGoogleSDK = () => {
       if (window.google && window.google.accounts && window.google.accounts.id) {
-        // Already loaded
         initializeGoogleSignIn();
         return;
       }
 
       if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
-        // Script already added but not loaded yet
         const checkGoogleLoaded = setInterval(() => {
           if (window.google && window.google.accounts) {
             clearInterval(checkGoogleLoaded);
@@ -112,7 +112,6 @@ export default function Register() {
           }
         }, 100);
         
-        // Timeout after 5 seconds
         setTimeout(() => {
           clearInterval(checkGoogleLoaded);
           if (!window.google || !window.google.accounts) {
@@ -128,8 +127,7 @@ export default function Register() {
       script.async = true;
       script.defer = true;
       script.onload = () => {
-      //("Google Sign-In script loaded");
-        setTimeout(initializeGoogleSignIn, 100); // Small delay to ensure full initialization
+        setTimeout(initializeGoogleSignIn, 100);
       };
       script.onerror = (error) => {
         console.error("Failed to load Google Sign-In script:", error);
@@ -140,7 +138,6 @@ export default function Register() {
     };
 
     if (GOOGLE_CLIENT_ID) {
-    //("Google Client ID found, loading SDK...");
       loadGoogleSDK();
     } else {
       setGoogleError("Google Client ID is missing. Please check environment configuration.");
@@ -148,7 +145,6 @@ export default function Register() {
     }
 
     return () => {
-      // Cleanup
       if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
           window.google.accounts.id.cancel();
@@ -162,6 +158,14 @@ export default function Register() {
     };
   }, [GOOGLE_CLIENT_ID]);
 
+  const handleLoginSuccess = (user) => {
+    console.log('Login successful:', user);
+  };
+
+  const handleLoginError = (error) => {
+    console.error('Login error:', error);
+  };
+
   const handleGoogleResponse = async (response) => {
     if (!response || !response.credential) {
       console.error("Invalid Google response received");
@@ -171,11 +175,10 @@ export default function Register() {
 
     setIsGoogleLoading(true);
     setGoogleError("");
-  //("Google Sign-In response received for registration");
     
     try {
-      // Send only the token for Google login (remove sourceWebsite)
-      await googleLogin(response.credential);
+      // Pass referral code to Google login as well
+      await googleLogin(response.credential, formData.referralCode);
       navigate("/profile");
     } catch (error) {
       console.error("Google Sign-In error:", error);
@@ -198,7 +201,6 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate captcha
     if (!captchaToken) {
       setCaptchaError("Please complete the 'I'm not a robot' verification");
       return;
@@ -206,15 +208,15 @@ export default function Register() {
 
     setIsLoading(true);
     try {
-      // Keep sourceWebsite for regular registration
-      await register({ 
+      const registrationData = { 
         ...formData, 
         captchaToken,
         sourceWebsite: 'cleartitle1'
-      });
+      };
+      
+      await register(registrationData);
       navigate("/profile");
     } catch (error) {
-      // Reset captcha on error
       if (recaptchaRef.current) {
         recaptchaRef.current.reset();
         setCaptchaToken("");
@@ -225,7 +227,6 @@ export default function Register() {
     }
   };
 
-  // Fallback Google button
   const triggerManualGoogleSignIn = () => {
     if (window.google && window.google.accounts && window.google.accounts.id) {
       try {
@@ -255,110 +256,118 @@ export default function Register() {
       <div className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-white/10 to-transparent relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20" />
         
-        {/* Animated Background Elements */}
         <div className="absolute top-20 left-20 w-64 h-64 bg-yellow-300/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         
-        <div className="relative z-10 flex flex-col justify-between  xl:p-16">
-          {/* Logo/Brand */}
-          <div className="flex items-center ">
-              <img src="/logo.png" className="w-96 h-auto drop-shadow-xl" />
+        <div className="relative z-10 flex flex-col justify-between xl:p-16">
+          <div className="flex items-center">
+            <img src="/logo.png" className="w-96 h-auto drop-shadow-xl" />
           </div>
 
-          {/* Middle Content */}
-       <div className="space-y-4 xl:space-y-6 max-w-md xl:max-w-lg">
-  <div className="space-y-2">
-    <div className="w-12 xl:w-16 h-1 bg-gradient-to-r from-yellow-300 to-yellow-400" />
-    <h2 className="text-2xl xl:text-3xl 2xl:text-4xl font-bold leading-tight">
-      Your Gateway to<br />Legally Secure Properties
-    </h2>
-  </div>
-  
-  <div className="text-white/80 text-sm xl:text-base 2xl:text-lg leading-relaxed space-y-4">
-    <p>
-      Welcome to <strong className="text-yellow-300">Clear Title 1</strong> - India's premier platform for 
-      <strong> 100% legally verified properties</strong>. We eliminate the uncertainty from property 
-      transactions through comprehensive legal due diligence.
-    </p>
-    
-    <div className="bg-gradient-to-r from-blue-600/20 to-blue-700/20 rounded-xl p-4 border border-blue-500/30">
-      <h4 className="font-bold text-white mb-2 text-sm">Why Choose Clear Title 1?</h4>
-      <ul className="space-y-2 text-sm">
-        <li className="flex items-start gap-2">
-          <span className="text-green-400 mt-1">•</span>
-          <span><strong>Zero Legal Disputes</strong> - Every property is cleared of all legal encumbrances</span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-green-400 mt-1">•</span>
-          <span><strong>Bank Loan Ready</strong> - All properties pre-approved by leading financial institutions</span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-green-400 mt-1">•</span>
-          <span><strong>Expert Network</strong> - Direct access to certified legal advisors and property experts</span>
-        </li>
-        <li className="flex items-start gap-2">
-          <span className="text-green-400 mt-1">•</span>
-          <span><strong>Complete Transparency</strong> - Full disclosure of all property documents and history</span>
-        </li>
-      </ul>
-    </div>
-    
-    <p className="text-white/60 italic text-sm">
-      "Property transactions should be exciting, not stressful. We make sure every property 
-      you see is legally sound and financially viable."
-    </p>
-  </div>
+          <div className="space-y-4 xl:space-y-6 max-w-md xl:max-w-lg">
+            <div className="space-y-2">
+              <div className="w-12 xl:w-16 h-1 bg-gradient-to-r from-yellow-300 to-yellow-400" />
+              <h2 className="text-2xl xl:text-3xl 2xl:text-4xl font-bold leading-tight">
+                Your Gateway to<br />Legally Secure Properties
+              </h2>
+            </div>
+            
+            {/* Referral Banner on Left Side */}
+            {referralCodeFromUrl && (
+              <div className="bg-gradient-to-r from-purple-600/30 to-pink-600/30 rounded-xl p-4 border border-purple-500/50">
+                <div className="flex items-center gap-3">
+                  <Gift className="w-8 h-8 text-purple-300" />
+                  <div>
+                    <h4 className="font-bold text-white text-sm">Referred by an Agent!</h4>
+                    <p className="text-white/70 text-xs mt-1">
+                      You're joining with a referral code. Get special benefits!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="text-white/80 text-sm xl:text-base 2xl:text-lg leading-relaxed space-y-4">
+              <p>
+                Welcome to <strong className="text-yellow-300">Clear Title 1</strong> - India's premier platform for 
+                <strong> 100% legally verified properties</strong>. We eliminate the uncertainty from property 
+                transactions through comprehensive legal due diligence.
+              </p>
+              
+              <div className="bg-gradient-to-r from-blue-600/20 to-blue-700/20 rounded-xl p-4 border border-blue-500/30">
+                <h4 className="font-bold text-white mb-2 text-sm">Why Choose Clear Title 1?</h4>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400 mt-1">•</span>
+                    <span><strong>Zero Legal Disputes</strong> - Every property is cleared of all legal encumbrances</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400 mt-1">•</span>
+                    <span><strong>Bank Loan Ready</strong> - All properties pre-approved by leading financial institutions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400 mt-1">•</span>
+                    <span><strong>Expert Network</strong> - Direct access to certified legal advisors and property experts</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400 mt-1">•</span>
+                    <span><strong>Complete Transparency</strong> - Full disclosure of all property documents and history</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <p className="text-white/60 italic text-sm">
+                "Property transactions should be exciting, not stressful. We make sure every property 
+                you see is legally sound and financially viable."
+              </p>
+            </div>
 
-  {/* Success Metrics */}
-  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-    <h4 className="font-bold text-white text-sm mb-3">Our Track Record</h4>
-    <div className="grid grid-cols-2 gap-3">
-      <div className="text-center">
-        <div className="text-xl font-bold text-yellow-300">1,000+</div>
-        <div className="text-xs text-white/70">Happy Clients</div>
-      </div>
-      <div className="text-center">
-        <div className="text-xl font-bold text-green-400">₹750Cr+</div>
-        <div className="text-xs text-white/70">Property Value</div>
-      </div>
-      <div className="text-center">
-        <div className="text-xl font-bold text-blue-400">99.7%</div>
-        <div className="text-xs text-white/70">Satisfaction Rate</div>
-      </div>
-      <div className="text-center">
-        <div className="text-xl font-bold text-purple-400">24/7</div>
-        <div className="text-xs text-white/70">Legal Support</div>
-      </div>
-    </div>
-  </div>
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+              <h4 className="font-bold text-white text-sm mb-3">Our Track Record</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center">
+                  <div className="text-xl font-bold text-yellow-300">1,000+</div>
+                  <div className="text-xs text-white/70">Happy Clients</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-green-400">₹750Cr+</div>
+                  <div className="text-xs text-white/70">Property Value</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-blue-400">99.7%</div>
+                  <div className="text-xs text-white/70">Satisfaction Rate</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-purple-400">24/7</div>
+                  <div className="text-xs text-white/70">Legal Support</div>
+                </div>
+              </div>
+            </div>
 
-  {/* Security Features */}
-  <div className="space-y-2">
-    <h4 className="font-bold text-white text-sm">Bank-Grade Security Features</h4>
-    <div className="flex flex-wrap gap-2">
-      <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-xs">256-bit SSL Encryption</span>
-      <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Two-Factor Authentication</span>
-      <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">Document Watermarking</span>
-      <span className="px-3 py-1 bg-yellow-500/20 text-yellow-300 rounded-full text-xs">Secure Digital Signatures</span>
-    </div>
-  </div>
+            <div className="space-y-2">
+              <h4 className="font-bold text-white text-sm">Bank-Grade Security Features</h4>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-xs">256-bit SSL Encryption</span>
+                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">Two-Factor Authentication</span>
+                <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">Document Watermarking</span>
+                <span className="px-3 py-1 bg-yellow-500/20 text-yellow-300 rounded-full text-xs">Secure Digital Signatures</span>
+              </div>
+            </div>
 
-  {/* Call to Action */}
-  <div className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl p-4 border border-yellow-500/30">
-    <div className="flex items-center gap-3">
-      <Shield className="w-8 h-8 text-yellow-300 flex-shrink-0" />
-      <div>
-        <h4 className="font-bold text-white text-sm">Start Your Secure Journey</h4>
-        <p className="text-white/70 text-xs mt-1">
-          Join thousands of satisfied customers who have found their dream properties 
-          with complete peace of mind.
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
+            <div className="bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-xl p-4 border border-yellow-500/30">
+              <div className="flex items-center gap-3">
+                <Shield className="w-8 h-8 text-yellow-300 flex-shrink-0" />
+                <div>
+                  <h4 className="font-bold text-white text-sm">Start Your Secure Journey</h4>
+                  <p className="text-white/70 text-xs mt-1">
+                    Join thousands of satisfied customers who have found their dream properties 
+                    with complete peace of mind.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          {/* Bottom */}
           <div className="text-white/50 text-sm">
             <p>Complete Legal Protection</p>
             <p className="text-white/30">Bengaluru, Karnataka</p>
@@ -371,8 +380,18 @@ export default function Register() {
         <div className="w-full max-w-xl space-y-8 py-8">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 justify-center mb-8">
-         <img src="/logo.png" className="w-56 h-auto drop-shadow-xl" />
+            <img src="/logo.png" className="w-56 h-auto drop-shadow-xl" />
           </div>
+
+          {/* Referral Banner (Mobile) */}
+          {referralCodeFromUrl && (
+            <div className="lg:hidden bg-gradient-to-r from-purple-600/30 to-pink-600/30 rounded-xl p-3 border border-purple-500/50">
+              <div className="flex items-center gap-2">
+                <Gift className="w-5 h-5 text-purple-300" />
+                <p className="text-sm text-white/90">Referred by an agent! Get special benefits.</p>
+              </div>
+            </div>
+          )}
 
           {/* Form Header */}
           <div className="space-y-2">
@@ -390,7 +409,6 @@ export default function Register() {
               <p className="text-white/60 text-sm mb-4">Sign up instantly with your Google account</p>
             </div>
             
-            {/* Google Sign-In Button Container */}
             <div className="w-full flex justify-center">
               <div 
                 ref={googleButtonRef}
@@ -398,7 +416,6 @@ export default function Register() {
               ></div>
             </div>
             
-            {/* Manual Google Sign-In Button (fallback) */}
             {!GOOGLE_CLIENT_ID && (
               <div className="text-center">
                 <p className="text-yellow-300 text-sm mb-2">Google Sign-In not configured</p>
@@ -432,21 +449,40 @@ export default function Register() {
               </div>
             )}
           </div>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-gradient-to-br from-blue-900 via-blue-800 to-black px-4 text-white/50">
-                Or register with email
-              </span>
-            </div>
+          
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-white/10"></div>
+            <span className="flex-shrink mx-4 text-white/40 text-xs">OR</span>
+            <div className="flex-grow border-t border-white/10"></div>
+          </div>    
+          
+          <TruecallerAuth 
+            onSuccess={handleLoginSuccess}
+            onError={handleLoginError}
+            redirectUrl="/profile"
+          />
+          
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-white/10"></div>
+            <span className="flex-shrink mx-4 text-white/40 text-xs">OR</span>
+            <div className="flex-grow border-t border-white/10"></div>
           </div>
 
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Referral Code Display (if from URL) */}
+            {referralCodeFromUrl && (
+              <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-3 border border-purple-500/30">
+                <div className="flex items-center gap-2">
+                  <Gift className="w-4 h-4 text-purple-300" />
+                  <p className="text-sm text-white/80">
+                    Referral Code: <span className="font-mono font-bold text-purple-300">{referralCodeFromUrl}</span>
+                  </p>
+                </div>
+                <input type="hidden" name="referralCode" value={referralCodeFromUrl} />
+              </div>
+            )}
+
             {/* Username */}
             <div className="space-y-2">
               <label className="text-sm text-white/70 tracking-wide font-medium">Username</label>
@@ -521,7 +557,7 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Phone & Email - Side by Side on larger screens */}
+            {/* Phone & Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm text-white/70 tracking-wide font-medium">Phone Number</label>
