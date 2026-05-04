@@ -50,6 +50,7 @@ import PropertyComparison from "./components/PropertyComparison";
 import BatchAdminPanel from "./components/BatchAdminPanel";
 import BatchListing from "./components/BatchListing";
 import Topratedcompanies from "./pages/Topratedcompanies";
+import BlogDetail from "./pages/BlogDetail";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -480,6 +481,7 @@ const AppContent = () => {
             </AdminRoute>
           } 
         />
+         <Route path="/blog/:id" element={<BlogDetail />} />
         <Route 
           path="/admin/batches/:id" 
           element={

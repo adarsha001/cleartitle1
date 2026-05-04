@@ -16,6 +16,7 @@ import ImprovedCarousel from '../newapproach/CarouselSlider';
 import UnifiedAuthCTA from './UnifiedAuthCTA';
 import BuildingMarquee from '../pages/Building';
 import PropertyComparison from '../components/PropertyComparison';
+import BlogList from '../pages/BlogList';
 
 const Finalized = () => {
   const sectionRefs = useRef([]);
@@ -24,14 +25,14 @@ const Finalized = () => {
     { name: 'All Properties', component: ImprovedCarousel },
     { name: 'CategoryGrid', component: PropertyCategories },
     { name: 'Featured', component: FeaturedProperties },
-    // { name: 'BuildingMarquee', component: BuildingMarquee },
     { name: 'ProjectGroupBatches ', component: ProjectGroupBatches },
     { name: 'Newly Launched', component: NewlyLaunchedProperties },
     { name: 'Possession Timeline', component: PossessionTimeline },
     { name: 'BengaluruEastLandPriceChart', component:  LocationBatches},
     { name: 'UnifiedAuthCTA ', component: UnifiedAuthCTA },
-        { name: 'property comparision', component: PropertyComparison },
+    { name: 'property comparision', component: PropertyComparison },
     { name: 'ListingTypeView', component:  ListingTypeView},
+    { name: 'BlogList', component: BlogList },
     { name: 'Quality', component: QualityAssurance },
   ];
 
