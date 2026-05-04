@@ -1,4 +1,4 @@
-// context/AuthContext.js
+  // context/AuthContext.js
 import { createContext, useContext, useState, useEffect } from 'react';
 import API from '../api/axios';
 
@@ -40,114 +40,136 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Google Sign-In with referral code support
-  const googleLogin = async (token, referralCode = null) => {
-    try {
-      if (!token || typeof token !== 'string') {
-        console.error('❌ Invalid token format:', token);
-        throw new Error('Invalid Google token received');
-      }
-      
-      // Prepare payload with optional referral code
-      const payload = { token: token };
-      if (referralCode) {
-        payload.referralCode = referralCode;
-        console.log('Google login with referral code:', referralCode);
-      }
-      
-      const { data } = await API.post('/auth/google-signin', payload);
-      
-      if (data.success && data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
-        
-        if (data.user.sourceWebsite) {
-          localStorage.setItem('currentWebsite', data.user.sourceWebsite);
-        }
-        if (data.user.websiteLogins) {
-          localStorage.setItem('websiteLogins', JSON.stringify(data.user.websiteLogins));
-        }
-        
-        setUser(data.user);
-        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
-        
-        return { success: true, user: data.user };
-      } else {
-        throw new Error(data.message || 'Google sign-in failed');
-      }
-    } catch (error) {
-      console.error('❌ Google login error:', error);
-      
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
-      throw error;
+  // Google Sign-In
+// In AuthContext.js - FIXED version
+const googleLogin = async (token) => { // Expect just a string token
+  try {
+  //('🔍 Google login attempt started');
+  //('✅ Token received:', {
+    //   type: typeof token,
+    //   isString: typeof token === 'string',
+    //   length: token?.length,
+    //   first50: token?.substring(0, 50),
+    //   isValidJWT: token?.split('.').length === 3
+    // });
+    
+    if (!token || typeof token !== 'string') {
+      console.error('❌ Invalid token format:', token);
+      throw new Error('Invalid Google token received');
     }
-  };
-
+    
+    // Send only the token string to backend
+  //('📤 Sending to backend:', {
+    //   endpoint: '/auth/google-signin',
+    //   payload: { token: token }
+    // });
+    
+    const { data } = await API.post('/auth/google-signin', {
+      token: token
+    });
+    
+  //('✅ Backend response:', data);
+    
+    if (data.success && data.token && data.user) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
+      
+      // Store website info if available from backend
+      if (data.user.sourceWebsite) {
+        localStorage.setItem('currentWebsite', data.user.sourceWebsite);
+      }
+      if (data.user.websiteLogins) {
+        localStorage.setItem('websiteLogins', JSON.stringify(data.user.websiteLogins));
+      }
+      
+      setUser(data.user);
+      setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
+      
+      return { success: true, user: data.user };
+    } else {
+      throw new Error(data.message || 'Google sign-in failed');
+    }
+  } catch (error) {
+    console.error('❌ Google login error details:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.config?.data
+      }
+    });
+    
+    // Check if it's a specific error from backend
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    
+    throw error;
+  }
+};
   // Regular login
-  const login = async (loginData) => {
-    try {
-      const { data } = await API.post('/auth/login', { 
-        emailOrUsername: loginData.emailOrUsername, 
-        password: loginData.password,
-        sourceWebsite: 'cleartitle1'
-      });
+const login = async (loginData) => {
+  try {
+    const { data } = await API.post('/auth/login', { 
+      emailOrUsername: loginData.emailOrUsername, 
+      password: loginData.password,
+      sourceWebsite:  'cleartitle1' // Add sourceWebsite
+    });
+    
+    if (data.success && data.token && data.user) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
       
-      if (data.success && data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
-        
-        setUser(data.user);
-        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
-        
-        return { success: true, user: data.user };
-      } else {
-        throw new Error(data.message || 'Invalid credentials');
-      }
-    } catch (error) {
-      console.error('❌ Login error:', error);
-      throw error;
+      setUser(data.user);
+      setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
+      
+      return { success: true, user: data.user };
+    } else {
+      throw new Error(data.message || 'Invalid credentials');
     }
-  };
-
-  // Register with referral code support
-  const register = async (registerData) => {
-    try {
-      const dataToSend = {
-        ...registerData,
-        sourceWebsite: registerData.sourceWebsite || 'cleartitle1'
-      };
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    throw error;
+  }
+};
+// context/AuthContext.jsx
+const register = async (registerData) => {
+  try {
+    // Ensure sourceWebsite is included (default to cleartitle1 if not provided)
+    const dataToSend = {
+      ...registerData,
+      sourceWebsite: registerData.sourceWebsite || 'cleartitle1'
+    };
+    
+  //('Registering user from:', dataToSend.sourceWebsite);
+    
+    const { data } = await API.post('/auth/register', dataToSend);
+    
+    if (data.success && data.token && data.user) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
       
-      console.log('Registering user from:', dataToSend.sourceWebsite);
-      if (dataToSend.referralCode) {
-        console.log('With referral code:', dataToSend.referralCode);
-      }
+      // Store website login info
+      localStorage.setItem('currentWebsite', dataToSend.sourceWebsite);
+      localStorage.setItem('websiteLogins', JSON.stringify(data.user.websiteLogins || {}));
       
-      const { data } = await API.post('/auth/register', dataToSend);
+      setUser(data.user);
+      setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
       
-      if (data.success && data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('requiresPhoneUpdate', data.user.requiresPhoneUpdate || false);
-        
-        localStorage.setItem('currentWebsite', dataToSend.sourceWebsite);
-        localStorage.setItem('websiteLogins', JSON.stringify(data.user.websiteLogins || {}));
-        
-        setUser(data.user);
-        setRequiresPhoneUpdate(data.user.requiresPhoneUpdate || false);
-        
-        return { success: true, user: data.user };
-      } else {
-        throw new Error(data.message || 'Registration failed');
-      }
-    } catch (error) {
-      console.error('❌ Registration error:', error);
-      throw error;
+      return { success: true, user: data.user };
+    } else {
+      throw new Error(data.message || 'Registration failed');
     }
-  };
+  } catch (error) {
+    console.error('❌ Registration error:', error);
+    throw error;
+  }
+};
 
   const updateProfile = async (profileData) => {
     try {
@@ -172,47 +194,44 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-
-  const loginWithTruecaller = async (truecallerData) => {
-    try {
-      const { token, user } = truecallerData;
-      
-      if (!token || !user) {
-        throw new Error('Invalid Truecaller login data');
-      }
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('requiresPhoneUpdate', user.requiresPhoneUpdate || false);
-      
-      if (user.sourceWebsite) {
-        localStorage.setItem('currentWebsite', user.sourceWebsite);
-      }
-      
-      setUser(user);
-      setRequiresPhoneUpdate(user.requiresPhoneUpdate || false);
-      
-      return { success: true, user };
-    } catch (error) {
-      console.error('❌ Truecaller login error:', error);
-      throw error;
+const loginWithTruecaller = async (truecallerData) => {
+  try {
+    const { token, user } = truecallerData;
+    
+    if (!token || !user) {
+      throw new Error('Invalid Truecaller login data');
     }
-  };
+    
+    // Store token and user data
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('requiresPhoneUpdate', user.requiresPhoneUpdate || false);
+    
+    // Store website info
+    if (user.sourceWebsite) {
+      localStorage.setItem('currentWebsite', user.sourceWebsite);
+    }
+    
+    // Update state
+    setUser(user);
+    setRequiresPhoneUpdate(user.requiresPhoneUpdate || false);
+    
+    return { success: true, user };
+  } catch (error) {
+    console.error('❌ Truecaller login error:', error);
+    throw error;
+  }
+};
 
   const logout = () => {
+    // Clear Google session if exists
     if (window.google && window.google.accounts) {
-      try {
-        window.google.accounts.id.disableAutoSelect();
-      } catch (error) {
-        console.warn('Error disabling Google auto select:', error);
-      }
+      window.google.accounts.id.disableAutoSelect();
     }
     
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('requiresPhoneUpdate');
-    localStorage.removeItem('currentWebsite');
-    localStorage.removeItem('websiteLogins');
     setUser(null);
     setRequiresPhoneUpdate(false);
   };
@@ -230,8 +249,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     login,
-    googleLogin,
-    loginWithTruecaller,
+    googleLogin,  loginWithTruecaller,
     register,
     logout,
     updateUser,

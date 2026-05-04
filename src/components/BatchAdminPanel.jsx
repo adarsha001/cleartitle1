@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import batchService, { checkAdminAccess } from '../api/batchService';
-import DeleteConfirmModal from './DeleteConfirmModal';
 import StatusToggleModal from './StatusToggleModal';
 
 const BatchAdminPanel = () => {
@@ -12,7 +11,6 @@ const BatchAdminPanel = () => {
   const [success, setSuccess] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [batchToDelete, setBatchToDelete] = useState(null);
   const [batchToToggle, setBatchToToggle] = useState(null);
   const [editingOrder, setEditingOrder] = useState(null);
   const [tempOrder, setTempOrder] = useState('');
@@ -39,14 +37,11 @@ const BatchAdminPanel = () => {
   }, [navigate]);
 
   const getDisplayOrderValue = (batch) => {
-    // Check for currentDisplayOrder virtual property
     if (batch.currentDisplayOrder !== undefined) return batch.currentDisplayOrder;
-    // Check for displayOrders object
     if (batch.displayOrders) {
       const orderField = `${batch.batchType}_order`;
       if (batch.displayOrders[orderField] !== undefined) return batch.displayOrders[orderField];
     }
-    // Fallback to displayOrder
     return batch.displayOrder || 0;
   };
 
@@ -62,7 +57,6 @@ const BatchAdminPanel = () => {
       if (response.success) {
         let batchData = response.data || [];
         
-        // Apply filters
         if (filters.search) {
           const searchTerm = filters.search.toLowerCase();
           batchData = batchData.filter(batch => 
@@ -81,7 +75,6 @@ const BatchAdminPanel = () => {
           batchData = batchData.filter(batch => batch.isActive === isActive);
         }
         
-        // Group by type and sort by display order
         const groupedByType = {};
         batchData.forEach(batch => {
           if (!groupedByType[batch.batchType]) groupedByType[batch.batchType] = [];
@@ -148,12 +141,10 @@ const BatchAdminPanel = () => {
         return;
       }
 
-      // Create new order array
       const reorderedBatches = [...sameTypeBatches];
       const [movedBatch] = reorderedBatches.splice(currentIndex, 1);
       reorderedBatches.splice(newOrder, 0, movedBatch);
 
-      // Update all batches in this type
       for (let index = 0; index < reorderedBatches.length; index++) {
         const batch = reorderedBatches[index];
         const currentBatchOrder = getDisplayOrderValue(batch);
@@ -189,14 +180,26 @@ const BatchAdminPanel = () => {
     setCurrentPage(1);
   };
 
-  const handleDelete = async () => {
-    try {
-      await batchService.deleteBatch(batchToDelete._id);
-      setSuccess('Batch deleted successfully');
-      fetchBatches();
-      setBatchToDelete(null);
-    } catch (err) {
-      setError(err.message || 'Failed to delete batch');
+  // Direct delete without confirmation
+  const handleDelete = async (batchId, batchName) => {
+    if (window.confirm(`Are you sure you want to delete "${batchName}"? This action cannot be undone.`)) {
+      try {
+        setLoading(true);
+        const response = await batchService.deleteBatch(batchId);
+        
+        if (response.success) {
+          setSuccess(response.message || 'Batch deleted successfully');
+          await fetchBatches();
+          setTimeout(() => setSuccess(''), 3000);
+        } else {
+          setError(response.message || 'Failed to delete batch');
+        }
+      } catch (err) {
+        console.error('Delete error:', err);
+        setError(err.message || 'Failed to delete batch');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -493,17 +496,20 @@ const BatchAdminPanel = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-2">
-                            <button onClick={() => setBatchToToggle(batch)} className="text-yellow-600 hover:text-yellow-900" title={batch.isActive ? 'Deactivate' : 'Activate'}>
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-                            </button>
                             <button onClick={() => navigate(`/admin/batches/edit/${batch._id}`)} className="text-blue-600 hover:text-blue-900" title="Edit">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             </button>
                             <button onClick={() => navigate(`/admin/batches/${batch._id}`)} className="text-green-600 hover:text-green-900" title="View">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                             </button>
-                            <button onClick={() => setBatchToDelete(batch)} className="text-red-600 hover:text-red-900" title="Delete">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            <button 
+                              onClick={() => handleDelete(batch._id, batch.batchName)} 
+                              className="text-red-600 hover:text-red-900" 
+                              title="Delete"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
                             </button>
                           </div>
                         </td>
@@ -527,7 +533,6 @@ const BatchAdminPanel = () => {
         )}
       </div>
 
-      <DeleteConfirmModal isOpen={!!batchToDelete} batch={batchToDelete} onClose={() => setBatchToDelete(null)} onConfirm={handleDelete} />
       <StatusToggleModal isOpen={!!batchToToggle} batch={batchToToggle} onClose={() => setBatchToToggle(null)} onConfirm={confirmToggleStatus} />
     </div>
   );

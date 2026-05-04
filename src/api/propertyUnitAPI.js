@@ -48,16 +48,24 @@ export const propertyUnitAPI = {
     return API.get('/property-units', { params: cleanParams });
   },
 
-  getAllAssignablePropertyUnits: async (params = {}) => {
-    const cleanParams = {};
-    Object.keys(params).forEach(key => {
-      if (params[key] !== '' && params[key] !== null && params[key] !== undefined) {
-        cleanParams[key] = params[key];
-      }
-    });
-    const response = await API.get('/property-units/all', { params: cleanParams });
-    return response.data;
-  },
+// In propertyUnitAPI.js - modify getAllAssignablePropertyUnits
+getAllAssignablePropertyUnits: async (params = {}) => {
+  const cleanParams = {};
+  Object.keys(params).forEach(key => {
+    if (params[key] !== '' && params[key] !== null && params[key] !== undefined) {
+      cleanParams[key] = params[key];
+    }
+  });
+  
+  // ADD THIS DEBUG LOG
+  console.log('Sending request to /property-units/all with params:', cleanParams);
+  console.log('ExcludeBatch value:', cleanParams.excludeBatch);
+  console.log('ExcludeBatch type:', typeof cleanParams.excludeBatch);
+  
+  const response = await API.get('/property-units/all', { params: cleanParams });
+  console.log("data fetched",response.data)
+  return response.data;
+},
 
   getPropertyUnit: async (id) => {
     const response = await API.get(`/property-units/${id}`);

@@ -1,18 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { propertyUnitAPI } from "../api/propertyUnitAPI";
+// frontend/src/components/PropertyUnitSelector.jsx
 
-// Custom debounce function
-const debounce = (func, wait) => {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-};
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { propertyUnitAPI } from "../api/propertyUnitAPI";
 
 const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,58 +11,75 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
   const [filters, setFilters] = useState({
     search: '',
     approvalStatus: 'approved',
-    availability: 'available'
+    availability: 'available',
+    city: '',
+    propertyType: '',
+    bedrooms: ''
   });
+  
   const [filterOptions, setFilterOptions] = useState({
     cities: [],
     propertyTypes: [],
     bedroomOptions: []
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedIds, setSelectedIds] = useState(selectedUnits);
+  
+  // CRITICAL FIX: Extract IDs from selectedUnits (which may contain full objects)
+  const [selectedIds, setSelectedIds] = useState(() => {
+    if (selectedUnits && selectedUnits.length > 0) {
+      // If selectedUnits contains objects with _id, extract the IDs
+      if (typeof selectedUnits[0] === 'object' && selectedUnits[0]._id) {
+        return selectedUnits.map(unit => unit._id);
+      }
+      // If it's already an array of IDs
+      return selectedUnits;
+    }
+    return [];
+  });
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize] = useState(100); // 100 items per page
   
-  const [viewMode, setViewMode] = useState('paginated');
-  
-  // Available page size options
-  const pageSizeOptions = [10, 20, 50, 100];
-
-  // Use useRef for debounced function
-  const debouncedSearchRef = useRef();
   const isFetchingRef = useRef(false);
+  const fetchTimeoutRef = useRef(null);
 
-  // CRITICAL FIX: Sync selectedIds with selectedUnits prop when it changes
+  // Debug logging
+  console.log("Selected Units Prop:", selectedUnits);
+  console.log("Selected IDs State:", selectedIds);
+
+  // Sync selectedIds with selectedUnits prop - FIXED to handle both formats
   useEffect(() => {
-    console.log('PropertyUnitSelector - Selected units updated from props:', selectedUnits);
-    console.log('PropertyUnitSelector - Selected units count:', selectedUnits.length);
-    setSelectedIds(selectedUnits);
+    if (selectedUnits && selectedUnits.length > 0) {
+      // Check if selectedUnits contains objects or IDs
+      if (typeof selectedUnits[0] === 'object' && selectedUnits[0]._id) {
+        const ids = selectedUnits.map(unit => unit._id);
+        console.log("Extracted IDs from objects:", ids);
+        setSelectedIds(ids);
+      } else {
+        console.log("Using IDs directly:", selectedUnits);
+        setSelectedIds(selectedUnits);
+      }
+    } else {
+      setSelectedIds([]);
+    }
   }, [selectedUnits]);
 
-  // Initialize debounced function
+  // Debounced search
   useEffect(() => {
-    debouncedSearchRef.current = debounce((searchValue) => {
-      setFilters(prev => ({ ...prev, search: searchValue }));
-      setCurrentPage(1); // Reset to page 1 when searching
-      setPropertyUnits([]); // Clear existing units
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchTerm }));
+      setCurrentPage(1);
+      setPropertyUnits([]);
     }, 500);
-  }, []);
-
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    if (debouncedSearchRef.current) {
-      debouncedSearchRef.current(value);
-    }
-  };
+    
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Fetch property units with pagination
-  const fetchPropertyUnits = async (page, isLoadMore = false) => {
+  const fetchPropertyUnits = useCallback(async (page, isLoadMore = false) => {
     if (isFetchingRef.current) return;
     
     isFetchingRef.current = true;
@@ -91,23 +97,21 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         limit: pageSize,
       };
       
-      // Only add excludeBatch if batchId is valid
-      if (batchId && batchId !== 'null' && batchId !== 'undefined' && batchId !== '') {
-        params.excludeBatch = batchId;
-      }
-
       // Clean up params
       Object.keys(params).forEach(key => {
-        if (params[key] === '' || params[key] === null || params[key] === undefined) {
+        if (!params[key] || params[key] === '' || params[key] === 'all') {
           delete params[key];
         }
       });
-
+      
+      // Add excludeBatch if valid
+      if (batchId && batchId !== 'null' && batchId !== 'undefined' && batchId !== '') {
+        params.excludeBatch = batchId;
+      }
+      
       console.log(`Fetching page ${page} with params:`, params);
       
       const response = await propertyUnitAPI.getPropertyUnits(params);
-      
-      console.log('Response:', response.data);
       
       if (response.data && response.data.success) {
         const newData = response.data.data || [];
@@ -115,10 +119,8 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         const pages = response.data.totalPages || 1;
         
         if (isLoadMore) {
-          // Append new data to existing
           setPropertyUnits(prev => [...prev, ...newData]);
         } else {
-          // Replace existing data
           setPropertyUnits(newData);
         }
         
@@ -126,20 +128,13 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         setTotalPages(pages);
         setCurrentPage(page);
         
-        console.log(`Loaded page ${page} of ${pages}, total items: ${total}, has more: ${page < pages}`);
-        
         // Update filter options on first load
         if (!isLoadMore && response.data.filters) {
           setFilterOptions({
-            cities: response.data.filters.availableCities || response.data.filters.cities || [],
-            propertyTypes: response.data.filters.availablePropertyTypes || response.data.filters.propertyTypes || [],
+            cities: response.data.filters.cities || [],
+            propertyTypes: response.data.filters.propertyTypes || [],
             bedroomOptions: response.data.filters.bedroomOptions || []
           });
-        }
-      } else {
-        console.error('Response success false:', response.data);
-        if (!isLoadMore) {
-          setPropertyUnits([]);
         }
       }
     } catch (error) {
@@ -155,125 +150,39 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         setLoadingMore(false);
       }
     }
-  };
-
-  // Fetch all property units (no pagination)
-  const fetchAllPropertyUnits = async () => {
-    if (isFetchingRef.current) return;
-    
-    isFetchingRef.current = true;
-    setLoading(true);
-    
-    try {
-      const params = {
-        ...filters,
-      };
-      
-      // Only add excludeBatch if batchId is valid
-      if (batchId && batchId !== 'null' && batchId !== 'undefined' && batchId !== '') {
-        params.excludeBatch = batchId;
-      }
-
-      // Clean up params
-      Object.keys(params).forEach(key => {
-        if (params[key] === '' || params[key] === null || params[key] === undefined) {
-          delete params[key];
-        }
-      });
-
-      console.log('Fetching all params:', params);
-
-      let data = [];
-      let filtersData = {};
-
-      try {
-        // Try the new endpoint first
-        const response = await propertyUnitAPI.getAllAssignablePropertyUnits(params);
-        console.log('Response from all endpoint:', response);
-        
-        if (response.success) {
-          data = response.data || [];
-          filtersData = response.filters || {};
-        }
-      } catch (error) {
-        console.log('New endpoint failed, using fallback with large limit');
-        
-        // Fallback: Use existing endpoint with large limit
-        const fallbackResponse = await propertyUnitAPI.getPropertyUnits({
-          ...params,
-          limit: 10000
-        });
-        
-        if (fallbackResponse.data && fallbackResponse.data.success) {
-          data = fallbackResponse.data.data || [];
-          filtersData = fallbackResponse.data.filters || {};
-        }
-      }
-      
-      setPropertyUnits(data);
-      setTotalItems(data.length);
-      setTotalPages(1);
-      setCurrentPage(1);
-      
-      // Set filter options
-      if (filtersData) {
-        setFilterOptions({
-          cities: filtersData.cities || filtersData.availableCities || [],
-          propertyTypes: filtersData.propertyTypes || filtersData.availablePropertyTypes || [],
-          bedroomOptions: filtersData.bedroomOptions || []
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching property units:', error);
-      setPropertyUnits([]);
-    } finally {
-      isFetchingRef.current = false;
-      setLoading(false);
-    }
-  };
+  }, [filters, pageSize, batchId]);
 
   // Load more items
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (!loadingMore && currentPage < totalPages && !isFetchingRef.current) {
       const nextPage = currentPage + 1;
-      console.log(`Loading more: next page ${nextPage}`);
       fetchPropertyUnits(nextPage, true);
     }
-  };
+  }, [loadingMore, currentPage, totalPages, fetchPropertyUnits]);
 
-  // Handle page size change
-  const handlePageSizeChange = (e) => {
-    const newLimit = parseInt(e.target.value);
-    setPageSize(newLimit);
-    setCurrentPage(1);
-    setPropertyUnits([]); // Clear existing data
-    // Fetch will be triggered by useEffect
-  };
-
-  // Initial fetch and when filters change
+  // Fetch when filters change
   useEffect(() => {
-    if (viewMode === 'paginated') {
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    
+    fetchTimeoutRef.current = setTimeout(() => {
       setCurrentPage(1);
       setPropertyUnits([]);
       fetchPropertyUnits(1, false);
-    } else {
-      fetchAllPropertyUnits();
-    }
-  }, [
-    filters.search, 
-    filters.approvalStatus, 
-    filters.availability, 
-    filters.city, 
-    filters.propertyType, 
-    filters.bedrooms,
-    viewMode,
-    pageSize
-  ]);
+    }, 300);
+    
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
+  }, [filters, fetchPropertyUnits]);
 
-  // Handle unit selection
-  const handleUnitSelect = (unit) => {
-    let newSelection;
+  // Handle unit selection - returns IDs to parent
+  const handleUnitSelect = useCallback((unit) => {
     const isSelected = selectedIds.includes(unit._id);
+    let newSelection;
     
     if (isSelected) {
       newSelection = selectedIds.filter(id => id !== unit._id);
@@ -281,72 +190,74 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
       newSelection = [...selectedIds, unit._id];
     }
     
-    console.log('Unit selected:', unit._id, 'New selection:', newSelection);
+    console.log("Selection changed:", { unitId: unit._id, isSelected, newSelection });
     setSelectedIds(newSelection);
-    onChange(newSelection);
-  };
+    onChange(newSelection); // Send array of IDs to parent
+  }, [selectedIds, onChange]);
 
-  // Handle bulk selection/deselection for current page
-  const handleBulkSelect = () => {
+  // Select all on current page
+  const handleSelectCurrentPage = useCallback(() => {
     const currentPageIds = propertyUnits.map(unit => unit._id);
     const allSelectedCurrentPage = currentPageIds.every(id => selectedIds.includes(id));
     
     if (allSelectedCurrentPage) {
-      // Deselect all on current page
       const newSelection = selectedIds.filter(id => !currentPageIds.includes(id));
       setSelectedIds(newSelection);
       onChange(newSelection);
     } else {
-      // Select all on current page
       const newSelection = [...new Set([...selectedIds, ...currentPageIds])];
       setSelectedIds(newSelection);
       onChange(newSelection);
     }
-  };
+  }, [propertyUnits, selectedIds, onChange]);
 
   // Select all units across all pages
-  const handleSelectAll = async () => {
-    if (viewMode === 'paginated') {
-      setLoading(true);
-      try {
-        const params = {
-          ...filters,
-          limit: 10000,
-        };
-        
-        if (batchId && batchId !== 'null' && batchId !== 'undefined' && batchId !== '') {
-          params.excludeBatch = batchId;
+  const handleSelectAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {
+        ...filters,
+        limit: 10000,
+      };
+      
+      Object.keys(params).forEach(key => {
+        if (!params[key] || params[key] === '' || params[key] === 'all') {
+          delete params[key];
         }
-        
-        const response = await propertyUnitAPI.getPropertyUnits(params);
-        if (response.data && response.data.success) {
-          const allIds = response.data.data.map(unit => unit._id);
-          console.log('Selecting all units:', allIds.length);
-          setSelectedIds(allIds);
-          onChange(allIds);
-        }
-      } catch (error) {
-        console.error('Error selecting all:', error);
-      } finally {
-        setLoading(false);
+      });
+      
+      if (batchId && batchId !== 'null' && batchId !== 'undefined' && batchId !== '') {
+        params.excludeBatch = batchId;
       }
-    } else {
-      const allIds = propertyUnits.map(unit => unit._id);
-      console.log('Selecting all units (all mode):', allIds.length);
-      setSelectedIds(allIds);
-      onChange(allIds);
+      
+      const response = await propertyUnitAPI.getPropertyUnits(params);
+      if (response.data && response.data.success) {
+        const allIds = response.data.data.map(unit => unit._id);
+        setSelectedIds(allIds);
+        onChange(allIds);
+      }
+    } catch (error) {
+      console.error('Error selecting all:', error);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [filters, batchId, onChange]);
+
+  // Clear all selections
+  const handleClearAll = useCallback(() => {
+    setSelectedIds([]);
+    onChange([]);
+  }, [onChange]);
 
   // Handle filter changes
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = useCallback((key, value) => {
     setFilters(prev => ({
       ...prev,
       [key]: value === 'all' ? '' : value
     }));
     setCurrentPage(1);
     setPropertyUnits([]);
-  };
+  }, []);
 
   // Get selected units count
   const selectedCount = selectedIds.length;
@@ -360,42 +271,26 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
   const endRange = Math.min(currentPage * pageSize, totalItems);
   const hasMore = currentPage < totalPages;
 
-  // Debug log for selected IDs
-  useEffect(() => {
-    console.log('Current selected IDs in selector:', selectedIds);
-  }, [selectedIds]);
-
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold text-gray-800">Select Property Units</h3>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => {
-                setViewMode(viewMode === 'paginated' ? 'all' : 'paginated');
-                setPropertyUnits([]);
-              }}
-              className="px-3 py-1 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md transition-colors"
-            >
-              {viewMode === 'paginated' ? 'Load All' : 'Show Paginated'}
-            </button>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
-            >
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </button>
-          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+          >
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </button>
         </div>
 
         {/* Search Bar */}
         <div className="mb-4">
           <input
             type="text"
-            placeholder="Search by title, city, address, or owner..."
+            placeholder="Search by title, city, address..."
             value={searchTerm}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -403,7 +298,6 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
         {/* Filters Panel */}
         {showFilters && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-            {/* City Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
               <select
@@ -418,7 +312,6 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
               </select>
             </div>
 
-            {/* Property Type Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
               <select
@@ -433,7 +326,6 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
               </select>
             </div>
 
-            {/* Bedrooms Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Bedrooms</label>
               <select
@@ -448,7 +340,6 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
               </select>
             </div>
 
-            {/* Status Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
@@ -471,13 +362,13 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
             <span className="text-sm text-gray-600">
               Selected: <span className="font-semibold text-blue-700">{selectedCount}</span> units
             </span>
+            <span className="text-sm text-gray-600 ml-4">
+              Total Available: <span className="font-semibold">{totalItems}</span> units
+            </span>
           </div>
           <div className="flex items-center space-x-4 flex-wrap gap-2">
-            <span className="text-sm text-gray-600">
-              Total: <span className="font-semibold">{totalItems || propertyUnits.length}</span> units
-            </span>
             <button
-              onClick={handleBulkSelect}
+              onClick={handleSelectCurrentPage}
               className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors"
             >
               {allCurrentPageSelected ? 'Deselect Page' : 'Select Current Page'}
@@ -488,31 +379,27 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
             >
               Select All
             </button>
+            {selectedCount > 0 && (
+              <button
+                onClick={handleClearAll}
+                className="px-3 py-1 text-sm bg-red-100 hover:bg-red-200 text-red-700 rounded-md transition-colors"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Pagination Info */}
+        <div className="mb-4 flex justify-between items-center text-sm text-gray-600">
+          <div>
+            Showing {startRange} - {endRange} of {totalItems} units
+          </div>
+          <div>
+            Page {currentPage} of {totalPages}
           </div>
         </div>
       </div>
-
-      {/* Page Size Selector (only in paginated mode) */}
-      {viewMode === 'paginated' && (
-        <div className="mb-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <label className="text-sm text-gray-600">Show:</label>
-            <select
-              value={pageSize}
-              onChange={handlePageSizeChange}
-              className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {pageSizeOptions.map(size => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
-            <span className="text-sm text-gray-600">per page</span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Showing {startRange} - {endRange} of {totalItems}
-          </div>
-        </div>
-      )}
 
       {/* Property Units List */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -557,6 +444,7 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {propertyUnits.map((unit) => {
+                    // CRITICAL: Check if this unit's ID is in selectedIds
                     const isSelected = selectedIds.includes(unit._id);
                     return (
                       <tr 
@@ -622,8 +510,8 @@ const PropertyUnitSelector = ({ selectedUnits = [], onChange, batchId = null }) 
               </table>
             </div>
 
-            {/* Load More Button for Paginated Mode */}
-            {viewMode === 'paginated' && hasMore && (
+            {/* Load More Button */}
+            {hasMore && (
               <div className="p-4 border-t border-gray-200 text-center">
                 <button
                   onClick={loadMore}
