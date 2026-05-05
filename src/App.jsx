@@ -51,6 +51,7 @@ import BatchAdminPanel from "./components/BatchAdminPanel";
 import BatchListing from "./components/BatchListing";
 import Topratedcompanies from "./pages/Topratedcompanies";
 import BlogDetail from "./pages/BlogDetail";
+import CardAdManagement from "./components/AdminCardAdManagement";
 
 // Component to redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -490,6 +491,8 @@ const AppContent = () => {
             </AdminRoute>
           } 
         />
+
+        <Route path="/admin/card-ads" element={<CardAdManagement />} />
         
         {/* 404 Route */}
         <Route 

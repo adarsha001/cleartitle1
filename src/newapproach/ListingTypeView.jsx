@@ -614,7 +614,7 @@ const ListingTypeView = () => {
   );
 
   return (
-    <div id="listing-type-view" className="bg-white py-1 md:pb-14">
+    <div id="listing-type-view" className="bg-white py-8 md:pb-10">
       <div className="relative max-w-7xl mx-auto px-3 md:px-4">
         {/* Header - Desktop Only */}
         <div ref={headerRef} className="hidden md:block text-center mb-20">

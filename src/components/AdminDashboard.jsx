@@ -21,6 +21,7 @@ import BatchAdminPanel from "./BatchAdminPanel";
 import CarouselAdmin from "./CarouselAdmin";
 import BatchAnalytics from "./AdminBatchAnalytics";
 import AdminEmployee from "./AdminEmployee";
+import CardAdsManager from "./AdminCardAdManagement";
 
 // Inline LoadingSpinner component
 const LoadingSpinner = ({ message = "Loading..." }) => {
@@ -216,7 +217,15 @@ const AdminDashboard = () => {
       text: "text-slate-700",
       border: "border-slate-200",
       light: "bg-slate-50"
-    }
+    },
+      "card-ads": {
+    bg: "bg-sky-600",
+    hover: "hover:bg-sky-700",
+    active: "bg-sky-700",
+    text: "text-sky-600",
+    border: "border-sky-200",
+    light: "bg-sky-50"
+  }
   };
 
   if (authLoading) {
@@ -261,6 +270,8 @@ const AdminDashboard = () => {
         return <AdminAgentPanel />;
       case "employee-dashboard":
         return <AdminEmployee />;
+        case "card-ads":
+  return <CardAdsManager />;
       case "property-units":
         return (
           <div className="p-4 sm:p-6">
@@ -527,6 +538,22 @@ const AdminDashboard = () => {
               </svg>
               <span>Carousel</span>
             </button>
+            <button
+  onClick={() => {
+    setActiveSection("card-ads");
+    setError(null);
+  }}
+  className={`px-4 sm:px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 text-sm shadow-sm ${
+    activeSection === "card-ads"
+      ? `${sectionColors["card-ads"].bg} text-white shadow-md ${sectionColors["card-ads"].hover}`
+      : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
+  }`}
+>
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+  </svg>
+  <span>Card Ads</span>
+</button>
             
             {/* Agent Management */}
             <button
