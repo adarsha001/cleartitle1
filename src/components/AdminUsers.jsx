@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import AdminAPI from '../api/admin';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -29,7 +30,6 @@ const AdminUsers = () => {
         return;
       }
 
-      // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10'
@@ -37,31 +37,20 @@ const AdminUsers = () => {
 
       if (search) params.append('search', search);
       
-      // If website is not 'all', use the specific website endpoint
+      let url = `/admin/users?${params.toString()}`;
       if (website !== 'all') {
-        const { data } = await API.get(`/admin/website/${website}?${params.toString()}`);
-        
-        if (data.success) {
-          setUsers(data.users || []);
-          console.log("data user",data.users)
-          setTotalPages(data.totalPages || 1);
-          setCurrentPage(data.currentPage || page);
-          setTotalUsers(data.total || 0);
-        } else {
-          throw new Error(data.message || 'Failed to fetch users');
-        }
+        url = `/admin/website/${website}?${params.toString()}`;
+      }
+      
+      const { data } = await API.get(url);
+      console.log("data",data)
+      if (data.success) {
+        setUsers(data.users || []);
+        setTotalPages(data.totalPages || 1);
+        setCurrentPage(data.currentPage || page);
+        setTotalUsers(data.total || 0);
       } else {
-        // Use the general users endpoint for all users
-        const { data } = await API.get(`/admin/users?${params.toString()}`);
-
-        if (data.success) {
-          setUsers(data.users || []);
-          setTotalPages(data.totalPages || 1);
-          setCurrentPage(data.currentPage || page);
-          setTotalUsers(data.total || 0);
-        } else {
-          throw new Error(data.message || 'Failed to fetch users');
-        }
+        throw new Error(data.message || 'Failed to fetch users');
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -70,8 +59,6 @@ const AdminUsers = () => {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         navigate('/login');
-      } else if (error.response?.status === 403) {
-        setError('You do not have permission to access this page');
       }
     } finally {
       setLoading(false);
@@ -90,21 +77,41 @@ const AdminUsers = () => {
     }
   };
 
-  // Get single user details
+  // Get single user details - FIXED to use correct endpoint
   const getUserDetails = async (userId) => {
     setLoadingUserDetails(true);
     try {
-      const { data } = await API.get(`/admin/users/${userId}`);
+      console.log('Fetching user details for ID:', userId);
       
-      if (data.success) {
-        setUserDetails(data.user);
-        console.log("user details",data.user)
+      // Using AdminAPI with correct route
+      const response = await AdminAPI.getUserById(userId);
+      
+      console.log('API Response:', response.data);
+      
+      if (response.data.success) {
+        const userData = response.data.user;
+        console.log('User found:', userData.username);
+        console.log('Posted properties count:', userData.postedProperties?.length || 0);
+        console.log('Posted properties:', userData.postedProperties);
+        
+        setUserDetails(userData);
+        return userData;
       } else {
-        throw new Error(data.message || 'Failed to fetch user details');
+        throw new Error(response.data.message || 'Failed to fetch user details');
       }
     } catch (error) {
       console.error('Error fetching user details:', error);
-      alert(error.response?.data?.message || 'Failed to load user details');
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Failed to load user details';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
+      return null;
     } finally {
       setLoadingUserDetails(false);
     }
@@ -135,7 +142,7 @@ const AdminUsers = () => {
 
   const handlePropertyClick = (propertyId, e) => {
     e.stopPropagation();
-    navigate(`/property/${propertyId}`);
+    navigate(`/property-units/${propertyId}`);
   };
 
   const handleWebsiteFilter = (website) => {
@@ -161,18 +168,12 @@ const AdminUsers = () => {
   };
 
   const getWebsiteBadgeColor = (website) => {
-    if (!website) {
-      return 'bg-gray-200 text-gray-800 border-gray-300';
-    }
-    switch (website.toLowerCase()) {
+    if (!website) return 'bg-gray-200 text-gray-800 border-gray-300';
+    switch (website?.toLowerCase()) {
       case 'saimgroups':
         return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'cleartitle1':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'direct':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'multiple':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -180,21 +181,19 @@ const AdminUsers = () => {
 
   const getWebsiteDisplayText = (website) => {
     if (!website) return 'No Website';
-    if (website === 'multiple') return 'Multiple';
     return website;
   };
 
-  // Check if user has multiple website logins
   const hasMultipleWebsiteLogins = (user) => {
-    return (user.websiteLogins?.saimgroups?.hasLoggedIn && user.websiteLogins?.cleartitle1?.hasLoggedIn) ||
+    return (user.websiteLogins?.saimgroups?.hasLoggedIn && 
+            user.websiteLogins?.cleartitle1?.hasLoggedIn) ||
            user.sourceWebsite === 'multiple';
   };
 
-  // Render loading state
   if (loading && users.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading users...</p>
@@ -204,11 +203,10 @@ const AdminUsers = () => {
     );
   }
 
-  // Render error state
   if (error && users.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center">
               <svg className="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,7 +239,7 @@ const AdminUsers = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
               <p className="text-gray-600 mt-2">
-                Manage users and view their liked properties
+                Manage users and view their listed properties
                 <span className="ml-2 text-sm text-gray-500">
                   • Total: {websiteStats?.totalUsers || totalUsers} users
                 </span>
@@ -404,7 +402,7 @@ const AdminUsers = () => {
                         </h3>
                         <div className="flex items-center gap-1">
                           {hasMultipleWebsiteLogins(user) ? (
-                            <span className={`text-xs px-2 py-1 rounded-full border ${getWebsiteBadgeColor('multiple')}`}>
+                            <span className="text-xs px-2 py-1 rounded-full border bg-yellow-100 text-yellow-800 border-yellow-200">
                               Multiple
                             </span>
                           ) : (
@@ -446,64 +444,11 @@ const AdminUsers = () => {
                     )}
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {user.isAdmin && (
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                        Admin
-                      </span>
-                    )}
-                    {user.isGoogleAuth && (
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-                        Google Auth
-                      </span>
-                    )}
-                    {user.isVerified && (
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                        Verified
-                      </span>
-                    )}
-                    {user.emailVerified && (
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                        Email Verified
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Login Stats */}
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    {user.websiteLogins?.saimgroups?.hasLoggedIn && (
-                      <div className="bg-purple-50 rounded-lg p-2">
-                        <div className="text-sm font-medium text-purple-700">SaimGroups</div>
-                        <div className="text-xs text-purple-600">{user.websiteLogins.saimgroups.loginCount} logins</div>
-                        {user.websiteLogins.saimgroups.lastLogin && (
-                          <div className="text-xs text-purple-500 mt-1">
-                            Last: {formatDate(user.websiteLogins.saimgroups.lastLogin)}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {user.websiteLogins?.cleartitle1?.hasLoggedIn && (
-                      <div className="bg-blue-50 rounded-lg p-2">
-                        <div className="text-sm font-medium text-blue-700">ClearTitle1</div>
-                        <div className="text-xs text-blue-600">{user.websiteLogins.cleartitle1.loginCount} logins</div>
-                        {user.websiteLogins.cleartitle1.lastLogin && (
-                          <div className="text-xs text-blue-500 mt-1">
-                            Last: {formatDate(user.websiteLogins.cleartitle1.lastLogin)}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-4 text-center mb-4">
-                    <div className="bg-blue-50 rounded-lg p-3">
-                      <div className="text-xl font-bold text-blue-600">{user.likedPropertiesCount || 0}</div>
-                      <div className="text-sm text-blue-800">Favorites</div>
-                    </div>
+                  {/* Stats - Only showing listed properties count */}
+                  <div className="grid grid-cols-1 gap-4 text-center mb-4">
                     <div className="bg-green-50 rounded-lg p-3">
                       <div className="text-xl font-bold text-green-600">{user.postedPropertiesCount || 0}</div>
-                      <div className="text-sm text-green-800">Listed</div>
+                      <div className="text-sm text-green-800">Listed Properties</div>
                     </div>
                   </div>
 
@@ -582,7 +527,7 @@ const AdminUsers = () => {
                       setShowUserModal(false);
                       setUserDetails(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600 p-1"
+                    className="text-gray-400 hover:text-gray-600"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -618,156 +563,103 @@ const AdminUsers = () => {
                           <div>
                             <label className="text-sm font-medium text-gray-600">Phone</label>
                             <p className="text-gray-900">{userDetails.phoneNumber}</p>
-                            {userDetails.alternativePhoneNumber && (
-                              <p className="text-gray-700 text-sm mt-1">Alt: {userDetails.alternativePhoneNumber}</p>
-                            )}
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-600">User Type</label>
                             <p className="text-gray-900 capitalize">{userDetails.userType}</p>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-600">Source Website</label>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className={`px-3 py-1 rounded-full text-sm ${getWebsiteBadgeColor(userDetails.sourceWebsite)}`}>
-                                {getWebsiteDisplayText(userDetails.sourceWebsite)}
-                              </span>
-                              {hasMultipleWebsiteLogins(userDetails) && (
-                                <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
-                                  Multi-Website User
-                                </span>
-                              )}
-                            </div>
+                            <label className="text-sm font-medium text-gray-600">Listed Properties</label>
+                            <p className="text-gray-900 font-bold">{userDetails.postedPropertiesCount || 0}</p>
                           </div>
                         </div>
                       </div>
 
                       {/* Activity & Verification */}
                       <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-lg font-semibold mb-4">Activity & Verification</h3>
+                        <h3 className="text-lg font-semibold mb-4">Account Information</h3>
                         <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white rounded-lg p-3 border">
-                              <div className="text-sm text-gray-600">Member Since</div>
-                              <div className="font-medium">{formatDate(userDetails.createdAt)}</div>
-                            </div>
-                            <div className="bg-white rounded-lg p-3 border">
-                              <div className="text-sm text-gray-600">Last Updated</div>
-                              <div className="font-medium">{formatDate(userDetails.updatedAt)}</div>
-                            </div>
+                          <div className="bg-white rounded-lg p-3 border">
+                            <div className="text-sm text-gray-600">Member Since</div>
+                            <div className="font-medium">{formatDate(userDetails.createdAt)}</div>
                           </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className={`rounded-lg p-3 ${userDetails.isVerified ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
-                              <div className="flex items-center">
-                                <div className={`w-3 h-3 rounded-full mr-2 ${userDetails.isVerified ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                                <span className="text-sm font-medium">Account Verified</span>
-                              </div>
-                              {userDetails.verificationDate && (
-                                <div className="text-xs mt-1">
-                                  Verified on {formatDate(userDetails.verificationDate)}
-                                </div>
-                              )}
-                            </div>
-                            <div className={`rounded-lg p-3 ${userDetails.emailVerified ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
-                              <div className="flex items-center">
-                                <div className={`w-3 h-3 rounded-full mr-2 ${userDetails.emailVerified ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                                <span className="text-sm font-medium">Email Verified</span>
-                              </div>
+                          <div className="bg-white rounded-lg p-3 border">
+                            <div className="text-sm text-gray-600">Last Login</div>
+                            <div className="font-medium">{formatDate(userDetails.lastLogin)}</div>
+                          </div>
+                          <div className={`rounded-lg p-3 ${userDetails.isVerified ? 'bg-green-50' : 'bg-yellow-50'}`}>
+                            <div className="flex items-center">
+                              <div className={`w-3 h-3 rounded-full mr-2 ${userDetails.isVerified ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                              <span className="text-sm font-medium">
+                                {userDetails.isVerified ? 'Verified Account' : 'Unverified Account'}
+                              </span>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Website Activity */}
+                      {/* Website Info */}
                       <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-lg font-semibold mb-4">Website Activity</h3>
+                        <h3 className="text-lg font-semibold mb-4">Website Information</h3>
                         <div className="space-y-4">
-                          {userDetails.websiteLogins?.saimgroups?.hasLoggedIn && (
-                            <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-purple-700">SaimGroups</span>
-                                <span className="text-purple-600 font-bold">
-                                  {userDetails.websiteLogins.saimgroups.loginCount} logins
-                                </span>
-                              </div>
-                              <div className="text-xs text-purple-600 space-y-1">
-                                <div>First: {formatDate(userDetails.websiteLogins.saimgroups.firstLogin)}</div>
-                                <div>Last: {formatDate(userDetails.websiteLogins.saimgroups.lastLogin)}</div>
-                              </div>
-                            </div>
-                          )}
-                          {userDetails.websiteLogins?.cleartitle1?.hasLoggedIn && (
-                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-blue-700">ClearTitle1</span>
-                                <span className="text-blue-600 font-bold">
-                                  {userDetails.websiteLogins.cleartitle1.loginCount} logins
-                                </span>
-                              </div>
-                              <div className="text-xs text-blue-600 space-y-1">
-                                <div>First: {formatDate(userDetails.websiteLogins.cleartitle1.firstLogin)}</div>
-                                <div>Last: {formatDate(userDetails.websiteLogins.cleartitle1.lastLogin)}</div>
-                              </div>
-                            </div>
-                          )}
-                          {(!userDetails.websiteLogins?.saimgroups?.hasLoggedIn && !userDetails.websiteLogins?.cleartitle1?.hasLoggedIn) && (
-                            <div className="bg-gray-100 p-3 rounded-lg border border-gray-200">
-                              <div className="text-center text-gray-600">
-                                No website login activity recorded
-                              </div>
-                            </div>
-                          )}
                           <div className="bg-white rounded-lg p-3 border">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Google Authentication</span>
-                              <span className={`px-2 py-1 rounded text-xs ${userDetails.isGoogleAuth ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                {userDetails.isGoogleAuth ? 'Enabled' : 'Disabled'}
-                              </span>
+                            <div className="text-sm text-gray-600">Source Website</div>
+                            <div className="font-medium capitalize">{userDetails.sourceWebsite || 'Direct'}</div>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 border">
+                            <div className="text-sm text-gray-600">Authentication</div>
+                            <div className="font-medium">
+                              {userDetails.isGoogleAuth ? 'Google Sign-In' : 'Email/Password'}
                             </div>
-                            {userDetails.googleId && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                Google ID: {userDetails.googleId.substring(0, 20)}...
-                              </div>
-                            )}
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Properties Section */}
-                    <div className="space-y-8">
-                      {/* Liked Properties */}
-                      <div>
-                        <h3 className="text-xl font-semibold mb-4">
-                          Liked Properties ({userDetails.likedProperties?.length || 0})
-                        </h3>
-                        {(!userDetails.likedProperties || userDetails.likedProperties.length === 0) ? (
-                          <p className="text-gray-500 text-center py-4 bg-gray-50 rounded-lg">No liked properties</p>
-                        ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {userDetails.likedProperties.map((property) => (
+                    {/* Posted Properties Section */}
+                    <div>
+                      <h3 className="text-xl font-semibold mb-4">
+                        Listed Properties ({userDetails.postedProperties?.length || 0})
+                      </h3>
+                      {(!userDetails.postedProperties || userDetails.postedProperties.length === 0) ? (
+                        <p className="text-gray-500 text-center py-4 bg-gray-50 rounded-lg">No listed properties</p>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {userDetails.postedProperties.map((item, index) => {
+                            const property = item.property;
+                            
+                            if (!property || !property._id) {
+                              console.log('Invalid property item:', item);
+                              return null;
+                            }
+                            
+                            return (
                               <div 
-                                key={property._id} 
-                                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-white"
+                                key={property._id || index} 
+                                className="border border-green-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-green-50"
                                 onClick={(e) => handlePropertyClick(property._id, e)}
                               >
                                 <div className="flex items-start space-x-4">
                                   <img
                                     src={property.images?.[0]?.url || "https://via.placeholder.com/80x60?text=No+Image"}
-                                    alt={property.title}
+                                    alt={property.title || 'Property'}
                                     className="w-20 h-16 object-cover rounded flex-shrink-0"
+                                    onError={(e) => {
+                                      e.target.src = "https://via.placeholder.com/80x60?text=No+Image";
+                                    }}
                                   />
                                   <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-gray-900 hover:text-blue-600">
-                                      {property.title}
+                                    <h4 className="font-semibold text-gray-900 hover:text-blue-600 truncate">
+                                      {property.title || 'Untitled Property'}
                                     </h4>
                                     <p className="text-sm text-gray-600 mt-1">
-                                      {property.city} • {property.category}
+                                      {property.city || 'Location not specified'} • {property.propertyType || 'Uncategorized'}
                                     </p>
-                                    <p className="text-blue-700 font-bold mt-1">
-                                      {formatPrice(property.price)}
-                                    </p>
+                                    {property.priceRange && (
+                                      <p className="text-blue-700 font-bold mt-1">
+                                        ₹{property.priceRange.min?.toLocaleString('en-IN')} - ₹{property.priceRange.max?.toLocaleString('en-IN')}
+                                      </p>
+                                    )}
                                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                                       <span className={`text-xs px-2 py-1 rounded-full ${
                                         property.approvalStatus === 'approved' 
@@ -776,108 +668,26 @@ const AdminUsers = () => {
                                           ? 'bg-yellow-100 text-yellow-800'
                                           : 'bg-red-100 text-red-800'
                                       }`}>
-                                        {property.approvalStatus}
+                                        {property.approvalStatus || 'pending'}
                                       </span>
-                                      {property.isVerified && (
-                                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                          Verified
+                                      {property.isFeatured && (
+                                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                                          Featured
                                         </span>
                                       )}
-                                      {property.likedAt && (
+                                      {item.postedAt && (
                                         <span className="text-xs text-gray-500">
-                                          Liked {formatDate(property.likedAt)}
+                                          Posted {formatDate(item.postedAt)}
                                         </span>
                                       )}
                                     </div>
-                                    {property.createdBy && (
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        Listed by: {property.createdBy.name} (@{property.createdBy.username})
-                                      </p>
-                                    )}
                                   </div>
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Posted Properties */}
-{/* Posted Properties */}
-<div>
-  <h3 className="text-xl font-semibold mb-4">
-    Listed Properties ({userDetails.postedProperties?.length || 0})
-  </h3>
-  {(!userDetails.postedProperties || userDetails.postedProperties.length === 0) ? (
-    <p className="text-gray-500 text-center py-4 bg-gray-50 rounded-lg">No listed properties</p>
-  ) : (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {userDetails.postedProperties.map((item) => {
-        // Access the property from the nested structure
-        const property = item.property;
-        
-        // Skip if property doesn't exist
-        if (!property) return null;
-        
-        return (
-          <div 
-            key={property._id} 
-            className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-white"
-            onClick={(e) => handlePropertyClick(property._id, e)}
-          >
-            <div className="flex items-start space-x-4">
-              <img
-                src={property.images?.[0]?.url || "https://via.placeholder.com/80x60?text=No+Image"}
-                alt={property.title || 'Property'}
-                className="w-20 h-16 object-cover rounded flex-shrink-0"
-                onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/80x60?text=No+Image";
-                }}
-              />
-              <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-gray-900 hover:text-blue-600">
-                  {property.title || 'Untitled Property'}
-                </h4>
-                <p className="text-sm text-gray-600 mt-1">
-                  {property.city || 'Location not specified'} • {property.propertyType || property.category || 'Uncategorized'}
-                </p>
-                <p className="text-blue-700 font-bold mt-1">
-                  {formatPrice(property.price)}
-                </p>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    property.approvalStatus === 'approved' 
-                      ? 'bg-green-100 text-green-800'
-                      : property.approvalStatus === 'pending'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {property.approvalStatus || 'pending'}
-                  </span>
-                  {property.isFeatured && (
-                    <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
-                      Featured
-                    </span>
-                  )}
-                  {item.postedAt && (
-                    <span className="text-xs text-gray-500">
-                      Posted {formatDate(item.postedAt)}
-                    </span>
-                  )}
-                </div>
-                {property.createdBy && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Listed by: {property.createdBy.name || property.createdBy.username}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  )}
-</div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </>
                 ) : (
