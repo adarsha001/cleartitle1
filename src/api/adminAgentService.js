@@ -1,121 +1,106 @@
-// src/services/adminAgentService.js
-import axios from 'axios';
+// api/adminAgentService.js
+const API_BASE_URL =  'https://saimr-backend-1.onrender.com/api';
 
-const API_URL = ' https://saimr-backend-1.onrender.com/api';
-
-// Create axios instance with auth header
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add token to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+const adminAgentService = {
+  // Get all agents with pagination
+  getAllAgents: async (params = {}) => {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const response = await fetch(`${API_BASE_URL}/admin/agents?${queryString}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      return data;
+    } catch (error) {
+      throw error;
     }
-    return config;
   },
-  (error) => {
-    return Promise.reject(error);
+
+  // Get global agent statistics for dashboard
+  getGlobalAgentStats: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/agents/stats/global`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get agent summary by agentId
+  getAgentSummary: async (agentId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/agents/${agentId}/summary`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get agent's referred users
+  getAgentReferredUsers: async (agentId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/agents/${agentId}/referred-users`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get agent's appointments
+  getAgentAppointments: async (agentId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/agents/${agentId}/appointments`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Update agent status
+  updateAgentStatus: async (agentId, statusData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/agents/${agentId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(statusData)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      return data;
+    } catch (error) {
+      throw error;
+    }
   }
-);
-
-// Agent Admin API Endpoints
-export const adminAgentService = {
-  // Get all agent applications
-  getAgentApplications: async (params = {}) => {
-    try {
-      const response = await api.get('/admin/agents/applications', { params });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'An error occurred' };
-    }
-  },
-
-  // Get agent by agentId
-  getAgentById: async (agentId) => {
-    try {
-      const response = await api.get(`/admin/agents/${agentId}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'An error occurred' };
-    }
-  },
-
-  // Search agents
-  searchAgents: async (params = {}) => {
-    try {
-      const response = await api.get('/admin/agents/search', { params });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'An error occurred' };
-    }
-  },
-
-  // Approve agent
-  approveAgent: async (userId, agentData) => {
-    try {
-      const response = await api.put(`/admin/agents/${userId}/approve`, agentData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'An error occurred' };
-    }
-  },
-
-  // Reject agent
-  rejectAgent: async (userId, rejectionData) => {
-    try {
-      const response = await api.put(`/admin/agents/${userId}/reject`, rejectionData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'An error occurred' };
-    }
-  },
-
-  // Set agent to pending
-  setAgentToPending: async (userId, notes) => {
-    try {
-      const response = await api.put(`/admin/agents/${userId}/pending`, { notes });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'An error occurred' };
-    }
-  },
-
-  // Suspend agent
-  suspendAgent: async (userId, suspensionData) => {
-    try {
-      const response = await api.put(`/admin/agents/${userId}/suspend`, suspensionData);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'An error occurred' };
-    }
-  },
-
-  // Reactivate agent
-  reactivateAgent: async (userId, notes) => {
-    try {
-      const response = await api.put(`/admin/agents/${userId}/reactivate`, { notes });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'An error occurred' };
-    }
-  },
-
-  // Get agent stats
-  getAgentStats: async () => {
-    try {
-      const response = await api.get('/admin/agents/stats');
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'An error occurred' };
-    }
-  },
 };
 
 export default adminAgentService;

@@ -254,9 +254,9 @@ const AdminDashboard = () => {
       case "properties":
         return <AdminProperties onEditProperty={handleEditProperty} />;
       case "property-agent":
-        return <Adminpropertyagent />;
+        return <AdminAgentPanel />;
       case "agents":
-        return <AgentsPage />;
+        return <AdminAgentPanel />;
       case "agent-management":
         return <AdminAgentPanel />;
       case "employee-dashboard":
