@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { propertyUnitAPI } from "../api/propertyUnitAPI";
+import bookingAPI from '../api/bookingAPI';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -123,6 +124,8 @@ import {
   ThumbsUp as LikeIcon
 } from "lucide-react";
 import Footer from "../pages/Footer";
+// import bookingAPI from '../api/bookingAPI';
+
 import PossessionTimeline from "../newapproach/PossessionTimeline";
 import NewlyLaunchedProperties from "../newapproach/NewlyLaunchedProperties";
 import FeaturedProperties from "../pages/FeaturedProperties";
@@ -149,7 +152,10 @@ export default function PropertyUnitDetail() {
   const [likeCount, setLikeCount] = useState(0);
   const [showAllFeatures, setShowAllFeatures] = useState(false);
   const fullscreenRef = useRef(null);
-  
+  const [isBooking, setIsBooking] = useState(false);
+const [bookingError, setBookingError] = useState('');
+const [isLoading, setIsLoading] = useState(false);
+
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -558,18 +564,17 @@ useEffect(() => {
     }
   };
 
-  // BOOKING FUNCTIONS
-  const handleBookAppointment = () => {
-    if (!user) {
-      navigate('/login', { state: { from: `/property-units/${id}` } });
-      return;
-    }
-    setShowBookingModal(true);
-    setBookingStep(1);
-    setSelectedDate("");
-    setSelectedTime("");
-  };
-
+const handleBookAppointment = () => {
+  if (!user) {
+    navigate('/login', { state: { from: `/property-units/${id}` } });
+    return;
+  }
+  setShowBookingModal(true);
+  setBookingStep(1);
+  setSelectedDate("");
+  setSelectedTime("");
+  setBookingError('');
+};
   const handleDateSelect = (date) => {
     setSelectedDate(date);
     setBookingStep(2);
@@ -592,63 +597,99 @@ useEffect(() => {
       day: 'numeric'
     });
   };
+const sendBookingToWhatsApp = async () => {
+  if (!propertyUnit || !selectedDate || !selectedTime) return;
+  
+  setIsLoading(true);
+  setBookingError('');
+  
+  const {
+    title,
+    address,
+    city,
+    propertyType,
+  } = propertyUnit;
 
-  const sendBookingToWhatsApp = () => {
-    if (!propertyUnit || !selectedDate || !selectedTime) return;
+  const appointmentDate = formatDateForDisplay(selectedDate);
+  
+  try {
+    // Step 1: Make API call to book appointment (backend will check if user is referred)
+    const response = await bookingAPI.bookAppointment({
+      propertyId: id,
+      appointmentDate: selectedDate,
+      appointmentTime: selectedTime,
+      notes: `Property: ${title}\nAddress: ${address}, ${city}\nProperty Type: ${propertyType}\nListing Type: ${listingType || 'N/A'}`
+    });
     
-    const {
-      title,
-      address,
-      city,
-      description,
-      propertyType,
-    } = propertyUnit;
+    if (response.success) {
+      // Step 2: Prepare WhatsApp message for the agent
+      let message = `*📅 PROPERTY VIEWING APPOINTMENT CONFIRMED*\n\n`;
+      message += `*Property Details:*\n`;
+      message += `🏢 *${title}*\n`;
+      message += `📍 ${address}, ${city}\n`;
+      message += `📐 ${propertyType}\n`;
+      message += `📋 Listing: ${listingType === 'sale' ? 'For Sale' : listingType === 'rent' ? 'For Rent' : 'Available'}\n`;
+      
+      if (selectedUnitType) {
+        message += `\n*Selected Unit:*\n`;
+        message += `🏠 Type: ${selectedUnitType.type}\n`;
+        message += `💰 Price: ${formatUnitPrice(selectedUnitType.price)}\n`;
+        message += `📏 Area: ${selectedUnitType.carpetArea?.toLocaleString()} sq.ft.\n`;
+      }
+      
+      message += `\n*Appointment Details:*\n`;
+      message += `📅 Date: ${appointmentDate}\n`;
+      message += `⏰ Time: ${selectedTime}\n`;
+      message += `\n*Client Information:*\n`;
+      message += `👤 Name: ${user?.name || user?.username || 'Not specified'}\n`;
+      message += `📧 Email: ${user?.gmail || user?.email || 'Not specified'}\n`;
+      message += `📱 Phone: ${user?.phoneNumber || 'Not specified'}\n`;
+      
+      // Only show referral info if user was referred
+      if (response.data?.wasReferred) {
+        message += `\n*Referral Info:*\n`;
+        message += `🔑 This client was referred by you\n`;
+        message += `✅ Referral status: Converted\n`;
+      }
+      
+      message += `\n_This appointment has been booked through the property portal_\n`;
+      message += `Property URL: ${window.location.href}`;
 
-    const appointmentDate = formatDateForDisplay(selectedDate);
-    
-    let message = `*📅 PROPERTY VIEWING APPOINTMENT REQUEST*\n\n`;
-    message += `*Property Details:*\n`;
-    message += `🏢 *${title}*\n`;
-    message += `📍 ${address}, ${city}\n`;
-    message += `📐 ${propertyType}\n`;
-    
-    if (selectedUnitType) {
-      message += `\n*Selected Unit:*\n`;
-      message += `🏠 Type: ${selectedUnitType.type}\n`;
-      message += `💰 Price: ${formatUnitPrice(selectedUnitType.price)}\n`;
-      message += `📏 Area: ${selectedUnitType.carpetArea.toLocaleString()} sq.ft.\n`;
+      // Step 3: Send WhatsApp message to the property owner/agent
+      const agentPhoneNumber = propertyUnit?.createdBy?.phoneNumber || "";
+      const cleanPhoneNumber = agentPhoneNumber.replace(/\D/g, '');
+      
+      if (cleanPhoneNumber) {
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`;
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        console.warn('Agent phone number not available for WhatsApp');
+      }
+      
+      // Step 4: Close modal and reset states
+      setShowBookingModal(false);
+      setSelectedDate("");
+      setSelectedTime("");
+      setBookingStep(1);
+      
+      // Step 5: Show success message
+      let successMessage = `✅ Appointment booked successfully!\n\nDate: ${appointmentDate}\nTime: ${selectedTime}\n\nThe property owner has been notified.`;
+      
+      if (response.data?.wasReferred) {
+        successMessage += `\n\n🎉 Your referring agent has been notified and will earn rewards on this booking!`;
+      }
+      
+      alert(successMessage);
     }
-    
-    message += `\n*Appointment Details:*\n`;
-    message += `📅 Date: ${appointmentDate}\n`;
-    message += `⏰ Time: ${selectedTime}\n`;
-    message += `\n*Client Information:*\n`;
-    message += `👤 Name: ${user?.name || 'Not specified'}\n`;
-    message += `📧 Email: ${user?.email || 'Not specified'}\n`;
-    message += `📱 Phone: ${user?.phoneNumber || 'Not specified'}\n`;
-    message += `\n_This appointment request was sent via Property Portal_\n`;
-    message += `Property URL: ${window.location.href}`;
-
-    const agentPhoneNumber = propertyUnit?.createdBy?.phoneNumber || "";
-    const cleanPhoneNumber = agentPhoneNumber.replace(/\D/g, '');
-    
-    if (!cleanPhoneNumber) {
-      alert('Agent phone number not available');
-      return;
-    }
-
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${cleanPhoneNumber}?text=${encodedMessage}`;
-    
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-    
-    setShowBookingModal(false);
-    setSelectedDate("");
-    setSelectedTime("");
-    setBookingStep(1);
-    
-    alert(`Appointment request sent to WhatsApp!\n\nDate: ${appointmentDate}\nTime: ${selectedTime}`);
-  };
+  } catch (error) {
+    console.error('Error booking appointment:', error);
+    setBookingError(error.message || 'Failed to book appointment. Please try again.');
+    alert(`❌ ${error.message || 'Failed to book appointment. Please try again.'}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Format price with null checks
   const formatPrice = (price) => {

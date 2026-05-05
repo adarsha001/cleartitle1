@@ -484,7 +484,7 @@ const PropertyComparison = () => {
   }, [selectedProperties.length]);
 
   return (
-    <div className="min-h-screen ">
+    <div className=" ">
       <div className="max-w-7xl mx-auto px-3 py-4">
         {/* Stats Banner */}
         {selectedProperties.length > 0 && (
