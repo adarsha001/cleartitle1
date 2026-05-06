@@ -29,7 +29,7 @@ const Finalized = () => {
     { name: 'ProjectGroupBatches ', component: ProjectGroupBatches },
     // First Ad Banner - Section 1
     { name: 'Promo Banner 1', component: () => <SectionCarousel sectionId="first" autoplaySpeed={5000} /> },
-    { name: 'Newly Launched', component: NewlyLaunchedProperties },
+    // { name: 'Newly Launched', component: NewlyLaunchedProperties },
     { name: 'Possession Timeline', component: PossessionTimeline },
     // Second Ad Banner - Section 2
     { name: 'Promo Banner 2', component: () => <SectionCarousel sectionId="second" autoplaySpeed={4000} /> },

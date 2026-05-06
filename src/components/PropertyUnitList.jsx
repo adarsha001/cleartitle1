@@ -17,7 +17,7 @@ export default function PropertyUnitList() {
   const [propertyUnits, setPropertyUnits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState("list");
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 

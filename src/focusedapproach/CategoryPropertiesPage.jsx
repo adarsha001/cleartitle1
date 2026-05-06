@@ -47,6 +47,7 @@ import PropertyUnitCard from "../components/PropertyUnitCard";
 import { motion, AnimatePresence } from "framer-motion";
 import CategoryBanner from "./CategoryBanner";
 import PropertyComparison from "../components/PropertyComparison";
+import NewlyLaunchedProperties from "../newapproach/NewlyLaunchedProperties";
 
 // Category Icons
 
@@ -1697,6 +1698,7 @@ const [showMoreFilters, setShowMoreFilters] = useState(false);
       </AnimatePresence>
       <div>
         <PropertyComparison/>
+        <NewlyLaunchedProperties/>
       </div>
     </div>
   );

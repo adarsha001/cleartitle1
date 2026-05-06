@@ -648,7 +648,7 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
             {title || "Untitled Property"}
           </h3>
           
-          <div className="flex items-center gap-2 text-gray-600 mb-1">
+          <div className="flex items-center gap-2 text-gray-600 ">
             <MapPin className="w-4 h-4 text-blue-600" />
             <span className="font-medium text-sm line-clamp-1">
               {city || "Location not specified"}
@@ -668,8 +668,8 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
         </Link>
 
         {/* Unit Types Section - Show ALL with expand/collapse */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
+        <div className="">
+          <div className="flex items-center justify-between">
             <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Configurations ({safeUnitTypes.length})
             </h4>
@@ -687,11 +687,11 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
             )}
           </div>
           
-          <div className="space-y-2">
+          <div className="mb-2">
             {displayUnits.map((unit, index) => (
               <div 
                 key={index}
-                className="flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-between p-2 mb-3 gap-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -707,7 +707,7 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="gap-3 mb-2  p-1 text-right">
                   <div className="font-bold text-sm text-blue-600">
                     {formatUnitPrice(unit)}
                   </div>
@@ -754,12 +754,9 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        {/* <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <div>
-            <div className="text-xs text-gray-500">Price Range</div>
-            <div className="font-bold text-lg text-blue-600">
-              {formatPriceRange()}
-            </div>
+         
             {safeUnitTypes.length > 1 && (
               <div className="text-xs text-gray-500">
                 {safeUnitTypes.length} configuration{safeUnitTypes.length > 1 ? 's' : ''}
@@ -773,7 +770,7 @@ export default function PropertyUnitCard({ propertyUnit, viewMode }) {
               <ChevronRight className="w-4 h-4" />
             </button>
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );

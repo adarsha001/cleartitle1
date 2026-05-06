@@ -7,7 +7,7 @@ import { gsap } from 'gsap';
 function DesktopNav({ user, isAdmin, onAddPropertyClick, onLogout, showTooltip }) {
   return (
     <div className="hidden md:flex items-center space-x-4">
-      <Link to="/" className="text-gray-50 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
+      <Link to="/property-units" className="text-gray-50 hover:text-blue-600 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium transition">
         Properties
       </Link>
 
@@ -255,7 +255,7 @@ function MobileNav({
             <div className="p-4 space-y-2 bg-white">
               <Link 
                 ref={addMenuItemToRefs}
-                to="/" 
+                to="/property-units" 
                 onClick={handleCloseAnimation} 
                 className="block py-3 px-4 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg text-base font-medium transition-all duration-200"
               >

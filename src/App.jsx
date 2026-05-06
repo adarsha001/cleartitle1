@@ -263,7 +263,7 @@ const AppContent = () => {
               <Helmet>
                 <title>Property Units - Your Property Site</title>
                 <meta name="description" content="Browse all available property units. Find your perfect match from our extensive collection." />
-                <link rel="canonical" href="https://yourdomain.com/property-units" />
+                <link rel="canonical" href="https://cleartitle1.com/property-units" />
               </Helmet>
               <PropertyUnitList />
             </>
