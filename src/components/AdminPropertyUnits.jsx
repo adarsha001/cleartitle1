@@ -373,6 +373,7 @@ const AdminPropertyUnits = () => {
 
   // Debounced filter change
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
+  const [isFilterDirty, setIsFilterDirty] = useState(false);
 
   // Fetch property units (admin endpoint)
   const fetchPropertyUnits = useCallback(async (params = {}) => {
@@ -391,6 +392,10 @@ const AdminPropertyUnits = () => {
       if (cleanedFilters.search) {
         cleanedFilters.search = cleanedFilters.search.trim();
       }
+      
+      // Ensure page is a number
+      cleanedFilters.page = parseInt(cleanedFilters.page) || 1;
+      cleanedFilters.limit = parseInt(cleanedFilters.limit) || 50;
       
       const response = await propertyUnitAPI.getAllPropertyUnits({
         ...cleanedFilters,
@@ -424,6 +429,7 @@ const AdminPropertyUnits = () => {
       toast.error(error.response?.data?.message || error.message || 'Failed to load property units');
     } finally {
       setLoading(false);
+      setIsFilterDirty(false);
     }
   }, [debouncedFilters]);
 
@@ -431,6 +437,7 @@ const AdminPropertyUnits = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedFilters(filters);
+      setIsFilterDirty(true);
     }, 500);
     
     return () => clearTimeout(timer);
@@ -448,9 +455,40 @@ const AdminPropertyUnits = () => {
     }
   }, []);
 
+  // Reset to page 1 when any filter changes (except page itself)
   useEffect(() => {
-    fetchPropertyUnits();
-  }, [fetchPropertyUnits]);
+    if (filters.page !== 1) {
+      setFilters(prev => ({ ...prev, page: 1 }));
+    } else if (isFilterDirty) {
+      fetchPropertyUnits();
+    }
+  }, [
+    debouncedFilters.search,
+    debouncedFilters.approvalStatus,
+    debouncedFilters.propertyType,
+    debouncedFilters.listingType,
+    debouncedFilters.city,
+    debouncedFilters.availability,
+    debouncedFilters.isFeatured,
+    debouncedFilters.isVerified,
+    debouncedFilters.unitType,
+    debouncedFilters.furnishing,
+    debouncedFilters.possessionStatus,
+    debouncedFilters.minPrice,
+    debouncedFilters.maxPrice,
+    debouncedFilters.sortBy,
+    debouncedFilters.sortOrder,
+    debouncedFilters.limit,
+  ]);
+
+  // Fetch when page changes
+  useEffect(() => {
+    if (!isFilterDirty && filters.page !== debouncedFilters.page) {
+      setDebouncedFilters(prev => ({ ...prev, page: filters.page }));
+    } else if (filters.page === debouncedFilters.page && !isFilterDirty) {
+      fetchPropertyUnits();
+    }
+  }, [filters.page, fetchPropertyUnits, isFilterDirty, filters.page, debouncedFilters.page]);
 
   useEffect(() => {
     fetchStats();
@@ -518,7 +556,9 @@ const AdminPropertyUnits = () => {
 
   // Handle page change
   const handlePageChange = (newPage) => {
-    setFilters(prev => ({ ...prev, page: newPage }));
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setFilters(prev => ({ ...prev, page: newPage }));
+    }
   };
 
   // Individual property actions
@@ -981,6 +1021,9 @@ const AdminPropertyUnits = () => {
     }));
   };
 
+  // Generate unique key for table to force re-render on sort/page change
+  const tableKey = `${filters.sortBy}-${filters.sortOrder}-${filters.page}-${filters.limit}`;
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="space-y-6">
@@ -1373,7 +1416,30 @@ const AdminPropertyUnits = () => {
             <div className="text-sm text-gray-600">
               Showing {propertyUnits.length > 0 ? ((filters.page - 1) * filters.limit) + 1 : 0} to {Math.min(filters.page * filters.limit, pagination.total)} of {pagination.total} properties
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-4">
+              <select
+                value={filters.sortBy}
+                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                disabled={isReordering}
+                className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 text-sm"
+              >
+                <option value="displayOrder">Sort by Display Order</option>
+                <option value="createdAt">Sort by Creation Date</option>
+                <option value="updatedAt">Sort by Update Date</option>
+                <option value="title">Sort by Title</option>
+                <option value="city">Sort by City</option>
+                <option value="viewCount">Sort by Views</option>
+                <option value="inquiryCount">Sort by Inquiries</option>
+              </select>
+              <select
+                value={filters.sortOrder}
+                onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
+                disabled={isReordering}
+                className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 text-sm"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
               <select
                 value={filters.limit}
                 onChange={(e) => handleFilterChange('limit', parseInt(e.target.value))}
@@ -1398,7 +1464,7 @@ const AdminPropertyUnits = () => {
             </div>
           ) : propertyUnits.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table key={tableKey} className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
@@ -1437,7 +1503,7 @@ const AdminPropertyUnits = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {propertyUnits.map((property, index) => (
                     <DraggablePropertyRow
-                      key={property._id}
+                      key={`${property._id}-${filters.page}-${index}`}
                       property={property}
                       index={index}
                       moveProperty={moveProperty}
@@ -1552,7 +1618,7 @@ const AdminPropertyUnits = () => {
             <PropertyUnitView property={viewingProperty} />
             <div className="mt-4 flex justify-end">
               <button
-                onClick={() => setViewingProperty(null)}
+                                onClick={() => setViewingProperty(null)}
                 className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors mr-2"
               >
                 Close
