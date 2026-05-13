@@ -1,7 +1,7 @@
 // services/projectBatchService.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/batches';
+const API_URL = 'https://saimr-backend-1.onrender.com/api/batches';
 
 export const projectBatchService = {
   // ========== PROJECT BATCH METHODS ==========
