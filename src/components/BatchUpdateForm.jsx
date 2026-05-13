@@ -1,7 +1,7 @@
 // src/components/admin/batches/BatchUpdateForm.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { batchService } from '../api/batchService';
+import batchService from '../api/batchService';
 import PropertyUnitSelector from './PropertyUnitSelector';
 
 const BatchUpdateForm = () => {
@@ -31,58 +31,83 @@ const BatchUpdateForm = () => {
     const fetchBatch = async () => {
       try {
         setLoading(true);
-        const response = await batchService.getBatch(id);
+        setError('');
         
-        if (response.success) {
-          const batch = response.data;
-          
-          // Extract property unit IDs correctly
-          let propertyUnitIds = [];
-          if (batch.propertyUnits && Array.isArray(batch.propertyUnits)) {
-            propertyUnitIds = batch.propertyUnits
-              .map(unit => {
-                // Handle different possible structures
-                if (typeof unit === 'object') {
-                  return unit.propertyId || unit._id || null;
-                }
-                return unit;
-              })
-              .filter(id => id); // Remove null/undefined
+        // Debug: Check if token exists
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        console.log('Token exists:', !!token);
+        
+        if (!token) {
+          setError('Please login to continue');
+          setTimeout(() => navigate('/login'), 2000);
+          return;
+        }
+        
+        const response = await batchService.getBatch(id);
+        console.log('Fetch response:', response);
+        
+        if (response && response.success !== undefined) {
+          if (response.success) {
+            const batch = response.data;
+            processBatchData(batch);
+          } else {
+            setError(response.message || 'Failed to load batch data');
           }
-          
-          console.log('Fetched batch - property units:', propertyUnitIds);
-          
-          setFormData({
-            batchName: batch.batchName || '',
-            locationName: batch.locationName || '',
-            description: batch.description || '',
-            image: null,
-            batchType: batch.batchType || 'location_based',
-            propertyUnits: propertyUnitIds,
-            tags: batch.tags || [],
-            locationCoordinates: batch.locationCoordinates || null,
-            isActive: batch.isActive !== undefined ? batch.isActive : true,
-            displayOrder: batch.displayOrder || 0,
-          });
-          
-          if (batch.image?.url) {
-            setImagePreview(batch.image.url);
-          }
+        } else if (response && response._id) {
+          // Handle case where response is the batch object directly
+          processBatchData(response);
         } else {
-          setError('Failed to load batch data');
+          setError('Failed to load batch data: Invalid response format');
         }
       } catch (err) {
-        setError('Failed to fetch batch data: ' + (err.message || 'Unknown error'));
-        console.error('Fetch error:', err);
+        console.error('Fetch error details:', err);
+        setError(err.message || 'Failed to fetch batch data');
+        if (err.status === 401) {
+          setTimeout(() => navigate('/login'), 2000);
+        }
       } finally {
         setLoading(false);
+      }
+    };
+
+    const processBatchData = (batch) => {
+      // Extract property unit IDs correctly
+      let propertyUnitIds = [];
+      if (batch.propertyUnits && Array.isArray(batch.propertyUnits)) {
+        propertyUnitIds = batch.propertyUnits
+          .map(unit => {
+            if (typeof unit === 'object' && unit !== null) {
+              return unit.propertyId || unit._id || null;
+            }
+            return unit;
+          })
+          .filter(id => id);
+      }
+      
+      console.log('Fetched batch - property units:', propertyUnitIds);
+      
+      setFormData({
+        batchName: batch.batchName || '',
+        locationName: batch.locationName || '',
+        description: batch.description || '',
+        image: null,
+        batchType: batch.batchType || 'location_based',
+        propertyUnits: propertyUnitIds,
+        tags: batch.tags || [],
+        locationCoordinates: batch.locationCoordinates || null,
+        isActive: batch.isActive !== undefined ? batch.isActive : true,
+        displayOrder: batch.displayOrder || 0,
+      });
+      
+      if (batch.image?.url) {
+        setImagePreview(batch.image.url);
       }
     };
 
     if (id) {
       fetchBatch();
     }
-  }, [id]);
+  }, [id, navigate]);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -147,7 +172,13 @@ const BatchUpdateForm = () => {
         throw new Error('Location name is required');
       }
 
-      // Prepare data for submission - ensure propertyUnits is array of strings
+      // Check token before submission
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) {
+        throw new Error('Please login to continue');
+      }
+
+      // Prepare data for submission
       const submitData = {
         batchName: formData.batchName,
         locationName: formData.locationName,
@@ -182,8 +213,11 @@ const BatchUpdateForm = () => {
         setError(result.message || 'Failed to update batch');
       }
     } catch (err) {
-      setError(err.message || 'An error occurred while updating the batch');
       console.error('Update error:', err);
+      setError(err.message || 'An error occurred while updating the batch');
+      if (err.status === 401) {
+        setTimeout(() => navigate('/login'), 2000);
+      }
     } finally {
       setSubmitting(false);
     }

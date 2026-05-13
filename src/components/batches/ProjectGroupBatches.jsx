@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { batchService } from '../../api/batchService';
+import { projectBatchService } from '../../api/publicBatchService';
 import PropertyUnitCard from '../../components/PropertyUnitCard';
-import { X, Shield, Building2, ChevronRight, Info, LayoutGrid, MapPin } from 'lucide-react';
+import { X, Shield, Building2, ChevronRight, Info, LayoutGrid } from 'lucide-react';
 import gsap from 'gsap';
 import { Observer } from 'gsap/Observer';
 
@@ -25,13 +25,23 @@ const ProjectGroupBatches = () => {
     const fetchBatches = async () => {
       try {
         setLoading(true);
-        const response = await batchService.getAllBatches({ isActive: true, limit: 6 });
+        // Using projectBatchService.getProjectBatches instead of batchService.getAllBatches
+        const response = await projectBatchService.getProjectBatches({ 
+          page: 1, 
+          limit: 20,
+          sortBy: 'displayOrder',
+          sortOrder: 'asc'
+        });
+        
         if (response.success) {
-          const projectBatches = (response.data || []).filter(b => b.batchType === 'project_group');
-          setBatches(projectBatches);
+          // The API already returns only project_group batches
+          setBatches(response.data || []);
+        } else {
+          setBatches([]);
         }
       } catch (error) { 
         console.error('Fetch error:', error); 
+        setBatches([]);
       } finally { 
         setLoading(false); 
       }
@@ -42,6 +52,7 @@ const ProjectGroupBatches = () => {
   // --- INFINITE X-AXIS SCROLL ENGINE ---
   useEffect(() => {
     if (!batches.length || !marqueeContentRef.current) return;
+    
     const content = marqueeContentRef.current;
     const itemWidth = content.children[0]?.offsetWidth + 16 || 400;
     const totalWidth = itemWidth * batches.length;
@@ -78,7 +89,12 @@ const ProjectGroupBatches = () => {
 
     const drift = gsap.to({}, {
       repeat: -1, duration: 1,
-      onUpdate: () => { if (!obs.isDragging && !obs.isPressed) { scrollPos -= 0.5; updateX(); } }
+      onUpdate: () => { 
+        if (!obs.isDragging && !obs.isPressed) { 
+          scrollPos -= 0.5; 
+          updateX(); 
+        } 
+      }
     });
 
     return () => { obs.kill(); drift.kill(); };
@@ -142,7 +158,6 @@ const ProjectGroupBatches = () => {
           // Unit specific fields
           unitDisplayOrder: unit.displayOrder,
           unitStats: unit.propertyStats,
-          // Additional fields that PropertyUnitCard might need
           ...propertyData
         };
       }
@@ -160,7 +175,9 @@ const ProjectGroupBatches = () => {
     setPropertyUnits([]);
     
     try {
-      const response = await batchService.getBatch(batch._id);
+      // Using projectBatchService.getProjectBatchById
+      const response = await projectBatchService.getProjectBatchById(batch._id);
+      
       if (response.success && response.data) {
         console.log("Project Group API Response:", response.data);
         
@@ -174,7 +191,7 @@ const ProjectGroupBatches = () => {
       }
     } catch (e) {
       console.error('Error fetching properties:', e);
-      setFetchError("Request timed out. The server is taking too long to respond.");
+      setFetchError(e.response?.data?.message || "Request timed out. The server is taking too long to respond.");
       setPropertyUnits([]);
     } finally {
       setUnitsLoading(false);
@@ -184,7 +201,21 @@ const ProjectGroupBatches = () => {
   if (loading) {
     return (
       <div className="h-96 flex items-center justify-center bg-white">
-        <div className="w-10 h-10 border-t-2 border-blue-600 rounded-full animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-t-2 border-blue-600 rounded-full animate-spin" />
+          <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-slate-400">Loading Collections</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (batches.length === 0) {
+    return (
+      <div className="h-96 flex items-center justify-center bg-white">
+        <div className="text-center">
+          <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-400 font-serif italic">No project collections available</p>
+        </div>
       </div>
     );
   }
@@ -203,7 +234,7 @@ const ProjectGroupBatches = () => {
         </div>
 
         {/* --- MARQUEE SECTION --- */}
-        <div ref={containerRef} className="relative touch-none">
+        <div ref={containerRef} className="relative touch-none mt-8">
           <div className="overflow-visible">
             <div 
               ref={marqueeContentRef}
@@ -217,12 +248,12 @@ const ProjectGroupBatches = () => {
                   className="flex-shrink-0 w-[300px] md:w-[420px] group transition-transform duration-500 cursor-pointer"
                 >
                   {/* CARD DESIGN */}
-                  <div className="flex items-center bg-white border border-slate-100 rounded-2xl p-5 transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] group-hover:border-blue-100">
+                  <div className="flex items-center bg-white border border-slate-100 rounded-2xl p-5 transition-all duration-700 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] hover:border-blue-100">
                     <div className="relative w-28 h-28 flex-shrink-0 overflow-hidden rounded-xl bg-slate-50">
                       <img 
                         src={batch.image?.url || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'} 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        alt={batch.projectName || batch.batchName}
+                        alt={batch.batchName}
                         onError={(e) => {
                           e.target.src = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800';
                         }}
@@ -230,10 +261,10 @@ const ProjectGroupBatches = () => {
                     </div>
                     <div className="flex-1 pl-6">
                       <span className="text-[9px] font-bold tracking-[0.2em] text-blue-600 uppercase block mb-1">
-                        {batch.projectStatus?.replace('_', ' ') || 'Exclusive'}
+                        {batch.batchType?.replace('_', ' ') || 'Exclusive'}
                       </span>
                       <h3 className="text-lg font-serif text-slate-900 leading-tight mb-2">
-                        {batch.projectName || batch.batchName}
+                        {batch.batchName}
                       </h3>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
@@ -275,9 +306,9 @@ const ProjectGroupBatches = () => {
               <div className="w-full lg:w-1/3 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col shrink-0">
                 <div className="h-48 sm:h-64 lg:h-80 relative shrink-0">
                   <img 
-                    src={selectedBatch.image?.url} 
+                    src={selectedBatch.image?.url || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'} 
                     className="w-full h-full object-cover" 
-                    alt={selectedBatch.projectName}
+                    alt={selectedBatch.batchName}
                     onError={(e) => {
                       e.target.src = 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800';
                     }}
@@ -291,7 +322,7 @@ const ProjectGroupBatches = () => {
                     <span className="text-[10px] font-bold uppercase tracking-widest">Master Collection</span>
                   </div>
                   <h2 className="text-2xl md:text-4xl font-serif text-slate-900 leading-tight">
-                    {selectedBatch.projectName || selectedBatch.batchName}
+                    {selectedBatch.batchName}
                   </h2>
                   <p className="text-slate-500 text-sm leading-relaxed font-light line-clamp-3 lg:line-clamp-none">
                     {selectedBatch.description || "An architectural masterpiece offering unparalleled luxury and community-centric design."}
@@ -303,6 +334,14 @@ const ProjectGroupBatches = () => {
                         {selectedBatch.stats?.totalProperties || 0} Units
                       </p>
                     </div>
+                    {selectedBatch.locationName && (
+                      <div className="bg-slate-50 p-4 rounded-2xl">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Location</p>
+                        <p className="text-base md:text-lg font-serif text-slate-900">
+                          {selectedBatch.locationName}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -315,6 +354,9 @@ const ProjectGroupBatches = () => {
                     <LayoutGrid className="w-4 h-4 text-blue-600" />
                     <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-900">Live Inventory</h3>
                   </div>
+                  <span className="text-[9px] text-slate-400">
+                    {propertyUnits.length} properties
+                  </span>
                 </div>
 
                 {/* Scrollable Area */}
@@ -341,7 +383,7 @@ const ProjectGroupBatches = () => {
                   ) : propertyUnits.length === 0 ? (
                     <div className="py-20 flex flex-col items-center justify-center opacity-40">
                       <Building2 className="w-12 h-12 mb-4" />
-                      <p className="font-serif italic text-slate-500 text-sm">No properties found.</p>
+                      <p className="font-serif italic text-slate-500 text-sm">No properties found in this collection.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 pb-20 lg:pb-0">

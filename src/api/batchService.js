@@ -91,7 +91,7 @@ export const handleApiError = (error) => {
 };
 
 export const batchService = {
-  // Public routes
+  // Public routes (no authentication required)
   getAllBatches: async () => {
     try {
       const response = await publicApi.get('/');
@@ -129,7 +129,7 @@ export const batchService = {
     }
   },
 
-  // Admin routes
+  // Admin routes (authentication required)
   createBatch: async (batchData) => {
     try {
       const formData = new FormData();
@@ -164,7 +164,6 @@ export const batchService = {
     try {
       console.log('=== UPDATE BATCH START ===');
       console.log('Batch ID:', id);
-      console.log('Original propertyUnits:', batchData.propertyUnits);
       
       const formData = new FormData();
       
@@ -214,18 +213,11 @@ export const batchService = {
         }
       }
       
-      console.log('FormData entries:');
-      for (let pair of formData.entries()) {
-        console.log(`  ${pair[0]}: ${pair[1]}`);
-      }
-      
       const response = await api.put(`/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       
       console.log('Update successful:', response.data);
-      console.log('=== UPDATE BATCH END ===');
-      
       return response.data;
     } catch (error) {
       console.error('Update batch error:', error.response?.data || error.message);
@@ -328,5 +320,4 @@ export const batchService = {
   }
 };
 
-// Also export batchService as default for compatibility
 export default batchService;

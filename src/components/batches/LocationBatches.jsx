@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { batchService } from '../../api/batchService';
+import { projectBatchService } from '../../api/publicBatchService';
 import PropertyUnitCard from '../../components/PropertyUnitCard';
 import { 
   MapPin,
@@ -9,7 +8,9 @@ import {
   ChevronRight,
   X,
   Building2,
-  Shield
+  Shield,
+  Info,
+  Globe
 } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -20,28 +21,33 @@ const LocationBatches = () => {
   const [showModal, setShowModal] = useState(false);
   const [propertyUnits, setPropertyUnits] = useState([]);
   const [unitsLoading, setUnitsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   
   const modalRef = useRef(null);
   const modalContentRef = useRef(null);
   const modalOverlayRef = useRef(null);
   const timelineRef = useRef(null);
-  
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBatches = async () => {
       try {
         setLoading(true);
-        const response = await batchService.getAllBatches({ isActive: true, limit: 6 });
+        // Using the dedicated location batches API
+        const response = await projectBatchService.getLocationBatches({ 
+          page: 1, 
+          limit: 20,
+          sortBy: 'displayOrder',
+          sortOrder: 'asc'
+        });
+        
         if (response.success) {
-          const locationBatches = (response.data || []).filter(
-            batch => batch.batchType === 'location_based'
-          );
-          setBatches(locationBatches);
+          setBatches(response.data || []);
+        } else {
+          setBatches([]);
         }
-       
       } catch (error) {
-        console.error('Error fetching batches:', error);
+        console.error('Error fetching location batches:', error);
+        setBatches([]);
       } finally {
         setLoading(false);
       }
@@ -52,16 +58,13 @@ const LocationBatches = () => {
   // Modal animation with GSAP
   useEffect(() => {
     if (showModal && modalRef.current && modalContentRef.current && modalOverlayRef.current) {
-      // Kill any existing animations
       if (timelineRef.current) {
         timelineRef.current.kill();
       }
 
-      // Create new timeline
       const tl = gsap.timeline();
       timelineRef.current = tl;
 
-      // Set initial states
       gsap.set(modalOverlayRef.current, {
         opacity: 0,
         display: 'flex'
@@ -78,7 +81,6 @@ const LocationBatches = () => {
         y: 30
       });
 
-      // Animate in
       tl.to(modalOverlayRef.current, {
         opacity: 1,
         duration: 0.4,
@@ -102,12 +104,12 @@ const LocationBatches = () => {
 
   const handleCloseModal = () => {
     if (modalRef.current && modalOverlayRef.current) {
-      // Create closing animation
       const tl = gsap.timeline({
         onComplete: () => {
           setShowModal(false);
           setSelectedBatch(null);
           setPropertyUnits([]);
+          setFetchError(null);
         }
       });
 
@@ -133,70 +135,65 @@ const LocationBatches = () => {
       setShowModal(false);
       setSelectedBatch(null);
       setPropertyUnits([]);
+      setFetchError(null);
     }
+  };
+
+  const transformPropertyUnits = (propertyUnitsData) => {
+    if (!propertyUnitsData || !Array.isArray(propertyUnitsData)) return [];
+    
+    return propertyUnitsData.map(unit => {
+      if (unit.propertyId && typeof unit.propertyId === 'object') {
+        const propertyData = unit.propertyId;
+        
+        return {
+          _id: propertyData._id || unit._id,
+          title: propertyData.title || propertyData.propertyName || 'Property',
+          propertyName: propertyData.propertyName || propertyData.title,
+          description: propertyData.description || '',
+          address: propertyData.address || '',
+          city: propertyData.city || '',
+          state: propertyData.state || '',
+          pincode: propertyData.pincode || '',
+          propertyType: propertyData.propertyType || '',
+          bedroomCount: propertyData.bedroomCount || 0,
+          bathroomCount: propertyData.bathroomCount || 0,
+          area: propertyData.area || 0,
+          areaUnit: propertyData.areaUnit || 'sqft',
+          price: propertyData.price || 0,
+          expectedPrice: propertyData.expectedPrice || 0,
+          images: propertyData.images || [],
+          thumbnail: propertyData.thumbnail || propertyData.images?.[0]?.url || '',
+          status: propertyData.status || 'available',
+          isActive: propertyData.isActive !== false,
+          unitDisplayOrder: unit.displayOrder,
+          unitStats: unit.propertyStats,
+          ...propertyData
+        };
+      }
+      return unit;
+    });
   };
 
   const fetchBatchPropertyUnits = async (batchId) => {
     try {
       setUnitsLoading(true);
-      const response = await batchService.getBatch(batchId);
+      setFetchError(null);
+      // Using the dedicated location batch by ID API
+      const response = await projectBatchService.getLocationBatchById(batchId);
+      
       if (response.success && response.data) {
-        console.log("API Response:", response.data);
-        
-        // Transform the property units to extract nested property data
-        let transformedUnits = [];
-        
-        if (response.data.propertyUnits && response.data.propertyUnits.length > 0) {
-          transformedUnits = response.data.propertyUnits.map(unit => {
-            // Check if property data is nested inside propertyId
-            if (unit.propertyId && typeof unit.propertyId === 'object') {
-              // The actual property data is in propertyId
-              const propertyData = unit.propertyId;
-              
-              // Return a flattened object that PropertyUnitCard expects
-              return {
-                _id: propertyData._id || unit._id,
-                // Property basic info
-                title: propertyData.title || propertyData.propertyName || 'Property',
-                propertyName: propertyData.propertyName || propertyData.title,
-                description: propertyData.description || '',
-                // Location info
-                address: propertyData.address || '',
-                city: propertyData.city || '',
-                state: propertyData.state || '',
-                pincode: propertyData.pincode || '',
-                // Property details
-                propertyType: propertyData.propertyType || '',
-                bedroomCount: propertyData.bedroomCount || 0,
-                bathroomCount: propertyData.bathroomCount || 0,
-                area: propertyData.area || 0,
-                areaUnit: propertyData.areaUnit || 'sqft',
-                // Pricing
-                price: propertyData.price || 0,
-                expectedPrice: propertyData.expectedPrice || 0,
-                // Images
-                images: propertyData.images || [],
-                thumbnail: propertyData.thumbnail || propertyData.images?.[0]?.url || '',
-                // Status
-                status: propertyData.status || 'available',
-                isActive: propertyData.isActive !== false,
-                // Unit specific fields
-                unitDisplayOrder: unit.displayOrder,
-                unitStats: unit.propertyStats,
-                // Additional fields that PropertyUnitCard might need
-                ...propertyData
-              };
-            }
-            // If propertyId is just an ID string, return the unit as is
-            return unit;
-          });
-        }
-        
+        console.log("Location Batch API Response:", response.data);
+        const transformedUnits = transformPropertyUnits(response.data.propertyUnits);
         console.log("Transformed Units:", transformedUnits);
         setPropertyUnits(transformedUnits);
+      } else {
+        setPropertyUnits([]);
       }
     } catch (error) {
       console.error('Error fetching properties:', error);
+      setFetchError(error.response?.data?.message || "Failed to load properties. Please try again.");
+      setPropertyUnits([]);
     } finally {
       setUnitsLoading(false);
     }
@@ -220,11 +217,22 @@ const LocationBatches = () => {
     );
   }
 
+  if (batches.length === 0) {
+    return (
+      <div className="h-96 flex items-center justify-center bg-white">
+        <div className="text-center">
+          <Globe className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-400 font-serif italic">No location-based collections available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white md:py-24">
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* --- PREMIUM MINIMALIST HEADER --- */}
+        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-baseline gap-6 border-b border-slate-100 pb-10">
           <div>
             <h4 className="text-[10px] font-bold tracking-[0.4em] uppercase text-blue-600 mb-2">Global Presence</h4>
@@ -235,8 +243,8 @@ const LocationBatches = () => {
           </p>
         </div>
 
-        {/* --- REFINED BATCH GRID (X-Scroll on Mobile) --- */}
-        <div className="relative">
+        {/* Location Grid */}
+        <div className="relative mt-8">
           <div className="
             flex overflow-x-auto pb-12 pt-4 px-2 -mx-6 snap-x snap-mandatory scrollbar-hide
             md:grid md:grid-cols-3 md:gap-y-20 md:gap-x-10 md:overflow-visible md:px-0 md:mx-0
@@ -251,7 +259,7 @@ const LocationBatches = () => {
                   group cursor-pointer relative
                 "
               >
-                {/* The Image "Frame" */}
+                {/* Image Frame */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-[#F9F9F9] rounded-sm transition-all duration-700 ease-out group-hover:shadow-[0_40px_80px_rgba(0,0,0,0.1)]">
                   <div className="absolute top-4 left-4 z-10 opacity-30 group-hover:opacity-100 transition-opacity">
                      <span className="text-[9px] font-serif italic text-slate-900">Premium Destination</span>
@@ -260,13 +268,13 @@ const LocationBatches = () => {
                   <img 
                     src={batch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'} 
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                    alt={batch.locationName}
+                    alt={batch.locationName || batch.batchName}
                     onError={(e) => {
                       e.target.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800';
                     }}
                   />
                   
-                  {/* Desktop Hover Overlay */}
+                  {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-white/10 opacity-0 md:group-hover:opacity-100 backdrop-blur-[2px] transition-all duration-500 flex items-center justify-center">
                     <div className="bg-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 border border-slate-50">
                       <span className="text-[10px] font-bold tracking-widest uppercase text-slate-900">Explore Location</span>
@@ -275,11 +283,11 @@ const LocationBatches = () => {
                   </div>
                 </div>
 
-                {/* Floating Content Block */}
+                {/* Content Block */}
                 <div className="relative -mt-8 mx-4 p-5 md:p-6 bg-white border border-slate-50 shadow-[0_15px_35px_rgba(0,0,0,0.04)] md:group-hover:shadow-[0_25px_50px_rgba(0,0,0,0.08)] md:group-hover:-translate-y-2 transition-all duration-500">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="text-lg md:text-xl font-serif text-slate-900 leading-tight">
-                      {batch.locationName}
+                      {batch.locationName || batch.batchName}
                     </h3>
                     <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 transition-colors" />
                   </div>
@@ -293,7 +301,7 @@ const LocationBatches = () => {
                     </div>
                     <span className="text-slate-200">|</span>
                     <span className="text-[9px] md:text-[10px] font-medium text-slate-400 italic">
-                      Strategic Zone
+                      {batch.city || batch.state || 'Strategic Zone'}
                     </span>
                   </div>
                 </div>
@@ -303,7 +311,7 @@ const LocationBatches = () => {
         </div>
       </div>
 
-      {/* --- PREMIUM MODAL WITH GSAP ANIMATIONS --- */}
+      {/* Modal */}
       {showModal && selectedBatch && (
         <div 
           ref={modalOverlayRef}
@@ -334,7 +342,7 @@ const LocationBatches = () => {
               className="flex-grow overflow-y-auto"
               style={{ opacity: 0 }}
             >
-              {/* Header Section: Anti-Pixelation Frame */}
+              {/* Header Section */}
               <div className="grid grid-cols-1 lg:grid-cols-2">
                 <div className="h-[35vh] md:h-[500px] bg-slate-50 relative overflow-hidden flex items-center justify-center">
                   <div 
@@ -342,9 +350,9 @@ const LocationBatches = () => {
                     style={{ backgroundImage: `url(${selectedBatch.image?.url})` }}
                   />
                   <img 
-                    src={selectedBatch.image?.url} 
+                    src={selectedBatch.image?.url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'} 
                     className="relative max-h-[90%] max-w-[90%] object-contain shadow-2xl rounded-sm" 
-                    alt={selectedBatch.locationName}
+                    alt={selectedBatch.locationName || selectedBatch.batchName}
                     onError={(e) => {
                       e.target.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800';
                     }}
@@ -353,7 +361,7 @@ const LocationBatches = () => {
                 
                 <div className="p-8 md:p-16 lg:p-24 flex flex-col justify-center">
                   <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-slate-900 mb-6 leading-tight">
-                    {selectedBatch.locationName}
+                    {selectedBatch.locationName || selectedBatch.batchName}
                   </h2>
                   <p className="text-slate-500 font-light leading-relaxed mb-10 text-sm md:text-base">
                     {selectedBatch.description || "Explore a curated list of properties located in the most strategic and high-growth zones."}
@@ -369,6 +377,18 @@ const LocationBatches = () => {
                       <p className="text-lg font-serif">{propertyUnits.length} Available Assets</p>
                     </div>
                   </div>
+
+                  {(selectedBatch.city || selectedBatch.state) && (
+                    <div className="mt-8 pt-6 border-t border-slate-100">
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-sm">
+                          {[selectedBatch.city, selectedBatch.state].filter(Boolean).join(', ')}
+                          {selectedBatch.pincode && ` - ${selectedBatch.pincode}`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -383,6 +403,19 @@ const LocationBatches = () => {
                   <div className="py-20 flex flex-col items-center gap-4">
                     <div className="w-8 h-8 border-b-2 border-blue-600 rounded-full animate-spin"></div>
                     <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Fetching Assets</span>
+                  </div>
+                ) : fetchError ? (
+                  <div className="py-20 flex flex-col items-center justify-center text-center">
+                    <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                      <Info className="text-red-500 w-6 h-6" />
+                    </div>
+                    <p className="text-slate-500 text-sm mb-4">{fetchError}</p>
+                    <button 
+                      onClick={() => fetchBatchPropertyUnits(selectedBatch._id)}
+                      className="px-6 py-2 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-blue-700 transition-colors"
+                    >
+                      Retry
+                    </button>
                   </div>
                 ) : propertyUnits.length === 0 ? (
                   <div className="py-20 text-center space-y-4">
@@ -404,7 +437,7 @@ const LocationBatches = () => {
               </div>
             </div>
 
-            {/* Footer Navigation */}
+            {/* Footer */}
             <div className="p-6 bg-white border-t border-slate-50 flex justify-center">
               <button 
                 onClick={handleCloseModal}
@@ -417,7 +450,6 @@ const LocationBatches = () => {
         </div>
       )}
 
-      {/* Utilities */}
       <style dangerouslySetInnerHTML={{ __html: `
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
