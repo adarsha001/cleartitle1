@@ -449,33 +449,7 @@ export default function EnhancedFooter() {
   </div>
 
   {/* Bottom Bar */}
-  <div className="border-t border-white/20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-    <div className="text-blue-100 text-sm text-center md:text-left">
-      © {new Date().getFullYear()} <span className="text-blue-300">CLEAR</span>
-      <span className="text-yellow-300">TITLE 1</span>. All rights reserved.
-      <span className="block md:inline md:ml-2 mt-1 md:mt-0">
-        Developed by 
-        <a 
-          href="https://www.linkedin.com/in/adarsha-h-9350182a6/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-yellow-300 hover:text-yellow-400 ml-1 transition-colors duration-300"
-        >
-          Adarsha
-        </a>
-      </span>
-    </div>
-    <div className="flex gap-6 text-sm">
 
-      <a 
-        href="/terms-and-conditions"  target="_blank"
-        className="text-blue-100 hover:text-yellow-300 transition-colors"
-      >
-        Terms and Conditions
-      </a>
-
-    </div>
-  </div>
 </div>
     </footer>
   );
